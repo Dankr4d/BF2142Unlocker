@@ -1,0 +1,13 @@
+AudioSettings.setVoipEnabled 1
+AudioSettings.setVoipPlaybackVolume 1
+AudioSettings.setVoipCaptureVolume 1
+AudioSettings.setVoipCaptureThreshold 0.1
+AudioSettings.setVoipBoostEnabled 0
+AudioSettings.setVoipUsePushToTalk 1
+AudioSettings.setProvider "software"
+AudioSettings.setSoundQuality "Medium"
+AudioSettings.setEffectsVolume 1
+AudioSettings.setMusicVolume 0.5
+AudioSettings.setHelpVoiceVolume 0.5
+AudioSettings.setEnglishOnlyVoices 0
+AudioSettings.setEnableEAX 1

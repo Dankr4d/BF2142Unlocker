@@ -1,0 +1,13 @@
+VideoSettings.setTerrainQuality 2
+VideoSettings.setGeometryQuality 2
+VideoSettings.setLightingQuality 2
+VideoSettings.setDynamicLightingQuality 2
+VideoSettings.setDynamicShadowsQuality 2
+VideoSettings.setEffectsQuality 2
+VideoSettings.setTextureQuality 3
+VideoSettings.setTextureFilteringQuality 2
+VideoSettings.setResolution 800x600@120Hz
+VideoSettings.setAntialiasing Off
+VideoSettings.setViewDistanceScale 0.9
+VideoSettings.setUseBloom 1
+VideoSettings.setVideoOptionScheme 1

@@ -1,0 +1,40 @@
+GeneralSettings.setSortOrder 0
+GeneralSettings.setSortKey ""
+GeneralSettings.setNumRoundsPlayed 0
+GeneralSettings.setServerFilter ""
+GeneralSettings.setHUDTransparency 255
+GeneralSettings.setCrosshairColor 255 255 255 255
+GeneralSettings.setBuddytagColor 0 0 0
+GeneralSettings.setSquadtagColor 0 255 0
+GeneralSettings.setMinimapRotate 1
+GeneralSettings.setMinimapTransparency 170
+GeneralSettings.setViewIntroMovie 1
+GeneralSettings.setOutOfVoting 0
+GeneralSettings.setBFTVSaveDirectory ""
+GeneralSettings.setConfirmQuit 0
+GeneralSettings.setMapIconAlphaTransparency 255
+GeneralSettings.setMaxBots 64
+GeneralSettings.setMaxBotsIncludeHumans 0
+GeneralSettings.setBotSkill 0.5
+GeneralSettings.setAutoScreenshot 0
+GeneralSettings.setIgnoreBuddyRequests 0
+GeneralSettings.setCameraShake 1
+GeneralSettings.setColorBlindFriendly 0
+GeneralSettings.setHelpPopups 1
+GeneralSettings.setKillMessagesFilter 1
+GeneralSettings.setRadioMessagesFilter 1
+GeneralSettings.setChatMessagesFilter 1
+GeneralSettings.setLastAwardsCheckDate 1560022998
+GeneralSettings.setAllowPunkBuster 1
+GeneralSettings.setItemSelectionReverseItems 1
+GeneralSettings.setToggleFilters 312194
+GeneralSettings.setAutoReload 1
+GeneralSettings.setConnectionType 5
+GeneralSettings.setLCDDisplayModes 0
+GeneralSettings.setConfirmLaunchEADownloader 0
+GeneralSettings.setConfirmLaunchBFWeb 0
+GeneralSettings.setConfirmDuplicateKey 0
+GeneralSettings.setConfirmLogout 0
+GeneralSettings.setConfirmDiscardBuddyMessages 0
+GeneralSettings.setConfirmInstantAction 0
+GeneralSettings.setConfirmReservedSlotsWarning 0
