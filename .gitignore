@@ -1,4 +1,5 @@
 instdeps
 instdeps.exe
+icon.res
 deps/
 build/

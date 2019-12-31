@@ -127,8 +127,8 @@ when defined(windows):
         cast[LPWSTR](0),
         SW_SHOWNORMAL
       )
-    if lastError <= 32:
-      raise newException(Exception, "Cannot elevate $1 ($2)" % [$pathToExe, $lastError])
+    # if lastError <= 32:
+    #   raise newException(Exception, "Cannot elevate $1 ($2)" % [$pathToExe, $lastError])
 
   proc isServerRunning*(): bool = # TODO: Should recv some data to determine if the server connecting to is our server
     var socket = newSocket()

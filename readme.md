@@ -36,6 +36,10 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Click on "Copy 64 coop maps (client)" and select the Levels folder from extracted zip file
 - Click on "Copy 64 coop maps (server)" and select the Levels folder from extracted zip file
 
+## Infos
+- If your BF2142 game folder is read only, you need to allow elevatedio to run as administrator. Otherwise just cancel the elevation request.
+- You need to set the BF2142 game path (and if you want to host the server, you also need to set the server path).
+
 ## Downloads
 - [Download BF2142 Unlocker v0.9](https://github.com/Dankr4d/BF2142Unlocker/archive/BF2142Unlocker_v0.9.zip)
 
