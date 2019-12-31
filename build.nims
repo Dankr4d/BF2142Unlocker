@@ -16,9 +16,9 @@ proc createIconRes() =
 
 proc compileGui() =
   when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --app:gui --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
+    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
   else:
-    exec("nim c -d:release --app:gui --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
 
 proc compileServer() =
   when defined(windows) and buildOS == "linux":

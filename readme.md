@@ -12,7 +12,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Switching mods is currently wihtout any functionality, because auto joining the server does not work with the modPath parameter.
 - Squad drones are disabled, because most of the time bots are endless spaming drones and stop moving.
 
-## Screenshots
+## Screenshots (Linux version)
 ### GUI:
 |   |   |
 | - | - |
@@ -39,6 +39,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 ## Infos
 - If your BF2142 game folder is read only, you need to allow elevatedio to run as administrator. Otherwise just cancel the elevation request.
 - You need to set the BF2142 game path (and if you want to host the server, you also need to set the server path).
+- To start the gui you need to execute the gui/gui.exe executable.
 
 ## Downloads
 - [Download BF2142 Unlocker v0.9](https://github.com/Dankr4d/BF2142Unlocker/archive/BF2142Unlocker_v0.9.zip)
