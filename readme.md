@@ -40,6 +40,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - If your BF2142 game folder is read only, you need to allow elevatedio to run as administrator. Otherwise just cancel the elevation request.
 - You need to set the BF2142 game path (and if you want to host the server, you also need to set the server path).
 - To start the gui you need to execute the gui/gui.exe executable.
+- Be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.
 
 ## Downloads
 - [Download BF2142 Unlocker v0.9](https://github.com/Dankr4d/BF2142Unlocker/archive/BF2142Unlocker_v0.9.zip)

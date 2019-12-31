@@ -1268,6 +1268,8 @@ proc onApplicationActivate(application: Application) =
   when defined(windows):
     lblWinePrefix.visible = false
     fchsrBtnWinePrefix.visible = false
+    if not dirExists(TEMP_FILES_DIR):
+      createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
   preClientPatchCheck()
