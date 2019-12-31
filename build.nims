@@ -16,21 +16,21 @@ proc createIconRes() =
 
 proc compileGui() =
   when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --app:gui --opt:speed --passL:-s gui")
+    exec("nim c -d:release -d:mingw --app:gui --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
   else:
-    exec("nim c -d:release --app:gui --opt:speed --passL:-s gui")
+    exec("nim c -d:release --app:gui --opt:speed --passL:-s -o:build/" & "gui".toExe() & " gui")
 
 proc compileServer() =
   when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --opt:speed --passL:-s server")
+    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:build/" & "server".toExe() & " server")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s server")
+    exec("nim c -d:release --opt:speed --passL:-s -o:build/" & "server".toExe() & " server")
 
 proc compileElevatedio() =
   when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --opt:speed --passL:-s elevatedio")
+    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:build/" & "elevatedio".toExe() & " elevatedio")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s elevatedio")
+    exec("nim c -d:release --opt:speed --passL:-s -o:build/" & "elevatedio".toExe() & " elevatedio")
 
 proc compileOpenSsl() =
   if not dirExists("deps"):
@@ -84,10 +84,6 @@ when defined(windows):
       cpFile("C:" / "msys64" / "mingw64" / "bin" / lib, "build" / lib)
 
 proc copyAll() =
-  cpFile("gui".toExe(), BUILD_DIR / "gui".toExe())
-  cpFile("server".toExe(), BUILD_DIR / "server".toExe())
-  when defined(windows):
-    cpFile("elevatedio".toExe(), BUILD_DIR / "elevatedio".toExe())
   cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
   cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
   when defined(windows):

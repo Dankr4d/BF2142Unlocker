@@ -61,7 +61,6 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
 - `nim build.nims`
 - `nim -d:mingw build.nims # Cross compile for windows, but currently not working`
-- `sudo chmod +x gui server`
 
 ## Compile (Docker)
 - `docker-compose up`
