@@ -43,7 +43,8 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9](https://github.com/Dankr4d/BF2142Unlocker/archive/BF2142Unlocker_v0.9.zip)
+- [Download BF2142 Unlocker v0.9 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9/BF2142Unlocker_v0.9_win.zip)
+- [Download BF2142 Unlocker v0.9 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9/BF2142Unlocker_v0.9_linux.zip)
 
 ---
 
