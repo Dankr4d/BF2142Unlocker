@@ -94,7 +94,7 @@ proc copyAll() =
     copyGtk()
 
 proc installDeps() =
-  exec("nim c -f -r deps.nim")
+  exec("nim c -f -r instdeps.nim")
 
 when isMainModule:
   mode = Verbose
