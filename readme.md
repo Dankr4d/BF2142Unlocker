@@ -9,7 +9,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 **Warning:** *The actual version is slightly hacky and not stable!*
 
 ## What does not work?
-- Switching mods is currently wihtout any functionality, because auto joining the server does not work with the modPath parameter.
+- Switching mods is currently without any functionality, because auto joining the server does not work with the modPath parameter.
 - Squad drones are disabled, because most of the time bots are endless spaming drones and stop moving.
 
 ## Screenshots (Linux version)
