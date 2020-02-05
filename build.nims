@@ -47,15 +47,15 @@ proc compileOpenSsl() =
   withDir(OPENSSL_PATH):
     when buildOS == "linux":
       when defined(linux):
-        exec("./config enable-ssl3 no-shared")
+        exec("./config enable-ssl3 shared")
         exec("make depend")
         exec("make -j4") # TODO: j parameter
       elif defined(windows):
-        exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 no-shared")
+        exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
         exec("make -j4") # TODO: j parameter
     elif buildOS == "windows":
-      exec("perl Configure mingw64 enable-ssl3 no-shared")
+      exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
       exec("make -j4") # TODO: j parameter
 
@@ -83,11 +83,18 @@ when defined(windows):
     for lib in GTK_LIBS:
       cpFile("C:" / "msys64" / "mingw64" / "bin" / lib, "build" / lib)
 
+  proc copyOpenSSL() =
+    cpFile(OPENSSL_PATH / "libeay32.dll", "build" / "libeay32.dll")
+    cpFile(OPENSSL_PATH / "libeay32.dll", "build" / "libeay64.dll")
+    cpFile(OPENSSL_PATH / "ssleay32.dll", "build" / "ssleay32.dll")
+    cpFile(OPENSSL_PATH / "ssleay32.dll", "build" / "ssleay64.dll")
+
 proc copyAll() =
   cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
   cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
   when defined(windows):
     copyGtk()
+    copyOpenSSL()
 
 proc installDeps() =
   exec("nim c -f -r instdeps.nim")
