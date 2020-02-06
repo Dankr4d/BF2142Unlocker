@@ -166,11 +166,11 @@ proc serialize(obj: EaMessageOut, id: uint8): string =
   result.add char(0x0) & char(0x0) & char(0x0) & char(0x0) # This is the length from the whole string and will be set later
   for key, val in obj.fieldPairs:
     result.add key & "=" & $val & '\n'
-  var len: uint32 = cast[uint32](result.len)
-  result[MESSAGE_PREFIX_LEN - 4] = char(len shr 24)
-  result[MESSAGE_PREFIX_LEN - 3] = char(len shl 8 shr 24)
-  result[MESSAGE_PREFIX_LEN - 2] = char(len shl 16 shr 24)
-  result[MESSAGE_PREFIX_LEN - 1] = char(len shl 24 shr 24)
+  var length: uint32 = cast[uint32](result.len)
+  result[MESSAGE_PREFIX_LEN - 4] = char(length shr 24)
+  result[MESSAGE_PREFIX_LEN - 3] = char(length shl 8 shr 24)
+  result[MESSAGE_PREFIX_LEN - 2] = char(length shl 16 shr 24)
+  result[MESSAGE_PREFIX_LEN - 1] = char(length shl 24 shr 24)
 
 proc parseData(data: string): Table[string, string] =
   result = initTable[string, string]()
@@ -194,7 +194,7 @@ proc pingInterval(data: tuple[client: Socket, channelKillThread: ptr Channel[voi
 
 proc handleFeslClient(client: Socket) {.thread.} =
   var prefix: string
-  var len: uint32
+  var length: uint32
   var id: uint8
   var data: string
   var playerName: string
@@ -206,19 +206,19 @@ proc handleFeslClient(client: Socket) {.thread.} =
   while true:
     isConnected = if client.recv(prefix, MESSAGE_PREFIX_LEN) == 0: false else: true
     if isConnected:
+      if prefix.len == 0:
+        break
       id = uint8(prefix[7])
-      len = (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 1]) shl 0) or
-            (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 2]) shl 8) or
-            (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 3]) shl 16) or
-            (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 4]) shl 24)
-      isConnected = if client.recv(data, int(len) - MESSAGE_PREFIX_LEN) == 0: false else: true
+      length = (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 1]) shl 0) or
+               (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 2]) shl 8) or
+               (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 3]) shl 16) or
+               (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 4]) shl 24)
+      isConnected = if client.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0: false else: true
     if not isConnected:
-      echo "FESL - Client disconnected!"
-      channelKillThread.close()
       break
     dataTbl = data.parseData()
     if dataTbl.contains("TXN"):
-      echo "FESL - Received: ", dataTbl # ["TXN"]
+      echo "FESL - Received: ", dataTbl
       case dataTbl["TXN"]:
         of "Hello":
           client.send(newHelloOut().serialize(id))
@@ -244,8 +244,10 @@ proc handleFeslClient(client: Socket) {.thread.} =
           discard
           # echo "Unhandled TXN: ", data
     data = ""
+  channelKillThread.close()
   if threadPingInterval.running:
-    threadPingInterval.joinThread() # Waiting for ping thread
+    threadPingInterval.joinThread() # Waiting for ping thread is closed
+  echo "FESL - Client disconnected!"
 
 proc run*() =
   var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "ssl_certs" / "cert.pem", keyFile = "ssl_certs" / "key.pem")

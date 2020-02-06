@@ -7,7 +7,13 @@ server
 server.exe
 fesl_server
 fesl_server.exe
+gpcm_server
+gpcm_server.exe
+unlock_server
+unlock_server.exe
 config.ini
 icon.res
+libeay32.dll
+ssleay32.dll
 deps/
 build/

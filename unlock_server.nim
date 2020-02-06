@@ -63,5 +63,4 @@ proc run*() =
   waitFor server.serve(Port(8080), handleClient)
 
 when isMainModule:
-  var server = newAsyncHttpServer()
-  waitFor server.serve(Port(8080), handleClient)
+  run()

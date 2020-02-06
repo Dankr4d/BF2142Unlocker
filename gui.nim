@@ -563,7 +563,7 @@ proc loadSaveAiSettings(save: bool) =
         sbtnBots.value = line.split(' ')[1].parseFloat()
     elif line.startsWith(AISETTING_OVERRIDE_MENU_SETTINGS):
       if save:
-        line = AISETTING_OVERRIDE_MENU_SETTINGS & " 1" # Necessary to change bot amount 
+        line = AISETTING_OVERRIDE_MENU_SETTINGS & " 1" # Necessary to change bot amount
     elif line.startsWith(AISETTING_BOT_SKILL):
       # As we added AISETTING_OVERRIDE_MENU_SETTINGS above every ai setting will override our serversettings.
       # So we need to remove every setting that can be done in gui from the ai config.
@@ -722,7 +722,7 @@ proc onBtnJoinClicked(self: Button) =
   if startupQuery != "":
     command.add(startupQuery & ' ')
   command.add("BF2142.exe" & ' ')
-  # command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ') # TODO: Login server crashes (on windows) because bf2142 is restarting after login
+  command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
   command.add("+fullscreen 1" & ' ') # TODO: Implement this as settings option
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
@@ -734,7 +734,7 @@ proc onBtnJoinClicked(self: Button) =
   when defined(linux): # TODO: Check if bf2142Path is neccessary
     let processCommand: string = command
   elif defined(windows):
-    let processCommand: string = bf2142Path / command
+    let processCommand: string = bf2142Path & '\\' & command
   var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )

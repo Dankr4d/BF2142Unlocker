@@ -18,11 +18,12 @@ proc handleClient(client: Socket) =
   echo "GPCM - Send: ", sdata
   playerId.inc()
   while true:
-    if client.recv(data, 512) == 0:
-      echo "GPCM - Client disconented!"
-      break
-    else:
+    # Regarding to documentation the recv proc should not return values lower then 0. But it does -.-
+    if client.recv(data, 512) > 0:
       echo "GPCM - RECEIVED: ", data
+    else:
+      break
+  echo "GPCM - Client disconented!"
   # client.close()
 
 proc run*() =
