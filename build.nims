@@ -49,15 +49,15 @@ proc compileOpenSsl() =
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
-        exec("make -j4") # TODO: j parameter
+        exec("make -j4") # TODO: j parameter: `nproc`
       elif defined(windows):
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
-        exec("make -j4") # TODO: j parameter
+        exec("make -j4") # TODO: j parameter: `nproc`
     elif buildOS == "windows":
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
-      exec("make -j4") # TODO: j parameter
+      exec("make -j4") # TODO: j parameter: `nproc`
 
 proc compileAll() =
   # compileDownload()
@@ -85,9 +85,7 @@ when defined(windows):
 
   proc copyOpenSSL() =
     cpFile(OPENSSL_PATH / "libeay32.dll", "build" / "libeay32.dll")
-    cpFile(OPENSSL_PATH / "libeay32.dll", "build" / "libeay64.dll")
     cpFile(OPENSSL_PATH / "ssleay32.dll", "build" / "ssleay32.dll")
-    cpFile(OPENSSL_PATH / "ssleay32.dll", "build" / "ssleay64.dll")
 
 proc copyAll() =
   cpDir("ssl_certs", BUILD_DIR / "ssl_certs")

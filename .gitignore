@@ -1,5 +1,13 @@
 instdeps
 instdeps.exe
+gui
+gui.exe
+elevatedio.exe
+server
+server.exe
+fesl_server
+fesl_server.exe
+config.ini
 icon.res
 deps/
 build/
