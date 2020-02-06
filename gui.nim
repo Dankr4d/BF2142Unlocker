@@ -35,6 +35,7 @@ var startupQuery: string
 var ipAddress: string
 var playerName: string
 var autoJoin: bool
+var windowMode: bool
 
 const VERSION: string = "0.9.0"
 
@@ -114,6 +115,7 @@ const
   CONFIG_KEY_PLAYER_NAME: string = "playername"
   CONFIG_KEY_IP_ADDRESS: string = "ip_address"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
+  CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
 const NO_PREVIEW_IMG_PATH = "nopreview.png"
 
@@ -137,6 +139,8 @@ var lblIpAddress: Label
 var txtIpAddress: Entry
 var lblAutoJoin: Label
 var chbtnAutoJoin: CheckButton
+var lblWindowMode: Label
+var chbtnWindowMode: CheckButton
 var btnJoin: Button
 ##
 ### Host controls
@@ -250,12 +254,19 @@ proc loadConfig() =
   txtIpAddress.text = ipAddress
   playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
   txtPlayerName.text = playerName
-  var autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
+  let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
   if autoJoinStr != "":
     autoJoin = autoJoinStr.parseBool()
   else:
-    autojoin = true
+    autojoin = false
   chbtnAutoJoin.active = autoJoin
+  let windowModeStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE)
+  if windowModeStr != "":
+    windowMode = windowModeStr.parseBool()
+  else:
+    windowMode = true
+  chbtnWindowMode.active = windowMode
+
 
 proc preClientPatchCheck() =
   let clientExePath: string = bf2142Path / BF2142_EXE_NAME
@@ -715,6 +726,7 @@ proc onBtnJoinClicked(self: Button) =
   playerName = txtPlayerName.text.strip()
   ipAddress = txtIpAddress.text.strip()
   autoJoin = chbtnAutoJoin.active
+  windowMode = chbtnWindowMode.active
   var invalidStr: string
   if ipAddress.startsWith("127") or ipAddress == "localhost": # TODO: Check if ip is also an valid ipv4 address
     invalidStr.add("\t* Localhost addresses are currently not supported. Battlefield 2142 starts with a black screen if you're trying to connect to a localhost address.\n")
@@ -735,6 +747,7 @@ proc onBtnJoinClicked(self: Button) =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, playerName)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $windowMode)
   config.writeConfig(CONFIG_FILE_NAME)
 
   preClientPatchCheck()
@@ -762,7 +775,8 @@ proc onBtnJoinClicked(self: Button) =
   command.add(BF2142_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
-  # command.add("+fullscreen 0" & ' ') # TODO: Implement this as settings option
+  if windowMode:
+    command.add("+fullscreen 0" & ' ')
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
   command.add("+eaAccountName " & playerName & ' ')
   command.add("+eaAccountPassword A" & ' ')
@@ -1048,9 +1062,12 @@ proc createNotebook(): NoteBook =
   lblAutoJoin = newLabel("Auto join server:")
   lblAutoJoin.styleContext.addClass("label")
   chbtnAutoJoin = newCheckButton()
+  lblWindowMode = newLabel("Window mode:")
+  lblWindowMode.styleContext.addClass("label")
+  chbtnWindowMode = newCheckButton()
   btnJoin = newButton("Join")
   btnJoin.styleContext.addClass("button")
-  tblJoin = newTable(5, 2, false)
+  tblJoin = newTable(6, 2, false)
   tblJoin.halign = Align.center
   tblJoin.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.fill}, {}, 0, 3)
@@ -1060,7 +1077,9 @@ proc createNotebook(): NoteBook =
   tblJoin.attach(txtIpAddress, 1, 2, 2, 3, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(lblAutoJoin, 0, 1, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(chbtnAutoJoin, 1, 2, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(btnJoin, 0, 2, 4, 5, {AttachFlag.fill}, {}, 0, 3)
+  tblJoin.attach(lblWindowMode, 0, 1, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
+  tblJoin.attach(chbtnWindowMode, 1, 2, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
+  tblJoin.attach(btnJoin, 0, 2, 5, 6, {AttachFlag.fill}, {}, 0, 3)
   vboxJoin = newBox(Orientation.vertical, 0)
   vboxJoin.styleContext.addClass("box")
   vboxJoin.add(tblJoin)
