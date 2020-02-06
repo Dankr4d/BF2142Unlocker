@@ -38,15 +38,22 @@ var autoJoin: bool
 
 const VERSION: string = "0.9.0"
 
-const ORIGINAL_CLIENT_MD5_HASH = "6ca5c59cd1623b78191e973b3e8088bc"
+const BF2142_EXE_NAME: string = "BF2142.exe"
+const OPENSPY_DLL_NAME: string = "RendDX9.dll"
+const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
+const FILE_BACKUP_SUFFIX: string = ".original"
+
+const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
+const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
+const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 when defined(linux):
   const
-    ORIGINAL_SERVER_MD5_HASH_32 = "9e9368e3ee5ffc0a533048685456cb8c"
-    ORIGINAL_SERVER_MD5_HASH_64 = "ce720cbf34cf11460a69eaaae50dc917"
+    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c"
+    ORIGINAL_SERVER_MD5_HASH_64: string = "ce720cbf34cf11460a69eaaae50dc917"
 elif defined(windows):
   const
-    ORIGINAL_SERVER_MD5_HASH_32 = "2380c7bc967f96aff1fbf83ce1b9390d"
-    ORIGINAL_SERVER_MD5_HASH_64 = "2380c7bc967f96aff1fbf83ce1b9390d"
+    ORIGINAL_SERVER_MD5_HASH_32: string = "2380c7bc967f96aff1fbf83ce1b9390d"
+    ORIGINAL_SERVER_MD5_HASH_64: string = "2380c7bc967f96aff1fbf83ce1b9390d"
 
 
 const GAME_MODES: seq[tuple[id: string, name: string]] = @[
@@ -199,6 +206,7 @@ var txtStartupQuery: Entry
 var btnRemoveMovies: Button
 var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
+var btnRestore: Button
 ##
 
 ### Helper procs
@@ -250,21 +258,48 @@ proc loadConfig() =
   chbtnAutoJoin.active = autoJoin
 
 proc preClientPatchCheck() =
-  var clientExePath = bf2142Path / "BF2142.exe"
-  if clientExePath != "" and fileExists(clientExePath):
-    var clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+  let clientExePath: string = bf2142Path / BF2142_EXE_NAME
+  if bf2142Path == "":
+    return
+  if fileExists(clientExePath):
+    let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
     if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo "Found original client binary (BF2142.exe). Creating a backup and prepatching!"
+      echo "Found original client binary (" & BF2142_EXE_NAME & "). Creating a backup and prepatching!"
       if hasWritePermission(clientExePath):
-        copyFile(clientExePath, clientExePath & ".original")
+        copyFile(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
         preClientPatch(clientExePath)
       else:
-        let tmpExePath: string = TEMP_FILES_DIR / "BF2142.exe"
-        copyFileElevated(clientExePath, clientExePath & ".original")
+        let tmpExePath: string = TEMP_FILES_DIR / BF2142_EXE_NAME
+        copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
         copyFile(clientExePath, tmpExePath)
         preClientPatch(tmpExePath)
         copyFileElevated(tmpExePath, clientExePath)
         removeFile(tmpExePath)
+      btnRestore.sensitive = true
+
+proc openspyBackupCheck() =
+  let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
+  let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
+  if fileExists(openspyDllPath) and fileExists(originalRendDX9Path):
+    let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
+    let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
+    if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
+      if hasWritePermission(openspyDllPath):
+        copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
+        copyFile(originalRendDX9Path, openspyDllPath)
+      else:
+        copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
+        copyFileElevated(originalRendDX9Path, openspyDllPath)
+      btnRestore.sensitive = true
+
+proc restoreCheck() =
+  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  if fileExists(clientExeBackupPath) or fileExists(openspyDllBackupPath):
+    btnRestore.sensitive = true
+  else:
+    btnRestore.sensitive = false
 
 proc preServerPatchCheck() =
   # when defined(windows):
@@ -285,12 +320,12 @@ proc preServerPatchCheck() =
     if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
       echo "Found original server binary. Creating a backup and prepatching!"
       if hasWritePermission(serverExePath):
-        copyFile(serverExePath, serverExePath & ".original")
+        copyFile(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
         preServerPatch(serverExePath, parseIpAddress("127.0.0.1"), Port(8080))
       else:
         var fileSplit = splitFile(serverExePath)
         let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
-        copyFileElevated(serverExePath, serverExePath & ".original")
+        copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
         copyFile(serverExePath, tmpExePath)
         preServerPatch(tmpExePath, parseIpAddress("127.0.0.1"), Port(8080))
         copyFileElevated(tmpExePath, serverExePath)
@@ -702,13 +737,16 @@ proc onBtnJoinClicked(self: Button) =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if hasWritePermission(bf2142Path / "BF2142.exe"):
-    patchClient(bf2142Path / "BF2142.exe", ipAddress.parseIpAddress(), Port(8080))
+  preClientPatchCheck()
+  if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
+    patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
   else:
-    copyFile(bf2142Path / "BF2142.exe", TEMP_FILES_DIR / "BF2142.exe")
-    patchClient(TEMP_FILES_DIR / "BF2142.exe", ipAddress.parseIpAddress(), Port(8080))
-    copyFileElevated(TEMP_FILES_DIR / "BF2142.exe", bf2142Path / "BF2142.exe")
-    removeFile(TEMP_FILES_DIR / "BF2142.exe")
+    copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
+    patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
+    copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
+    removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
+
+  openspyBackupCheck()
 
   saveProfileAccountName()
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
@@ -721,10 +759,10 @@ proc onBtnJoinClicked(self: Button) =
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
   if startupQuery != "":
     command.add(startupQuery & ' ')
-  command.add("BF2142.exe" & ' ')
+  command.add(BF2142_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
-  command.add("+fullscreen 1" & ' ') # TODO: Implement this as settings option
+  # command.add("+fullscreen 0" & ' ') # TODO: Implement this as settings option
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
   command.add("+eaAccountName " & playerName & ' ')
   command.add("+eaAccountPassword A" & ' ')
@@ -841,7 +879,8 @@ proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: Tree
 ## Settings
 proc onFchsrBtnBF2142PathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
   bf2142Path = self.getFilename()
-  preClientPatchCheck()
+  if btnRestore.sensitive == false:
+    restoreCheck()
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
@@ -956,6 +995,39 @@ proc onBtnPatchServerMapsClicked(self: Button) =
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
+
+proc onBtnRestoreClicked(self: Button) =
+  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+  let clientExeRestorePath: string = bf2142Path / BF2142_EXE_NAME
+  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  var restoredFiles: bool = false
+  if bf2142Path == "":
+    return
+  if fileExists(clientExeBackupPath):
+    let clientMd5Hash: string = getMD5(clientExeBackupPath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
+      echo "Found original client binary (" & BF2142_EXE_NAME & "). Restoring!"
+      if hasWritePermission(clientExeBackupPath):
+        copyFile(clientExeBackupPath, clientExeRestorePath)
+        removeFile(clientExeBackupPath)
+      else:
+        copyFileElevated(clientExeBackupPath, clientExeRestorePath)
+        removeFileElevated(clientExeBackupPath)
+      restoredFiles = true
+  if fileExists(openspyDllBackupPath):
+    let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+    if openspyMd5Hash == OPENSPY_MD5_HASH:
+      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+      if hasWritePermission(openspyDllBackupPath):
+        copyFile(openspyDllBackupPath, openspyDllRestorePath)
+        removeFile(openspyDllBackupPath)
+      else:
+        copyFileElevated(openspyDllBackupPath, openspyDllRestorePath)
+        removeFileElevated(openspyDllBackupPath)
+      restoredFiles = true
+  if restoredFiles:
+    btnRestore.sensitive = false
 #
 ##
 proc createNotebook(): NoteBook =
@@ -1156,7 +1228,10 @@ proc createNotebook(): NoteBook =
   btnPatchClientMaps.styleContext.addClass("button")
   btnPatchServerMaps = newButton("Copy 64 coop maps (server)")
   btnPatchServerMaps.styleContext.addClass("button")
-  tblSettings = newTable(7, 2, false)
+  btnRestore = newButton("Restore original files")
+  btnRestore.styleContext.addClass("button")
+  btnRestore.sensitive = false
+  tblSettings = newTable(8, 2, false)
   tblSettings.rowSpacings = 5
   tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {}, {}, 10, 0)
   tblSettings.attach(fchsrBtnBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
@@ -1169,6 +1244,7 @@ proc createNotebook(): NoteBook =
   tblSettings.attach(btnRemoveMovies, 1, 2, 4, 5, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(btnPatchClientMaps, 1, 2, 5, 6, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(btnPatchServerMaps, 1, 2, 6, 7, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
+  tblSettings.attach(btnRestore, 1, 2, 7, 8, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   vboxSettings = newBox(Orientation.vertical, 0)
   vboxSettings.styleContext.addClass("box")
   vboxSettings.add(tblSettings)
@@ -1212,6 +1288,7 @@ proc connectSignals() =
   btnRemoveMovies.connect("clicked", onBtnRemoveMoviesClicked)
   btnPatchClientMaps.connect("clicked", onBtnPatchClientMapsClicked)
   btnPatchServerMaps.connect("clicked", onBtnPatchServerMapsClicked)
+  btnRestore.connect("clicked", onBtnRestoreClicked)
   #
 
 var signalsConnected: bool = false # TODO: Workaround, because gintro does not implement the disconnect template/macro in gimpl.nim
@@ -1246,8 +1323,9 @@ proc onApplicationActivate(application: Application) =
   notebook.vexpand = true
   vboxMain.add(notebook)
   actionBar = newActionBar()
-  actionbar.packEnd(newLinkButtonWithLabel("http://code0.xyz/", "code0"))
-  actionBar.packEnd(newLabel("Powered by"))
+  actionbar.packEnd(newLinkButtonWithLabel("https://www.moddb.com/mods/project-remaster", "Project Remaster Mod"))
+  actionbar.packEnd(newLinkButtonWithLabel("https://www.moddb.com/mods/bf2142unlocker", "Moddb"))
+  actionbar.packEnd(newLinkButtonWithLabel("https://github.com/Dankr4d/BF2142Unlocker", "Github"))
   actionBar.packStart(newLabel("Version: " & VERSION))
   vboxMain.add(actionBar)
   window.add(vboxMain)
@@ -1272,7 +1350,7 @@ proc onApplicationActivate(application: Application) =
       createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
-  preClientPatchCheck()
+  restoreCheck()
   preServerPatchCheck()
 
 proc main =
