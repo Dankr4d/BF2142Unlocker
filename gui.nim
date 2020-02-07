@@ -1379,6 +1379,11 @@ proc onApplicationActivate(application: Application) =
 proc main =
   application = newApplication()
   application.connect("activate", onApplicationActivate)
+  when defined(windows):
+    # Hiding cmd, because I could not compile it as gui.
+    # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
+    # TODO: This is a workaround.
+    ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
 
 main()
