@@ -938,7 +938,7 @@ proc onBtnRemoveMoviesClicked(self: Button) =
       else:
         removeFileElevated(movie.path)
 
-proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = @[], createBackup: bool = true, copyLevelsLowerCase: bool = false) =
+proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = @[], createBackup: bool = false, copyLevelsLowerCase: bool = false) =
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
   echo "Creating a Levels folder backup!"
   if createBackup:
@@ -961,14 +961,6 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = 
           copyFile(srcPath, dstPath)
         else:
           copyFileElevated(srcPath, dstPath)
-  for levelPath in walkDir(dstLevelPath): # We need to rewalk levels to delete all archive.md5 files
-    dstArchiveMd5Path = levelPath.path / "archive.md5"
-    if fileExists(dstArchiveMd5Path):
-      echo "Removing checksum file: ", dstArchiveMd5Path
-      if hasWritePermission(dstArchiveMd5Path):
-        removeFile(dstArchiveMd5Path)
-      else:
-        removeFileElevated(dstArchiveMd5Path)
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
   let
@@ -1330,10 +1322,12 @@ proc onApplicationActivate(application: Application) =
   window.connect("destroy", onApplicationWindowDestroy)
   # discard window.setIconFromFile(os.getCurrentDir() / "bf2142unlocker.icon")
   var cssProvider: CssProvider = newCssProvider()
-  discard cssProvider.loadFromData(GUI_CSS)
-  # discard cssProvider.loadFromPath("gui.css")
-  getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
-  window.title = "BF2142Unlocker - Launcher"
+  when defined(release):
+    discard cssProvider.loadFromData(GUI_CSS)
+  else:
+    discard cssProvider.loadFromPath("gui.css")
+  # getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
+  window.title = "BF2142Unlocker"
   window.defaultSize = (957, 600)
   window.position = WindowPosition.center
   vboxMain = newBox(Orientation.vertical, 0)
@@ -1379,7 +1373,7 @@ proc onApplicationActivate(application: Application) =
 proc main =
   application = newApplication()
   application.connect("activate", onApplicationActivate)
-  when defined(windows):
+  when defined(windows) and defined(release):
     # Hiding cmd, because I could not compile it as gui.
     # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
     # TODO: This is a workaround.

@@ -19,22 +19,30 @@ proc createIconRes() =
     exec("""windres.exe .\icon.rc -O coff -o icon.res""")
 
 proc compileGui() =
-  when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+  when defined(windows):
+    if buildOS == "linux":
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+    else:
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe() & " gui")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe() & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "gui".toExe() & " gui")
 
 proc compileServer() =
-  when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+  when defined(windows):
+    if buildOS == "linux":
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+    else:
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "server".toExe & " server")
 
-proc compileElevatedio() =
-  when defined(windows) and buildOS == "linux":
-    exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
-  else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
+
+when defined(windows):
+  proc compileElevatedio() =
+    if buildOS == "linux":
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
+    else:
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
 
 proc compileOpenSsl() =
   if not dirExists("deps"):
@@ -92,18 +100,23 @@ when defined(windows):
     cpFile(OPENSSL_PATH / "ssleay32.dll", BUILD_BIN_DIR / "ssleay32.dll")
 
 proc copyAll() =
-  cpDir("ssl_certs", BUILD_BIN_DIR / "ssl_certs")
-  cpFile("nopreview.png", BUILD_BIN_DIR / "nopreview.png")
+  when defined(windows):
+    cpDir("ssl_certs", BUILD_BIN_DIR / "ssl_certs")
+    cpFile("nopreview.png", BUILD_BIN_DIR / "nopreview.png")
+  else:
+    cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
+    cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
   when defined(windows):
     copyGtk()
     copyOpenSSL()
 
-proc createStartupBatch() =
-  writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
+when defined(windows):
+  proc createStartupBatch() =
+    writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
 @echo off
 cd /d bin
 start gui.exe
-  """)
+    """)
 
 proc installDeps() =
   exec("nim c -f -r instdeps.nim")
