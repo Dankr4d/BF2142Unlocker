@@ -47,7 +47,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 ### 64 Coop Maps
 - Goto https://battlefield2142.co/ and click on "Download Map Pack".
 - Unzip downloaded mappack.
-- Open BF2142Unlocker gui and go to settings tab.
+- Start BF2142Unlocker and go to Settings tab.
 - Click on "Copy 64 coop maps (client)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 client path must be set*).
 - Click on "Copy 64 coop maps (server)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 server path must be set*).
 

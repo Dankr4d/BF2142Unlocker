@@ -264,7 +264,7 @@ proc loadConfig() =
   if windowModeStr != "":
     windowMode = windowModeStr.parseBool()
   else:
-    windowMode = true
+    windowMode = false
   chbtnWindowMode.active = windowMode
 
 
@@ -1326,7 +1326,7 @@ proc onApplicationActivate(application: Application) =
     discard cssProvider.loadFromData(GUI_CSS)
   else:
     discard cssProvider.loadFromPath("gui.css")
-  # getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
+  getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
   window.title = "BF2142Unlocker"
   window.defaultSize = (957, 600)
   window.position = WindowPosition.center
