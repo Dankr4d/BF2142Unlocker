@@ -81,7 +81,16 @@ proc compileAll() =
     compileElevatedio()
 
 when defined(windows):
-  const GTK_LIBS: seq[string] = @["gdbus.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll", "libcairo-gobject-2.dll", "libcroco-0.6-3.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libffi-6.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll", "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll", "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll", "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll", "libpangowin32-1.0-0.dll", "libpcre-1.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll", "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll"]
+  const GTK_LIBS: seq[string] = @[
+    "gdbus.exe", "gspawn-win64-helper-console.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
+    "libcairo-gobject-2.dll", "libcroco-0.6-3.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll",
+    "libffi-6.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll",
+    "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
+    "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
+    "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",
+    "libpangowin32-1.0-0.dll", "libpcre-1.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll",
+    "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll"
+  ]
   proc copyGtk() =
     mkDir(BUILD_LIB_DIR)
     cpDir("C:" / "msys64"/ "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
