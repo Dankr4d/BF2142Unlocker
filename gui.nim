@@ -37,7 +37,7 @@ var playerName: string
 var autoJoin: bool
 var windowMode: bool
 
-const VERSION: string = "0.9.0"
+const VERSION: string = "0.9.1"
 
 const BF2142_EXE_NAME: string = "BF2142.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
