@@ -765,7 +765,7 @@ proc onBtnJoinClicked(self: Button) =
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
   var command: string
   when defined(linux):
-    when defined(debug):
+    when not defined(release):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
     if winePrefix != "":
       command.add("WINEPREFIX=" & wineprefix & ' ')
