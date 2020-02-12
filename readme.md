@@ -11,8 +11,8 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Battlefield 2142 with the original executable.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9/BF2142Unlocker_v0.9_win.zip)
-- [Download BF2142 Unlocker v0.9 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9/BF2142Unlocker_v0.9_linux.zip)
+- [Download BF2142 Unlocker v0.9.1 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.1/BF2142Unlocker_v0.9.1_win.zip)
+- [Download BF2142 Unlocker v0.9.1 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.1/BF2142Unlocker_v0.9.1_linux.zip)
 
 ## How to use:
 - Start the BF2142Unlocker:
