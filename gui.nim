@@ -872,7 +872,7 @@ proc onCbxGameModeChanged(self: ComboBoxText) =
 
 proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menuMap.png"
+  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
   if fileExists(imgPath):
     imgLevelPreview.setFromFile(imgPath)
   elif fileExists(NO_PREVIEW_IMG_PATH):
@@ -938,22 +938,28 @@ proc onBtnRemoveMoviesClicked(self: Button) =
       else:
         removeFileElevated(movie.path)
 
-proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = @[], createBackup: bool = false, copyLevelsLowerCase: bool = false) =
+proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false) =
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
-  echo "Creating a Levels folder backup!"
   if createBackup:
+    echo "Creating a Levels folder backup!"
     copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()) # TODO: Check if dir could be copied as normal user
   for levelFolder in walkDir(srcLevelPath, true):
     levelName = levelFolder.path
-    if copyLevelsLowerCase:
-      levelName = levelFolder.path.toLower()
+    when defined(linux):
+      if isServer:
+        levelName = levelFolder.path.toLower()
     discard existsOrCreateDirElevated(dstLevelPath / levelName) # TODO: Check for write permission
     echo "Copying level: ", levelName
-    for levelFiles in walkDir(srcLevelPath / levelName, true):
-      dstPath = dstLevelPath / levelName / levelFiles.path
-      srcPath = srcLevelPath / levelName / levelFiles.path
-      if levelFiles.path in excludeFiles:
-        continue
+    for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
+      dstPath = dstLevelPath / levelName
+      when defined(linux):
+        if isServer and levelFiles.kind == pcDir and levelFiles.path == "Info":
+          dstPath = dstPath / levelFiles.path.toLower()
+        else:
+          dstPath = dstPath / levelFiles.path
+      else:
+        dstPath = dstPath / levelFiles.path
+      srcPath = srcLevelPath / levelFolder.path / levelFiles.path
       if levelFiles.kind == pcDir:
         copyDirElevated(srcPath, dstPath) # TODO: Check for write permission
       elif levelFiles.kind == pcFile:
@@ -961,6 +967,65 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = 
           copyFile(srcPath, dstPath)
         else:
           copyFileElevated(srcPath, dstPath)
+    ## Move desc file # TODO: Create a recursive function that walks every file in each folder
+    # if isServer: # Linux only # TODO: Refactor copyLevels
+    if isServer: # Moving all files in levels info folder with lowercase namens
+      let infoPath = dstLevelPath / levelName / "info"
+      for fileName in walkDir(infoPath, true):
+        if fileName.kind == pcFile:
+          when defined(linux):
+            let srcDescPath = infoPath / fileName.path
+            let dstDescPath = infoPath / fileName.path.toLower()
+            if srcDescPath != dstDescPath:
+              moveFile(srcDescPath, dstDescPath) # TODO: Move elevated on windows
+
+
+          block FIX_INVALID_XML_FILES: # Fixes invalid xml files, should be deleted later
+            const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
+            const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
+            const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
+            const OMAHA_BEACH_DESC_MD5_HASH: string = "0e28bad9b61224f7889cfffcded81182"
+            const PANORAMA_DESC_MD5_HASH: string = "5288a6a0dded7df3c60341f5a20a5f0a"
+            const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
+            const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
+            proc removeLine(path, fileName: string, val: int) =
+              var raw: string = readFile(path / fileName.toLower())
+              var rawLines: seq[string] = raw.splitLines()
+              rawLines.delete(val - 1)
+              when defined(windows):
+                if hasWritePermission(path / fileName):
+                  writeFile(path / fileName, rawLines.join("\n"))
+                else:
+                  writeFileElevated(path / fileName, rawLines.join("\n"))
+              else:
+                  writeFile(path / fileName.toLower(), rawLines.join("\n"))
+            proc removeChars(path: string, fileName: string, valFrom, valTo: int) =
+              var raw: string = readFile(path / fileName.toLower())
+              raw.delete(valFrom - 1, valTo - 1)
+              when defined(windows):
+                if hasWritePermission(path / fileName):
+                  writeFile(path / fileName, raw)
+                else:
+                  writeFileElevated(path / fileName, raw)
+              else:
+                  writeFile(path / fileName.toLower(), raw)
+            if fileName.path.endsWith(".desc"):
+              echo "Filename/Hash: ", fileName.path.toLower() & "\t\t\t" & getMd5(readFile(infoPath / fileName.path.toLower()))
+              if fileName.path.toLower() == "aegis_station.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == AEGIS_STATION_DESC_MD5_HASH:
+                removeChars(infoPath, fileName.path, 1464, 1464) # Fix: Remove char on position 1464
+              if fileName.path.toLower() == "bloodgulch.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == BLOODGULCH_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 20) # Fix: Delete line 20
+              if fileName.path.toLower() == "kilimandscharo.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == KILIMANDSCHARO_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 7) # Fix: Delete line 7
+              if fileName.path.toLower() == "omaha_beach.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == OMAHA_BEACH_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 11) # Fix: Delete line 11
+              if fileName.path.toLower() == "panorama.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == PANORAMA_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 14) # Fix: Delete line 14
+              if fileName.path.toLower() == "severnaya.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == SEVERNAYA_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 16) # Fix: Delete line 16
+              if fileName.path.toLower() == "street.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == STREET_DESC_MD5_HASH:
+                removeLine(infoPath, fileName.path, 9) # Fix: Delete line 9
+
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
   let
@@ -985,10 +1050,9 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   let
     response = ResponseType(responseId)
     srcLevelPath: string = dialog.getFilename()
-    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "Levels" # TODO: Check if "Levels" is in linux lowercase (i think so)
-    copyLevelsLowerCase: bool = defined(linux)
+    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels"
   if response == ResponseType.ok:
-    copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, excludeFiles = @["client.zip"], copyLevelsLowerCase = copyLevelsLowerCase)
+    copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
     fillListSelectableMaps()
     dialog.destroy()
     newInfoDialog("Done", "Copied 64 coop maps (server)!")
