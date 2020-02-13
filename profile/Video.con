@@ -6,8 +6,8 @@ VideoSettings.setDynamicShadowsQuality 2
 VideoSettings.setEffectsQuality 2
 VideoSettings.setTextureQuality 3
 VideoSettings.setTextureFilteringQuality 2
-VideoSettings.setResolution 800x600@120Hz
+VideoSettings.setResolution 800x600@60Hz
 VideoSettings.setAntialiasing Off
-VideoSettings.setViewDistanceScale 0.9
+VideoSettings.setViewDistanceScale 1.0
 VideoSettings.setUseBloom 1
 VideoSettings.setVideoOptionScheme 1
