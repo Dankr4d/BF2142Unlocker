@@ -35,7 +35,6 @@ var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
 var winePrefix: string
 var startupQuery: string
-var ipAddress: string
 var playerName: string
 var autoJoin: bool
 var windowMode: bool
@@ -117,7 +116,6 @@ const
   CONFIG_KEY_WINEPREFIX: string = "wineprefix"
   CONFIG_KEY_STARTUP_QUERY: string = "startup_query"
   CONFIG_KEY_PLAYER_NAME: string = "playername"
-  # CONFIG_KEY_IP_ADDRESS: string = "ip_address"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
@@ -130,11 +128,16 @@ var application: Application
 var window: ApplicationWindow
 var vboxMain: Box
 var notebook: Notebook
+var actionBar: ActionBar
 ##
 ### Join controls
 var vboxJoin: Box
-var actionBar: ActionBar
-var tblJoin: Table
+var hboxJoinSettings: Box
+var vboxJustPlay: Box
+var frameJoinConnect: Frame
+var frameJoinSettings: Frame
+var tblJoinConnect: Table
+var tblJoinSettings: Table
 var lblJoinMods: Label
 var cbxJoinMods: ComboBoxText
 var lblPlayerName: Label
@@ -147,6 +150,8 @@ var lblWindowMode: Label
 var chbtnWindowMode: CheckButton
 var btnJoin: Button # TODO: Rename to btnConnect
 var btnJustPlay: Button
+var btnJustPlayCancel: Button
+# var panedJustPlay: Paned
 var termJustPlayServer: Terminal
 ##
 ### Host controls
@@ -296,9 +301,6 @@ proc loadConfig() =
       txtStartupQuery.text = "start"
   else:
     txtStartupQuery.text = startupQuery
-  # ipAddress = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS)
-  # txtIpAddress.text = ipAddress
-  # TODO: This should not be in loadConfig
   playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
   txtPlayerName.text = playerName
   let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
@@ -776,8 +778,8 @@ proc loadHostMods() =
 ### Events
 ## Join
 proc patchAndStartLogic() =
+  let ipAddress: string = txtIpAddress.text.strip()
   playerName = txtPlayerName.text.strip()
-  ipAddress = txtIpAddress.text.strip()
   autoJoin = chbtnAutoJoin.active
   windowMode = chbtnWindowMode.active
   var invalidStr: string
@@ -849,12 +851,22 @@ proc onBtnJoinClicked(self: Button) =
 
 proc onBtnJustPlayClicked(self: Button) =
   # TODO: Start login/unlock server
-  termJustPlayServer.visible = true
   chbtnAutoJoin.active = false
+  termJustPlayServer.visible = true
+  btnJustPlay.visible = false
+  btnJustPlayCancel.visible = true
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
   termJustPlayServer.startLoginServer(ipAddress)
   patchAndStartLogic()
+
+proc onBtnJustPlayCancelClicked(self: Button) =
+  killProcess(termLoginServerPid)
+  termJustPlayServer.visible = false
+  btnJustPlay.visible = true
+  btnJustPlayCancel.visible = false
+  termLoginServer.clear()
+  termLoginServerPid = 0
 
 proc onBtnAddMapClicked(self: Button) =
   var mapName, mapMode, mapSize: string
@@ -1171,10 +1183,12 @@ proc createNotebook(): NoteBook =
   cbxJoinMods = newComboBoxText()
   lblPlayerName = newLabel("Player name: ")
   lblPlayerName.styleContext.addClass("label")
+  lblPlayerName.setAlignment(0.0, 0.5)
   txtPlayerName = newEntry()
   txtPlayerName.styleContext.addClass("entry")
   lblIpAddress = newLabel("IP-Address:")
   lblIpAddress.styleContext.addClass("label")
+  lblIpAddress.setAlignment(0.0, 0.5)
   txtIpAddress = newEntry()
   txtIpAddress.styleContext.addClass("entry")
   lblAutoJoin = newLabel("Auto join server:")
@@ -1182,31 +1196,69 @@ proc createNotebook(): NoteBook =
   chbtnAutoJoin = newCheckButton()
   lblWindowMode = newLabel("Window mode:")
   lblWindowMode.styleContext.addClass("label")
+  lblWindowMode.setAlignment(0.0, 0.5)
   chbtnWindowMode = newCheckButton()
   btnJoin = newButton("Connect")
   btnJoin.styleContext.addClass("button")
   btnJustPlay = newButton("Just play")
   btnJustPlay.styleContext.addClass("button")
-  tblJoin = newTable(7, 2, false)
-  tblJoin.halign = Align.center
-  tblJoin.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.fill}, {}, 0, 3)
-  tblJoin.attach(lblPlayerName, 0, 1, 1, 2, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(txtPlayerName, 1, 2, 1, 2, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(lblIpAddress, 0, 1, 2, 3, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(txtIpAddress, 1, 2, 2, 3, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(lblAutoJoin, 0, 1, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(chbtnAutoJoin, 1, 2, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(lblWindowMode, 0, 1, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(chbtnWindowMode, 1, 2, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(btnJoin, 0, 2, 5, 6, {AttachFlag.fill}, {}, 0, 3)
-  tblJoin.attach(btnJustPlay, 0, 2, 6, 7, {AttachFlag.fill}, {}, 0, 3)
-  vboxJoin = newBox(Orientation.vertical, 0)
+  btnJustPlay.styleContext.addClass("justPlay")
+  btnJustPlay.setSizeRequest(0, 50)
+  btnJustPlayCancel = newButton("Cancel")
+  btnJustPlayCancel.styleContext.addClass("button")
+  btnJustPlayCancel.styleContext.addClass("justPlay")
+  btnJustPlayCancel.setSizeRequest(0, 50)
+
+  tblJoinConnect = newTable(3, 2, false)
+  tblJoinConnect.halign = Align.start
+  tblJoinConnect.hexpand = true
+  tblJoinConnect.rowSpacings = 2
+  tblJoinConnect.attach(lblIpAddress, 0, 1, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinConnect.attach(txtIpAddress, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinConnect.attach(lblAutoJoin, 0, 1, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinConnect.attach(chbtnAutoJoin, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinConnect.attach(btnJoin, 0, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  frameJoinConnect = newFrame("Connect")
+  frameJoinConnect.add(tblJoinConnect)
+
+  tblJoinSettings = newTable(3, 2, false)
+  tblJoinSettings.halign = Align.start
+  tblJoinSettings.hexpand = true
+  tblJoinSettings.rowSpacings = 2
+  tblJoinSettings.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinSettings.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinSettings.attach(lblPlayerName, 0, 1, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinSettings.attach(txtPlayerName, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinSettings.attach(lblWindowMode, 0, 1, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  tblJoinSettings.attach(chbtnWindowMode, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
+  frameJoinSettings = newFrame("Game settings")
+  frameJoinSettings.add(tblJoinSettings)
+
+  hboxJoinSettings = newBox(Orientation.horizontal, 5)
+  hboxJoinSettings.vexpand = true
+  hboxJoinSettings.styleContext.addClass("box")
+  hboxJoinSettings.add(frameJoinConnect)
+  hboxJoinSettings.add(frameJoinSettings)
+  vboxJoin = newBox(Orientation.vertical, 5)
+  vboxJoin.vexpand = true
   vboxJoin.styleContext.addClass("box")
-  vboxJoin.add(tblJoin)
+  vboxJoin.add(hboxJoinSettings)
+  # vboxJoin.add(btnJustPlay)
   termJustPlayServer = newTerminal()
-  termJustPlayServer.hexpand = true
-  vboxJoin.add(termJustPlayServer)
+  termJustPlayServer.vexpand = true
+
+  vboxJustPlay = newBox(Orientation.vertical, 0)
+  vboxJustPlay.hexpand = true
+  vboxJustPlay.add(btnJustPlay)
+  vboxJustPlay.add(termJustPlayServer)
+  vboxJustPlay.add(btnJustPlayCancel)
+
+  # panedJustPlay = newPaned(Orientation.vertical)
+  # panedJustPlay.pack1(hboxJoinSettings, true, false)
+  # panedJustPlay.pack2(vboxJustPlay, true, true)
+
+  # vboxJoin.add(panedJustPlay)
+  vboxJoin.add(vboxJustPlay)
   ##
   ### Host
   vboxHost = newBox(Orientation.vertical, 10)
@@ -1428,6 +1480,7 @@ proc connectSignals() =
   txtIpAddress.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
   btnJoin.connect("clicked", onBtnJoinClicked)
   btnJustPlay.connect("clicked", onBtnJustPlayClicked)
+  btnJustPlayCancel.connect("clicked", onBtnJustPlayCancelClicked)
   #
   ## Host
   btnAddMap.connect("clicked", onBtnAddMapClicked)
@@ -1481,7 +1534,7 @@ proc onApplicationActivate(application: Application) =
     discard cssProvider.loadFromPath("gui.css")
   getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
   window.title = "BF2142Unlocker"
-  window.defaultSize = (957, 600)
+  window.defaultSize = (800, 600)
   window.position = WindowPosition.center
   vboxMain = newBox(Orientation.vertical, 0)
   vboxMain.styleContext.addClass("box")
@@ -1514,6 +1567,7 @@ proc onApplicationActivate(application: Application) =
   termBF2142Server.visible = false
   termLoginServer.visible = false
   btnHostCancel.visible = false
+  btnJustPlayCancel.visible = false
   when defined(windows):
     lblWinePrefix.visible = false
     fchsrBtnWinePrefix.visible = false

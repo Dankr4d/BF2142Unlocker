@@ -25,6 +25,11 @@
   background-color: #323232;
 }
 
+.justPlay {
+  font-weight: bold;
+  font-size: 2em;
+}
+
 notebook {
   border: none;
 }
