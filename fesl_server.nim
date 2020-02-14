@@ -1,6 +1,7 @@
 import net
 import os
 import tables, strutils
+import strformat # Required for fmt macro
 
 const MESSAGE_PREFIX_LEN: int = 12
 
@@ -249,19 +250,20 @@ proc handleFeslClient(client: Socket) {.thread.} =
     threadPingInterval.joinThread() # Waiting for ping thread is closed
   echo "FESL - Client disconnected!"
 
-proc run*() =
+proc run*(ipAddress: IpAddress) {.thread.} =
   var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "ssl_certs" / "cert.pem", keyFile = "ssl_certs" / "key.pem")
   var server: Socket = newSocket()
+  let port: Port = Port(18300)
   sslContext.wrapSocket(server)
   server.setSockOpt(OptReuseAddr, true)
   server.setSockOpt(OptReusePort, true)
-  server.bindAddr(Port(18300))
+  server.bindAddr(port, $ipAddress)
   server.listen()
 
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo "Fesl server running and waiting for clients!"
+  echo fmt"Fesl server running on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
@@ -275,4 +277,4 @@ proc run*() =
     # thread.joinThread()
 
 when isMainModule:
-  run()
+  run("0.0.0.0".parseIpAddress()) # TODO

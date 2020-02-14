@@ -11,6 +11,10 @@ gpcm_server
 gpcm_server.exe
 unlock_server
 unlock_server.exe
+localaddrs
+localaddrs.exe
+checkserver
+checkserver.exe
 config.ini
 icon.res
 libeay32.dll

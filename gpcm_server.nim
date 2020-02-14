@@ -1,4 +1,5 @@
 import net
+import strformat # Required for fmt macro
 
 var playerId: int = 2001 # ID must start with 2001 or Battlefield 2142 will NOT unlock the weapons
 
@@ -26,17 +27,18 @@ proc handleClient(client: Socket) =
   echo "GPCM - Client disconented!"
   # client.close()
 
-proc run*() =
+proc run*(ipAddress: IpAddress) =
   var gpcmServer: Socket = newSocket()
+  let port: Port = Port(29900)
   gpcmServer.setSockOpt(OptReuseAddr, true)
   gpcmServer.setSockOpt(OptReusePort, true)
-  gpcmServer.bindAddr(Port(29900))
+  gpcmServer.bindAddr(port, $ipAddress)
   gpcmServer.listen()
 
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo "Gpcm server running and waiting for clients!"
+  echo fmt"Gpcm server running on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
@@ -46,4 +48,4 @@ proc run*() =
     # thread.joinThread()
 
 when isMainModule:
-  run()
+  run("0.0.0.0".parseIpAddress())

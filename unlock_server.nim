@@ -1,6 +1,8 @@
 import asynchttpserver, asyncdispatch
 import tables # Query params
 import strutils
+import strformat # Required for fmt macro
+import net # Required for IpAddress type
 
 # import ea
 
@@ -57,10 +59,11 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
     else:
       await req.respond(Http200, "Hello World!")
 
-proc run*() =
+proc run*(ipAddress: IpAddress) =
   var server = newAsyncHttpServer()
-  echo "Http server running and waiting for clients!"
-  waitFor server.serve(Port(8080), handleClient)
+  let port = Port(8080)
+  echo fmt"Unlock server running on {$ipAddress}:{$port} and waiting for clients!"
+  waitFor server.serve(port, handleClient, $ipAddress)
 
 when isMainModule:
-  run()
+  run("0.0.0.0".parseIpAddress())

@@ -156,15 +156,6 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
     , (process, terminal, searchForkedProcess, result))
 ##########################
 
-proc killProcess*(terminal: Terminal, processId: int) = # TODO: Add some error handling; TODO: processId should be stored in startProcess and not passed
-  when defined(linux):
-    if kill(Pid(processId), SIGKILL) < 0:
-      echo "ERROR: Cannot kill bf2142 server! TODO: Handle this case"
-  elif defined(windows):
-    channelTerminate.send(true)
-    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, processId.DWORD)
-    discard hndlProcess.TerminateProcess(0)
-
 when isMainModule:
   proc appActivate (app: Application) =
     let window = newApplicationWindow(app)

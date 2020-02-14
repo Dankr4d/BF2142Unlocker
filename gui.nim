@@ -5,6 +5,7 @@ import os
 import net # Requierd for ip parsing and type
 import osproc # Requierd for process starting
 import strutils
+import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
   import posix # Requierd for getlogin
@@ -18,6 +19,8 @@ import times # Requierd for rudimentary level backup with epochtime suffix
 import checkpermission # Requierd to check if file has write permissions
 import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
+import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
+import options
 
 # Set icon (windres.exe .\icon.rc -O coff -o icon.res)
 when defined(gcc) and defined(windows):
@@ -78,6 +81,7 @@ const
   SETTING_TEAM_RATIO: string = "sv.teamRatioPercent"
   SETTING_MAX_PLAYERS: string = "sv.maxPlayers"
   SETTING_PLAYERS_NEEDED_TO_START: string = "sv.numPlayersNeededToStart"
+  SETTING_SERVER_IP: string = "sv.serverIP"
 
 const
   AISETTING_BOTS: string = "aiSettings.setMaxNBots"
@@ -113,7 +117,7 @@ const
   CONFIG_KEY_WINEPREFIX: string = "wineprefix"
   CONFIG_KEY_STARTUP_QUERY: string = "startup_query"
   CONFIG_KEY_PLAYER_NAME: string = "playername"
-  CONFIG_KEY_IP_ADDRESS: string = "ip_address"
+  # CONFIG_KEY_IP_ADDRESS: string = "ip_address"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
@@ -125,7 +129,7 @@ var config: Config
 var application: Application
 var window: ApplicationWindow
 var vboxMain: Box
-var notebook: gtk.Notebook
+var notebook: Notebook
 ##
 ### Join controls
 var vboxJoin: Box
@@ -141,7 +145,9 @@ var lblAutoJoin: Label
 var chbtnAutoJoin: CheckButton
 var lblWindowMode: Label
 var chbtnWindowMode: CheckButton
-var btnJoin: Button
+var btnJoin: Button # TODO: Rename to btnConnect
+var btnJustPlay: Button
+var termJustPlayServer: Terminal
 ##
 ### Host controls
 var tblHostSettings: Table
@@ -177,6 +183,8 @@ var lblFriendlyFire: Label
 var chbtnFriendlyFire: CheckButton
   # teamratio (also for coop?)
   # autobalance (also for coop?)
+var lblHostIpAddress: Label
+var txtHostIpAddress: Entry
 var hboxMaps: Box
 var listSelectableMaps: TreeView
 var sWindowSelectableMaps: ScrolledWindow
@@ -214,6 +222,44 @@ var btnRestore: Button
 ##
 
 ### Helper procs
+proc areServerReachable(address: string): bool =
+  if not isAddrReachable(address, Port(8080)):
+    return false
+  if not isAddrReachable(address, Port(18300)):
+    return false
+  if not isAddrReachable(address, Port(29900)):
+    return false
+  return true
+
+proc getIpAddrForServer(): Option[string] =
+  for localAddr in getLocalAddrs():
+    if areServerReachable(localAddr):
+      return some localAddr
+  return
+
+proc fillJoinIpAddress() =
+  let optLocalAddr: Option[string] = getIpAddrForServer()
+  if optLocalAddr.isSome:
+    txtIpAddress.text = optLocalAddr.get()
+  else:
+    txtIpAddress.text = ""
+
+proc fillHostIpAddress() =
+  var addrs: seq[string] = getLocalAddrs()
+  if addrs.len > 0:
+    txtHostIpAddress.text = addrs[0] # TODO: Validate interface and choose lan interfaces first
+  else:
+    txtHostIpAddress.text = ""
+
+proc killProcess*(processId: int) = # TODO: Add some error handling; TODO: processId should be stored in startProcess and not passed
+  when defined(linux):
+    if kill(Pid(processId), SIGKILL) < 0:
+      echo "ERROR: Cannot kill process!" # TODO: Create a popup
+  elif defined(windows):
+    channelTerminate.send(true)
+    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, processId.DWORD)
+    discard hndlProcess.TerminateProcess(0)
+
 proc onWidgetFakeHoverEnterNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
   self.styleContext.addClass("fake-hover")
 proc onWidgetFakeHoverLeaveNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
@@ -250,8 +296,9 @@ proc loadConfig() =
       txtStartupQuery.text = "start"
   else:
     txtStartupQuery.text = startupQuery
-  ipAddress = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS)
-  txtIpAddress.text = ipAddress
+  # ipAddress = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS)
+  # txtIpAddress.text = ipAddress
+  # TODO: This should not be in loadConfig
   playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
   txtPlayerName.text = playerName
   let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
@@ -266,7 +313,6 @@ proc loadConfig() =
   else:
     windowMode = false
   chbtnWindowMode.active = windowMode
-
 
 proc preClientPatchCheck() =
   let clientExePath: string = bf2142Path / BF2142_EXE_NAME
@@ -569,6 +615,9 @@ proc loadSaveServerSettings(save: bool) =
           value = $sbtnPlayersNeededToStart.value.toInt()
         else:
           sbtnPlayersNeededToStart.value = value.parseFloat()
+      of SETTING_SERVER_IP:
+        if save:
+          value = "\"" & txtHostIpAddress.text & "\""
       of SETTING_TEAM_RATIO:
         discard # TODO: Implement SETTING_TEAM_RATIO
     if save:
@@ -685,12 +734,16 @@ proc saveProfileAccountName() =
   file.close()
   writeFile(profileConPath, profileContent)
 
-proc startLoginServer() =
-  termLoginServer.setSizeRequest(0, 300)
+proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+    term.clear()
+    termLoginServerPid = 0
+  term.setSizeRequest(0, 300)
   when defined(linux):
-    termLoginServerPid = termLoginServer.startProcess(command = "./server")
+    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress}")
   elif defined(windows):
-    termLoginServerPid = termLoginServer.startProcess(command = "server.exe")
+    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress}")
 
 proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
@@ -722,7 +775,7 @@ proc loadHostMods() =
 
 ### Events
 ## Join
-proc onBtnJoinClicked(self: Button) =
+proc patchAndStartLogic() =
   playerName = txtPlayerName.text.strip()
   ipAddress = txtIpAddress.text.strip()
   autoJoin = chbtnAutoJoin.active
@@ -744,7 +797,7 @@ proc onBtnJoinClicked(self: Button) =
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
     return
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
+  # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, playerName)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $windowMode)
@@ -791,6 +844,17 @@ proc onBtnJoinClicked(self: Button) =
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )
 
+proc onBtnJoinClicked(self: Button) =
+  patchAndStartLogic()
+
+proc onBtnJustPlayClicked(self: Button) =
+  # TODO: Start login/unlock server
+  termJustPlayServer.visible = true
+  chbtnAutoJoin.active = false
+  var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
+  txtIpAddress.text = $ipAddress
+  termJustPlayServer.startLoginServer(ipAddress)
+  patchAndStartLogic()
 
 proc onBtnAddMapClicked(self: Button) =
   var mapName, mapMode, mapSize: string
@@ -828,7 +892,7 @@ proc onBtnHostClicked(self: Button) =
   hboxTerms.visible = true
   termLoginServer.visible = true
   termBF2142Server.visible = true
-  startLoginServer()
+  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
 proc onBtnHostLoginServerClicked(self: Button) =
@@ -839,7 +903,7 @@ proc onBtnHostLoginServerClicked(self: Button) =
   btnHostCancel.visible = true
   hboxTerms.visible = true
   termLoginServer.visible = true
-  startLoginServer()
+  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
 proc onBtnHostCancelClicked(self: Button) =
   tblHostSettings.sensitive = true
@@ -851,11 +915,11 @@ proc onBtnHostCancelClicked(self: Button) =
   termBF2142Server.visible = false
   termLoginServer.visible = false
   if termLoginServerPid > 0:
-    termLoginServer.killProcess(termLoginServerPid)
+    killProcess(termLoginServerPid)
     termLoginServer.clear()
     termLoginServerPid = 0
   if termBf2142ServerPid > 0:
-    termBF2142Server.killProcess(termBf2142ServerPid)
+    killProcess(termBf2142ServerPid)
     termLoginServer.clear()
     termBf2142ServerPid = 0
 
@@ -979,7 +1043,6 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
             if srcDescPath != dstDescPath:
               moveFile(srcDescPath, dstDescPath) # TODO: Move elevated on windows
 
-
           block FIX_INVALID_XML_FILES: # Fixes invalid xml files, should be deleted later
             const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
             const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
@@ -1010,7 +1073,6 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               else:
                   writeFile(path / fileName.toLower(), raw)
             if fileName.path.endsWith(".desc"):
-              echo "Filename/Hash: ", fileName.path.toLower() & "\t\t\t" & getMd5(readFile(infoPath / fileName.path.toLower()))
               if fileName.path.toLower() == "aegis_station.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == AEGIS_STATION_DESC_MD5_HASH:
                 removeChars(infoPath, fileName.path, 1464, 1464) # Fix: Remove char on position 1464
               if fileName.path.toLower() == "bloodgulch.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == BLOODGULCH_DESC_MD5_HASH:
@@ -1121,9 +1183,11 @@ proc createNotebook(): NoteBook =
   lblWindowMode = newLabel("Window mode:")
   lblWindowMode.styleContext.addClass("label")
   chbtnWindowMode = newCheckButton()
-  btnJoin = newButton("Join")
+  btnJoin = newButton("Connect")
   btnJoin.styleContext.addClass("button")
-  tblJoin = newTable(6, 2, false)
+  btnJustPlay = newButton("Just play")
+  btnJustPlay.styleContext.addClass("button")
+  tblJoin = newTable(7, 2, false)
   tblJoin.halign = Align.center
   tblJoin.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.fill}, {}, 0, 3)
@@ -1136,9 +1200,13 @@ proc createNotebook(): NoteBook =
   tblJoin.attach(lblWindowMode, 0, 1, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(chbtnWindowMode, 1, 2, 4, 5, {AttachFlag.shrink}, {}, 0, 3)
   tblJoin.attach(btnJoin, 0, 2, 5, 6, {AttachFlag.fill}, {}, 0, 3)
+  tblJoin.attach(btnJustPlay, 0, 2, 6, 7, {AttachFlag.fill}, {}, 0, 3)
   vboxJoin = newBox(Orientation.vertical, 0)
   vboxJoin.styleContext.addClass("box")
   vboxJoin.add(tblJoin)
+  termJustPlayServer = newTerminal()
+  termJustPlayServer.hexpand = true
+  vboxJoin.add(termJustPlayServer)
   ##
   ### Host
   vboxHost = newBox(Orientation.vertical, 10)
@@ -1187,7 +1255,12 @@ proc createNotebook(): NoteBook =
   lblFriendlyFire.setAlignment(0.0, 0.5)
   chbtnFriendlyFire = newCheckButton()
   chbtnFriendlyFire.active = true
-  tblHostSettings = newTable(10, 3, true)
+  lblHostIpAddress = newLabel("Server IP-Address: ")
+  lblHostIpAddress.styleContext.addClass("label")
+  lblHostIpAddress.setAlignment(0.0, 0.5)
+  txtHostIpAddress = newEntry()
+  txtHostIpAddress.styleContext.addClass("entry")
+  tblHostSettings = newTable(11, 3, true)
   tblHostSettings.rowSpacings = 3
   tblHostSettings.attachDefaults(lblHostMods, 0, 1, 0, 1)
   tblHostSettings.attachDefaults(cbxHostMods, 1, 2, 0, 1)
@@ -1216,6 +1289,8 @@ proc createNotebook(): NoteBook =
   tblHostSettings.attachDefaults(scalePlayersNeededToStart, 2, 3, 8, 9)
   tblHostSettings.attachDefaults(lblFriendlyFire, 0, 1, 9, 10)
   tblHostSettings.attachDefaults(chbtnFriendlyFire, 1, 2, 9, 10)
+  tblHostSettings.attachDefaults(lblHostIpAddress, 0, 1, 10, 11)
+  tblHostSettings.attachDefaults(txtHostIpAddress, 1, 2, 10, 11)
   tblHostSettings.halign = Align.start
   hboxHostLevelPreview = newBox(Orientation.horizontal, 0)
   hboxHostLevelPreview.add(tblHostSettings)
@@ -1331,14 +1406,28 @@ proc createNotebook(): NoteBook =
   discard result.appendPage(vboxHost, newLabel("Host")) # returns page index?
   discard result.appendPage(vboxSettings, newLabel("Settings")) # returns page index?
 
+proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) =
+  case pageNum # Login # TODO: Create enum or check page widget
+  of 0:
+    fillJoinIpAddress()
+  of 1:
+    if txtHostIpAddress.text == "":
+      fillHostIpAddress()
+  else:
+    discard
+
 proc connectSignals() =
   ### Bind signals
+  ## General
+  notebook.connect("switch-page", onNotebookSwitchPage)
+  #
   ## Join
   txtPlayerName.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
   txtPlayerName.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
   txtIpAddress.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
   txtIpAddress.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
   btnJoin.connect("clicked", onBtnJoinClicked)
+  btnJustPlay.connect("clicked", onBtnJustPlayClicked)
   #
   ## Host
   btnAddMap.connect("clicked", onBtnAddMapClicked)
@@ -1375,10 +1464,10 @@ proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context):
 proc onApplicationWindowDestroy(window: ApplicationWindow) =
   if termBf2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
-    termBF2142Server.killProcess(termBf2142ServerPid)
+    killProcess(termBf2142ServerPid)
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
-    termLoginServer.killProcess(termLoginServerPid)
+    killProcess(termLoginServerPid)
 
 proc onApplicationActivate(application: Application) =
   window = newApplicationWindow(application)
@@ -1421,6 +1510,7 @@ proc onApplicationActivate(application: Application) =
     loadServerSettings()
     loadAiSettings()
   hboxTerms.visible = false
+  termJustPlayServer.visible = false
   termBF2142Server.visible = false
   termLoginServer.visible = false
   btnHostCancel.visible = false
