@@ -302,6 +302,8 @@ proc loadConfig() =
   else:
     txtStartupQuery.text = startupQuery
   playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
+  if playerName == "":
+    playerName = "Player"
   txtPlayerName.text = playerName
   let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
   if autoJoinStr != "":
@@ -360,7 +362,7 @@ proc restoreCheck() =
   else:
     btnRestore.sensitive = false
 
-proc preServerPatchCheck() =
+proc preServerPatchCheck(ipAddress: IpAddress) =
   # when defined(windows):
   #   raise newException(ValueError, "Windows server precheck not implemented")
   #   return
@@ -376,19 +378,24 @@ proc preServerPatchCheck() =
     serverExePath = serverExePath / "BF2142_w32ded.exe"
   if serverExePath != "" and fileExists(serverExePath):
     var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+    var createBackup: bool = false
     if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
       echo "Found original server binary. Creating a backup and prepatching!"
-      if hasWritePermission(serverExePath):
+      createBackup = true
+    echo "Patching Battlefield 2142 server!"
+    if hasWritePermission(serverExePath):
+      if createBackup:
         copyFile(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
-        preServerPatch(serverExePath, parseIpAddress("127.0.0.1"), Port(8080))
-      else:
-        var fileSplit = splitFile(serverExePath)
-        let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
+      preServerPatch(serverExePath, ipAddress, Port(8080))
+    else:
+      var fileSplit = splitFile(serverExePath)
+      let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
+      if createBackup:
         copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
-        copyFile(serverExePath, tmpExePath)
-        preServerPatch(tmpExePath, parseIpAddress("127.0.0.1"), Port(8080))
-        copyFileElevated(tmpExePath, serverExePath)
-        removeFile(tmpExePath)
+      copyFile(serverExePath, tmpExePath)
+      preServerPatch(tmpExePath, ipAddress, Port(8080))
+      copyFileElevated(tmpExePath, serverExePath)
+      removeFile(tmpExePath)
 
 proc newRangeEntry(min, max, step, value: float): tuple[spinButton: SpinButton, hScale: HScale] = # TODO: Handle values with bindProperty
   proc onValueChanged(self: SpinButton | HScale, other: SpinButton | HScale) =
@@ -736,11 +743,18 @@ proc saveProfileAccountName() =
   file.close()
   writeFile(profileConPath, profileContent)
 
-proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
+proc killLoginServer() =
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
-    term.clear()
+    if termLoginServer.visible:
+      termLoginServer.clear()
+    if termJustPlayServer.visible:
+      termJustPlayServer.clear()
     termLoginServerPid = 0
+
+proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
+  # if termLoginServerPid > 0:
+  killLoginServer()
   term.setSizeRequest(0, 300)
   when defined(linux):
     termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress}")
@@ -777,7 +791,7 @@ proc loadHostMods() =
 
 ### Events
 ## Join
-proc patchAndStartLogic() =
+proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
   playerName = txtPlayerName.text.strip()
   autoJoin = chbtnAutoJoin.active
@@ -795,10 +809,10 @@ proc patchAndStartLogic() =
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
     if winePrefix == "":
-      invalidStr.add("\t* You need to specify your wine path (in \"Settings\"-Tab).\n")
+      invalidStr.add("\t* You need to specify your wine prefix (in \"Settings\"-Tab).\n")
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
-    return
+    return false
   # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, playerName)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
@@ -845,28 +859,29 @@ proc patchAndStartLogic() =
   var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )
+  return true
 
 proc onBtnJoinClicked(self: Button) =
-  patchAndStartLogic()
+  discard patchAndStartLogic()
+
+proc applyJustPlayRunningSensitivity(running: bool) =
+  chbtnAutoJoin.active = not running
+  termJustPlayServer.visible = running
+  btnJustPlay.visible = not running
+  btnJustPlayCancel.visible = running
 
 proc onBtnJustPlayClicked(self: Button) =
-  # TODO: Start login/unlock server
-  chbtnAutoJoin.active = false
-  termJustPlayServer.visible = true
-  btnJustPlay.visible = false
-  btnJustPlayCancel.visible = true
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
   termJustPlayServer.startLoginServer(ipAddress)
-  patchAndStartLogic()
+  termLoginServer.visible = false
+  if patchAndStartLogic():
+    applyJustPlayRunningSensitivity(true)
+
 
 proc onBtnJustPlayCancelClicked(self: Button) =
-  killProcess(termLoginServerPid)
-  termJustPlayServer.visible = false
-  btnJustPlay.visible = true
-  btnJustPlayCancel.visible = false
-  termLoginServer.clear()
-  termLoginServerPid = 0
+  killLoginServer()
+  applyJustPlayRunningSensitivity(false)
 
 proc onBtnAddMapClicked(self: Button) =
   var mapName, mapMode, mapSize: string
@@ -890,46 +905,37 @@ proc onBtnMapMoveDownClicked(self: Button) =
   listSelectedMaps.moveSelectedDown()
 #
 ## Host
+proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
+  tblHostSettings.sensitive = not running
+  hboxMaps.sensitive = not running
+  btnHostLoginServer.visible = not running
+  btnHost.visible = not running
+  btnHostCancel.visible = running
+  hboxTerms.visible = running
+  termLoginServer.visible = running
+  if bf2142ServerInvisible:
+    termBF2142Server.visible = false
+  else:
+    termBF2142Server.visible = running
+
 proc onBtnHostClicked(self: Button) =
-  # var thread: system.Thread[void]
-  # thread.createThread(server.run)
-  tblHostSettings.sensitive = false
-  hboxMaps.sensitive = false
-  btnHostLoginServer.visible = false
-  btnHost.visible = false
-  btnHostCancel.visible = true
   saveMapList()
   saveServerSettings()
   saveAiSettings()
-  hboxTerms.visible = true
-  termLoginServer.visible = true
-  termBF2142Server.visible = true
+  applyJustPlayRunningSensitivity(false)
+  applyHostRunningSensitivity(true)
+  preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
 proc onBtnHostLoginServerClicked(self: Button) =
-  tblHostSettings.sensitive = false
-  hboxMaps.sensitive = false
-  btnHostLoginServer.visible = false
-  btnHost.visible = false
-  btnHostCancel.visible = true
-  hboxTerms.visible = true
-  termLoginServer.visible = true
+  applyJustPlayRunningSensitivity(false)
+  applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
 proc onBtnHostCancelClicked(self: Button) =
-  tblHostSettings.sensitive = true
-  hboxMaps.sensitive = true
-  btnHostLoginServer.visible = true
-  btnHost.visible = true
-  btnHostCancel.visible = false
-  hboxTerms.visible = false
-  termBF2142Server.visible = false
-  termLoginServer.visible = false
-  if termLoginServerPid > 0:
-    killProcess(termLoginServerPid)
-    termLoginServer.clear()
-    termLoginServerPid = 0
+  applyHostRunningSensitivity(false)
+  killLoginServer()
   if termBf2142ServerPid > 0:
     killProcess(termBf2142ServerPid)
     termLoginServer.clear()
@@ -986,7 +992,6 @@ proc onFchsrBtnBF2142PathSelectionChanged(self: FileChooserButton) = # TODO: Add
 
 proc onFchsrBtnBF2142ServerPathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
   bf2142ServerPath = self.getFilename()
-  preServerPatchCheck()
   updatePathes()
   loadHostMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
@@ -1576,7 +1581,6 @@ proc onApplicationActivate(application: Application) =
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
   restoreCheck()
-  preServerPatchCheck()
 
 proc main =
   application = newApplication()
