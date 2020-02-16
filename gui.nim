@@ -216,9 +216,11 @@ var lblBF2142Path: Label
 var btnBF2142Path: Button
 var txtBF2142Path: Entry
 var lblBF2142ServerPath: Label
-var fchsrBtnBF2142ServerPath: FileChooserButton
+var btnBF2142ServerPath: Button
+var txtBF2142ServerPath: Entry
 var lblWinePrefix: Label
-var fchsrBtnWinePrefix: FileChooserButton
+var btnWinePrefix: Button
+var txtWinePrefix: Entry
 var lblStartupQuery: Label
 var txtStartupQuery: Entry
 var btnRemoveMovies: Button
@@ -285,23 +287,22 @@ proc loadConfig() =
     txtBF2142Path.text = bf2142Path
   bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH)
   if bf2142ServerPath != "":
-    discard fchsrBtnBF2142ServerPath.setFilename(bf2142ServerPath)
+    txtBF2142ServerPath.text = bf2142ServerPath
   winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
   when defined(linux):
     if winePrefix != "":
-      discard fchsrBtnWinePrefix.setFilename(winePrefix)
+      txtWinePrefix.text = winePrefix
       documentsPath = winePrefix / "drive_c" / "users" / $getlogin() / "My Documents"
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
   startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
   if startupQuery == "":
-    when defined(linux):
-      txtStartupQuery.text = "/usr/bin/wine"
-    elif defined(windows):
-      txtStartupQuery.text = "start"
-  else:
-    txtStartupQuery.text = startupQuery
+    when defined(windows):
+      sartupQuery = "start"
+    else:
+      startupQuery = "/usr/bin/wine"
+  txtStartupQuery.text = startupQuery
   playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
   if playerName == "":
     playerName = "Player"
@@ -974,24 +975,26 @@ proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: Tree
   updateLevelPreview(mapName, mapMode, mapSize)
 #
 ## Settings
-proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
-  var dialog: FileChooserDialog = newFileChooserDialog(lblBF2142Path.text, window, FileChooserAction.selectFolder)
+proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
+  var dialog: FileChooserDialog = newFileChooserDialog(title, window, FileChooserAction.selectFolder)
   discard dialog.addButton("OK", ResponseType.ok.ord)
   discard dialog.addButton("Cancel", ResponseType.cancel.ord)
   let responseId: int = dialog.run()
-  let tmpPath: string = dialog.getFilename()
-  if bf2142Path == tmpPath:
-    return
-  if responseId != ResponseType.ok.ord:
-    return
+  let path: string = dialog.getFilename()
   dialog.destroy()
-  if not fileExists(tmpPath / BF2142_EXE_NAME):
+  return (cast[ResponseType](responseId), path)
+
+proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if not fileExists(path / BF2142_EXE_NAME):
     newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
     return
   vboxJoin.visible = true
   vboxHost.visible = true
-  bf2142Path = tmpPath # TODO
-  txtBF2142Path.text = tmpPath # TODO
+  bf2142Path = path
+  txtBF2142Path.text = path
   if btnRestore.sensitive == false:
     restoreCheck()
   loadJoinMods()
@@ -1001,21 +1004,33 @@ proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
     var wineEndPos: int
     if wineStartPos > -1:
       wineEndPos = bf2142Path.find(DirSep, wineStartPos) - 1
-      if fchsrBtnWinePrefix.getFilename() == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
+      if txtWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
         winePrefix = bf2142Path.substr(0, wineEndPos)
-        discard fchsrBtnWinePrefix.setFilename(winePrefix)
+        txtWinePrefix.text = winePrefix
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onFchsrBtnBF2142ServerPathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  bf2142ServerPath = self.getFilename()
+proc onBtnBF2142ServerPathClicked(self: Button) = # TODO: Add Checks
+  var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if bf2142ServerPath == path:
+    return
+  bf2142ServerPath = path
+  txtBF2142ServerPath.text = path
   updatePathes()
   loadHostMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onFchsrBtnWinePrefixSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  winePrefix = self.getFilename()
+proc onBtnWinePrefixClicked(self: Button) = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if bf2142ServerPath == path:
+    return
+  winePrefix = path
+  txtWinePrefix.text = path
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
@@ -1435,6 +1450,7 @@ proc createNotebook(window: gtk.Window): Notebook =
   ### Settings
   lblBF2142Path = newLabel("Battlefield 2142 path:")
   lblBF2142Path.styleContext.addClass("label")
+  lblBF2142Path.setAlignment(0.0, 0.5)
   btnBF2142Path = newButton("Select")
   btnBF2142Path.styleContext.addClass("button")
   txtBF2142Path = newEntry()
@@ -1442,12 +1458,23 @@ proc createNotebook(window: gtk.Window): Notebook =
   txtBF2142Path.editable = false
   lblBF2142ServerPath = newLabel("Battlefield 2142 Server path:")
   lblBF2142ServerPath.styleContext.addClass("label")
-  fchsrBtnBF2142ServerPath = newFileChooserButton(lblBF2142ServerPath.text, FileChooserAction.selectFolder)
+  lblBF2142ServerPath.setAlignment(0.0, 0.5)
+  btnBf2142ServerPath = newButton("Select")
+  btnBf2142ServerPath.styleContext.addClass("button")
+  txtBF2142ServerPath = newEntry()
+  txtBF2142ServerPath.styleContext.addClass("entry")
+  txtBF2142ServerPath.editable = false
   lblWinePrefix = newLabel("Wine prefix:") # Linux only
   lblWinePrefix.styleContext.addClass("label")
-  fchsrBtnWinePrefix = newFileChooserButton(lblWinePrefix.text, FileChooserAction.selectFolder)
+  lblWinePrefix.setAlignment(0.0, 0.5)
+  btnWinePrefix = newButton("Select")
+  btnWinePrefix.styleContext.addClass("button")
+  txtWinePrefix = newEntry()
+  txtWinePrefix.styleContext.addClass("entry")
+  txtWinePrefix.editable = false
   lblStartupQuery = newLabel("Startup query:")
   lblStartupQuery.styleContext.addClass("label")
+  lblStartupQuery.setAlignment(0.0, 0.5)
   txtStartupQuery = newEntry()
   txtStartupQuery.styleContext.addClass("entry")
   btnRemoveMovies = newButton("Remove movies")
@@ -1461,14 +1488,16 @@ proc createNotebook(window: gtk.Window): Notebook =
   btnRestore.sensitive = false
   tblSettings = newTable(8, 3, false)
   tblSettings.rowSpacings = 5
-  tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {}, {}, 10, 0)
+  tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {AttachFlag.fill}, {}, 10, 0)
   tblSettings.attach(txtBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(btnBF2142Path, 2, 3, 0, 1, {AttachFlag.shrink}, {}, 0, 0)
-  tblSettings.attach(lblBF2142ServerPath, 0, 1, 1, 2, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnBF2142ServerPath, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(lblWinePrefix, 0, 1, 2, 3, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnWinePrefix, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(lblStartupQuery, 0, 1, 3, 4, {}, {}, 10, 0)
+  tblSettings.attach(lblBF2142ServerPath, 0, 1, 1, 2, {AttachFlag.fill}, {}, 10, 0)
+  tblSettings.attach(txtBF2142ServerPath, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
+  tblSettings.attach(btnBF2142ServerPath, 2, 3, 1, 2, {AttachFlag.shrink}, {}, 0, 0)
+  tblSettings.attach(lblWinePrefix, 0, 1, 2, 3, {AttachFlag.fill}, {}, 10, 0)
+  tblSettings.attach(txtWinePrefix, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
+  tblSettings.attach(btnWinePrefix, 2, 3, 2, 3, {AttachFlag.shrink}, {}, 0, 0)
+  tblSettings.attach(lblStartupQuery, 0, 1, 3, 4, {AttachFlag.fill}, {}, 10, 0)
   tblSettings.attach(txtStartupQuery, 1, 2, 3, 4, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(btnRemoveMovies, 1, 2, 4, 5, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(btnPatchClientMaps, 1, 2, 5, 6, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
@@ -1524,8 +1553,8 @@ proc connectSignals() =
   #
   ## Settings
   btnBF2142Path.connect("clicked", onBtnBF2142PathClicked)
-  fchsrBtnBF2142ServerPath.connect("selection-changed", onFchsrBtnBF2142ServerPathSelectionChanged)
-  fchsrBtnWinePrefix.connect("selection-changed", onFchsrBtnWinePrefixSelectionChanged)
+  btnBF2142ServerPath.connect("clicked", onBtnBF2142ServerPathClicked)
+  btnWinePrefix.connect("clicked", onBtnWinePrefixClicked)
   txtStartupQuery.connect("focus-out-event", onTxtStartupQueryFocusOut)
   txtStartupQuery.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
   txtStartupQuery.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
@@ -1597,7 +1626,8 @@ proc onApplicationActivate(application: Application) =
   btnJustPlayCancel.visible = false
   when defined(windows):
     lblWinePrefix.visible = false
-    fchsrBtnWinePrefix.visible = false
+    txtWinePrefix.visible = false
+    btnWinePrefix.visible = false
     if not dirExists(TEMP_FILES_DIR):
       createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
