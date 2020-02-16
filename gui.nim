@@ -1,4 +1,4 @@
-import gintro/[gtk, glib, gobject, gdk, cairo]
+import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf]
 import gintro/gio except ListStore
 
 import os
@@ -114,7 +114,7 @@ const
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
-const NO_PREVIEW_IMG_PATH = "nopreview.png"
+const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
 var config: Config
 
@@ -946,9 +946,11 @@ proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   var imgPath: string
   imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
   if fileExists(imgPath):
-    imgLevelPreview.setFromFile(imgPath)
+    var pixbuf = newPixbufFromFile(imgPath)
+    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
+    imgLevelPreview.setFromPixbuf(pixbuf)
   elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH)
+    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
   else:
     imgLevelPreview.clear()
 
