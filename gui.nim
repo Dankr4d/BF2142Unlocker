@@ -213,7 +213,8 @@ var termBF2142Server: Terminal
 var vboxSettings: Box
 var tblSettings: Table
 var lblBF2142Path: Label
-var fchsrBtnBF2142Path: FileChooserButton
+var btnBF2142Path: Button
+var txtBF2142Path: Entry
 var lblBF2142ServerPath: Label
 var fchsrBtnBF2142ServerPath: FileChooserButton
 var lblWinePrefix: Label
@@ -281,7 +282,7 @@ proc loadConfig() =
     config = loadConfig(CONFIG_FILE_NAME)
   bf2142Path = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH)
   if bf2142Path != "":
-    discard fchsrBtnBF2142Path.setFilename(bf2142Path)
+    txtBF2142Path.text = bf2142Path
   bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH)
   if bf2142ServerPath != "":
     discard fchsrBtnBF2142ServerPath.setFilename(bf2142ServerPath)
@@ -973,8 +974,24 @@ proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: Tree
   updateLevelPreview(mapName, mapMode, mapSize)
 #
 ## Settings
-proc onFchsrBtnBF2142PathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  bf2142Path = self.getFilename()
+proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
+  var dialog: FileChooserDialog = newFileChooserDialog(lblBF2142Path.text, window, FileChooserAction.selectFolder)
+  discard dialog.addButton("OK", ResponseType.ok.ord)
+  discard dialog.addButton("Cancel", ResponseType.cancel.ord)
+  let responseId: int = dialog.run()
+  let tmpPath: string = dialog.getFilename()
+  if bf2142Path == tmpPath:
+    return
+  if responseId != ResponseType.ok.ord:
+    return
+  dialog.destroy()
+  if not fileExists(tmpPath / BF2142_EXE_NAME):
+    newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
+    return
+  vboxJoin.visible = true
+  vboxHost.visible = true
+  bf2142Path = tmpPath # TODO
+  txtBF2142Path.text = tmpPath # TODO
   if btnRestore.sensitive == false:
     restoreCheck()
   loadJoinMods()
@@ -1179,7 +1196,7 @@ proc onBtnRestoreClicked(self: Button) =
     btnRestore.sensitive = false
 #
 ##
-proc createNotebook(): NoteBook =
+proc createNotebook(window: gtk.Window): Notebook =
   result = newNotebook()
   ### Join
   lblJoinMods = newLabel("Mods:")
@@ -1418,7 +1435,11 @@ proc createNotebook(): NoteBook =
   ### Settings
   lblBF2142Path = newLabel("Battlefield 2142 path:")
   lblBF2142Path.styleContext.addClass("label")
-  fchsrBtnBF2142Path = newFileChooserButton(lblBF2142Path.text, FileChooserAction.selectFolder)
+  btnBF2142Path = newButton("Select")
+  btnBF2142Path.styleContext.addClass("button")
+  txtBF2142Path = newEntry()
+  txtBF2142Path.styleContext.addClass("entry")
+  txtBF2142Path.editable = false
   lblBF2142ServerPath = newLabel("Battlefield 2142 Server path:")
   lblBF2142ServerPath.styleContext.addClass("label")
   fchsrBtnBF2142ServerPath = newFileChooserButton(lblBF2142ServerPath.text, FileChooserAction.selectFolder)
@@ -1438,10 +1459,11 @@ proc createNotebook(): NoteBook =
   btnRestore = newButton("Restore original files")
   btnRestore.styleContext.addClass("button")
   btnRestore.sensitive = false
-  tblSettings = newTable(8, 2, false)
+  tblSettings = newTable(8, 3, false)
   tblSettings.rowSpacings = 5
   tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
+  tblSettings.attach(txtBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
+  tblSettings.attach(btnBF2142Path, 2, 3, 0, 1, {AttachFlag.shrink}, {}, 0, 0)
   tblSettings.attach(lblBF2142ServerPath, 0, 1, 1, 2, {}, {}, 10, 0)
   tblSettings.attach(fchsrBtnBF2142ServerPath, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
   tblSettings.attach(lblWinePrefix, 0, 1, 2, 3, {}, {}, 10, 0)
@@ -1501,7 +1523,7 @@ proc connectSignals() =
   listSelectedMaps.connect("row-activated", onListSelectedMapsRowActivated)
   #
   ## Settings
-  fchsrBtnBF2142Path.connect("selection-changed", onFchsrBtnBF2142PathSelectionChanged)
+  btnBF2142Path.connect("clicked", onBtnBF2142PathClicked)
   fchsrBtnBF2142ServerPath.connect("selection-changed", onFchsrBtnBF2142ServerPathSelectionChanged)
   fchsrBtnWinePrefix.connect("selection-changed", onFchsrBtnWinePrefixSelectionChanged)
   txtStartupQuery.connect("focus-out-event", onTxtStartupQueryFocusOut)
@@ -1543,7 +1565,7 @@ proc onApplicationActivate(application: Application) =
   window.position = WindowPosition.center
   vboxMain = newBox(Orientation.vertical, 0)
   vboxMain.styleContext.addClass("box")
-  notebook = createNotebook()
+  notebook = window.createNotebook()
   notebook.vexpand = true
   vboxMain.add(notebook)
   actionBar = newActionBar()
@@ -1580,6 +1602,8 @@ proc onApplicationActivate(application: Application) =
       createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
+    vboxJoin.visible = false
+    vboxHost.visible = false
   restoreCheck()
 
 proc main =
