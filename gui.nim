@@ -33,11 +33,6 @@ var bf2142ServerPath: string
 var documentsPath: string
 var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
-var winePrefix: string
-var startupQuery: string
-var playerName: string
-var autoJoin: bool
-var windowMode: bool
 
 const VERSION: string = "0.9.1"
 
@@ -288,37 +283,32 @@ proc loadConfig() =
   bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH)
   if bf2142ServerPath != "":
     txtBF2142ServerPath.text = bf2142ServerPath
-  winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
+  txtWinePrefix.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
   when defined(linux):
-    if winePrefix != "":
-      txtWinePrefix.text = winePrefix
-      documentsPath = winePrefix / "drive_c" / "users" / $getlogin() / "My Documents"
+    if txtWinePrefix.text != "":
+      documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
-  startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
-  if startupQuery == "":
+  txtStartupQuery.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
+  if txtStartupQuery.text == "":
     when defined(windows):
-      sartupQuery = "start"
+      txtStartupQuery.text = "start"
     else:
-      startupQuery = "/usr/bin/wine"
-  txtStartupQuery.text = startupQuery
-  playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
-  if playerName == "":
-    playerName = "Player"
-  txtPlayerName.text = playerName
+      txtStartupQuery.text = "/usr/bin/wine"
+  txtPlayerName.text = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
+  if txtPlayerName.text == "":
+    txtPlayerName.text = "Player"
   let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
   if autoJoinStr != "":
-    autoJoin = autoJoinStr.parseBool()
+    chbtnAutoJoin.active = autoJoinStr.parseBool()
   else:
-    autojoin = false
-  chbtnAutoJoin.active = autoJoin
+    chbtnAutoJoin.active = false
   let windowModeStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE)
   if windowModeStr != "":
-    windowMode = windowModeStr.parseBool()
+    chbtnWindowMode.active = windowModeStr.parseBool()
   else:
-    windowMode = false
-  chbtnWindowMode.active = windowMode
+    chbtnWindowMode.active = false
 
 proc preClientPatchCheck() =
   let clientExePath: string = bf2142Path / BF2142_EXE_NAME
@@ -737,9 +727,9 @@ proc saveProfileAccountName() =
   var line, profileContent: string
   while file.readLine(line):
     if line.startsWith("LocalProfile.setEAOnlineMasterAccount"):
-      profileContent.add("LocalProfile.setEAOnlineMasterAccount \"" & playerName & "\"\n" )
+      profileContent.add("LocalProfile.setEAOnlineMasterAccount \"" & txtPlayerName.text & "\"\n" )
     elif line.startsWith("LocalProfile.setEAOnlineSubAccount"):
-      profileContent.add("LocalProfile.setEAOnlineSubAccount \"" & playerName & "\"\n" )
+      profileContent.add("LocalProfile.setEAOnlineSubAccount \"" & txtPlayerName.text & "\"\n" )
     else:
       profileContent.add(line & '\n')
   file.close()
@@ -795,9 +785,7 @@ proc loadHostMods() =
 ## Join
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
-  playerName = txtPlayerName.text.strip()
-  autoJoin = chbtnAutoJoin.active
-  windowMode = chbtnWindowMode.active
+  txtPlayerName.text = txtPlayerName.text.strip()
   var invalidStr: string
   if ipAddress.startsWith("127") or ipAddress == "localhost": # TODO: Check if ip is also an valid ipv4 address
     invalidStr.add("\t* Localhost addresses are currently not supported. Battlefield 2142 starts with a black screen if you're trying to connect to a localhost address.\n")
@@ -805,20 +793,20 @@ proc patchAndStartLogic(): bool =
     invalidStr.add("\t* Your IP-address is not valid.\n")
   elif ipAddress.parseIpAddress().family == IPv6:
     invalidStr.add("\t* IPv6 not testes!\n") # TODO: Add ignore?
-  if playerName.len == 0:
+  if txtPlayerName.text == "":
     invalidStr.add("\t* You need to specify a playername with at least one character.\n")
   if bf2142Path == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
-    if winePrefix == "":
+    if txtWinePrefix.text == "":
       invalidStr.add("\t* You need to specify your wine prefix (in \"Settings\"-Tab).\n")
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
     return false
   # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, playerName)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $windowMode)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
   preClientPatchCheck()
@@ -838,21 +826,21 @@ proc patchAndStartLogic(): bool =
   when defined(linux):
     when not defined(release):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
-    if winePrefix != "":
-      command.add("WINEPREFIX=" & wineprefix & ' ')
+    if txtWinePrefix.text != "":
+      command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
-  if startupQuery != "":
-    command.add(startupQuery & ' ')
+  if txtStartupQuery.text != "":
+    command.add(txtStartupQuery.text & ' ')
   command.add(BF2142_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
-  if windowMode:
+  if chbtnWindowMode.active:
     command.add("+fullscreen 0" & ' ')
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
-  command.add("+eaAccountName " & playerName & ' ')
+  command.add("+eaAccountName " & txtPlayerName.text & ' ')
   command.add("+eaAccountPassword A" & ' ')
-  command.add("+soldierName " & playerName & ' ')
-  if autoJoin:
+  command.add("+soldierName " & txtPlayerName.text & ' ')
+  if chbtnAutoJoin.active:
     command.add("+joinServer " & ipAddress)
   when defined(linux): # TODO: Check if bf2142Path is neccessary
     let processCommand: string = command
@@ -867,7 +855,6 @@ proc onBtnJoinClicked(self: Button) =
   discard patchAndStartLogic()
 
 proc applyJustPlayRunningSensitivity(running: bool) =
-  chbtnAutoJoin.active = not running
   termJustPlayServer.visible = running
   btnJustPlay.visible = not running
   btnJustPlayCancel.visible = running
@@ -877,6 +864,7 @@ proc onBtnJustPlayClicked(self: Button) =
   txtIpAddress.text = $ipAddress
   termJustPlayServer.startLoginServer(ipAddress)
   termLoginServer.visible = false
+  chbtnAutoJoin.active = false
   if patchAndStartLogic():
     applyJustPlayRunningSensitivity(true)
 
@@ -1000,14 +988,13 @@ proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
-    var wineStartPos: int = bf2142Path.find(".wine")
+    let wineStartPos: int = bf2142Path.find(".wine")
     var wineEndPos: int
     if wineStartPos > -1:
       wineEndPos = bf2142Path.find(DirSep, wineStartPos) - 1
       if txtWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
-        winePrefix = bf2142Path.substr(0, wineEndPos)
-        txtWinePrefix.text = winePrefix
-        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix) # TODO: Create a saveWinePrefix proc
+        txtWinePrefix.text = bf2142Path.substr(0, wineEndPos)
+        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc onBtnBF2142ServerPathClicked(self: Button) = # TODO: Add Checks
@@ -1029,17 +1016,15 @@ proc onBtnWinePrefixClicked(self: Button) = # TODO: Add checks
     return
   if bf2142ServerPath == path:
     return
-  winePrefix = path
   txtWinePrefix.text = path
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
-    documentsPath = winePrefix / "drive_c" / "users" / $getlogin() / "My Documents"
+    documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
 proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool =
-  startupQuery = self.text
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, startupQuery)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc onBtnRemoveMoviesClicked(self: Button) =
