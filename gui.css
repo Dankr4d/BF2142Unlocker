@@ -71,6 +71,10 @@ combobox menuitem:hover {
   background-color: rgba(0, 128, 128, .25);
 }
 
+frame {
+  color: white;
+}
+
 scale value {
   color: teal;
 }

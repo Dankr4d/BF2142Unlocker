@@ -234,19 +234,6 @@ proc areServerReachable(address: string): bool =
     return false
   return true
 
-proc getIpAddrForServer(): Option[string] =
-  for localAddr in getLocalAddrs():
-    if areServerReachable(localAddr):
-      return some localAddr
-  return
-
-proc fillJoinIpAddress() =
-  let optLocalAddr: Option[string] = getIpAddrForServer()
-  if optLocalAddr.isSome:
-    txtIpAddress.text = optLocalAddr.get()
-  else:
-    txtIpAddress.text = ""
-
 proc fillHostIpAddress() =
   var addrs: seq[string] = getLocalAddrs()
   if addrs.len > 0:
@@ -259,7 +246,6 @@ proc killProcess*(processId: int) = # TODO: Add some error handling; TODO: proce
     if kill(Pid(processId), SIGKILL) < 0:
       echo "ERROR: Cannot kill process!" # TODO: Create a popup
   elif defined(windows):
-    channelTerminate.send(true)
     var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, processId.DWORD)
     discard hndlProcess.TerminateProcess(0)
 
@@ -290,11 +276,9 @@ proc loadConfig() =
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
-  txtStartupQuery.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
-  if txtStartupQuery.text == "":
-    when defined(windows):
-      txtStartupQuery.text = "start"
-    else:
+  when defined(linux):
+    txtStartupQuery.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
+    if txtStartupQuery.text == "":
       txtStartupQuery.text = "/usr/bin/wine"
   txtPlayerName.text = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
   if txtPlayerName.text == "":
@@ -829,8 +813,9 @@ proc patchAndStartLogic(): bool =
     if txtWinePrefix.text != "":
       command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
-  if txtStartupQuery.text != "":
-    command.add(txtStartupQuery.text & ' ')
+  when defined(linux):
+    if txtStartupQuery.text != "":
+      command.add(txtStartupQuery.text & ' ')
   command.add(BF2142_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
@@ -915,17 +900,20 @@ proc onBtnHostClicked(self: Button) =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
   preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
+  txtIpAddress.text = txtHostIpAddress.text
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
 proc onBtnHostLoginServerClicked(self: Button) =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
+  txtIpAddress.text = txtHostIpAddress.text
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
 proc onBtnHostCancelClicked(self: Button) =
   applyHostRunningSensitivity(false)
   killLoginServer()
+  txtIpAddress.text = ""
   if termBf2142ServerPid > 0:
     killProcess(termBf2142ServerPid)
     termLoginServer.clear()
@@ -1502,14 +1490,9 @@ proc createNotebook(window: gtk.Window): Notebook =
   discard result.appendPage(vboxSettings, newLabel("Settings")) # returns page index?
 
 proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) =
-  case pageNum # Login # TODO: Create enum or check page widget
-  of 0:
-    fillJoinIpAddress()
-  of 1:
+  if pageNum == 1:
     if txtHostIpAddress.text == "":
       fillHostIpAddress()
-  else:
-    discard
 
 proc connectSignals() =
   ### Bind signals
@@ -1615,6 +1598,8 @@ proc onApplicationActivate(application: Application) =
     lblWinePrefix.visible = false
     txtWinePrefix.visible = false
     btnWinePrefix.visible = false
+    lblStartupQuery.visible = false
+    txtStartupQuery.visible = false
     if not dirExists(TEMP_FILES_DIR):
       createDir(TEMP_FILES_DIR)
   if bf2142Path == "":

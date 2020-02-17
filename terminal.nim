@@ -79,7 +79,6 @@ when defined(windows):
   var thread {.global.}: system.Thread[tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
-  var channelTerminate: Channel[bool]
 
   proc timerReplaceTerminalText(timerData: TimerData): bool =
     var (hasData, data) = channelReplaceText.tryRecv()
@@ -137,7 +136,6 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
       channelAddText.open()
       discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
 
-    channelTerminate.open()
 
     thread.createThread(proc (data: tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]) {.thread.} =
       if data.searchForkedProcess:
@@ -146,11 +144,10 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
           sleep(250)
           hwnd = getHWndByPid(data.processId)
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
-        while not channelTerminate.tryRecv().dataAvailable:
-          channelReplaceText.send(readStdOut(data.processId))
-          sleep(250)
+        channelReplaceText.send(readStdOut(data.processId))
+        sleep(250)
       else:
-        while not isNil(data.process.outputStream) and not channelTerminate.tryRecv().dataAvailable:
+        while not isNil(data.process.outputStream):
           channelAddText.send(data.process.outputStream.readAll())
           sleep(250)
     , (process, terminal, searchForkedProcess, result))
