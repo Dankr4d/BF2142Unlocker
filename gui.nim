@@ -301,17 +301,21 @@ proc preClientPatchCheck() =
   if fileExists(clientExePath):
     let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
     if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo "Found original client binary (" & BF2142_EXE_NAME & "). Creating a backup and prepatching!"
+      echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
       if hasWritePermission(clientExePath):
         copyFile(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
         preClientPatch(clientExePath)
       else:
+        var writeSucceed: bool = false
         let tmpExePath: string = TEMP_FILES_DIR / BF2142_EXE_NAME
-        copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
+        if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
+          return
         copyFile(clientExePath, tmpExePath)
         preClientPatch(tmpExePath)
-        copyFileElevated(tmpExePath, clientExePath)
+        writeSucceed = copyFileElevated(tmpExePath, clientExePath)
         removeFile(tmpExePath)
+        if not writeSucceed:
+          return
       btnRestore.sensitive = true
 
 proc openspyBackupCheck() =
@@ -326,8 +330,10 @@ proc openspyBackupCheck() =
         copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
         copyFile(originalRendDX9Path, openspyDllPath)
       else:
-        copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
-        copyFileElevated(originalRendDX9Path, openspyDllPath)
+        if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+          return
+        if not copyFileElevated(originalRendDX9Path, openspyDllPath):
+          return
       btnRestore.sensitive = true
 
 proc restoreCheck() =
@@ -367,10 +373,11 @@ proc preServerPatchCheck(ipAddress: IpAddress) =
       var fileSplit = splitFile(serverExePath)
       let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
       if createBackup:
-        copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
+        if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
+          return
       copyFile(serverExePath, tmpExePath)
       preServerPatch(tmpExePath, ipAddress, Port(8080))
-      copyFileElevated(tmpExePath, serverExePath)
+      discard copyFileElevated(tmpExePath, serverExePath)
       removeFile(tmpExePath)
 
 proc newRangeEntry(min, max, step, value: float): tuple[spinButton: SpinButton, hScale: HScale] = # TODO: Handle values with bindProperty
@@ -550,7 +557,7 @@ proc updatePathes() =
   currentLevelFolderPath = currentModPath / "levels"
   currentAiSettingsPath = currentModPath / "ai" / "aidefault.ai"
 
-proc loadSaveServerSettings(save: bool) =
+proc loadSaveServerSettings(save: bool): bool =
   var
     line: string
     serverConfig: string
@@ -612,15 +619,17 @@ proc loadSaveServerSettings(save: bool) =
     if hasWritePermission(currentServerSettingsPath):
       writeFile(currentServerSettingsPath, serverConfig)
     else:
-      writeFileElevated(currentServerSettingsPath, serverConfig)
+      return writeFileElevated(currentServerSettingsPath, serverConfig)
+  return true
 
-proc saveServerSettings() =
-  loadSaveServerSettings(save = true)
 
-proc loadServerSettings() =
-  loadSaveServerSettings(save = false)
+proc saveServerSettings(): bool =
+  return loadSaveServerSettings(save = true)
 
-proc loadSaveAiSettings(save: bool) =
+proc loadServerSettings(): bool =
+  return loadSaveServerSettings(save = false)
+
+proc loadSaveAiSettings(save: bool): bool =
   var
     line: string
     aiConfig: string
@@ -666,30 +675,33 @@ proc loadSaveAiSettings(save: bool) =
     if hasWritePermission(currentAiSettingsPath):
       writeFile(currentAiSettingsPath, aiConfig)
     else:
-      writeFileElevated(currentAiSettingsPath, aiConfig)
+      return writeFileElevated(currentAiSettingsPath, aiConfig)
+  return true
 
-proc saveAiSettings() =
-  loadSaveAiSettings(save = true)
+proc saveAiSettings(): bool =
+  return loadSaveAiSettings(save = true)
 
-proc loadAiSettings() =
-  loadSaveAiSettings(save = false)
+proc loadAiSettings(): bool =
+  return loadSaveAiSettings(save = false)
 
-proc saveMapList() =
+proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
   if hasWritePermission(currentMapListPath):
     writeFile(currentMapListPath, mapListContent)
   else:
-    writeFileElevated(currentMapListPath, mapListContent)
+    return writeFileElevated(currentMapListPath, mapListContent)
+  return true
 
-proc loadMapList() =
+proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
   var line, mapName, mapMode, mapSize: string
   while file.readLine(line):
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   file.close()
+  return true
 
 proc checkProfileFiles() =
   if bf2142ProfilesPath == "":
@@ -794,13 +806,16 @@ proc patchAndStartLogic(): bool =
   config.writeConfig(CONFIG_FILE_NAME)
 
   preClientPatchCheck()
+  var writeSucceed: bool = true
   if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
     patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
   else:
     copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
     patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
-    copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
+    writeSucceed = copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
     removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
+  if not writeSucceed:
+    return
 
   openspyBackupCheck()
 
@@ -894,9 +909,12 @@ proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = fa
     termBF2142Server.visible = running
 
 proc onBtnHostClicked(self: Button) =
-  saveMapList()
-  saveServerSettings()
-  saveAiSettings()
+  if not saveMapList():
+    return
+  if not saveServerSettings():
+    return
+  if not saveAiSettings():
+    return
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
   preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
@@ -922,9 +940,9 @@ proc onBtnHostCancelClicked(self: Button) =
 proc onCbxHostModsChanged(self: ComboBoxText) =
   updatePathes()
   fillListSelectableMaps()
-  loadMapList()
-  loadServerSettings()
-  loadAiSettings()
+  discard loadMapList()
+  discard loadServerSettings()
+  discard loadAiSettings()
 
 proc onCbxGameModeChanged(self: ComboBoxText) =
   updatePathes()
@@ -1024,19 +1042,22 @@ proc onBtnRemoveMoviesClicked(self: Button) =
       if hasWritePermission(movie.path):
         removeFile(movie.path)
       else:
-        removeFileElevated(movie.path)
+        discard removeFileElevated(movie.path)
 
-proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false) =
+proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
+  result = true
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
   if createBackup:
     echo "Creating a Levels folder backup!"
-    copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()) # TODO: Check if dir could be copied as normal user
+    if not copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()): # TODO: Check if dir could be copied as normal user
+      return false
   for levelFolder in walkDir(srcLevelPath, true):
     levelName = levelFolder.path
     when defined(linux):
       if isServer:
         levelName = levelFolder.path.toLower()
-    discard existsOrCreateDirElevated(dstLevelPath / levelName) # TODO: Check for write permission
+    if not existsOrCreateDirElevated(dstLevelPath / levelName)[0]: # TODO: Check for write permission
+      return false
     echo "Copying level: ", levelName
     for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
       dstPath = dstLevelPath / levelName
@@ -1049,12 +1070,14 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
         dstPath = dstPath / levelFiles.path
       srcPath = srcLevelPath / levelFolder.path / levelFiles.path
       if levelFiles.kind == pcDir:
-        copyDirElevated(srcPath, dstPath) # TODO: Check for write permission
+        if not copyDirElevated(srcPath, dstPath): # TODO: Check for write permission
+          return false
       elif levelFiles.kind == pcFile:
         if hasWritePermission(dstPath):
           copyFile(srcPath, dstPath)
         else:
-          copyFileElevated(srcPath, dstPath)
+          if not copyFileElevated(srcPath, dstPath):
+            return false
     ## Move desc file # TODO: Create a recursive function that walks every file in each folder
     # if isServer: # Linux only # TODO: Refactor copyLevels
     if isServer: # Moving all files in levels info folder with lowercase namens
@@ -1075,7 +1098,7 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
             const PANORAMA_DESC_MD5_HASH: string = "5288a6a0dded7df3c60341f5a20a5f0a"
             const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
             const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
-            proc removeLine(path, fileName: string, val: int) =
+            proc removeLine(path, fileName: string, val: int): bool =
               var raw: string = readFile(path / fileName.toLower())
               var rawLines: seq[string] = raw.splitLines()
               rawLines.delete(val - 1)
@@ -1083,34 +1106,45 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
                 if hasWritePermission(path / fileName):
                   writeFile(path / fileName, rawLines.join("\n"))
                 else:
-                  writeFileElevated(path / fileName, rawLines.join("\n"))
+                  if not writeFileElevated(path / fileName, rawLines.join("\n")):
+                    return false
               else:
-                  writeFile(path / fileName.toLower(), rawLines.join("\n"))
-            proc removeChars(path: string, fileName: string, valFrom, valTo: int) =
+                writeFile(path / fileName.toLower(), rawLines.join("\n"))
+              return true
+            proc removeChars(path: string, fileName: string, valFrom, valTo: int): bool =
               var raw: string = readFile(path / fileName.toLower())
               raw.delete(valFrom - 1, valTo - 1)
               when defined(windows):
                 if hasWritePermission(path / fileName):
                   writeFile(path / fileName, raw)
                 else:
-                  writeFileElevated(path / fileName, raw)
+                  if not writeFileElevated(path / fileName, raw):
+                    return false
               else:
-                  writeFile(path / fileName.toLower(), raw)
+                writeFile(path / fileName.toLower(), raw)
+              return true
             if fileName.path.endsWith(".desc"):
               if fileName.path.toLower() == "aegis_station.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == AEGIS_STATION_DESC_MD5_HASH:
-                removeChars(infoPath, fileName.path, 1464, 1464) # Fix: Remove char on position 1464
+                if not removeChars(infoPath, fileName.path, 1464, 1464): # Fix: Remove char on position 1464
+                  return false
               if fileName.path.toLower() == "bloodgulch.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == BLOODGULCH_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 20) # Fix: Delete line 20
+                if not removeLine(infoPath, fileName.path, 20): # Fix: Delete line 20
+                  return false
               if fileName.path.toLower() == "kilimandscharo.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == KILIMANDSCHARO_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 7) # Fix: Delete line 7
+                if not removeLine(infoPath, fileName.path, 7): # Fix: Delete line 7
+                  return false
               if fileName.path.toLower() == "omaha_beach.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == OMAHA_BEACH_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 11) # Fix: Delete line 11
+                if not removeLine(infoPath, fileName.path, 11): # Fix: Delete line 11
+                  return false
               if fileName.path.toLower() == "panorama.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == PANORAMA_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 14) # Fix: Delete line 14
+                if not removeLine(infoPath, fileName.path, 14): # Fix: Delete line 14
+                  return false
               if fileName.path.toLower() == "severnaya.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == SEVERNAYA_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 16) # Fix: Delete line 16
+                if not removeLine(infoPath, fileName.path, 16): # Fix: Delete line 16
+                  return false
               if fileName.path.toLower() == "street.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == STREET_DESC_MD5_HASH:
-                removeLine(infoPath, fileName.path, 9) # Fix: Delete line 9
+                if not removeLine(infoPath, fileName.path, 9): # Fix: Delete line 9
+                  return false
 
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
@@ -1119,9 +1153,10 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     srcLevelPath: string = dialog.getFilename()
     dstLevelPath: string = bf2142Path / "mods" / "bf2142" / "Levels"
   if response == ResponseType.ok:
-    copyLevels(srcLevelPath, dstLevelPath)
+    var writeSucceed: bool = copyLevels(srcLevelPath, dstLevelPath)
     dialog.destroy()
-    newInfoDialog("Done", "Copied 64 coop maps (client)!")
+    if writeSucceed:
+      newInfoDialog("Done", "Copied 64 coop maps (client)!")
   else:
     dialog.destroy()
 
@@ -1138,10 +1173,11 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     srcLevelPath: string = dialog.getFilename()
     dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels"
   if response == ResponseType.ok:
-    copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
-    fillListSelectableMaps()
+    var writeSucceed: bool = copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
     dialog.destroy()
-    newInfoDialog("Done", "Copied 64 coop maps (server)!")
+    if writeSucceed:
+      fillListSelectableMaps()
+      newInfoDialog("Done", "Copied 64 coop maps (server)!")
   else:
     dialog.destroy()
 
@@ -1168,8 +1204,10 @@ proc onBtnRestoreClicked(self: Button) =
         copyFile(clientExeBackupPath, clientExeRestorePath)
         removeFile(clientExeBackupPath)
       else:
-        copyFileElevated(clientExeBackupPath, clientExeRestorePath)
-        removeFileElevated(clientExeBackupPath)
+        if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
+          return
+        if not removeFileElevated(clientExeBackupPath):
+          return
       restoredFiles = true
   if fileExists(openspyDllBackupPath):
     let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
@@ -1179,8 +1217,10 @@ proc onBtnRestoreClicked(self: Button) =
         copyFile(openspyDllBackupPath, openspyDllRestorePath)
         removeFile(openspyDllBackupPath)
       else:
-        copyFileElevated(openspyDllBackupPath, openspyDllRestorePath)
-        removeFileElevated(openspyDllBackupPath)
+        if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
+          return
+        if not removeFileElevated(openspyDllBackupPath):
+          return
       restoredFiles = true
   if restoredFiles:
     btnRestore.sensitive = false
@@ -1547,6 +1587,9 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) =
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
+  if elevatedio.isServerRunning():
+    echo "KILLING ELEVATEDIO SERVER"
+    killElevatedIo()
 
 proc onApplicationActivate(application: Application) =
   window = newApplicationWindow(application)
@@ -1585,9 +1628,9 @@ proc onApplicationActivate(application: Application) =
   if bf2142ServerPath != "":
     updatePathes()
     fillListSelectableMaps()
-    loadMapList()
-    loadServerSettings()
-    loadAiSettings()
+    discard loadMapList()
+    discard loadServerSettings()
+    discard loadAiSettings()
   hboxTerms.visible = false
   termJustPlayServer.visible = false
   termBF2142Server.visible = false
