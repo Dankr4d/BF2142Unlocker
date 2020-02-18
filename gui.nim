@@ -874,7 +874,7 @@ proc onBtnJustPlayClicked(self: Button) =
   txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
-  # termJustPlayServer.clear()
+  termJustPlayServer.clear()
   termJustPlayServer.startLoginServer(ipAddress)
   termLoginServer.visible = false
   chbtnAutoJoin.active = false
@@ -922,7 +922,7 @@ proc onBtnHostClicked(self: Button) =
   txtIpAddress.text = txtHostIpAddress.text
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
-  # termLoginServer.clear()
+  termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
@@ -932,7 +932,7 @@ proc onBtnHostLoginServerClicked(self: Button) =
   txtIpAddress.text = txtHostIpAddress.text
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
-  # termLoginServer.clear()
+  termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
 proc onBtnHostCancelClicked(self: Button) =

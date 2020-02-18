@@ -28,8 +28,10 @@ elif defined(windows):
     scrolledWindow.add(textView)
     result = cast[Terminal](scrolledWindow)
     # textView.buffer = result.getBuffer()
+  proc textView(terminal: Terminal): TextView =
+    return cast[TextView](terminal.getChild())
   proc buffer*(terminal: Terminal): TextBuffer =
-    return cast[TextView](terminal.getChild()).getBuffer()
+    return terminal.textView.getBuffer()
 
 proc `text=`*(terminal: Terminal, text: string) =
   when defined(linux):
@@ -47,11 +49,14 @@ proc text*(terminal: Terminal): string =
     terminal.buffer.getEndIter(endIter)
     return terminal.buffer.getText(startIter, endIter, true)
 
-proc addText*(terminal: Terminal, text: string) =
+proc addText*(terminal: Terminal, text: string, scrollDown: bool = false) =
   when defined(linux):
     discard # TODO: implement
   elif defined(windows):
     terminal.text = terminal.text & text
+    if scrollDown:
+      var mark: TextMark = terminal.buffer.getInsert()
+      terminal.textView.scrollMarkOnScreen(mark)
 
 proc clear*(terminal: Terminal) =
   when defined(linux):
@@ -82,10 +87,12 @@ when defined(windows):
   # TODO: There are no multiple Terminals possible. That's because the two global channels.
   # These Channel should be in scope. This is not possible. Adding a global pragma doesn't resolve this.
   # This could be solved with a macro. Creating the channels on compiletime with different names.
-  var thread {.global.}: system.Thread[tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]]
+  var thread {.global.}: system.Thread[Process]
+  var threadForked {.global.}: system.Thread[int]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
   var channelTerminate: Channel[bool]
+  var channelTerminateForked: Channel[bool]
   var channelStopTimerAdd: Channel[bool]
   var channelStopTimerReplace: Channel[bool]
 
@@ -102,15 +109,16 @@ when defined(windows):
       return SOURCE_REMOVE
     var (hasData, data) = channelAddText.tryRecv()
     if hasData:
-      timerData.terminal.addText(data)
+      timerData.terminal.addText(data, scrollDown = true)
     return SOURCE_CONTINUE
 
   proc terminateThread*() = # TODO
     channelStopTimerAdd.send(true)
+    channelTerminate.send(true)
 
   proc terminateForkedThread*() = # TODO
-    channelTerminate.send(true)
     channelStopTimerReplace.send(true)
+    channelTerminateForked.send(true)
 
 proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
   when defined(linux):
@@ -150,30 +158,41 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
     if searchForkedProcess:
       var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       channelReplaceText.open()
-      channelTerminate.open()
+      channelTerminateForked.open()
       channelStopTimerReplace.open()
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
+      threadForked.createThread(proc (processId: int) {.thread.} =
+        var hwnd: HWND = getHWndByPid(processId)
+        while hwnd == 0: # Waiting until window can be accessed
+          sleep(250)
+          hwnd = getHWndByPid(processId)
+        # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
+        while true:
+          if channelTerminateForked.tryRecv().dataAvailable:
+            return
+          channelReplaceText.send(readStdOut(processId))
+          sleep(250)
+        channelReplaceText.close()
+        channelTerminateForked.close()
+      , (result))
     else:
       var timerDataAddText: TimerData = TimerData(terminal: terminal)
       channelAddText.open()
+      channelTerminate.open()
       channelStopTimerAdd.open()
       discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
-
-    thread.createThread(proc (data: tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]) {.thread.} =
-      if data.searchForkedProcess:
-        var hwnd: HWND = getHWndByPid(data.processId)
-        while hwnd == 0: # Waiting until window can be accessed
+      thread.createThread(proc (process: Process) {.thread.} =
+        while true:
+          if channelTerminate.tryRecv().dataAvailable:
+            return
+          if process.outputStream.isNil:
+            return
+          channelAddText.send(process.outputStream.readAll())
           sleep(250)
-          hwnd = getHWndByPid(data.processId)
-        # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
-        while not channelTerminate.tryRecv().dataAvailable:
-          channelReplaceText.send(readStdOut(data.processId))
-          sleep(250)
-      else:
-        while not data.process.outputStream.isNil:
-          channelAddText.send(data.process.outputStream.readAll())
-          sleep(250)
-    , (process, terminal, searchForkedProcess, result))
+        process.close()
+        channelAddText.close()
+        channelTerminate.close()
+      , (process))
 ##########################
 
 when isMainModule:
