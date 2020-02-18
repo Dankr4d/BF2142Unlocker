@@ -8,7 +8,7 @@ import strutils
 import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
-  import posix # Requierd for getlogin
+  import posix # Requierd for getlogin and killProcess
 elif defined(windows):
   import winim
   import docpath
@@ -241,13 +241,21 @@ proc fillHostIpAddress() =
   else:
     txtHostIpAddress.text = ""
 
-proc killProcess*(processId: int) = # TODO: Add some error handling; TODO: processId should be stored in startProcess and not passed
+proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should be stored in startProcess and not passed
   when defined(linux):
-    if kill(Pid(processId), SIGKILL) < 0:
+    if kill(Pid(pid), SIGKILL) < 0:
       echo "ERROR: Cannot kill process!" # TODO: Create a popup
   elif defined(windows):
-    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, processId.DWORD)
-    discard hndlProcess.TerminateProcess(0)
+    if pid == termBf2142ServerPid:
+      terminateForkedThread() # TODO
+    elif pid == termLoginServerPid:
+      terminateThread() # TODO
+    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
+    discard hndlProcess.TerminateProcess(0) # TODO: Check result
+  if pid == termBF2142ServerPid:
+    termBF2142ServerPid = 0
+  elif pid == termLoginServerPid:
+    termLoginServerPid = 0
 
 proc onWidgetFakeHoverEnterNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
   self.styleContext.addClass("fake-hover")
@@ -731,18 +739,7 @@ proc saveProfileAccountName() =
   file.close()
   writeFile(profileConPath, profileContent)
 
-proc killLoginServer() =
-  if termLoginServerPid > 0:
-    killProcess(termLoginServerPid)
-    if termLoginServer.visible:
-      termLoginServer.clear()
-    if termJustPlayServer.visible:
-      termJustPlayServer.clear()
-    termLoginServerPid = 0
-
 proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
-  # if termLoginServerPid > 0:
-  killLoginServer()
   term.setSizeRequest(0, 300)
   when defined(linux):
     termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress}")
@@ -862,6 +859,9 @@ proc applyJustPlayRunningSensitivity(running: bool) =
 proc onBtnJustPlayClicked(self: Button) =
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+  # termJustPlayServer.clear()
   termJustPlayServer.startLoginServer(ipAddress)
   termLoginServer.visible = false
   chbtnAutoJoin.active = false
@@ -870,7 +870,7 @@ proc onBtnJustPlayClicked(self: Button) =
 
 
 proc onBtnJustPlayCancelClicked(self: Button) =
-  killLoginServer()
+  killProcess(termLoginServerPid)
   applyJustPlayRunningSensitivity(false)
 
 proc onBtnAddMapClicked(self: Button) =
@@ -919,6 +919,9 @@ proc onBtnHostClicked(self: Button) =
   applyHostRunningSensitivity(true)
   preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
   txtIpAddress.text = txtHostIpAddress.text
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+  # termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
@@ -926,16 +929,17 @@ proc onBtnHostLoginServerClicked(self: Button) =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
   txtIpAddress.text = txtHostIpAddress.text
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+  # termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
 proc onBtnHostCancelClicked(self: Button) =
   applyHostRunningSensitivity(false)
-  killLoginServer()
+  killProcess(termLoginServerPid)
   txtIpAddress.text = ""
   if termBf2142ServerPid > 0:
     killProcess(termBf2142ServerPid)
-    termLoginServer.clear()
-    termBf2142ServerPid = 0
 
 proc onCbxHostModsChanged(self: ComboBoxText) =
   updatePathes()

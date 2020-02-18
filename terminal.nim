@@ -1,3 +1,10 @@
+#[
+  TODO: Encapsulate and refactor or rewrite!
+  Currently:
+    Do not create multiple processes or multiple forked processes.
+    Only one process and one forked process is allowed.
+]#
+
 import gintro/[gtk, glib, gobject, gio]
 
 import strutils
@@ -6,7 +13,6 @@ import os
 when defined(linux):
   import gintro/vte # Requierd for terminal (linux only feature)
   export vte
-  import posix # Requierd for kill process
 elif defined(windows):
   import osproc
   import streams
@@ -79,18 +85,32 @@ when defined(windows):
   var thread {.global.}: system.Thread[tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
+  var channelTerminate: Channel[bool]
+  var channelStopTimerAdd: Channel[bool]
+  var channelStopTimerReplace: Channel[bool]
 
   proc timerReplaceTerminalText(timerData: TimerData): bool =
+    if channelStopTimerReplace.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
     var (hasData, data) = channelReplaceText.tryRecv()
     if hasData:
       timerData.terminal.text = data
     return SOURCE_CONTINUE
 
   proc timerAddTerminalText(timerData: TimerData): bool =
+    if channelStopTimerAdd.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
     var (hasData, data) = channelAddText.tryRecv()
     if hasData:
       timerData.terminal.addText(data)
     return SOURCE_CONTINUE
+
+  proc terminateThread*() = # TODO
+    channelStopTimerAdd.send(true)
+
+  proc terminateForkedThread*() = # TODO
+    channelTerminate.send(true)
+    channelStopTimerReplace.send(true)
 
 proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
   when defined(linux):
@@ -130,12 +150,14 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
     if searchForkedProcess:
       var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       channelReplaceText.open()
+      channelTerminate.open()
+      channelStopTimerReplace.open()
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
     else:
       var timerDataAddText: TimerData = TimerData(terminal: terminal)
       channelAddText.open()
+      channelStopTimerAdd.open()
       discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
-
 
     thread.createThread(proc (data: tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]) {.thread.} =
       if data.searchForkedProcess:
@@ -144,10 +166,11 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
           sleep(250)
           hwnd = getHWndByPid(data.processId)
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
-        channelReplaceText.send(readStdOut(data.processId))
-        sleep(250)
+        while not channelTerminate.tryRecv().dataAvailable:
+          channelReplaceText.send(readStdOut(data.processId))
+          sleep(250)
       else:
-        while not isNil(data.process.outputStream):
+        while not data.process.outputStream.isNil:
           channelAddText.send(data.process.outputStream.readAll())
           sleep(250)
     , (process, terminal, searchForkedProcess, result))

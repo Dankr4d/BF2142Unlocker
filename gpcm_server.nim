@@ -10,7 +10,7 @@ proc handleClient(client: Socket) =
   client.send(sdata)
   echo "GPCM - Send: ", sdata
   try:
-    discard client.recv(data, 512, 1000)
+    client.readLine(data, maxLength = 512, timeout = 1000)
   except TimeoutError:
     discard
   echo "GPCM - Received: ", data
@@ -19,11 +19,14 @@ proc handleClient(client: Socket) =
   echo "GPCM - Send: ", sdata
   playerId.inc()
   while true:
-    # Regarding to documentation the recv proc should not return values lower then 0. But it does -.-
-    if client.recv(data, 512) > 0:
-      echo "GPCM - RECEIVED: ", data
-    else:
-      break
+    try:
+      client.readLine(data, maxLength = 512, timeout = 1000)
+      if data.len > 0:
+        echo "GPCM - RECEIVED: ", data
+      else:
+        break
+    except TimeoutError:
+      discard
   echo "GPCM - Client disconented!"
   # client.close()
 
