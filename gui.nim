@@ -91,7 +91,7 @@ var currentLevelFolderPath: string
 var currentAiSettingsPath: string
 
 var termLoginServerPid: int = 0
-var termBf2142ServerPid: int = 0
+var termBF2142ServerPid: int = 0
 
 const
   PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
@@ -246,7 +246,7 @@ proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should 
     if kill(Pid(pid), SIGKILL) < 0:
       echo "ERROR: Cannot kill process!" # TODO: Create a popup
   elif defined(windows):
-    if pid == termBf2142ServerPid:
+    if pid == termBF2142ServerPid:
       terminateForkedThread() # TODO
     elif pid == termLoginServerPid:
       terminateThread() # TODO
@@ -752,9 +752,9 @@ proc startBF2142Server() =
   if symlinkExists(stupidPbSymlink):
     removeFile(stupidPbSymlink)
   when defined(linux):
-    termBf2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
+    termBF2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
   elif defined(windows):
-    termBf2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
+    termBF2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
 
 proc loadJoinMods() =
   cbxJoinMods.removeAll()
@@ -771,6 +771,24 @@ proc loadHostMods() =
       if folder.kind == pcDir:
         cbxHostMods.appendText(folder.path)
   cbxHostMods.active = 0
+
+proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
+  tblHostSettings.sensitive = not running
+  hboxMaps.sensitive = not running
+  btnHostLoginServer.visible = not running
+  btnHost.visible = not running
+  btnHostCancel.visible = running
+  hboxTerms.visible = running
+  termLoginServer.visible = running
+  if bf2142ServerInvisible:
+    termBF2142Server.visible = false
+  else:
+    termBF2142Server.visible = running
+
+proc applyJustPlayRunningSensitivity(running: bool) =
+  termJustPlayServer.visible = running
+  btnJustPlay.visible = not running
+  btnJustPlayCancel.visible = running
 ##
 
 
@@ -851,11 +869,6 @@ proc patchAndStartLogic(): bool =
 proc onBtnJoinClicked(self: Button) =
   discard patchAndStartLogic()
 
-proc applyJustPlayRunningSensitivity(running: bool) =
-  termJustPlayServer.visible = running
-  btnJustPlay.visible = not running
-  btnJustPlayCancel.visible = running
-
 proc onBtnJustPlayClicked(self: Button) =
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
@@ -867,7 +880,8 @@ proc onBtnJustPlayClicked(self: Button) =
   chbtnAutoJoin.active = false
   if patchAndStartLogic():
     applyJustPlayRunningSensitivity(true)
-
+    if termBF2142ServerPid == 0:
+      applyHostRunningSensitivity(false)
 
 proc onBtnJustPlayCancelClicked(self: Button) =
   killProcess(termLoginServerPid)
@@ -895,19 +909,6 @@ proc onBtnMapMoveDownClicked(self: Button) =
   listSelectedMaps.moveSelectedDown()
 #
 ## Host
-proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
-  tblHostSettings.sensitive = not running
-  hboxMaps.sensitive = not running
-  btnHostLoginServer.visible = not running
-  btnHost.visible = not running
-  btnHostCancel.visible = running
-  hboxTerms.visible = running
-  termLoginServer.visible = running
-  if bf2142ServerInvisible:
-    termBF2142Server.visible = false
-  else:
-    termBF2142Server.visible = running
-
 proc onBtnHostClicked(self: Button) =
   if not saveMapList():
     return
@@ -936,10 +937,11 @@ proc onBtnHostLoginServerClicked(self: Button) =
 
 proc onBtnHostCancelClicked(self: Button) =
   applyHostRunningSensitivity(false)
+  applyJustPlayRunningSensitivity(false)
   killProcess(termLoginServerPid)
   txtIpAddress.text = ""
-  if termBf2142ServerPid > 0:
-    killProcess(termBf2142ServerPid)
+  if termBF2142ServerPid > 0:
+    killProcess(termBF2142ServerPid)
 
 proc onCbxHostModsChanged(self: ComboBoxText) =
   updatePathes()
@@ -1585,9 +1587,9 @@ proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context):
     signalsConnected = true
 
 proc onApplicationWindowDestroy(window: ApplicationWindow) =
-  if termBf2142ServerPid > 0:
+  if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
-    killProcess(termBf2142ServerPid)
+    killProcess(termBF2142ServerPid)
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
