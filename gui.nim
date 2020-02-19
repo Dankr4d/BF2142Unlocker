@@ -1595,9 +1595,10 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) =
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
-  if elevatedio.isServerRunning():
-    echo "KILLING ELEVATEDIO SERVER"
-    killElevatedIo()
+  when defined(windows):
+    if elevatedio.isServerRunning():
+      echo "KILLING ELEVATEDIO SERVER"
+      killElevatedIo()
 
 proc onApplicationActivate(application: Application) =
   window = newApplicationWindow(application)
