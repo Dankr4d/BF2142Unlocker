@@ -169,7 +169,7 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
         while true:
           if channelTerminateForked.tryRecv().dataAvailable:
-            return
+            break
           channelReplaceText.send(readStdOut(processId))
           sleep(250)
         channelReplaceText.close()
@@ -184,12 +184,11 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
       thread.createThread(proc (process: Process) {.thread.} =
         while true:
           if channelTerminate.tryRecv().dataAvailable:
-            return
+            break
           if process.outputStream.isNil:
-            return
+            break
           channelAddText.send(process.outputStream.readAll())
           sleep(250)
-        process.close()
         channelAddText.close()
         channelTerminate.close()
       , (process))

@@ -6,6 +6,7 @@ const
   BUILD_BIN_DIR: string = BUILD_DIR / "bin"
   BUILD_LIB_DIR: string = BUILD_DIR / "lib"
   BUILD_SHARE_DIR: string = BUILD_DIR / "share"
+  BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
   OPENSSL_VERSION: string = "1.0.2r"
   OPENSSL_DIR: string = "openssl-" & OPENSSL_VERSION
   OPENSSL_PATH: string = "deps" / "openssl"
@@ -96,7 +97,18 @@ when defined(windows):
     cpDir("C:" / "msys64"/ "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
     mkDir(BUILD_SHARE_DIR)
-    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons", BUILD_SHARE_DIR / "icons")
+    mkDir(BUILD_SHARE_DIR / "icons")
+    mkDir(BUILD_SHARE_DIR / "icons" / "Adwaita")
+    cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
+    cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
+    mkDir(BUILD_SHARE_THEME_DIR / "scalable")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
+
+    # cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita", BUILD_SHARE_DIR / "icons")
 
     mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
     cpFile("C:" / "msys64" / "mingw64" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
