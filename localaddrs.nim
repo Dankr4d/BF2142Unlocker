@@ -60,9 +60,11 @@ when defined(windows):
   ##
 else:
   import psutil
+  export net_if_addrs
+  import psutil/common
+  export Address
 
 proc pretty*(addrs: OrderedTable[string, seq[Address]] | Table[string, seq[Address]]): string =
-  var pIpAdapterInfo: PIP_ADAPTER_INFO = getAdapterInfo()
   for adapterName, addresses in addrs.pairs():
     echo "Adapter: "
     echo "\tName: ", adapterName
