@@ -821,16 +821,16 @@ proc patchAndStartLogic(): bool =
   config.writeConfig(CONFIG_FILE_NAME)
 
   preClientPatchCheck()
-  var writeSucceed: bool = true
   if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
     patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
   else:
+    var writeSucceed: bool
     copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
     patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
     writeSucceed = copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
     removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
-  if not writeSucceed:
-    return
+    if not writeSucceed:
+      return false
 
   openspyBackupCheck()
 
@@ -876,12 +876,14 @@ proc onBtnJustPlayClicked(self: Button) =
     killProcess(termLoginServerPid)
   termJustPlayServer.clear()
   termJustPlayServer.startLoginServer(ipAddress)
-  termLoginServer.visible = false
-  chbtnAutoJoin.active = false
   if patchAndStartLogic():
+    termLoginServer.visible = false
+    chbtnAutoJoin.active = false
     applyJustPlayRunningSensitivity(true)
     if termBF2142ServerPid == 0:
       applyHostRunningSensitivity(false)
+  else:
+    killProcess(termLoginServerPid)
 
 proc onBtnJustPlayCancelClicked(self: Button) =
   killProcess(termLoginServerPid)

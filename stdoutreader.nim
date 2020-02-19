@@ -42,5 +42,9 @@ proc readStdOut*(pid: int): string =
       cntNewLines.inc()
 
 when isMainModule:
+  import os
   var pid: int = getPidByName("BF2142_w32ded.exe")
-  echo readStdOut(pid)
+  echo "PID: ", $pid
+  while true:
+    echo readStdOut(pid)
+    sleep 500

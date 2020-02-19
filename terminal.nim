@@ -87,8 +87,8 @@ when defined(windows):
   # TODO: There are no multiple Terminals possible. That's because the two global channels.
   # These Channel should be in scope. This is not possible. Adding a global pragma doesn't resolve this.
   # This could be solved with a macro. Creating the channels on compiletime with different names.
-  var thread {.global.}: system.Thread[Process]
-  var threadForked {.global.}: system.Thread[int]
+  var thread: system.Thread[Process]
+  var threadForked: system.Thread[int]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
   var channelTerminate: Channel[bool]
@@ -156,10 +156,10 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
         sleep(500)
 
     if searchForkedProcess:
-      var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       channelReplaceText.open()
       channelTerminateForked.open()
       channelStopTimerReplace.open()
+      var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
       threadForked.createThread(proc (processId: int) {.thread.} =
         var hwnd: HWND = getHWndByPid(processId)
@@ -169,28 +169,24 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
         while true:
           if channelTerminateForked.tryRecv().dataAvailable:
-            break
+            return
           channelReplaceText.send(readStdOut(processId))
           sleep(250)
-        channelReplaceText.close()
-        channelTerminateForked.close()
       , (result))
     else:
-      var timerDataAddText: TimerData = TimerData(terminal: terminal)
       channelAddText.open()
       channelTerminate.open()
       channelStopTimerAdd.open()
+      var timerDataAddText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
       thread.createThread(proc (process: Process) {.thread.} =
         while true:
           if channelTerminate.tryRecv().dataAvailable:
-            break
+            return
           if process.outputStream.isNil:
-            break
+            return
           channelAddText.send(process.outputStream.readAll())
           sleep(250)
-        channelAddText.close()
-        channelTerminate.close()
       , (process))
 ##########################
 

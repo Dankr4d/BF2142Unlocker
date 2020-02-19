@@ -24,9 +24,9 @@ proc compileGui() =
     if buildOS == "linux":
       exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
     else:
-      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe() & " gui")
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "gui".toExe() & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "gui".toExe & " gui")
 
 proc compileServer() =
   when defined(windows):
