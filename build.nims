@@ -3,14 +3,16 @@ from strformat import fmt
 
 const
   BUILD_DIR: string = "build"
-  BUILD_BIN_DIR: string = BUILD_DIR / "bin"
-  BUILD_LIB_DIR: string = BUILD_DIR / "lib"
-  BUILD_SHARE_DIR: string = BUILD_DIR / "share"
-  BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
   OPENSSL_VERSION: string = "1.0.2r"
   OPENSSL_DIR: string = "openssl-" & OPENSSL_VERSION
   OPENSSL_PATH: string = "deps" / "openssl"
   OPENSSL_URL: string = "https://www.openssl.org/source/openssl-" & OPENSSL_VERSION & ".tar.gz"
+when defined(windows):
+  const
+    BUILD_BIN_DIR: string = BUILD_DIR / "bin"
+    BUILD_LIB_DIR: string = BUILD_DIR / "lib"
+    BUILD_SHARE_DIR: string = BUILD_DIR / "share"
+    BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
 
 proc createIconRes() =
   echo "Creating icon.res"
@@ -94,7 +96,7 @@ when defined(windows):
   ]
   proc copyGtk() =
     mkDir(BUILD_LIB_DIR)
-    cpDir("C:" / "msys64"/ "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
+    cpDir("C:" / "msys64" / "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
     mkDir(BUILD_SHARE_DIR)
     mkDir(BUILD_SHARE_DIR / "icons")

@@ -20,7 +20,6 @@ import checkpermission # Requierd to check if file has write permissions
 import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
-import options
 
 # Set icon (windres.exe .\icon.rc -O coff -o icon.res)
 when defined(gcc) and defined(windows):
@@ -225,14 +224,14 @@ var btnRestore: Button
 ##
 
 ### Helper procs
-proc areServerReachable(address: string): bool =
-  if not isAddrReachable(address, Port(8080)):
-    return false
-  if not isAddrReachable(address, Port(18300)):
-    return false
-  if not isAddrReachable(address, Port(29900)):
-    return false
-  return true
+# proc areServerReachable(address: string): bool =
+#   if not isAddrReachable(address, Port(8080)):
+#     return false
+#   if not isAddrReachable(address, Port(18300)):
+#     return false
+#   if not isAddrReachable(address, Port(29900)):
+#     return false
+#   return true
 
 proc fillHostIpAddress() =
   var addrs: seq[string] = getLocalAddrs()

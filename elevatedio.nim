@@ -53,8 +53,8 @@ proc handleRequest(req: Request) {.async.} =
   of Action.existsOrCreateDir:
     let path: string = req.headers["path", 0]
     echo "* ExistsOrCreateDir ", path
-    var result: bool = existsOrCreateDir(path)
-    await req.respond(Http200, $result)
+    var res: bool = existsOrCreateDir(path)
+    await req.respond(Http200, $res)
     return
   of Action.closeServer:
     quit(0) # TODO: Should respons data and then quit
