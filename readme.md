@@ -18,14 +18,15 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Start the BF2142Unlocker:
   - Windows: BF2142Unlocker.bat
   - Linux: gui
-- If your BF2142 game folder is read only, you need to allow elevatedio to run as administrator. Otherwise just cancel the elevation request.
-- Set your Battlefield 2142 client path in settings.
-- Goto settings tab and start login server "Host login server only".
-- Goto join tab, set your playername and your local ip address (localhost and 127.0.0.1 as well as ipv6 addresses are not supported).
-  <br />
-  *Be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.*
-- Click on join and setup your match ingame (singleplayer or lan/coop).
-- *Optional: You could also set the Battlefield 2142 Server path in settings menu to configure serversettings and start the server in Host tab.*
+- Set at least your Battlefield 2142 client path in "Settings" tab (this will make the other tabs visible).
+- If your BF2142 game/server folder is read only, you need to allow the elevation request from elevatedio (to run as administrator). Elevatedio will be only started when it's required.
+- Goto "Join" tab and click on "Just play". You'll get logged in and can start playing in singleplayer or multiplayer/lan.<br />
+  *Info: "Just play" read out ip addresses and chooses the first. When coop/lan is not working with your friends goto the next step.*
+- Goto "Host" tab and enter your IP address in "Server IP-Address", the login, unlock and BF2142 game server should listen to (it's prefilled with the first ip address the unlocker read out). Start login/unlock server by clicking on "Host login server only".
+- Goto "Join" tab and click on connect (IP address will be set after you launched the login/unlock server). Tell your friends the ip address to connect to.<br />
+  *Info: localhost and ipv6 addresses are not supported. Also be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.*
+- *Optional: You could also set the Battlefield 2142 Server path in "Settings" tab to configure server settings and start the game server in "Host" tab. To host login/unlock and game server, just click on "Host". If you want, you could enable "Auto join server" in "Join" tab to automatically join the game server.<br />
+  Info: This works well on windows. On linux you currently need to add the ncurses version 5 shared library to your game servers bin/amd-64/ path.*
 
 
 ## Screenshots (Linux version)
@@ -47,7 +48,7 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 ### 64 Coop Maps
 - Goto https://battlefield2142.co/ and click on "Download Map Pack".
 - Unzip downloaded mappack.
-- Start BF2142Unlocker and go to Settings tab.
+- Start BF2142Unlocker and go to "Settings" tab.
 - Click on "Copy 64 coop maps (client)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 client path must be set*).
 - Click on "Copy 64 coop maps (server)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 server path must be set*).
 
