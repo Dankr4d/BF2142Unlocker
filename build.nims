@@ -136,7 +136,7 @@ when defined(windows):
     writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
 @echo off
 cd /d bin
-start gui.exe
+cmd /c gui.exe
     """)
 
 proc installDeps() =
@@ -144,9 +144,9 @@ proc installDeps() =
 
 when isMainModule:
   mode = Verbose
-  installDeps()
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
+  installDeps()
   when defined(windows):
     mkDir(BUILD_BIN_DIR / "tempfiles") # TODO: This folder should not be created here
     createStartupBatch()

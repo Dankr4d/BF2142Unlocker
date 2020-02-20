@@ -876,13 +876,15 @@ proc onBtnJustPlayClicked(self: Button) =
     killProcess(termLoginServerPid)
   termJustPlayServer.clear()
   termJustPlayServer.startLoginServer(ipAddress)
+  var prevAutoJoinVal: bool = chbtnAutoJoin.active
+  chbtnAutoJoin.active = false
   if patchAndStartLogic():
     termLoginServer.visible = false
-    chbtnAutoJoin.active = false
     applyJustPlayRunningSensitivity(true)
     if termBF2142ServerPid == 0:
       applyHostRunningSensitivity(false)
   else:
+    chbtnAutoJoin.active = prevAutoJoinVal
     killProcess(termLoginServerPid)
 
 proc onBtnJustPlayCancelClicked(self: Button) =

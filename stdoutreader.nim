@@ -1,8 +1,16 @@
 import winim
 import getprocessbyname
 
-proc `$`(buffer: array[2800, CHAR_INFO]): string = # TODO: Array length
-  for charInfo in buffer:
+# Templates copied form: https://forum.nim-lang.org/t/1188#7366
+template `+`*[T](p: ptr T, off: int): ptr T =
+  cast[ptr type(p[])](cast[ByteAddress](p) +% off * sizeof(p[]))
+template `[]`*[T](p: ptr T, off: int): T =
+  (p + off)[]
+
+proc stringify(buffer: PCHAR_INFO, length: int): string = # TODO: Array length
+  var charInfo: CHAR_INFO
+  for idx in 0..length:
+    charInfo = buffer[idx]
     result.add(charInfo.Char.AsciiChar)
 
 proc readStdOut*(pid: int): string =
@@ -11,7 +19,9 @@ proc readStdOut*(pid: int): string =
   var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE)
   var screenBufferInfo: CONSOLE_SCREEN_BUFFER_INFO
   discard GetConsoleScreenBufferInfo(stdHandle, addr screenBufferInfo)
-  var buffer: array[2800, CHAR_INFO] # TODO: Array length
+  var bufferLen: int = screenBufferInfo.dwSize.X * screenBufferInfo.dwSize.Y
+  var buffer: PCHAR_INFO
+  buffer = resize(buffer, bufferLen)
   var dwBufferSize: COORD
   dwBufferSize.X = screenBufferInfo.dwSize.X
   dwBufferSize.Y = screenBufferInfo.dwSize.Y
@@ -25,7 +35,7 @@ proc readStdOut*(pid: int): string =
   lpReadRegion.Bottom = screenBufferInfo.dwSize.Y
   discard ReadConsoleOutput(
     stdHandle,
-    cast[ptr CHAR_INFO](addr buffer),
+    buffer,
     dwBufferSize,
     dwBufferCoord,
     addr lpReadRegion
@@ -33,7 +43,8 @@ proc readStdOut*(pid: int): string =
   discard FreeConsole()
   discard AttachConsole(ATTACH_PARENT_PROCESS)
 
-  result = $buffer
+  result = stringify(buffer, bufferLen)
+  dealloc(buffer)
 
   var cntNewLines: int = 0
   if dwBufferSize.X > 0:
@@ -47,4 +58,4 @@ when isMainModule:
   echo "PID: ", $pid
   while true:
     echo readStdOut(pid)
-    sleep 500
+    sleep 50

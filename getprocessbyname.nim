@@ -1,6 +1,5 @@
 import winim
 import winim/winstr
-import strutils
 
 proc getPidByName*(name: string): int =
   result = 0
