@@ -11,8 +11,8 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Battlefield 2142 with the original executable.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9.1 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.1/BF2142Unlocker_v0.9.1_win.zip)
-- [Download BF2142 Unlocker v0.9.1 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.1/BF2142Unlocker_v0.9.1_linux.zip)
+- [Download BF2142 Unlocker v0.9.2 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.2/BF2142Unlocker_v0.9.2_win.zip)
+- [Download BF2142 Unlocker v0.9.2 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.2/BF2142Unlocker_v0.9.2_linux.zip)
 
 ## How to use:
 - Start the BF2142Unlocker:
@@ -26,15 +26,15 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - Goto "Join" tab and click on connect (IP address will be set after you launched the login/unlock server). Tell your friends the ip address to connect to.<br />
   *Info: localhost and ipv6 addresses are not supported. Also be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.*
 - *Optional: You could also set the Battlefield 2142 Server path in "Settings" tab to configure server settings and start the game server in "Host" tab. To host login/unlock and game server, just click on "Host". If you want, you could enable "Auto join server" in "Join" tab to automatically join the game server.<br />
-  Info: This works well on windows. On linux you currently need to add the ncurses version 5 shared library to your game servers bin/amd-64/ path.*
+  Info: This works well on windows. On linux you currently need to add the ncurses version 5 shared library to your game servers bin/amd-64/ path. (libncurses.so.5 and libtinfo.so.5)*
 
 
 ## Screenshots (Linux version)
 ### GUI:
 |   |   |
 | - | - |
-| ![Host menu](screenshots/gui_host.png) | ![Join menu](screenshots/gui_join.png) |
-| ![Settings menu](screenshots/gui_settings.png) |
+| ![Host menu](screenshots/gui_host.png) | ![Settings menu](screenshots/gui_settings.png) |
+| ![Join menu](screenshots/gui_join.png) | ![Join menu just play](screenshots/gui_join_justplay.png) |
 ### Ingame:
 |   |   |
 | - | - |

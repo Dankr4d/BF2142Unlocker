@@ -33,7 +33,7 @@ var documentsPath: string
 var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
 
-const VERSION: string = "0.9.1"
+const VERSION: string = "0.9.2"
 
 const BF2142_EXE_NAME: string = "BF2142.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
