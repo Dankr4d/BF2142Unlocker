@@ -460,6 +460,14 @@ proc moveSelectedUp(list: TreeView) =
 proc moveSelectedDown(list: TreeView) =
   list.moveSelectedUpDown(up = false)
 
+proc selectNext(list: TreeView) =
+  var iter: TreeIter
+  var store = listStore(list.getModel())
+  if not list.selection.getSelected(store, iter):
+    return
+  if store.iterNext(iter):
+    list.selection.selectIter(iter)
+
 proc removeSelected(list: TreeView) =
   var
     ls: ListStore
@@ -895,7 +903,7 @@ proc onBtnAddMapClicked(self: Button) =
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
-  listSelectableMaps.removeSelected()
+  listSelectableMaps.selectNext()
 
 proc onBtnRemoveMapClicked(self: Button) =
   var mapName, mapMode, mapSize: string
