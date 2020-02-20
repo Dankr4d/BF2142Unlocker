@@ -9,7 +9,7 @@ template `[]`*[T](p: ptr T, off: int): T =
 
 proc stringify(buffer: PCHAR_INFO, length: int): string = # TODO: Array length
   var charInfo: CHAR_INFO
-  for idx in 0..length:
+  for idx in 0..length - 1:
     charInfo = buffer[idx]
     result.add(charInfo.Char.AsciiChar)
 
