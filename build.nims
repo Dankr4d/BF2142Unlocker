@@ -137,7 +137,7 @@ when defined(windows):
   proc createStartupBatch() =
     writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
 @echo off
-cd /d bin
+cd bin
 cmd /c gui.exe
     """)
 

@@ -1,4 +1,4 @@
-import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf]
+import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf, gmodule]
 import gintro/gio except ListStore
 
 import os
@@ -20,6 +20,7 @@ import checkpermission # Requierd to check if file has write permissions
 import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
+import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 
 # Set icon (windres.exe .\icon.rc -O coff -o icon.res)
 when defined(gcc) and defined(windows):
@@ -116,86 +117,57 @@ const
 const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
 var config: Config
+var windowShown: bool = false
 
 ### General controls
 var application: Application
 var window: ApplicationWindow
-var vboxMain: Box
 var notebook: Notebook
-var actionBar: ActionBar
 ##
 ### Join controls
 var vboxJoin: Box
-var hboxJoinSettings: Box
 var vboxJustPlay: Box
-var frameJoinConnect: Frame
-var frameJoinSettings: Frame
-var tblJoinConnect: Table
-var tblJoinSettings: Table
-var lblJoinMods: Label
 var cbxJoinMods: ComboBoxText
-var lblPlayerName: Label
 var txtPlayerName: Entry
-var lblIpAddress: Label
 var txtIpAddress: Entry
-var lblAutoJoin: Label
 var chbtnAutoJoin: CheckButton
-var lblWindowMode: Label
 var chbtnWindowMode: CheckButton
 var btnJoin: Button # TODO: Rename to btnConnect
 var btnJustPlay: Button
 var btnJustPlayCancel: Button
-# var panedJustPlay: Paned
 var termJustPlayServer: Terminal
 ##
 ### Host controls
-var tblHostSettings: Table
 var vboxHost: Box
-var hboxHostLevelPreview: Box
+var tblHostSettings: Grid
 var imgLevelPreview: Image
-var lblHostMods: Label
 var cbxHostMods: ComboBoxText
-var lblGameMode: Label
 var cbxGameMode: ComboBoxText
-var lblBotSkill: Label
 var sbtnBotSkill: SpinButton
-var scaleBotSkill: HScale
-var lblTicketRatio: Label
+var scaleBotSkill: Scale
 var sbtnTicketRatio: SpinButton
-var scaleTicketRatio: HScale
-var lblSpawnTime: Label
+var scaleTicketRatio: Scale
 var sbtnSpawnTime: SpinButton
-var scaleSpawnTime: HScale
-var lblRoundsPerMap: Label
+var scaleSpawnTime: Scale
 var sbtnRoundsPerMap: SpinButton
-var scaleRoundsPerMap: HScale
-var lblBots: Label
+var scaleRoundsPerMap: Scale
 var sbtnBots: SpinButton
-var scaleBots: HScale
-var lblMaxPlayers: Label
+var scaleBots: Scale
 var sbtnMaxPlayers: SpinButton
-var scaleMaxPlayers: HScale
-var lblPlayersNeededToStart: Label
+var scaleMaxPlayers: Scale
 var sbtnPlayersNeededToStart: SpinButton
-var scalePlayersNeededToStart: HScale
-var lblFriendlyFire: Label
+var scalePlayersNeededToStart: Scale
 var chbtnFriendlyFire: CheckButton
   # teamratio (also for coop?)
   # autobalance (also for coop?)
-var lblHostIpAddress: Label
 var txtHostIpAddress: Entry
 var hboxMaps: Box
 var listSelectableMaps: TreeView
-var sWindowSelectableMaps: ScrolledWindow
 var listSelectedMaps: TreeView
-var sWindowSelectedMaps: ScrolledWindow
-var vboxAddRemoveMap: Box
 var btnAddMap: Button
 var btnRemoveMap: Button
-var vboxMoveMap: Box
 var btnMapMoveUp: Button
 var btnMapMoveDown: Button
-var hboxHostButtons: Box
 var btnHostLoginServer: Button
 var btnHost: Button
 var btnHostCancel: Button
@@ -204,14 +176,12 @@ var termLoginServer: Terminal
 var termBF2142Server: Terminal
 ##
 ### Settings controls
-var vboxSettings: Box
-var tblSettings: Table
 var lblBF2142Path: Label
-var btnBF2142Path: Button
 var txtBF2142Path: Entry
+var btnBF2142Path: Button
 var lblBF2142ServerPath: Label
-var btnBF2142ServerPath: Button
 var txtBF2142ServerPath: Entry
+var btnBF2142ServerPath: Button
 var lblWinePrefix: Label
 var btnWinePrefix: Button
 var txtWinePrefix: Entry
@@ -256,10 +226,12 @@ proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should 
   elif pid == termLoginServerPid:
     termLoginServerPid = 0
 
-proc onWidgetFakeHoverEnterNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
-  self.styleContext.addClass("fake-hover")
-proc onWidgetFakeHoverLeaveNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
-  self.styleContext.removeClass("fake-hover")
+proc onWidgetFakeHoverEnterNotifyEvent(self: Widget, event: EventCrossing): bool {.signal.} =
+  discard
+  # self.styleContext.addClass("fake-hover") # TODO
+proc onWidgetFakeHoverLeaveNotifyEvent(self: Widget, event: EventCrossing): bool {.signal.} =
+  discard
+  # self.styleContext.removeClass("fake-hover") # TODO
 
 proc updateProfilePathes() =
   bf2142ProfilesPath = documentsPath / "Battlefield 2142" / "Profiles"
@@ -387,17 +359,6 @@ proc preServerPatchCheck(ipAddress: IpAddress) =
       discard copyFileElevated(tmpExePath, serverExePath)
       removeFile(tmpExePath)
 
-proc newRangeEntry(min, max, step, value: float): tuple[spinButton: SpinButton, hScale: HScale] = # TODO: Handle values with bindProperty
-  proc onValueChanged(self: SpinButton | HScale, other: SpinButton | HScale) =
-    other.value = self.value
-  result = (spinButton: newSpinButtonWithRange(min, max, step), hScale: newHScaleWithRange(min, max, step))
-  result.spinButton.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  result.spinButton.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  result.hScale.value = value
-  result.spinButton.value = value
-  result.hScale.connect("value-changed", onValueChanged, result.spinButton)
-  result.spinButton.connect("value-changed", onValueChanged, result.hScale)
-
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
   dialog.title = title
@@ -520,6 +481,11 @@ proc clear(list: TreeView) =
   if not store.iterFirst(iter):
     return
   clear(store)
+
+proc fillHostMode() =
+  for mode in GAME_MODES:
+    cbxGameMode.append(mode.id, mode.name)
+  cbxGameMode.active = 2 # Coop
 
 proc fillListSelectableMaps() =
   listSelectableMaps.clear()
@@ -873,10 +839,10 @@ proc patchAndStartLogic(): bool =
   )
   return true
 
-proc onBtnJoinClicked(self: Button) =
+proc onBtnJoinClicked(self: Button) {.signal.} =
   discard patchAndStartLogic()
 
-proc onBtnJustPlayClicked(self: Button) =
+proc onBtnJustPlayClicked(self: Button) {.signal.} =
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
@@ -894,18 +860,18 @@ proc onBtnJustPlayClicked(self: Button) =
     chbtnAutoJoin.active = prevAutoJoinVal
     killProcess(termLoginServerPid)
 
-proc onBtnJustPlayCancelClicked(self: Button) =
+proc onBtnJustPlayCancelClicked(self: Button) {.signal.} =
   killProcess(termLoginServerPid)
   applyJustPlayRunningSensitivity(false)
 
-proc onBtnAddMapClicked(self: Button) =
+proc onBtnAddMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   listSelectableMaps.selectNext()
 
-proc onBtnRemoveMapClicked(self: Button) =
+proc onBtnRemoveMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
@@ -913,14 +879,14 @@ proc onBtnRemoveMapClicked(self: Button) =
     listSelectableMaps.appendMap(mapName, mapMode, mapSize)
   listSelectedMaps.removeSelected()
 
-proc onBtnMapMoveUpClicked(self: Button) =
+proc onBtnMapMoveUpClicked(self: Button) {.signal.} =
   listSelectedMaps.moveSelectedUp()
 
-proc onBtnMapMoveDownClicked(self: Button) =
+proc onBtnMapMoveDownClicked(self: Button) {.signal.} =
   listSelectedMaps.moveSelectedDown()
 #
 ## Host
-proc onBtnHostClicked(self: Button) =
+proc onBtnHostClicked(self: Button) {.signal.} =
   if not saveMapList():
     return
   if not saveServerSettings():
@@ -937,7 +903,7 @@ proc onBtnHostClicked(self: Button) =
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
-proc onBtnHostLoginServerClicked(self: Button) =
+proc onBtnHostLoginServerClicked(self: Button) {.signal.} =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
   txtIpAddress.text = txtHostIpAddress.text
@@ -946,7 +912,7 @@ proc onBtnHostLoginServerClicked(self: Button) =
   termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
-proc onBtnHostCancelClicked(self: Button) =
+proc onBtnHostCancelClicked(self: Button) {.signal.} =
   applyHostRunningSensitivity(false)
   applyJustPlayRunningSensitivity(false)
   killProcess(termLoginServerPid)
@@ -954,14 +920,14 @@ proc onBtnHostCancelClicked(self: Button) =
   if termBF2142ServerPid > 0:
     killProcess(termBF2142ServerPid)
 
-proc onCbxHostModsChanged(self: ComboBoxText) =
+proc onCbxHostModsChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
   discard loadMapList()
   discard loadServerSettings()
   discard loadAiSettings()
 
-proc onCbxGameModeChanged(self: ComboBoxText) =
+proc onCbxGameModeChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
@@ -977,12 +943,12 @@ proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   else:
     imgLevelPreview.clear()
 
-proc onListSelectableMapsCursorChanged(self: TreeView) =
+proc onListSelectableMapsCursorChanged(self: TreeView) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   updateLevelPreview(mapName, mapMode, mapSize)
 
-proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) =
+proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   updateLevelPreview(mapName, mapMode, mapSize)
@@ -997,7 +963,7 @@ proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: 
   dialog.destroy()
   return (cast[ResponseType](responseId), path)
 
-proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
+proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -1022,7 +988,7 @@ proc onBtnBF2142PathClicked(self: Button) = # TODO: Add checks
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnBF2142ServerPathClicked(self: Button) = # TODO: Add Checks
+proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
   var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -1035,7 +1001,7 @@ proc onBtnBF2142ServerPathClicked(self: Button) = # TODO: Add Checks
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnWinePrefixClicked(self: Button) = # TODO: Add checks
+proc onBtnWinePrefixClicked(self: Button) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -1048,11 +1014,11 @@ proc onBtnWinePrefixClicked(self: Button) = # TODO: Add checks
     documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
-proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool =
+proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnRemoveMoviesClicked(self: Button) =
+proc onBtnRemoveMoviesClicked(self: Button) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
@@ -1177,7 +1143,7 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   else:
     dialog.destroy()
 
-proc onBtnPatchClientMapsClicked(self: Button) =
+proc onBtnPatchClientMapsClicked(self: Button) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (client)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
@@ -1198,14 +1164,14 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   else:
     dialog.destroy()
 
-proc onBtnPatchServerMapsClicked(self: Button) =
+proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (server)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
 
-proc onBtnRestoreClicked(self: Button) =
+proc onBtnRestoreClicked(self: Button) {.signal.} =
   let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
   let clientExeRestorePath: string = bf2142Path / BF2142_EXE_NAME
   let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
@@ -1243,361 +1209,17 @@ proc onBtnRestoreClicked(self: Button) =
     btnRestore.sensitive = false
 #
 ##
-proc createNotebook(window: gtk.Window): Notebook =
-  result = newNotebook()
-  ### Join
-  lblJoinMods = newLabel("Mods:")
-  lblJoinMods.styleContext.addClass("label")
-  lblJoinMods.setAlignment(0.0, 0.5)
-  cbxJoinMods = newComboBoxText()
-  lblPlayerName = newLabel("Player name: ")
-  lblPlayerName.styleContext.addClass("label")
-  lblPlayerName.setAlignment(0.0, 0.5)
-  txtPlayerName = newEntry()
-  txtPlayerName.styleContext.addClass("entry")
-  lblIpAddress = newLabel("IP-Address:")
-  lblIpAddress.styleContext.addClass("label")
-  lblIpAddress.setAlignment(0.0, 0.5)
-  txtIpAddress = newEntry()
-  txtIpAddress.styleContext.addClass("entry")
-  lblAutoJoin = newLabel("Auto join server:")
-  lblAutoJoin.styleContext.addClass("label")
-  chbtnAutoJoin = newCheckButton()
-  lblWindowMode = newLabel("Window mode:")
-  lblWindowMode.styleContext.addClass("label")
-  lblWindowMode.setAlignment(0.0, 0.5)
-  chbtnWindowMode = newCheckButton()
-  btnJoin = newButton("Connect")
-  btnJoin.styleContext.addClass("button")
-  btnJustPlay = newButton("Just play")
-  btnJustPlay.styleContext.addClass("button")
-  btnJustPlay.styleContext.addClass("justPlay")
-  btnJustPlay.setSizeRequest(0, 50)
-  btnJustPlayCancel = newButton("Cancel")
-  btnJustPlayCancel.styleContext.addClass("button")
-  btnJustPlayCancel.styleContext.addClass("justPlay")
-  btnJustPlayCancel.setSizeRequest(0, 50)
 
-  tblJoinConnect = newTable(3, 2, false)
-  tblJoinConnect.halign = Align.start
-  tblJoinConnect.hexpand = true
-  tblJoinConnect.rowSpacings = 2
-  tblJoinConnect.attach(lblIpAddress, 0, 1, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinConnect.attach(txtIpAddress, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinConnect.attach(lblAutoJoin, 0, 1, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinConnect.attach(chbtnAutoJoin, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinConnect.attach(btnJoin, 0, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  frameJoinConnect = newFrame("Connect")
-  frameJoinConnect.add(tblJoinConnect)
-
-  tblJoinSettings = newTable(3, 2, false)
-  tblJoinSettings.halign = Align.start
-  tblJoinSettings.hexpand = true
-  tblJoinSettings.rowSpacings = 2
-  tblJoinSettings.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinSettings.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinSettings.attach(lblPlayerName, 0, 1, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinSettings.attach(txtPlayerName, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinSettings.attach(lblWindowMode, 0, 1, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  tblJoinSettings.attach(chbtnWindowMode, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 5, 3)
-  frameJoinSettings = newFrame("Game settings")
-  frameJoinSettings.add(tblJoinSettings)
-
-  hboxJoinSettings = newBox(Orientation.horizontal, 5)
-  hboxJoinSettings.vexpand = true
-  hboxJoinSettings.styleContext.addClass("box")
-  hboxJoinSettings.add(frameJoinConnect)
-  hboxJoinSettings.add(frameJoinSettings)
-  vboxJoin = newBox(Orientation.vertical, 5)
-  vboxJoin.vexpand = true
-  vboxJoin.styleContext.addClass("box")
-  vboxJoin.add(hboxJoinSettings)
-  # vboxJoin.add(btnJustPlay)
-  termJustPlayServer = newTerminal()
-  termJustPlayServer.vexpand = true
-
-  vboxJustPlay = newBox(Orientation.vertical, 0)
-  vboxJustPlay.hexpand = true
-  vboxJustPlay.add(btnJustPlay)
-  vboxJustPlay.add(termJustPlayServer)
-  vboxJustPlay.add(btnJustPlayCancel)
-
-  # panedJustPlay = newPaned(Orientation.vertical)
-  # panedJustPlay.pack1(hboxJoinSettings, true, false)
-  # panedJustPlay.pack2(vboxJustPlay, true, true)
-
-  # vboxJoin.add(panedJustPlay)
-  vboxJoin.add(vboxJustPlay)
-  ##
-  ### Host
-  vboxHost = newBox(Orientation.vertical, 10)
-  vboxHost.styleContext.addClass("box")
-  lblHostMods = newLabel("Mods:")
-  lblHostMods.styleContext.addClass("label")
-  lblHostMods.setAlignment(0.0, 0.5)
-  cbxHostMods = newComboBoxText()
-  lblGameMode = newLabel("Game mode:")
-  lblGameMode.styleContext.addClass("label")
-  lblGameMode.setAlignment(0.0, 0.5)
-  cbxGameMode = newComboBoxText()
-  for mode in GAME_MODES:
-    cbxGameMode.append(mode.id, mode.name)
-  cbxGameMode.active = 2 # Coop
-  lblBotSkill = newLabel("Bot skill:")
-  lblBotSkill.styleContext.addClass("label")
-  lblBotSkill.setAlignment(0.0, 0.5)
-  (sbtnBotSkill, scaleBotSkill) = newRangeEntry(0, 1, 0.1, 0.5)
-  lblTicketRatio = newLabel("Ticket ratio: ")
-  lblTicketRatio.styleContext.addClass("label")
-  lblTicketRatio.setAlignment(0.0, 0.5)
-  (sbtnTicketRatio, scaleTicketRatio) = newRangeEntry(10, 999, 1, 100)
-  lblSpawnTime = newLabel("Spawn time: ")
-  lblSpawnTime.styleContext.addClass("label")
-  lblSpawnTime.setAlignment(0.0, 0.5)
-  (sbtnSpawnTime, scaleSpawnTime) = newRangeEntry(0, 60, 1, 15)
-  lblRoundsPerMap = newLabel("Rounds per map: ")
-  lblRoundsPerMap.styleContext.addClass("label")
-  lblRoundsPerMap.setAlignment(0.0, 0.5)
-  (sbtnRoundsPerMap, scaleRoundsPerMap) = newRangeEntry(1, 5, 1, 1)
-  lblBots = newLabel("Bots: ")
-  lblBots.styleContext.addClass("label")
-  lblBots.setAlignment(0.0, 0.5)
-  (sbtnBots, scaleBots) = newRangeEntry(0, 255, 1, 63)
-  lblMaxPlayers = newLabel("Max players: ")
-  lblMaxPlayers.styleContext.addClass("label")
-  lblMaxPlayers.setAlignment(0.0, 0.5)
-  (sbtnMaxPlayers, scaleMaxPlayers) = newRangeEntry(1, 64, 1, 64)
-  lblPlayersNeededToStart = newLabel("Players needed to start: ")
-  lblPlayersNeededToStart.styleContext.addClass("label")
-  lblPlayersNeededToStart.setAlignment(0.0, 0.5)
-  (sbtnPlayersNeededToStart, scalePlayersNeededToStart) = newRangeEntry(1, 64, 1, 1)
-  lblFriendlyFire = newLabel("Friendly fire: ")
-  lblFriendlyFire.styleContext.addClass("label")
-  lblFriendlyFire.setAlignment(0.0, 0.5)
-  chbtnFriendlyFire = newCheckButton()
-  chbtnFriendlyFire.active = true
-  lblHostIpAddress = newLabel("Server IP-Address: ")
-  lblHostIpAddress.styleContext.addClass("label")
-  lblHostIpAddress.setAlignment(0.0, 0.5)
-  txtHostIpAddress = newEntry()
-  txtHostIpAddress.styleContext.addClass("entry")
-  tblHostSettings = newTable(11, 3, true)
-  tblHostSettings.rowSpacings = 3
-  tblHostSettings.attachDefaults(lblHostMods, 0, 1, 0, 1)
-  tblHostSettings.attachDefaults(cbxHostMods, 1, 2, 0, 1)
-  tblHostSettings.attachDefaults(lblGameMode, 0, 1, 1, 2)
-  tblHostSettings.attachDefaults(cbxGameMode, 1, 2, 1, 2)
-  tblHostSettings.attachDefaults(lblBotSkill, 0, 1, 2, 3)
-  tblHostSettings.attachDefaults(sbtnBotSkill, 1, 2, 2, 3)
-  tblHostSettings.attachDefaults(scaleBotSkill, 2, 3, 2, 3)
-  tblHostSettings.attachDefaults(lblTicketRatio, 0, 1, 3, 4)
-  tblHostSettings.attachDefaults(sbtnTicketRatio, 1, 2, 3, 4)
-  tblHostSettings.attachDefaults(scaleTicketRatio, 2, 3, 3, 4)
-  tblHostSettings.attachDefaults(lblSpawnTime, 0, 1, 4, 5)
-  tblHostSettings.attachDefaults(sbtnSpawnTime, 1, 2, 4, 5)
-  tblHostSettings.attachDefaults(scaleSpawnTime, 2, 3, 4, 5)
-  tblHostSettings.attachDefaults(lblRoundsPerMap, 0, 1, 5, 6)
-  tblHostSettings.attachDefaults(sbtnRoundsPerMap, 1, 2, 5, 6)
-  tblHostSettings.attachDefaults(scaleRoundsPerMap, 2, 3, 5, 6)
-  tblHostSettings.attachDefaults(lblBots, 0, 1, 6, 7)
-  tblHostSettings.attachDefaults(sbtnBots, 1, 2, 6, 7)
-  tblHostSettings.attachDefaults(scaleBots, 2, 3, 6, 7)
-  tblHostSettings.attachDefaults(lblMaxPlayers, 0, 1, 7, 8)
-  tblHostSettings.attachDefaults(sbtnMaxPlayers, 1, 2, 7, 8)
-  tblHostSettings.attachDefaults(scaleMaxPlayers, 2, 3, 7, 8)
-  tblHostSettings.attachDefaults(lblPlayersNeededToStart, 0, 1, 8, 9)
-  tblHostSettings.attachDefaults(sbtnPlayersNeededToStart, 1, 2, 8, 9)
-  tblHostSettings.attachDefaults(scalePlayersNeededToStart, 2, 3, 8, 9)
-  tblHostSettings.attachDefaults(lblFriendlyFire, 0, 1, 9, 10)
-  tblHostSettings.attachDefaults(chbtnFriendlyFire, 1, 2, 9, 10)
-  tblHostSettings.attachDefaults(lblHostIpAddress, 0, 1, 10, 11)
-  tblHostSettings.attachDefaults(txtHostIpAddress, 1, 2, 10, 11)
-  tblHostSettings.halign = Align.start
-  hboxHostLevelPreview = newBox(Orientation.horizontal, 0)
-  hboxHostLevelPreview.add(tblHostSettings)
-  imgLevelPreview = newImage()
-  hboxHostLevelPreview.add(imgLevelPreview)
-  vboxHost.add(hboxHostLevelPreview)
-  listSelectableMaps = newTreeView()
-  # listSelectableMaps.rulesHint = true # Sets a hint to the theme to draw rows in alternating colors. TODO: Cannot set even/odd row colors -.-
-  listSelectableMaps.activateOnSingleClick = true
-  listSelectableMaps.hexpand = true
-  listSelectableMaps.initMapList("Maps")
-  sWindowSelectableMaps = newScrolledWindow(listSelectableMaps.getHadjustment(), listSelectableMaps.getVadjustment())
-  sWindowSelectableMaps.add(listSelectableMaps)
-  listSelectedMaps = newTreeView()
-  # listSelectedMaps.rulesHint = true # Sets a hint to the theme to draw rows in alternating colors. TODO: Cannot set even/odd row colors -.-
-  listSelectedMaps.activateOnSingleClick = true
-  listSelectedMaps.hexpand = true
-  listSelectedMaps.initMapList("Selected maps")
-  sWindowSelectedMaps = newScrolledWindow(listSelectedMaps.getHadjustment(), listSelectedMaps.getVadjustment())
-  sWindowSelectedMaps.add(listSelectedMaps)
-  vboxAddRemoveMap = newBox(Orientation.vertical, 10)
-  vboxAddRemoveMap.valign = Align.center
-  btnAddMap = newButton("→")
-  btnAddMap.styleContext.addClass("button")
-  vboxAddRemoveMap.add(btnAddMap)
-  btnRemoveMap = newButton("←")
-  btnRemoveMap.styleContext.addClass("button")
-  vboxAddRemoveMap.add(btnRemoveMap)
-  vboxMoveMap = newBox(Orientation.vertical, 10)
-  vboxMoveMap.valign = Align.center
-  btnMapMoveUp = newButton("↑")
-  btnMapMoveUp.styleContext.addClass("button")
-  vboxMoveMap.add(btnMapMoveUp)
-  btnMapMoveDown = newButton("↓")
-  btnMapMoveDown.styleContext.addClass("button")
-  vboxMoveMap.add(btnMapMoveDown)
-  hboxMaps = newBox(Orientation.horizontal, 5)
-  hboxMaps.vexpand = true
-  hboxMaps.add(sWindowSelectableMaps)
-  hboxMaps.add(vboxAddRemoveMap)
-  hboxMaps.add(sWindowSelectedMaps)
-  hboxMaps.add(vboxMoveMap)
-  vboxHost.add(hboxMaps)
-  hboxHostButtons = newBox(Orientation.horizontal, 15)
-  btnHostLoginServer = newButton("Host login server only")
-  btnHostLoginServer.styleContext.addClass("button")
-  btnHostLoginServer.hexpand = true
-  btnHost = newButton("Host")
-  btnHost.styleContext.addClass("button")
-  btnHost.hexpand = true
-  btnHostCancel = newButton("Cancel")
-  btnHostCancel.styleContext.addClass("button")
-  btnHostCancel.hexpand = true
-  hboxHostButtons.add(btnHostLoginServer)
-  hboxHostButtons.add(btnHost)
-  hboxHostButtons.add(btnHostCancel)
-  vboxHost.add(hboxHostButtons)
-  termLoginServer = newTerminal()
-  termLoginServer.hexpand = true
-  hboxTerms = newBox(Orientation.horizontal, 1)
-  # hboxTerms.hexpand = true
-  hboxTerms.add(termLoginServer)
-  termBF2142Server = newTerminal()
-  termBF2142Server.hexpand = true
-  hboxTerms.add(termBF2142Server)
-  vboxHost.add(hboxTerms)
-  ##
-  ### Settings
-  lblBF2142Path = newLabel("Battlefield 2142 path:")
-  lblBF2142Path.styleContext.addClass("label")
-  lblBF2142Path.setAlignment(0.0, 0.5)
-  btnBF2142Path = newButton("Select")
-  btnBF2142Path.styleContext.addClass("button")
-  txtBF2142Path = newEntry()
-  txtBF2142Path.styleContext.addClass("entry")
-  txtBF2142Path.editable = false
-  lblBF2142ServerPath = newLabel("Battlefield 2142 Server path:")
-  lblBF2142ServerPath.styleContext.addClass("label")
-  lblBF2142ServerPath.setAlignment(0.0, 0.5)
-  btnBf2142ServerPath = newButton("Select")
-  btnBf2142ServerPath.styleContext.addClass("button")
-  txtBF2142ServerPath = newEntry()
-  txtBF2142ServerPath.styleContext.addClass("entry")
-  txtBF2142ServerPath.editable = false
-  lblWinePrefix = newLabel("Wine prefix:") # Linux only
-  lblWinePrefix.styleContext.addClass("label")
-  lblWinePrefix.setAlignment(0.0, 0.5)
-  btnWinePrefix = newButton("Select")
-  btnWinePrefix.styleContext.addClass("button")
-  txtWinePrefix = newEntry()
-  txtWinePrefix.styleContext.addClass("entry")
-  txtWinePrefix.editable = false
-  lblStartupQuery = newLabel("Startup query:")
-  lblStartupQuery.styleContext.addClass("label")
-  lblStartupQuery.setAlignment(0.0, 0.5)
-  txtStartupQuery = newEntry()
-  txtStartupQuery.styleContext.addClass("entry")
-  btnRemoveMovies = newButton("Remove movies")
-  btnRemoveMovies.styleContext.addClass("button")
-  btnPatchClientMaps = newButton("Copy 64 coop maps (client)")
-  btnPatchClientMaps.styleContext.addClass("button")
-  btnPatchServerMaps = newButton("Copy 64 coop maps (server)")
-  btnPatchServerMaps.styleContext.addClass("button")
-  btnRestore = newButton("Restore original files")
-  btnRestore.styleContext.addClass("button")
-  btnRestore.sensitive = false
-  tblSettings = newTable(8, 3, false)
-  tblSettings.rowSpacings = 5
-  tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {AttachFlag.fill}, {}, 10, 0)
-  tblSettings.attach(txtBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnBF2142Path, 2, 3, 0, 1, {AttachFlag.shrink}, {}, 0, 0)
-  tblSettings.attach(lblBF2142ServerPath, 0, 1, 1, 2, {AttachFlag.fill}, {}, 10, 0)
-  tblSettings.attach(txtBF2142ServerPath, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnBF2142ServerPath, 2, 3, 1, 2, {AttachFlag.shrink}, {}, 0, 0)
-  tblSettings.attach(lblWinePrefix, 0, 1, 2, 3, {AttachFlag.fill}, {}, 10, 0)
-  tblSettings.attach(txtWinePrefix, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnWinePrefix, 2, 3, 2, 3, {AttachFlag.shrink}, {}, 0, 0)
-  tblSettings.attach(lblStartupQuery, 0, 1, 3, 4, {AttachFlag.fill}, {}, 10, 0)
-  tblSettings.attach(txtStartupQuery, 1, 2, 3, 4, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnRemoveMovies, 1, 2, 4, 5, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnPatchClientMaps, 1, 2, 5, 6, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnPatchServerMaps, 1, 2, 6, 7, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnRestore, 1, 2, 7, 8, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  vboxSettings = newBox(Orientation.vertical, 0)
-  vboxSettings.styleContext.addClass("box")
-  vboxSettings.add(tblSettings)
-  ##
-  ##
-  ### Terminal sending data: vte_terminal_feed_child (For later admin.runNextRound button or something else)
-  ##  cbxHostMods.connect("changed", onCbxHostModsChanged)
-  discard result.appendPage(vboxJoin, newLabel("Join")) # returns page index?
-  discard result.appendPage(vboxHost, newLabel("Host")) # returns page index?
-  discard result.appendPage(vboxSettings, newLabel("Settings")) # returns page index?
-
-proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) =
+proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) {.signal.} =
   if pageNum == 1:
     if txtHostIpAddress.text == "":
       fillHostIpAddress()
 
-proc connectSignals() =
-  ### Bind signals
-  ## General
-  notebook.connect("switch-page", onNotebookSwitchPage)
-  #
-  ## Join
-  txtPlayerName.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtPlayerName.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  txtIpAddress.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtIpAddress.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  btnJoin.connect("clicked", onBtnJoinClicked)
-  btnJustPlay.connect("clicked", onBtnJustPlayClicked)
-  btnJustPlayCancel.connect("clicked", onBtnJustPlayCancelClicked)
-  #
-  ## Host
-  btnAddMap.connect("clicked", onBtnAddMapClicked)
-  btnRemoveMap.connect("clicked", onBtnRemoveMapClicked)
-  btnMapMoveUp.connect("clicked", onBtnMapMoveUpClicked)
-  btnMapMoveDown.connect("clicked", onBtnMapMoveDownClicked)
-  btnHostLoginServer.connect("clicked", onBtnHostLoginServerClicked)
-  btnHost.connect("clicked", onBtnHostClicked)
-  btnHostCancel.connect("clicked", onBtnHostCancelClicked)
-  cbxHostMods.connect("changed", onCbxHostModsChanged)
-  cbxGameMode.connect("changed", onCbxGameModeChanged)
-  listSelectableMaps.connect("cursor-changed", onListSelectableMapsCursorChanged)
-  listSelectedMaps.connect("row-activated", onListSelectedMapsRowActivated)
-  #
-  ## Settings
-  btnBF2142Path.connect("clicked", onBtnBF2142PathClicked)
-  btnBF2142ServerPath.connect("clicked", onBtnBF2142ServerPathClicked)
-  btnWinePrefix.connect("clicked", onBtnWinePrefixClicked)
-  txtStartupQuery.connect("focus-out-event", onTxtStartupQueryFocusOut)
-  txtStartupQuery.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtStartupQuery.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  btnRemoveMovies.connect("clicked", onBtnRemoveMoviesClicked)
-  btnPatchClientMaps.connect("clicked", onBtnPatchClientMapsClicked)
-  btnPatchServerMaps.connect("clicked", onBtnPatchServerMapsClicked)
-  btnRestore.connect("clicked", onBtnRestoreClicked)
-  #
+proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context): bool {.signalNoCheck.} =
+  if not windowShown:
+    windowShown = true
 
-var signalsConnected: bool = false # TODO: Workaround, because gintro does not implement the disconnect template/macro in gimpl.nim
-proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context): bool =
-  if not signalsConnected:
-    connectSignals()
-    signalsConnected = true
-
-proc onApplicationWindowDestroy(window: ApplicationWindow) =
+proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
   if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
     killProcess(termBF2142ServerPid)
@@ -1610,51 +1232,93 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) =
       killElevatedIo()
 
 proc onApplicationActivate(application: Application) =
-  window = newApplicationWindow(application)
-  window.connect("draw", onApplicationWindowDraw)
-  window.connect("destroy", onApplicationWindowDestroy)
-  # discard window.setIconFromFile(os.getCurrentDir() / "bf2142unlocker.icon")
-  var cssProvider: CssProvider = newCssProvider()
-  when defined(release):
-    discard cssProvider.loadFromData(GUI_CSS)
-  else:
-    discard cssProvider.loadFromPath("gui.css")
-  getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
-  window.title = "BF2142Unlocker"
-  window.defaultSize = (800, 600)
-  window.position = WindowPosition.center
-  vboxMain = newBox(Orientation.vertical, 0)
-  vboxMain.styleContext.addClass("box")
-  notebook = window.createNotebook()
-  notebook.vexpand = true
-  vboxMain.add(notebook)
-  actionBar = newActionBar()
-  actionBar.packEnd(newLinkButtonWithLabel("https://battlefield2142.co/", "Play online"))
-  actionBar.packEnd(newLabel("|"))
-  actionBar.packEnd(newLinkButtonWithLabel("https://www.moddb.com/mods/project-remaster", "Project Remaster Mod"))
-  actionBar.packEnd(newLabel("|"))
-  actionBar.packEnd(newLinkButtonWithLabel("https://www.moddb.com/mods/bf2142unlocker", "Moddb"))
-  actionBar.packEnd(newLabel("|"))
-  actionBar.packEnd(newLinkButtonWithLabel("https://github.com/Dankr4d/BF2142Unlocker", "Github"))
-  actionBar.packStart(newLabel("Version: " & VERSION))
-  vboxMain.add(actionBar)
-  window.add(vboxMain)
-  window.showAll()
+  let builder = newBuilder()
+  discard builder.addFromFile("gui.glade")
+  window = builder.getApplicationWindow("window")
+  notebook = builder.getNotebook("notebook")
+  vboxJoin = builder.getBox("vboxJoin")
+  vboxJustPlay = builder.getBox("vboxJustPlay")
+  cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
+  txtPlayerName = builder.getEntry("txtPlayerName")
+  txtIpAddress = builder.getEntry("txtIpAddress")
+  chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
+  chbtnWindowMode = builder.getCheckButton("chbtnWindowMode")
+  btnJoin = builder.getButton("btnJoin")
+  btnJustPlay = builder.getButton("btnJustPlay")
+  btnJustPlayCancel = builder.getButton("btnJustPlayCancel")
+  vboxHost = builder.getBox("vboxHost")
+  tblHostSettings = builder.getGrid("tblHostSettings")
+  imgLevelPreview = builder.getImage("imgLevelPreview")
+  cbxHostMods = builder.getComboBoxText("cbxHostMods")
+  cbxGameMode = builder.getComboBoxText("cbxGameMode")
+  sbtnBotSkill = builder.getSpinButton("sbtnBotSkill")
+  scaleBotSkill = builder.getScale("scaleBotSkill")
+  sbtnTicketRatio = builder.getSpinButton("sbtnTicketRatio")
+  scaleTicketRatio = builder.getScale("scaleTicketRatio")
+  sbtnSpawnTime = builder.getSpinButton("sbtnSpawnTime")
+  scaleSpawnTime = builder.getScale("scaleSpawnTime")
+  sbtnRoundsPerMap = builder.getSpinButton("sbtnRoundsPerMap")
+  scaleRoundsPerMap = builder.getScale("scaleRoundsPerMap")
+  sbtnBots = builder.getSpinButton("sbtnBots")
+  scaleBots = builder.getScale("scaleBots")
+  sbtnMaxPlayers = builder.getSpinButton("sbtnMaxPlayers")
+  scaleMaxPlayers = builder.getScale("scaleMaxPlayers")
+  sbtnPlayersNeededToStart = builder.getSpinButton("sbtnPlayersNeededToStart")
+  scalePlayersNeededToStart = builder.getScale("scalePlayersNeededToStart")
+  chbtnFriendlyFire = builder.getCheckButton("chbtnFriendlyFire")
+  txtHostIpAddress = builder.getEntry("txtHostIpAddress")
+  hboxMaps = builder.getBox("hboxMaps")
+  listSelectableMaps = builder.getTreeView("listSelectableMaps")
+  listSelectedMaps = builder.getTreeView("listSelectedMaps")
+  btnAddMap = builder.getButton("btnAddMap")
+  btnRemoveMap = builder.getButton("btnRemoveMap")
+  btnMapMoveUp = builder.getButton("btnMapMoveUp")
+  btnMapMoveDown = builder.getButton("btnMapMoveDown")
+  btnHostLoginServer = builder.getButton("btnHostLoginServer")
+  btnHost = builder.getButton("btnHost")
+  btnHostCancel = builder.getButton("btnHostCancel")
+  hboxTerms = builder.getBox("hboxTerms")
+  lblBF2142Path = builder.getLabel("lblBF2142Path")
+  txtBF2142Path = builder.getEntry("txtBF2142Path")
+  btnBF2142Path = builder.getButton("btnBF2142Path")
+  lblBF2142ServerPath = builder.getLabel("lblBF2142ServerPath")
+  txtBF2142ServerPath = builder.getEntry("txtBF2142ServerPath")
+  btnBF2142ServerPath = builder.getButton("btnBF2142ServerPath")
+  lblWinePrefix = builder.getLabel("lblWinePrefix")
+  btnWinePrefix = builder.getButton("btnWinePrefix")
+  txtWinePrefix = builder.getEntry("txtWinePrefix")
+  lblStartupQuery = builder.getLabel("lblStartupQuery")
+  txtStartupQuery = builder.getEntry("txtStartupQuery")
+  btnRemoveMovies = builder.getButton("btnRemoveMovies")
+  btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
+  btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
+  btnRestore = builder.getButton("btnRestore")
+
+  ## Terminals # TODO: Create a glade custom widget
+  termJustPlayServer = newTerminal()
+  termJustPlayServer.vexpand = true
+  vboxJustPlay.add(termJustPlayServer)
+  termLoginServer = newTerminal()
+  termLoginServer.hexpand = true
+  termBF2142Server = newTerminal()
+  termBF2142Server.hexpand = true
+  hboxTerms.add(termLoginServer)
+  hboxTerms.add(termBF2142Server)
+  #
+
+  window.setApplication(application)
+  builder.connectSignals(cast[pointer](nil))
+  window.show()
   loadConfig()
   loadJoinMods()
   loadHostMods()
   if bf2142ServerPath != "":
     updatePathes()
+    fillHostMode()
     fillListSelectableMaps()
     discard loadMapList()
     discard loadServerSettings()
     discard loadAiSettings()
-  hboxTerms.visible = false
-  termJustPlayServer.visible = false
-  termBF2142Server.visible = false
-  termLoginServer.visible = false
-  btnHostCancel.visible = false
-  btnJustPlayCancel.visible = false
   when defined(windows):
     lblWinePrefix.visible = false
     txtWinePrefix.visible = false
