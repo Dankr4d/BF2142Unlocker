@@ -71,8 +71,8 @@
   <object class="GtkApplicationWindow" id="window">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
-    <property name="default_width">800</property>
-    <property name="default_height">600</property>
+    <property name="default_width">1024</property>
+    <property name="default_height">768</property>
     <signal name="destroy" handler="onApplicationWindowDestroy" swapped="no"/>
     <signal name="draw" handler="onApplicationWindowDraw" swapped="no"/>
     <child type="titlebar">
@@ -92,15 +92,14 @@
               <object class="GtkBox" id="vboxJoin">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_left">3</property>
-                <property name="margin_right">3</property>
-                <property name="margin_top">3</property>
-                <property name="margin_bottom">3</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">3</property>
+                    <property name="margin_right">3</property>
+                    <property name="margin_top">3</property>
                     <property name="spacing">3</property>
                     <child>
                       <object class="GtkFrame">
@@ -112,7 +111,8 @@
                           <object class="GtkAlignment">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="left_padding">12</property>
+                            <property name="left_padding">5</property>
+                            <property name="right_padding">5</property>
                             <child>
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
@@ -147,8 +147,6 @@
                                   <object class="GtkEntry" id="txtIpAddress">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <signal name="enter-notify-event" handler="onWidgetFakeHoverEnterNotifyEvent" swapped="no"/>
-                                    <signal name="leave-notify-event" handler="onWidgetFakeHoverLeaveNotifyEvent" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -210,7 +208,8 @@
                           <object class="GtkAlignment">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="left_padding">12</property>
+                            <property name="left_padding">5</property>
+                            <property name="right_padding">5</property>
                             <child>
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
@@ -257,8 +256,6 @@
                                   <object class="GtkEntry" id="txtPlayerName">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <signal name="enter-notify-event" handler="onWidgetFakeHoverEnterNotifyEvent" swapped="no"/>
-                                    <signal name="leave-notify-event" handler="onWidgetFakeHoverLeaveNotifyEvent" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -317,17 +314,14 @@
                   <object class="GtkBox" id="vboxJustPlay">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">3</property>
+                    <property name="margin_right">3</property>
+                    <property name="margin_top">1</property>
+                    <property name="margin_bottom">3</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">2</property>
                     <child>
-                      <object class="GtkTextView">
-                        <property name="can_focus">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
+                      <placeholder/>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnJustPlayCancel">
@@ -397,13 +391,11 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="expanded">True</property>
-                            <property name="resize_toplevel">True</property>
                             <child>
                               <object class="GtkScrolledWindow">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="vexpand">True</property>
-                                <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkViewport">
                                     <property name="visible">True</property>
@@ -412,12 +404,16 @@
                                       <object class="GtkBox">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
+                                        <property name="margin_left">5</property>
+                                        <property name="margin_right">5</property>
+                                        <property name="margin_top">5</property>
+                                        <property name="margin_bottom">5</property>
                                         <child>
                                           <object class="GtkGrid" id="tblHostSettings">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
-                                            <property name="row_spacing">2</property>
-                                            <property name="column_spacing">2</property>
+                                            <property name="row_spacing">3</property>
+                                            <property name="column_spacing">3</property>
                                             <property name="column_homogeneous">True</property>
                                             <child>
                                               <object class="GtkLabel">
@@ -834,12 +830,14 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="expanded">True</property>
-                            <property name="resize_toplevel">True</property>
                             <child>
                               <object class="GtkBox" id="hboxMaps">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="margin_left">3</property>
+                                <property name="margin_right">3</property>
                                 <property name="vexpand">True</property>
+                                <property name="spacing">3</property>
                                 <child>
                                   <object class="GtkScrolledWindow">
                                     <property name="visible">True</property>
@@ -1076,12 +1074,13 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="expanded">True</property>
-                        <property name="resize_toplevel">True</property>
                         <child>
                           <object class="GtkBox" id="hboxTerms">
                             <property name="name">hboxTerms</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="margin_left">3</property>
+                            <property name="margin_right">3</property>
                             <property name="vexpand">True</property>
                             <property name="spacing">3</property>
                             <property name="homogeneous">True</property>
@@ -1117,11 +1116,16 @@
                   <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">3</property>
+                    <property name="margin_right">3</property>
+                    <property name="margin_top">1</property>
+                    <property name="margin_bottom">3</property>
                     <property name="orientation">vertical</property>
                     <child>
                       <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="spacing">1</property>
                         <property name="homogeneous">True</property>
                         <child>
                           <object class="GtkButton" id="btnHostLoginServer">
@@ -1195,16 +1199,20 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="vboxSettings">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">3</property>
+                <property name="margin_right">3</property>
+                <property name="margin_top">3</property>
+                <property name="margin_bottom">3</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="row_spacing">3</property>
-                    <property name="column_spacing">2</property>
+                    <property name="column_spacing">3</property>
                     <child>
                       <object class="GtkLabel" id="lblBF2142Path">
                         <property name="visible">True</property>
@@ -1291,9 +1299,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="hexpand">True</property>
-                        <signal name="enter-notify-event" handler="onWidgetFakeHoverEnterNotifyEvent" swapped="no"/>
                         <signal name="focus-out-event" handler="onTxtStartupQueryFocusOut" swapped="no"/>
-                        <signal name="leave-notify-event" handler="onWidgetFakeHoverLeaveNotifyEvent" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1463,62 +1469,112 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Version: x.x.x</property>
+                <property name="label" translatable="yes">Version: 0.9.2</property>
               </object>
               <packing>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLinkButton">
-                <property name="label" translatable="yes">button</property>
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
-              </object>
-              <packing>
-                <property name="pack_type">end</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLinkButton">
-                <property name="label" translatable="yes">button</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
-              </object>
-              <packing>
-                <property name="pack_type">end</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLinkButton">
-                <property name="label" translatable="yes">button</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
-              </object>
-              <packing>
-                <property name="pack_type">end</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLinkButton">
-                <property name="label" translatable="yes">button</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkLinkButton" id="lbtnUnlockerGithub">
+                    <property name="label" translatable="yes">button</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <property name="uri">https://github.com/Dankr4d/BF2142Unlocker</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">|</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="lbtnUnlockerModdb">
+                    <property name="label" translatable="yes">button</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <property name="uri">https://www.moddb.com/mods/bf2142unlocker</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">|</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="lbtnProjectRemaster">
+                    <property name="label" translatable="yes">button</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <property name="uri">https://www.moddb.com/mods/project-remaster</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">|</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">5</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="lbtnReclamation">
+                    <property name="label" translatable="yes">button</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <property name="uri">https://battlefield2142.co</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">6</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="pack_type">end</property>
@@ -1529,7 +1585,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

@@ -27,7 +27,7 @@ elif defined(windows):
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
     scrolledWindow.add(textView)
     result = cast[Terminal](scrolledWindow)
-    # textView.buffer = result.getBuffer()
+    result.styleContext.addClass("terminal")
   proc textView(terminal: Terminal): TextView =
     return cast[TextView](terminal.getChild())
   proc buffer*(terminal: Terminal): TextBuffer =

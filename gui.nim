@@ -123,6 +123,10 @@ var windowShown: bool = false
 var application: Application
 var window: ApplicationWindow
 var notebook: Notebook
+var lbtnUnlockerGithub: LinkButton
+var lbtnUnlockerModdb: LinkButton
+var lbtnProjectRemaster: LinkButton
+var lbtnReclamation: LinkButton
 ##
 ### Join controls
 var vboxJoin: Box
@@ -225,13 +229,6 @@ proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should 
     termBF2142ServerPid = 0
   elif pid == termLoginServerPid:
     termLoginServerPid = 0
-
-proc onWidgetFakeHoverEnterNotifyEvent(self: Widget, event: EventCrossing): bool {.signal.} =
-  discard
-  # self.styleContext.addClass("fake-hover") # TODO
-proc onWidgetFakeHoverLeaveNotifyEvent(self: Widget, event: EventCrossing): bool {.signal.} =
-  discard
-  # self.styleContext.removeClass("fake-hover") # TODO
 
 proc updateProfilePathes() =
   bf2142ProfilesPath = documentsPath / "Battlefield 2142" / "Profiles"
@@ -1236,6 +1233,10 @@ proc onApplicationActivate(application: Application) =
   discard builder.addFromFile("gui.glade")
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
+  lbtnUnlockerGithub = builder.getLinkButton("lbtnUnlockerGithub")
+  lbtnUnlockerModdb = builder.getLinkButton("lbtnUnlockerModdb")
+  lbtnProjectRemaster = builder.getLinkButton("lbtnProjectRemaster")
+  lbtnReclamation = builder.getLinkButton("lbtnReclamation")
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
   cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
@@ -1294,16 +1295,31 @@ proc onApplicationActivate(application: Application) =
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
   btnRestore = builder.getButton("btnRestore")
 
-  ## Terminals # TODO: Create a glade custom widget
+  ## Set LinkButton label (cannot be set in glade)
+  lbtnUnlockerGithub.label = "Github"
+  lbtnUnlockerModdb.label = "Moddb"
+  lbtnProjectRemaster.label = "Project Remaster Mod"
+  lbtnReclamation.label = "Play online"
+  #
+  ## Terminals # TODO: Create a custom widget for glade
   termJustPlayServer = newTerminal()
   termJustPlayServer.vexpand = true
   vboxJustPlay.add(termJustPlayServer)
+  vboxJustPlay.reorderChild(termJustPlayServer, 0)
   termLoginServer = newTerminal()
   termLoginServer.hexpand = true
   termBF2142Server = newTerminal()
   termBF2142Server.hexpand = true
   hboxTerms.add(termLoginServer)
   hboxTerms.add(termBF2142Server)
+  #
+  ## Setting styles
+  var cssProvider: CssProvider = newCssProvider()
+  when defined(release):
+    discard cssProvider.loadFromData(GUI_CSS)
+  else:
+    discard cssProvider.loadFromPath("gui.css")
+  getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
   #
 
   window.setApplication(application)
