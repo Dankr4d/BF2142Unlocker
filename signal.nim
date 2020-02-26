@@ -4,8 +4,10 @@ macro signalNoCheck*(eventProc: untyped): untyped =
   # {.exportc, cdecl.}
   let pragmas: NimNode = nnkPragma.newTree(
     newIdentNode("exportc"),
-    newIdentNode("cdecl")
+    newIdentNode("cdecl"),
   )
+  when defined(windows):
+    pragmas.add(newIdentNode("dynlib"))
   eventProc.pragma = pragmas
   result = quote do:
     `eventProc`
@@ -14,8 +16,10 @@ macro signal*(eventProc: untyped): untyped =
   # {.exportc, cdecl.}
   let pragmas: NimNode = nnkPragma.newTree(
     newIdentNode("exportc"),
-    newIdentNode("cdecl")
+    newIdentNode("cdecl"),
   )
+  when defined(windows):
+    pragmas.add(newIdentNode("dynlib"))
   # if not windowShown: return
   let windowShownStatement: NimNode = nnkStmtList.newTree(
     nnkIfStmt.newTree(

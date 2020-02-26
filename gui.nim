@@ -26,6 +26,10 @@ import signal # Required to use the custom signal pragma (checks windowShown fla
 when defined(gcc) and defined(windows):
   {.link: "icon.res".}
 
+when defined(linux):
+  {.passC:"-Wl,--export-dynamic".}
+  {.passL:"-lgmodule-2.0 -rdynamic".}
+
 const TEMP_FILES_DIR*: string = "tempfiles" # TODO
 
 var bf2142Path: string
@@ -1320,6 +1324,15 @@ proc onApplicationActivate(application: Application) =
   else:
     discard cssProvider.loadFromPath("gui.css")
   getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
+  #
+  ## Set Adwaita dark mode
+  when defined(windows):
+    var settings: gtk.Settings = getDefaultSettings()
+    var preferDarkTheme: Value
+    settings.getProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
+    if not preferDarkTheme.getBoolean():
+      preferDarkTheme.setBoolean(true)
+      settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
 
   window.setApplication(application)
