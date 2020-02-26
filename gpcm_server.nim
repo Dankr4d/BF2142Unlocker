@@ -1,4 +1,5 @@
 import net
+import strformat # Required for fmt macro
 
 var playerId: int = 2001 # ID must start with 2001 or Battlefield 2142 will NOT unlock the weapons
 
@@ -9,7 +10,7 @@ proc handleClient(client: Socket) =
   client.send(sdata)
   echo "GPCM - Send: ", sdata
   try:
-    discard client.recv(data, 512, 1000)
+    client.readLine(data, maxLength = 512, timeout = 1000)
   except TimeoutError:
     discard
   echo "GPCM - Received: ", data
@@ -18,24 +19,29 @@ proc handleClient(client: Socket) =
   echo "GPCM - Send: ", sdata
   playerId.inc()
   while true:
-    if client.recv(data, 512) == 0:
-      echo "GPCM - Client disconented!"
-      break
-    else:
-      echo "GPCM - RECEIVED: ", data
+    try:
+      client.readLine(data, maxLength = 512, timeout = 1000)
+      if data.len > 0:
+        echo "GPCM - RECEIVED: ", data
+      else:
+        break
+    except TimeoutError:
+      discard
+  echo "GPCM - Client disconented!"
   # client.close()
 
-proc run*() =
+proc run*(ipAddress: IpAddress) =
   var gpcmServer: Socket = newSocket()
+  let port: Port = Port(29900)
   gpcmServer.setSockOpt(OptReuseAddr, true)
   gpcmServer.setSockOpt(OptReusePort, true)
-  gpcmServer.bindAddr(Port(29900))
+  gpcmServer.bindAddr(port, $ipAddress)
   gpcmServer.listen()
 
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo "Gpcm server running and waiting for clients!"
+  echo fmt"Gpcm server running on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
@@ -45,4 +51,4 @@ proc run*() =
     # thread.joinThread()
 
 when isMainModule:
-  run()
+  run("0.0.0.0".parseIpAddress())

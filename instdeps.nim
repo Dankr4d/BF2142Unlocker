@@ -18,3 +18,8 @@ when defined(windows):
     discard
   else:
     discard install("winregistry")
+
+  when (compiles do: import psutil):
+    discard
+  else:
+    discard install("psutil")

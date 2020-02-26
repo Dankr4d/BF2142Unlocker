@@ -1,13 +1,14 @@
-import gintro/[gtk, glib, gobject, gdk, cairo]
+import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf, gmodule]
 import gintro/gio except ListStore
 
 import os
 import net # Requierd for ip parsing and type
 import osproc # Requierd for process starting
 import strutils
+import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
-  import posix # Requierd for getlogin
+  import posix # Requierd for getlogin and killProcess
 elif defined(windows):
   import winim
   import docpath
@@ -18,10 +19,16 @@ import times # Requierd for rudimentary level backup with epochtime suffix
 import checkpermission # Requierd to check if file has write permissions
 import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
+import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
+import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 
 # Set icon (windres.exe .\icon.rc -O coff -o icon.res)
 when defined(gcc) and defined(windows):
   {.link: "icon.res".}
+
+when defined(linux):
+  {.passC:"-Wl,--export-dynamic".}
+  {.passL:"-lgmodule-2.0 -rdynamic".}
 
 const TEMP_FILES_DIR*: string = "tempfiles" # TODO
 
@@ -30,23 +37,25 @@ var bf2142ServerPath: string
 var documentsPath: string
 var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
-var winePrefix: string
-var startupQuery: string
-var ipAddress: string
-var playerName: string
-var autoJoin: bool
 
-const VERSION: string = "0.9.0"
+const VERSION: string = "0.9.2"
 
-const ORIGINAL_CLIENT_MD5_HASH = "6ca5c59cd1623b78191e973b3e8088bc"
+const BF2142_EXE_NAME: string = "BF2142.exe"
+const OPENSPY_DLL_NAME: string = "RendDX9.dll"
+const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
+const FILE_BACKUP_SUFFIX: string = ".original"
+
+const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
+const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
+const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 when defined(linux):
   const
-    ORIGINAL_SERVER_MD5_HASH_32 = "9e9368e3ee5ffc0a533048685456cb8c"
-    ORIGINAL_SERVER_MD5_HASH_64 = "ce720cbf34cf11460a69eaaae50dc917"
+    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c"
+    ORIGINAL_SERVER_MD5_HASH_64: string = "ce720cbf34cf11460a69eaaae50dc917"
 elif defined(windows):
   const
-    ORIGINAL_SERVER_MD5_HASH_32 = "2380c7bc967f96aff1fbf83ce1b9390d"
-    ORIGINAL_SERVER_MD5_HASH_64 = "2380c7bc967f96aff1fbf83ce1b9390d"
+    ORIGINAL_SERVER_MD5_HASH_32: string = "2380c7bc967f96aff1fbf83ce1b9390d"
+    ORIGINAL_SERVER_MD5_HASH_64: string = "2380c7bc967f96aff1fbf83ce1b9390d"
 
 
 const GAME_MODES: seq[tuple[id: string, name: string]] = @[
@@ -70,6 +79,7 @@ const
   SETTING_TEAM_RATIO: string = "sv.teamRatioPercent"
   SETTING_MAX_PLAYERS: string = "sv.maxPlayers"
   SETTING_PLAYERS_NEEDED_TO_START: string = "sv.numPlayersNeededToStart"
+  SETTING_SERVER_IP: string = "sv.serverIP"
 
 const
   AISETTING_BOTS: string = "aiSettings.setMaxNBots"
@@ -85,7 +95,7 @@ var currentLevelFolderPath: string
 var currentAiSettingsPath: string
 
 var termLoginServerPid: int = 0
-var termBf2142ServerPid: int = 0
+var termBF2142ServerPid: int = 0
 
 const
   PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
@@ -105,79 +115,67 @@ const
   CONFIG_KEY_WINEPREFIX: string = "wineprefix"
   CONFIG_KEY_STARTUP_QUERY: string = "startup_query"
   CONFIG_KEY_PLAYER_NAME: string = "playername"
-  CONFIG_KEY_IP_ADDRESS: string = "ip_address"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
+  CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
-const NO_PREVIEW_IMG_PATH = "nopreview.png"
+const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
 var config: Config
+var windowShown: bool = false
 
 ### General controls
 var application: Application
 var window: ApplicationWindow
-var vboxMain: Box
-var notebook: gtk.Notebook
+var notebook: Notebook
+var lbtnUnlockerGithub: LinkButton
+var lbtnUnlockerModdb: LinkButton
+var lbtnProjectRemaster: LinkButton
+var lbtnReclamation: LinkButton
 ##
 ### Join controls
 var vboxJoin: Box
-var actionBar: ActionBar
-var tblJoin: Table
-var lblJoinMods: Label
+var vboxJustPlay: Box
 var cbxJoinMods: ComboBoxText
-var lblPlayerName: Label
 var txtPlayerName: Entry
-var lblIpAddress: Label
 var txtIpAddress: Entry
-var lblAutoJoin: Label
 var chbtnAutoJoin: CheckButton
-var btnJoin: Button
+var chbtnWindowMode: CheckButton
+var btnJoin: Button # TODO: Rename to btnConnect
+var btnJustPlay: Button
+var btnJustPlayCancel: Button
+var termJustPlayServer: Terminal
 ##
 ### Host controls
-var tblHostSettings: Table
 var vboxHost: Box
-var hboxHostLevelPreview: Box
+var tblHostSettings: Grid
 var imgLevelPreview: Image
-var lblHostMods: Label
 var cbxHostMods: ComboBoxText
-var lblGameMode: Label
 var cbxGameMode: ComboBoxText
-var lblBotSkill: Label
 var sbtnBotSkill: SpinButton
-var scaleBotSkill: HScale
-var lblTicketRatio: Label
+var scaleBotSkill: Scale
 var sbtnTicketRatio: SpinButton
-var scaleTicketRatio: HScale
-var lblSpawnTime: Label
+var scaleTicketRatio: Scale
 var sbtnSpawnTime: SpinButton
-var scaleSpawnTime: HScale
-var lblRoundsPerMap: Label
+var scaleSpawnTime: Scale
 var sbtnRoundsPerMap: SpinButton
-var scaleRoundsPerMap: HScale
-var lblBots: Label
+var scaleRoundsPerMap: Scale
 var sbtnBots: SpinButton
-var scaleBots: HScale
-var lblMaxPlayers: Label
+var scaleBots: Scale
 var sbtnMaxPlayers: SpinButton
-var scaleMaxPlayers: HScale
-var lblPlayersNeededToStart: Label
+var scaleMaxPlayers: Scale
 var sbtnPlayersNeededToStart: SpinButton
-var scalePlayersNeededToStart: HScale
-var lblFriendlyFire: Label
+var scalePlayersNeededToStart: Scale
 var chbtnFriendlyFire: CheckButton
   # teamratio (also for coop?)
   # autobalance (also for coop?)
+var txtHostIpAddress: Entry
 var hboxMaps: Box
 var listSelectableMaps: TreeView
-var sWindowSelectableMaps: ScrolledWindow
 var listSelectedMaps: TreeView
-var sWindowSelectedMaps: ScrolledWindow
-var vboxAddRemoveMap: Box
 var btnAddMap: Button
 var btnRemoveMap: Button
-var vboxMoveMap: Box
 var btnMapMoveUp: Button
 var btnMapMoveDown: Button
-var hboxHostButtons: Box
 var btnHostLoginServer: Button
 var btnHost: Button
 var btnHostCancel: Button
@@ -186,26 +184,55 @@ var termLoginServer: Terminal
 var termBF2142Server: Terminal
 ##
 ### Settings controls
-var vboxSettings: Box
-var tblSettings: Table
 var lblBF2142Path: Label
-var fchsrBtnBF2142Path: FileChooserButton
+var txtBF2142Path: Entry
+var btnBF2142Path: Button
 var lblBF2142ServerPath: Label
-var fchsrBtnBF2142ServerPath: FileChooserButton
+var txtBF2142ServerPath: Entry
+var btnBF2142ServerPath: Button
 var lblWinePrefix: Label
-var fchsrBtnWinePrefix: FileChooserButton
+var btnWinePrefix: Button
+var txtWinePrefix: Entry
 var lblStartupQuery: Label
 var txtStartupQuery: Entry
 var btnRemoveMovies: Button
 var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
+var btnRestore: Button
 ##
 
 ### Helper procs
-proc onWidgetFakeHoverEnterNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
-  self.styleContext.addClass("fake-hover")
-proc onWidgetFakeHoverLeaveNotifyEvent(self: Entry | SpinButton, event: EventCrossing): bool =
-  self.styleContext.removeClass("fake-hover")
+# proc areServerReachable(address: string): bool =
+#   if not isAddrReachable(address, Port(8080)):
+#     return false
+#   if not isAddrReachable(address, Port(18300)):
+#     return false
+#   if not isAddrReachable(address, Port(29900)):
+#     return false
+#   return true
+
+proc fillHostIpAddress() =
+  var addrs: seq[string] = getLocalAddrs()
+  if addrs.len > 0:
+    txtHostIpAddress.text = addrs[0] # TODO: Validate interface and choose lan interfaces first
+  else:
+    txtHostIpAddress.text = ""
+
+proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should be stored in startProcess and not passed
+  when defined(linux):
+    if kill(Pid(pid), SIGKILL) < 0:
+      echo "ERROR: Cannot kill process!" # TODO: Create a popup
+  elif defined(windows):
+    if pid == termBF2142ServerPid:
+      terminateForkedThread() # TODO
+    elif pid == termLoginServerPid:
+      terminateThread() # TODO
+    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
+    discard hndlProcess.TerminateProcess(0) # TODO: Check result
+  if pid == termBF2142ServerPid:
+    termBF2142ServerPid = 0
+  elif pid == termLoginServerPid:
+    termLoginServerPid = 0
 
 proc updateProfilePathes() =
   bf2142ProfilesPath = documentsPath / "Battlefield 2142" / "Profiles"
@@ -218,55 +245,86 @@ proc loadConfig() =
     config = loadConfig(CONFIG_FILE_NAME)
   bf2142Path = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH)
   if bf2142Path != "":
-    discard fchsrBtnBF2142Path.setFilename(bf2142Path)
+    txtBF2142Path.text = bf2142Path
   bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH)
   if bf2142ServerPath != "":
-    discard fchsrBtnBF2142ServerPath.setFilename(bf2142ServerPath)
-  winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
+    txtBF2142ServerPath.text = bf2142ServerPath
+  txtWinePrefix.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
   when defined(linux):
-    if winePrefix != "":
-      discard fchsrBtnWinePrefix.setFilename(winePrefix)
-      documentsPath = winePrefix / "drive_c" / "users" / $getlogin() / "My Documents"
+    if txtWinePrefix.text != "":
+      documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
-  startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
-  if startupQuery == "":
-    when defined(linux):
+  when defined(linux):
+    txtStartupQuery.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
+    if txtStartupQuery.text == "":
       txtStartupQuery.text = "/usr/bin/wine"
-    elif defined(windows):
-      txtStartupQuery.text = "start"
-  else:
-    txtStartupQuery.text = startupQuery
-  ipAddress = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS)
-  txtIpAddress.text = ipAddress
-  playerName = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
-  txtPlayerName.text = playerName
-  var autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
+  txtPlayerName.text = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
+  if txtPlayerName.text == "":
+    txtPlayerName.text = "Player"
+  let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
   if autoJoinStr != "":
-    autoJoin = autoJoinStr.parseBool()
+    chbtnAutoJoin.active = autoJoinStr.parseBool()
   else:
-    autojoin = true
-  chbtnAutoJoin.active = autoJoin
+    chbtnAutoJoin.active = false
+  let windowModeStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE)
+  if windowModeStr != "":
+    chbtnWindowMode.active = windowModeStr.parseBool()
+  else:
+    chbtnWindowMode.active = false
 
 proc preClientPatchCheck() =
-  var clientExePath = bf2142Path / "BF2142.exe"
-  if clientExePath != "" and fileExists(clientExePath):
-    var clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+  let clientExePath: string = bf2142Path / BF2142_EXE_NAME
+  if bf2142Path == "":
+    return
+  if fileExists(clientExePath):
+    let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
     if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo "Found original client binary (BF2142.exe). Creating a backup and prepatching!"
+      echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
       if hasWritePermission(clientExePath):
-        copyFile(clientExePath, clientExePath & ".original")
+        copyFile(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
         preClientPatch(clientExePath)
       else:
-        let tmpExePath: string = TEMP_FILES_DIR / "BF2142.exe"
-        copyFileElevated(clientExePath, clientExePath & ".original")
+        var writeSucceed: bool = false
+        let tmpExePath: string = TEMP_FILES_DIR / BF2142_EXE_NAME
+        if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
+          return
         copyFile(clientExePath, tmpExePath)
         preClientPatch(tmpExePath)
-        copyFileElevated(tmpExePath, clientExePath)
+        writeSucceed = copyFileElevated(tmpExePath, clientExePath)
         removeFile(tmpExePath)
+        if not writeSucceed:
+          return
+      btnRestore.sensitive = true
 
-proc preServerPatchCheck() =
+proc openspyBackupCheck() =
+  let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
+  let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
+  if fileExists(openspyDllPath) and fileExists(originalRendDX9Path):
+    let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
+    let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
+    if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
+      if hasWritePermission(openspyDllPath):
+        copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
+        copyFile(originalRendDX9Path, openspyDllPath)
+      else:
+        if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+          return
+        if not copyFileElevated(originalRendDX9Path, openspyDllPath):
+          return
+      btnRestore.sensitive = true
+
+proc restoreCheck() =
+  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  if fileExists(clientExeBackupPath) or fileExists(openspyDllBackupPath):
+    btnRestore.sensitive = true
+  else:
+    btnRestore.sensitive = false
+
+proc preServerPatchCheck(ipAddress: IpAddress) =
   # when defined(windows):
   #   raise newException(ValueError, "Windows server precheck not implemented")
   #   return
@@ -282,30 +340,25 @@ proc preServerPatchCheck() =
     serverExePath = serverExePath / "BF2142_w32ded.exe"
   if serverExePath != "" and fileExists(serverExePath):
     var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+    var createBackup: bool = false
     if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
       echo "Found original server binary. Creating a backup and prepatching!"
-      if hasWritePermission(serverExePath):
-        copyFile(serverExePath, serverExePath & ".original")
-        preServerPatch(serverExePath, parseIpAddress("127.0.0.1"), Port(8080))
-      else:
-        var fileSplit = splitFile(serverExePath)
-        let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
-        copyFileElevated(serverExePath, serverExePath & ".original")
-        copyFile(serverExePath, tmpExePath)
-        preServerPatch(tmpExePath, parseIpAddress("127.0.0.1"), Port(8080))
-        copyFileElevated(tmpExePath, serverExePath)
-        removeFile(tmpExePath)
-
-proc newRangeEntry(min, max, step, value: float): tuple[spinButton: SpinButton, hScale: HScale] = # TODO: Handle values with bindProperty
-  proc onValueChanged(self: SpinButton | HScale, other: SpinButton | HScale) =
-    other.value = self.value
-  result = (spinButton: newSpinButtonWithRange(min, max, step), hScale: newHScaleWithRange(min, max, step))
-  result.spinButton.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  result.spinButton.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  result.hScale.value = value
-  result.spinButton.value = value
-  result.hScale.connect("value-changed", onValueChanged, result.spinButton)
-  result.spinButton.connect("value-changed", onValueChanged, result.hScale)
+      createBackup = true
+    echo "Patching Battlefield 2142 server!"
+    if hasWritePermission(serverExePath):
+      if createBackup:
+        copyFile(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
+      preServerPatch(serverExePath, ipAddress, Port(8080))
+    else:
+      var fileSplit = splitFile(serverExePath)
+      let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
+      if createBackup:
+        if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
+          return
+      copyFile(serverExePath, tmpExePath)
+      preServerPatch(tmpExePath, ipAddress, Port(8080))
+      discard copyFileElevated(tmpExePath, serverExePath)
+      removeFile(tmpExePath)
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -369,6 +422,14 @@ proc moveSelectedUp(list: TreeView) =
 proc moveSelectedDown(list: TreeView) =
   list.moveSelectedUpDown(up = false)
 
+proc selectNext(list: TreeView) =
+  var iter: TreeIter
+  var store = listStore(list.getModel())
+  if not list.selection.getSelected(store, iter):
+    return
+  if store.iterNext(iter):
+    list.selection.selectIter(iter)
+
 proc removeSelected(list: TreeView) =
   var
     ls: ListStore
@@ -422,6 +483,11 @@ proc clear(list: TreeView) =
     return
   clear(store)
 
+proc fillHostMode() =
+  for mode in GAME_MODES:
+    cbxGameMode.append(mode.id, mode.name)
+  cbxGameMode.active = 2 # Coop
+
 proc fillListSelectableMaps() =
   listSelectableMaps.clear()
   var gameMode: string = cbxGameMode.activeId
@@ -473,7 +539,7 @@ proc updatePathes() =
   currentLevelFolderPath = currentModPath / "levels"
   currentAiSettingsPath = currentModPath / "ai" / "aidefault.ai"
 
-proc loadSaveServerSettings(save: bool) =
+proc loadSaveServerSettings(save: bool): bool =
   var
     line: string
     serverConfig: string
@@ -523,6 +589,9 @@ proc loadSaveServerSettings(save: bool) =
           value = $sbtnPlayersNeededToStart.value.toInt()
         else:
           sbtnPlayersNeededToStart.value = value.parseFloat()
+      of SETTING_SERVER_IP:
+        if save:
+          value = "\"" & txtHostIpAddress.text & "\""
       of SETTING_TEAM_RATIO:
         discard # TODO: Implement SETTING_TEAM_RATIO
     if save:
@@ -532,15 +601,17 @@ proc loadSaveServerSettings(save: bool) =
     if hasWritePermission(currentServerSettingsPath):
       writeFile(currentServerSettingsPath, serverConfig)
     else:
-      writeFileElevated(currentServerSettingsPath, serverConfig)
+      return writeFileElevated(currentServerSettingsPath, serverConfig)
+  return true
 
-proc saveServerSettings() =
-  loadSaveServerSettings(save = true)
 
-proc loadServerSettings() =
-  loadSaveServerSettings(save = false)
+proc saveServerSettings(): bool =
+  return loadSaveServerSettings(save = true)
 
-proc loadSaveAiSettings(save: bool) =
+proc loadServerSettings(): bool =
+  return loadSaveServerSettings(save = false)
+
+proc loadSaveAiSettings(save: bool): bool =
   var
     line: string
     aiConfig: string
@@ -563,7 +634,7 @@ proc loadSaveAiSettings(save: bool) =
         sbtnBots.value = line.split(' ')[1].parseFloat()
     elif line.startsWith(AISETTING_OVERRIDE_MENU_SETTINGS):
       if save:
-        line = AISETTING_OVERRIDE_MENU_SETTINGS & " 1" # Necessary to change bot amount 
+        line = AISETTING_OVERRIDE_MENU_SETTINGS & " 1" # Necessary to change bot amount
     elif line.startsWith(AISETTING_BOT_SKILL):
       # As we added AISETTING_OVERRIDE_MENU_SETTINGS above every ai setting will override our serversettings.
       # So we need to remove every setting that can be done in gui from the ai config.
@@ -586,30 +657,33 @@ proc loadSaveAiSettings(save: bool) =
     if hasWritePermission(currentAiSettingsPath):
       writeFile(currentAiSettingsPath, aiConfig)
     else:
-      writeFileElevated(currentAiSettingsPath, aiConfig)
+      return writeFileElevated(currentAiSettingsPath, aiConfig)
+  return true
 
-proc saveAiSettings() =
-  loadSaveAiSettings(save = true)
+proc saveAiSettings(): bool =
+  return loadSaveAiSettings(save = true)
 
-proc loadAiSettings() =
-  loadSaveAiSettings(save = false)
+proc loadAiSettings(): bool =
+  return loadSaveAiSettings(save = false)
 
-proc saveMapList() =
+proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
   if hasWritePermission(currentMapListPath):
     writeFile(currentMapListPath, mapListContent)
   else:
-    writeFileElevated(currentMapListPath, mapListContent)
+    return writeFileElevated(currentMapListPath, mapListContent)
+  return true
 
-proc loadMapList() =
+proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
   var line, mapName, mapMode, mapSize: string
   while file.readLine(line):
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   file.close()
+  return true
 
 proc checkProfileFiles() =
   if bf2142ProfilesPath == "":
@@ -631,20 +705,20 @@ proc saveProfileAccountName() =
   var line, profileContent: string
   while file.readLine(line):
     if line.startsWith("LocalProfile.setEAOnlineMasterAccount"):
-      profileContent.add("LocalProfile.setEAOnlineMasterAccount \"" & playerName & "\"\n" )
+      profileContent.add("LocalProfile.setEAOnlineMasterAccount \"" & txtPlayerName.text & "\"\n" )
     elif line.startsWith("LocalProfile.setEAOnlineSubAccount"):
-      profileContent.add("LocalProfile.setEAOnlineSubAccount \"" & playerName & "\"\n" )
+      profileContent.add("LocalProfile.setEAOnlineSubAccount \"" & txtPlayerName.text & "\"\n" )
     else:
       profileContent.add(line & '\n')
   file.close()
   writeFile(profileConPath, profileContent)
 
-proc startLoginServer() =
-  termLoginServer.setSizeRequest(0, 300)
+proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
+  term.setSizeRequest(0, 300)
   when defined(linux):
-    termLoginServerPid = termLoginServer.startProcess(command = "./server")
+    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress}")
   elif defined(windows):
-    termLoginServerPid = termLoginServer.startProcess(command = "server.exe")
+    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress}")
 
 proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
@@ -652,9 +726,9 @@ proc startBF2142Server() =
   if symlinkExists(stupidPbSymlink):
     removeFile(stupidPbSymlink)
   when defined(linux):
-    termBf2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
+    termBF2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
   elif defined(windows):
-    termBf2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
+    termBF2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
 
 proc loadJoinMods() =
   cbxJoinMods.removeAll()
@@ -671,15 +745,32 @@ proc loadHostMods() =
       if folder.kind == pcDir:
         cbxHostMods.appendText(folder.path)
   cbxHostMods.active = 0
+
+proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
+  tblHostSettings.sensitive = not running
+  hboxMaps.sensitive = not running
+  btnHostLoginServer.visible = not running
+  btnHost.visible = not running
+  btnHostCancel.visible = running
+  hboxTerms.visible = running
+  termLoginServer.visible = running
+  if bf2142ServerInvisible:
+    termBF2142Server.visible = false
+  else:
+    termBF2142Server.visible = running
+
+proc applyJustPlayRunningSensitivity(running: bool) =
+  termJustPlayServer.visible = running
+  btnJustPlay.visible = not running
+  btnJustPlayCancel.visible = running
 ##
 
 
 ### Events
 ## Join
-proc onBtnJoinClicked(self: Button) =
-  playerName = txtPlayerName.text.strip()
-  ipAddress = txtIpAddress.text.strip()
-  autoJoin = chbtnAutoJoin.active
+proc patchAndStartLogic(): bool =
+  let ipAddress: string = txtIpAddress.text.strip()
+  txtPlayerName.text = txtPlayerName.text.strip()
   var invalidStr: string
   if ipAddress.startsWith("127") or ipAddress == "localhost": # TODO: Check if ip is also an valid ipv4 address
     invalidStr.add("\t* Localhost addresses are currently not supported. Battlefield 2142 starts with a black screen if you're trying to connect to a localhost address.\n")
@@ -687,67 +778,101 @@ proc onBtnJoinClicked(self: Button) =
     invalidStr.add("\t* Your IP-address is not valid.\n")
   elif ipAddress.parseIpAddress().family == IPv6:
     invalidStr.add("\t* IPv6 not testes!\n") # TODO: Add ignore?
-  if playerName.len == 0:
+  if txtPlayerName.text == "":
     invalidStr.add("\t* You need to specify a playername with at least one character.\n")
   if bf2142Path == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
-    if winePrefix == "":
-      invalidStr.add("\t* You need to specify your wine path (in \"Settings\"-Tab).\n")
+    if txtWinePrefix.text == "":
+      invalidStr.add("\t* You need to specify your wine prefix (in \"Settings\"-Tab).\n")
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
-    return
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, playerName)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $autoJoin)
+    return false
+  # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if hasWritePermission(bf2142Path / "BF2142.exe"):
-    patchClient(bf2142Path / "BF2142.exe", ipAddress.parseIpAddress(), Port(8080))
+  preClientPatchCheck()
+  if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
+    patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
   else:
-    copyFile(bf2142Path / "BF2142.exe", TEMP_FILES_DIR / "BF2142.exe")
-    patchClient(TEMP_FILES_DIR / "BF2142.exe", ipAddress.parseIpAddress(), Port(8080))
-    copyFileElevated(TEMP_FILES_DIR / "BF2142.exe", bf2142Path / "BF2142.exe")
-    removeFile(TEMP_FILES_DIR / "BF2142.exe")
+    var writeSucceed: bool
+    copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
+    patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
+    writeSucceed = copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
+    removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
+    if not writeSucceed:
+      return false
+
+  openspyBackupCheck()
 
   saveProfileAccountName()
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
   var command: string
   when defined(linux):
-    when defined(debug):
+    when not defined(release):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
-    if winePrefix != "":
-      command.add("WINEPREFIX=" & wineprefix & ' ')
+    if txtWinePrefix.text != "":
+      command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
-  if startupQuery != "":
-    command.add(startupQuery & ' ')
-  command.add("BF2142.exe" & ' ')
-  # command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ') # TODO: Login server crashes (on windows) because bf2142 is restarting after login
+  when defined(linux):
+    if txtStartupQuery.text != "":
+      command.add(txtStartupQuery.text & ' ')
+  command.add(BF2142_EXE_NAME & ' ')
+  command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
-  command.add("+fullscreen 1" & ' ') # TODO: Implement this as settings option
+  if chbtnWindowMode.active:
+    command.add("+fullscreen 0" & ' ')
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
-  command.add("+eaAccountName " & playerName & ' ')
+  command.add("+eaAccountName " & txtPlayerName.text & ' ')
   command.add("+eaAccountPassword A" & ' ')
-  command.add("+soldierName " & playerName & ' ')
-  if autoJoin:
+  command.add("+soldierName " & txtPlayerName.text & ' ')
+  if chbtnAutoJoin.active:
     command.add("+joinServer " & ipAddress)
   when defined(linux): # TODO: Check if bf2142Path is neccessary
     let processCommand: string = command
   elif defined(windows):
-    let processCommand: string = bf2142Path / command
+    let processCommand: string = bf2142Path & '\\' & command
   var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )
+  return true
 
+proc onBtnJoinClicked(self: Button) {.signal.} =
+  discard patchAndStartLogic()
 
-proc onBtnAddMapClicked(self: Button) =
+proc onBtnJustPlayClicked(self: Button) {.signal.} =
+  var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
+  txtIpAddress.text = $ipAddress
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+  termJustPlayServer.clear()
+  termJustPlayServer.startLoginServer(ipAddress)
+  var prevAutoJoinVal: bool = chbtnAutoJoin.active
+  chbtnAutoJoin.active = false
+  if patchAndStartLogic():
+    termLoginServer.visible = false
+    applyJustPlayRunningSensitivity(true)
+    if termBF2142ServerPid == 0:
+      applyHostRunningSensitivity(false)
+  else:
+    chbtnAutoJoin.active = prevAutoJoinVal
+    killProcess(termLoginServerPid)
+
+proc onBtnJustPlayCancelClicked(self: Button) {.signal.} =
+  killProcess(termLoginServerPid)
+  applyJustPlayRunningSensitivity(false)
+
+proc onBtnAddMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
-  listSelectableMaps.removeSelected()
+  listSelectableMaps.selectNext()
 
-proc onBtnRemoveMapClicked(self: Button) =
+proc onBtnRemoveMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
@@ -755,167 +880,256 @@ proc onBtnRemoveMapClicked(self: Button) =
     listSelectableMaps.appendMap(mapName, mapMode, mapSize)
   listSelectedMaps.removeSelected()
 
-proc onBtnMapMoveUpClicked(self: Button) =
+proc onBtnMapMoveUpClicked(self: Button) {.signal.} =
   listSelectedMaps.moveSelectedUp()
 
-proc onBtnMapMoveDownClicked(self: Button) =
+proc onBtnMapMoveDownClicked(self: Button) {.signal.} =
   listSelectedMaps.moveSelectedDown()
 #
 ## Host
-proc onBtnHostClicked(self: Button) =
-  # var thread: system.Thread[void]
-  # thread.createThread(server.run)
-  tblHostSettings.sensitive = false
-  hboxMaps.sensitive = false
-  btnHostLoginServer.visible = false
-  btnHost.visible = false
-  btnHostCancel.visible = true
-  saveMapList()
-  saveServerSettings()
-  saveAiSettings()
-  hboxTerms.visible = true
-  termLoginServer.visible = true
-  termBF2142Server.visible = true
-  startLoginServer()
+proc onBtnHostClicked(self: Button) {.signal.} =
+  if not saveMapList():
+    return
+  if not saveServerSettings():
+    return
+  if not saveAiSettings():
+    return
+  applyJustPlayRunningSensitivity(false)
+  applyHostRunningSensitivity(true)
+  preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
+  txtIpAddress.text = txtHostIpAddress.text
+  if termLoginServerPid > 0:
+    killProcess(termLoginServerPid)
+  termLoginServer.clear()
+  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
-proc onBtnHostLoginServerClicked(self: Button) =
-  tblHostSettings.sensitive = false
-  hboxMaps.sensitive = false
-  btnHostLoginServer.visible = false
-  btnHost.visible = false
-  btnHostCancel.visible = true
-  hboxTerms.visible = true
-  termLoginServer.visible = true
-  startLoginServer()
-
-proc onBtnHostCancelClicked(self: Button) =
-  tblHostSettings.sensitive = true
-  hboxMaps.sensitive = true
-  btnHostLoginServer.visible = true
-  btnHost.visible = true
-  btnHostCancel.visible = false
-  hboxTerms.visible = false
-  termBF2142Server.visible = false
-  termLoginServer.visible = false
+proc onBtnHostLoginServerClicked(self: Button) {.signal.} =
+  applyJustPlayRunningSensitivity(false)
+  applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
+  txtIpAddress.text = txtHostIpAddress.text
   if termLoginServerPid > 0:
-    termLoginServer.killProcess(termLoginServerPid)
-    termLoginServer.clear()
-    termLoginServerPid = 0
-  if termBf2142ServerPid > 0:
-    termBF2142Server.killProcess(termBf2142ServerPid)
-    termLoginServer.clear()
-    termBf2142ServerPid = 0
+    killProcess(termLoginServerPid)
+  termLoginServer.clear()
+  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
-proc onCbxHostModsChanged(self: ComboBoxText) =
+proc onBtnHostCancelClicked(self: Button) {.signal.} =
+  applyHostRunningSensitivity(false)
+  applyJustPlayRunningSensitivity(false)
+  killProcess(termLoginServerPid)
+  txtIpAddress.text = ""
+  if termBF2142ServerPid > 0:
+    killProcess(termBF2142ServerPid)
+
+proc onCbxHostModsChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
-  loadMapList()
-  loadServerSettings()
-  loadAiSettings()
+  discard loadMapList()
+  discard loadServerSettings()
+  discard loadAiSettings()
 
-proc onCbxGameModeChanged(self: ComboBoxText) =
+proc onCbxGameModeChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
 proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menuMap.png"
+  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
   if fileExists(imgPath):
-    imgLevelPreview.setFromFile(imgPath)
+    var pixbuf = newPixbufFromFile(imgPath)
+    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
+    imgLevelPreview.setFromPixbuf(pixbuf)
   elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH)
+    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
   else:
     imgLevelPreview.clear()
 
-proc onListSelectableMapsCursorChanged(self: TreeView) =
+proc onListSelectableMapsCursorChanged(self: TreeView) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   updateLevelPreview(mapName, mapMode, mapSize)
 
-proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) =
+proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   updateLevelPreview(mapName, mapMode, mapSize)
 #
 ## Settings
-proc onFchsrBtnBF2142PathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  bf2142Path = self.getFilename()
-  preClientPatchCheck()
+proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
+  var dialog: FileChooserDialog = newFileChooserDialog(title, window, FileChooserAction.selectFolder)
+  discard dialog.addButton("OK", ResponseType.ok.ord)
+  discard dialog.addButton("Cancel", ResponseType.cancel.ord)
+  let responseId: int = dialog.run()
+  let path: string = dialog.getFilename()
+  dialog.destroy()
+  return (cast[ResponseType](responseId), path)
+
+proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if not fileExists(path / BF2142_EXE_NAME):
+    newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
+    return
+  vboxJoin.visible = true
+  vboxHost.visible = true
+  bf2142Path = path
+  txtBF2142Path.text = path
+  if btnRestore.sensitive == false:
+    restoreCheck()
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
-    var wineStartPos: int = bf2142Path.find(".wine")
+    let wineStartPos: int = bf2142Path.find(".wine")
     var wineEndPos: int
     if wineStartPos > -1:
       wineEndPos = bf2142Path.find(DirSep, wineStartPos) - 1
-      if fchsrBtnWinePrefix.getFilename() == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
-        winePrefix = bf2142Path.substr(0, wineEndPos)
-        discard fchsrBtnWinePrefix.setFilename(winePrefix)
-        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix) # TODO: Create a saveWinePrefix proc
+      if txtWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
+        txtWinePrefix.text = bf2142Path.substr(0, wineEndPos)
+        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onFchsrBtnBF2142ServerPathSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  bf2142ServerPath = self.getFilename()
-  preServerPatchCheck()
+proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
+  var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if bf2142ServerPath == path:
+    return
+  bf2142ServerPath = path
+  txtBF2142ServerPath.text = path
   updatePathes()
   loadHostMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onFchsrBtnWinePrefixSelectionChanged(self: FileChooserButton) = # TODO: Add checks
-  winePrefix = self.getFilename()
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, winePrefix)
+proc onBtnWinePrefixClicked(self: Button) {.signal.} = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  if bf2142ServerPath == path:
+    return
+  txtWinePrefix.text = path
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
-    documentsPath = winePrefix / "drive_c" / "users" / $getlogin() / "My Documents"
+    documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
-proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool =
-  startupQuery = self.text
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, startupQuery)
+proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnRemoveMoviesClicked(self: Button) =
+proc onBtnRemoveMoviesClicked(self: Button) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
       if hasWritePermission(movie.path):
         removeFile(movie.path)
       else:
-        removeFileElevated(movie.path)
+        discard removeFileElevated(movie.path)
 
-proc copyLevels(srcLevelPath, dstLevelPath: string, excludeFiles: seq[string] = @[], createBackup: bool = true, copyLevelsLowerCase: bool = false) =
+proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
+  result = true
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
-  echo "Creating a Levels folder backup!"
   if createBackup:
-    copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()) # TODO: Check if dir could be copied as normal user
+    echo "Creating a Levels folder backup!"
+    if not copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()): # TODO: Check if dir could be copied as normal user
+      return false
   for levelFolder in walkDir(srcLevelPath, true):
     levelName = levelFolder.path
-    if copyLevelsLowerCase:
-      levelName = levelFolder.path.toLower()
-    discard existsOrCreateDirElevated(dstLevelPath / levelName) # TODO: Check for write permission
+    when defined(linux):
+      if isServer:
+        levelName = levelFolder.path.toLower()
+    if not existsOrCreateDirElevated(dstLevelPath / levelName)[0]: # TODO: Check for write permission
+      return false
     echo "Copying level: ", levelName
-    for levelFiles in walkDir(srcLevelPath / levelName, true):
-      dstPath = dstLevelPath / levelName / levelFiles.path
-      srcPath = srcLevelPath / levelName / levelFiles.path
-      if levelFiles.path in excludeFiles:
-        continue
+    for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
+      dstPath = dstLevelPath / levelName
+      when defined(linux):
+        if isServer and levelFiles.kind == pcDir and levelFiles.path == "Info":
+          dstPath = dstPath / levelFiles.path.toLower()
+        else:
+          dstPath = dstPath / levelFiles.path
+      else:
+        dstPath = dstPath / levelFiles.path
+      srcPath = srcLevelPath / levelFolder.path / levelFiles.path
       if levelFiles.kind == pcDir:
-        copyDirElevated(srcPath, dstPath) # TODO: Check for write permission
+        if not copyDirElevated(srcPath, dstPath): # TODO: Check for write permission
+          return false
       elif levelFiles.kind == pcFile:
         if hasWritePermission(dstPath):
           copyFile(srcPath, dstPath)
         else:
-          copyFileElevated(srcPath, dstPath)
-  for levelPath in walkDir(dstLevelPath): # We need to rewalk levels to delete all archive.md5 files
-    dstArchiveMd5Path = levelPath.path / "archive.md5"
-    if fileExists(dstArchiveMd5Path):
-      echo "Removing checksum file: ", dstArchiveMd5Path
-      if hasWritePermission(dstArchiveMd5Path):
-        removeFile(dstArchiveMd5Path)
-      else:
-        removeFileElevated(dstArchiveMd5Path)
+          if not copyFileElevated(srcPath, dstPath):
+            return false
+    ## Move desc file # TODO: Create a recursive function that walks every file in each folder
+    # if isServer: # Linux only # TODO: Refactor copyLevels
+    if isServer: # Moving all files in levels info folder with lowercase namens
+      let infoPath = dstLevelPath / levelName / "info"
+      for fileName in walkDir(infoPath, true):
+        if fileName.kind == pcFile:
+          when defined(linux):
+            let srcDescPath = infoPath / fileName.path
+            let dstDescPath = infoPath / fileName.path.toLower()
+            if srcDescPath != dstDescPath:
+              moveFile(srcDescPath, dstDescPath) # TODO: Move elevated on windows
+
+          block FIX_INVALID_XML_FILES: # Fixes invalid xml files, should be deleted later
+            const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
+            const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
+            const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
+            const OMAHA_BEACH_DESC_MD5_HASH: string = "0e28bad9b61224f7889cfffcded81182"
+            const PANORAMA_DESC_MD5_HASH: string = "5288a6a0dded7df3c60341f5a20a5f0a"
+            const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
+            const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
+            proc removeLine(path, fileName: string, val: int): bool =
+              var raw: string = readFile(path / fileName.toLower())
+              var rawLines: seq[string] = raw.splitLines()
+              rawLines.delete(val - 1)
+              when defined(windows):
+                if hasWritePermission(path / fileName):
+                  writeFile(path / fileName, rawLines.join("\n"))
+                else:
+                  if not writeFileElevated(path / fileName, rawLines.join("\n")):
+                    return false
+              else:
+                writeFile(path / fileName.toLower(), rawLines.join("\n"))
+              return true
+            proc removeChars(path: string, fileName: string, valFrom, valTo: int): bool =
+              var raw: string = readFile(path / fileName.toLower())
+              raw.delete(valFrom - 1, valTo - 1)
+              when defined(windows):
+                if hasWritePermission(path / fileName):
+                  writeFile(path / fileName, raw)
+                else:
+                  if not writeFileElevated(path / fileName, raw):
+                    return false
+              else:
+                writeFile(path / fileName.toLower(), raw)
+              return true
+            if fileName.path.endsWith(".desc"):
+              if fileName.path.toLower() == "aegis_station.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == AEGIS_STATION_DESC_MD5_HASH:
+                if not removeChars(infoPath, fileName.path, 1464, 1464): # Fix: Remove char on position 1464
+                  return false
+              if fileName.path.toLower() == "bloodgulch.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == BLOODGULCH_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 20): # Fix: Delete line 20
+                  return false
+              if fileName.path.toLower() == "kilimandscharo.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == KILIMANDSCHARO_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 7): # Fix: Delete line 7
+                  return false
+              if fileName.path.toLower() == "omaha_beach.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == OMAHA_BEACH_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 11): # Fix: Delete line 11
+                  return false
+              if fileName.path.toLower() == "panorama.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == PANORAMA_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 14): # Fix: Delete line 14
+                  return false
+              if fileName.path.toLower() == "severnaya.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == SEVERNAYA_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 16): # Fix: Delete line 16
+                  return false
+              if fileName.path.toLower() == "street.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == STREET_DESC_MD5_HASH:
+                if not removeLine(infoPath, fileName.path, 9): # Fix: Delete line 9
+                  return false
+
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
   let
@@ -923,13 +1137,14 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     srcLevelPath: string = dialog.getFilename()
     dstLevelPath: string = bf2142Path / "mods" / "bf2142" / "Levels"
   if response == ResponseType.ok:
-    copyLevels(srcLevelPath, dstLevelPath)
+    var writeSucceed: bool = copyLevels(srcLevelPath, dstLevelPath)
     dialog.destroy()
-    newInfoDialog("Done", "Copied 64 coop maps (client)!")
+    if writeSucceed:
+      newInfoDialog("Done", "Copied 64 coop maps (client)!")
   else:
     dialog.destroy()
 
-proc onBtnPatchClientMapsClicked(self: Button) =
+proc onBtnPatchClientMapsClicked(self: Button) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (client)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
@@ -940,344 +1155,221 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   let
     response = ResponseType(responseId)
     srcLevelPath: string = dialog.getFilename()
-    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "Levels" # TODO: Check if "Levels" is in linux lowercase (i think so)
-    copyLevelsLowerCase: bool = defined(linux)
+    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels"
   if response == ResponseType.ok:
-    copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, excludeFiles = @["client.zip"], copyLevelsLowerCase = copyLevelsLowerCase)
-    fillListSelectableMaps()
+    var writeSucceed: bool = copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
     dialog.destroy()
-    newInfoDialog("Done", "Copied 64 coop maps (server)!")
+    if writeSucceed:
+      fillListSelectableMaps()
+      newInfoDialog("Done", "Copied 64 coop maps (server)!")
   else:
     dialog.destroy()
 
-proc onBtnPatchServerMapsClicked(self: Button) =
+proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (server)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
+
+proc onBtnRestoreClicked(self: Button) {.signal.} =
+  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+  let clientExeRestorePath: string = bf2142Path / BF2142_EXE_NAME
+  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  var restoredFiles: bool = false
+  if bf2142Path == "":
+    return
+  if fileExists(clientExeBackupPath):
+    let clientMd5Hash: string = getMD5(clientExeBackupPath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
+      echo "Found original client binary (" & BF2142_EXE_NAME & "). Restoring!"
+      if hasWritePermission(clientExeBackupPath):
+        copyFile(clientExeBackupPath, clientExeRestorePath)
+        removeFile(clientExeBackupPath)
+      else:
+        if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
+          return
+        if not removeFileElevated(clientExeBackupPath):
+          return
+      restoredFiles = true
+  if fileExists(openspyDllBackupPath):
+    let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+    if openspyMd5Hash == OPENSPY_MD5_HASH:
+      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+      if hasWritePermission(openspyDllBackupPath):
+        copyFile(openspyDllBackupPath, openspyDllRestorePath)
+        removeFile(openspyDllBackupPath)
+      else:
+        if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
+          return
+        if not removeFileElevated(openspyDllBackupPath):
+          return
+      restoredFiles = true
+  if restoredFiles:
+    btnRestore.sensitive = false
 #
 ##
-proc createNotebook(): NoteBook =
-  result = newNotebook()
-  ### Join
-  lblJoinMods = newLabel("Mods:")
-  lblJoinMods.styleContext.addClass("label")
-  lblJoinMods.setAlignment(0.0, 0.5)
-  cbxJoinMods = newComboBoxText()
-  lblPlayerName = newLabel("Player name: ")
-  lblPlayerName.styleContext.addClass("label")
-  txtPlayerName = newEntry()
-  txtPlayerName.styleContext.addClass("entry")
-  lblIpAddress = newLabel("IP-Address:")
-  lblIpAddress.styleContext.addClass("label")
-  txtIpAddress = newEntry()
-  txtIpAddress.styleContext.addClass("entry")
-  lblAutoJoin = newLabel("Auto join server:")
-  lblAutoJoin.styleContext.addClass("label")
-  chbtnAutoJoin = newCheckButton()
-  btnJoin = newButton("Join")
-  btnJoin.styleContext.addClass("button")
-  tblJoin = newTable(5, 2, false)
-  tblJoin.halign = Align.center
-  tblJoin.attach(lblJoinMods, 0, 1, 0, 1, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(cbxJoinMods, 1, 2, 0, 1, {AttachFlag.fill}, {}, 0, 3)
-  tblJoin.attach(lblPlayerName, 0, 1, 1, 2, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(txtPlayerName, 1, 2, 1, 2, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(lblIpAddress, 0, 1, 2, 3, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(txtIpAddress, 1, 2, 2, 3, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(lblAutoJoin, 0, 1, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(chbtnAutoJoin, 1, 2, 3, 4, {AttachFlag.shrink}, {}, 0, 3)
-  tblJoin.attach(btnJoin, 0, 2, 4, 5, {AttachFlag.fill}, {}, 0, 3)
-  vboxJoin = newBox(Orientation.vertical, 0)
-  vboxJoin.styleContext.addClass("box")
-  vboxJoin.add(tblJoin)
-  ##
-  ### Host
-  vboxHost = newBox(Orientation.vertical, 10)
-  vboxHost.styleContext.addClass("box")
-  lblHostMods = newLabel("Mods:")
-  lblHostMods.styleContext.addClass("label")
-  lblHostMods.setAlignment(0.0, 0.5)
-  cbxHostMods = newComboBoxText()
-  lblGameMode = newLabel("Game mode:")
-  lblGameMode.styleContext.addClass("label")
-  lblGameMode.setAlignment(0.0, 0.5)
-  cbxGameMode = newComboBoxText()
-  for mode in GAME_MODES:
-    cbxGameMode.append(mode.id, mode.name)
-  cbxGameMode.active = 2 # Coop
-  lblBotSkill = newLabel("Bot skill:")
-  lblBotSkill.styleContext.addClass("label")
-  lblBotSkill.setAlignment(0.0, 0.5)
-  (sbtnBotSkill, scaleBotSkill) = newRangeEntry(0, 1, 0.1, 0.5)
-  lblTicketRatio = newLabel("Ticket ratio: ")
-  lblTicketRatio.styleContext.addClass("label")
-  lblTicketRatio.setAlignment(0.0, 0.5)
-  (sbtnTicketRatio, scaleTicketRatio) = newRangeEntry(10, 999, 1, 100)
-  lblSpawnTime = newLabel("Spawn time: ")
-  lblSpawnTime.styleContext.addClass("label")
-  lblSpawnTime.setAlignment(0.0, 0.5)
-  (sbtnSpawnTime, scaleSpawnTime) = newRangeEntry(0, 60, 1, 15)
-  lblRoundsPerMap = newLabel("Rounds per map: ")
-  lblRoundsPerMap.styleContext.addClass("label")
-  lblRoundsPerMap.setAlignment(0.0, 0.5)
-  (sbtnRoundsPerMap, scaleRoundsPerMap) = newRangeEntry(1, 5, 1, 1)
-  lblBots = newLabel("Bots: ")
-  lblBots.styleContext.addClass("label")
-  lblBots.setAlignment(0.0, 0.5)
-  (sbtnBots, scaleBots) = newRangeEntry(0, 255, 1, 63)
-  lblMaxPlayers = newLabel("Max players: ")
-  lblMaxPlayers.styleContext.addClass("label")
-  lblMaxPlayers.setAlignment(0.0, 0.5)
-  (sbtnMaxPlayers, scaleMaxPlayers) = newRangeEntry(1, 64, 1, 64)
-  lblPlayersNeededToStart = newLabel("Players needed to start: ")
-  lblPlayersNeededToStart.styleContext.addClass("label")
-  lblPlayersNeededToStart.setAlignment(0.0, 0.5)
-  (sbtnPlayersNeededToStart, scalePlayersNeededToStart) = newRangeEntry(1, 64, 1, 1)
-  lblFriendlyFire = newLabel("Friendly fire: ")
-  lblFriendlyFire.styleContext.addClass("label")
-  lblFriendlyFire.setAlignment(0.0, 0.5)
-  chbtnFriendlyFire = newCheckButton()
-  chbtnFriendlyFire.active = true
-  tblHostSettings = newTable(10, 3, true)
-  tblHostSettings.rowSpacings = 3
-  tblHostSettings.attachDefaults(lblHostMods, 0, 1, 0, 1)
-  tblHostSettings.attachDefaults(cbxHostMods, 1, 2, 0, 1)
-  tblHostSettings.attachDefaults(lblGameMode, 0, 1, 1, 2)
-  tblHostSettings.attachDefaults(cbxGameMode, 1, 2, 1, 2)
-  tblHostSettings.attachDefaults(lblBotSkill, 0, 1, 2, 3)
-  tblHostSettings.attachDefaults(sbtnBotSkill, 1, 2, 2, 3)
-  tblHostSettings.attachDefaults(scaleBotSkill, 2, 3, 2, 3)
-  tblHostSettings.attachDefaults(lblTicketRatio, 0, 1, 3, 4)
-  tblHostSettings.attachDefaults(sbtnTicketRatio, 1, 2, 3, 4)
-  tblHostSettings.attachDefaults(scaleTicketRatio, 2, 3, 3, 4)
-  tblHostSettings.attachDefaults(lblSpawnTime, 0, 1, 4, 5)
-  tblHostSettings.attachDefaults(sbtnSpawnTime, 1, 2, 4, 5)
-  tblHostSettings.attachDefaults(scaleSpawnTime, 2, 3, 4, 5)
-  tblHostSettings.attachDefaults(lblRoundsPerMap, 0, 1, 5, 6)
-  tblHostSettings.attachDefaults(sbtnRoundsPerMap, 1, 2, 5, 6)
-  tblHostSettings.attachDefaults(scaleRoundsPerMap, 2, 3, 5, 6)
-  tblHostSettings.attachDefaults(lblBots, 0, 1, 6, 7)
-  tblHostSettings.attachDefaults(sbtnBots, 1, 2, 6, 7)
-  tblHostSettings.attachDefaults(scaleBots, 2, 3, 6, 7)
-  tblHostSettings.attachDefaults(lblMaxPlayers, 0, 1, 7, 8)
-  tblHostSettings.attachDefaults(sbtnMaxPlayers, 1, 2, 7, 8)
-  tblHostSettings.attachDefaults(scaleMaxPlayers, 2, 3, 7, 8)
-  tblHostSettings.attachDefaults(lblPlayersNeededToStart, 0, 1, 8, 9)
-  tblHostSettings.attachDefaults(sbtnPlayersNeededToStart, 1, 2, 8, 9)
-  tblHostSettings.attachDefaults(scalePlayersNeededToStart, 2, 3, 8, 9)
-  tblHostSettings.attachDefaults(lblFriendlyFire, 0, 1, 9, 10)
-  tblHostSettings.attachDefaults(chbtnFriendlyFire, 1, 2, 9, 10)
-  tblHostSettings.halign = Align.start
-  hboxHostLevelPreview = newBox(Orientation.horizontal, 0)
-  hboxHostLevelPreview.add(tblHostSettings)
-  imgLevelPreview = newImage()
-  hboxHostLevelPreview.add(imgLevelPreview)
-  vboxHost.add(hboxHostLevelPreview)
-  listSelectableMaps = newTreeView()
-  # listSelectableMaps.rulesHint = true # Sets a hint to the theme to draw rows in alternating colors. TODO: Cannot set even/odd row colors -.-
-  listSelectableMaps.activateOnSingleClick = true
-  listSelectableMaps.hexpand = true
-  listSelectableMaps.initMapList("Maps")
-  sWindowSelectableMaps = newScrolledWindow(listSelectableMaps.getHadjustment(), listSelectableMaps.getVadjustment())
-  sWindowSelectableMaps.add(listSelectableMaps)
-  listSelectedMaps = newTreeView()
-  # listSelectedMaps.rulesHint = true # Sets a hint to the theme to draw rows in alternating colors. TODO: Cannot set even/odd row colors -.-
-  listSelectedMaps.activateOnSingleClick = true
-  listSelectedMaps.hexpand = true
-  listSelectedMaps.initMapList("Selected maps")
-  sWindowSelectedMaps = newScrolledWindow(listSelectedMaps.getHadjustment(), listSelectedMaps.getVadjustment())
-  sWindowSelectedMaps.add(listSelectedMaps)
-  vboxAddRemoveMap = newBox(Orientation.vertical, 10)
-  vboxAddRemoveMap.valign = Align.center
-  btnAddMap = newButton("→")
-  btnAddMap.styleContext.addClass("button")
-  vboxAddRemoveMap.add(btnAddMap)
-  btnRemoveMap = newButton("←")
-  btnRemoveMap.styleContext.addClass("button")
-  vboxAddRemoveMap.add(btnRemoveMap)
-  vboxMoveMap = newBox(Orientation.vertical, 10)
-  vboxMoveMap.valign = Align.center
-  btnMapMoveUp = newButton("↑")
-  btnMapMoveUp.styleContext.addClass("button")
-  vboxMoveMap.add(btnMapMoveUp)
-  btnMapMoveDown = newButton("↓")
-  btnMapMoveDown.styleContext.addClass("button")
-  vboxMoveMap.add(btnMapMoveDown)
-  hboxMaps = newBox(Orientation.horizontal, 5)
-  hboxMaps.vexpand = true
-  hboxMaps.add(sWindowSelectableMaps)
-  hboxMaps.add(vboxAddRemoveMap)
-  hboxMaps.add(sWindowSelectedMaps)
-  hboxMaps.add(vboxMoveMap)
-  vboxHost.add(hboxMaps)
-  hboxHostButtons = newBox(Orientation.horizontal, 15)
-  btnHostLoginServer = newButton("Host login server only")
-  btnHostLoginServer.styleContext.addClass("button")
-  btnHostLoginServer.hexpand = true
-  btnHost = newButton("Host")
-  btnHost.styleContext.addClass("button")
-  btnHost.hexpand = true
-  btnHostCancel = newButton("Cancel")
-  btnHostCancel.styleContext.addClass("button")
-  btnHostCancel.hexpand = true
-  hboxHostButtons.add(btnHostLoginServer)
-  hboxHostButtons.add(btnHost)
-  hboxHostButtons.add(btnHostCancel)
-  vboxHost.add(hboxHostButtons)
-  termLoginServer = newTerminal()
-  termLoginServer.hexpand = true
-  hboxTerms = newBox(Orientation.horizontal, 1)
-  # hboxTerms.hexpand = true
-  hboxTerms.add(termLoginServer)
-  termBF2142Server = newTerminal()
-  termBF2142Server.hexpand = true
-  hboxTerms.add(termBF2142Server)
-  vboxHost.add(hboxTerms)
-  ##
-  ### Settings
-  lblBF2142Path = newLabel("Battlefield 2142 path:")
-  lblBF2142Path.styleContext.addClass("label")
-  fchsrBtnBF2142Path = newFileChooserButton(lblBF2142Path.text, FileChooserAction.selectFolder)
-  lblBF2142ServerPath = newLabel("Battlefield 2142 Server path:")
-  lblBF2142ServerPath.styleContext.addClass("label")
-  fchsrBtnBF2142ServerPath = newFileChooserButton(lblBF2142ServerPath.text, FileChooserAction.selectFolder)
-  lblWinePrefix = newLabel("Wine prefix:") # Linux only
-  lblWinePrefix.styleContext.addClass("label")
-  fchsrBtnWinePrefix = newFileChooserButton(lblWinePrefix.text, FileChooserAction.selectFolder)
-  lblStartupQuery = newLabel("Startup query:")
-  lblStartupQuery.styleContext.addClass("label")
-  txtStartupQuery = newEntry()
-  txtStartupQuery.styleContext.addClass("entry")
-  btnRemoveMovies = newButton("Remove movies")
-  btnRemoveMovies.styleContext.addClass("button")
-  btnPatchClientMaps = newButton("Copy 64 coop maps (client)")
-  btnPatchClientMaps.styleContext.addClass("button")
-  btnPatchServerMaps = newButton("Copy 64 coop maps (server)")
-  btnPatchServerMaps.styleContext.addClass("button")
-  tblSettings = newTable(7, 2, false)
-  tblSettings.rowSpacings = 5
-  tblSettings.attach(lblBF2142Path, 0, 1, 0, 1, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnBF2142Path, 1, 2, 0, 1, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(lblBF2142ServerPath, 0, 1, 1, 2, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnBF2142ServerPath, 1, 2, 1, 2, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(lblWinePrefix, 0, 1, 2, 3, {}, {}, 10, 0)
-  tblSettings.attach(fchsrBtnWinePrefix, 1, 2, 2, 3, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(lblStartupQuery, 0, 1, 3, 4, {}, {}, 10, 0)
-  tblSettings.attach(txtStartupQuery, 1, 2, 3, 4, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnRemoveMovies, 1, 2, 4, 5, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnPatchClientMaps, 1, 2, 5, 6, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  tblSettings.attach(btnPatchServerMaps, 1, 2, 6, 7, {AttachFlag.expand, AttachFlag.fill}, {}, 0, 0)
-  vboxSettings = newBox(Orientation.vertical, 0)
-  vboxSettings.styleContext.addClass("box")
-  vboxSettings.add(tblSettings)
-  ##
-  ##
-  ### Terminal sending data: vte_terminal_feed_child (For later admin.runNextRound button or something else)
-  ##  cbxHostMods.connect("changed", onCbxHostModsChanged)
-  discard result.appendPage(vboxJoin, newLabel("Join")) # returns page index?
-  discard result.appendPage(vboxHost, newLabel("Host")) # returns page index?
-  discard result.appendPage(vboxSettings, newLabel("Settings")) # returns page index?
 
-proc connectSignals() =
-  ### Bind signals
-  ## Join
-  txtPlayerName.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtPlayerName.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  txtIpAddress.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtIpAddress.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  btnJoin.connect("clicked", onBtnJoinClicked)
-  #
-  ## Host
-  btnAddMap.connect("clicked", onBtnAddMapClicked)
-  btnRemoveMap.connect("clicked", onBtnRemoveMapClicked)
-  btnMapMoveUp.connect("clicked", onBtnMapMoveUpClicked)
-  btnMapMoveDown.connect("clicked", onBtnMapMoveDownClicked)
-  btnHostLoginServer.connect("clicked", onBtnHostLoginServerClicked)
-  btnHost.connect("clicked", onBtnHostClicked)
-  btnHostCancel.connect("clicked", onBtnHostCancelClicked)
-  cbxHostMods.connect("changed", onCbxHostModsChanged)
-  cbxGameMode.connect("changed", onCbxGameModeChanged)
-  listSelectableMaps.connect("cursor-changed", onListSelectableMapsCursorChanged)
-  listSelectedMaps.connect("row-activated", onListSelectedMapsRowActivated)
-  #
-  ## Settings
-  fchsrBtnBF2142Path.connect("selection-changed", onFchsrBtnBF2142PathSelectionChanged)
-  fchsrBtnBF2142ServerPath.connect("selection-changed", onFchsrBtnBF2142ServerPathSelectionChanged)
-  fchsrBtnWinePrefix.connect("selection-changed", onFchsrBtnWinePrefixSelectionChanged)
-  txtStartupQuery.connect("focus-out-event", onTxtStartupQueryFocusOut)
-  txtStartupQuery.connect("enter-notify-event", onWidgetFakeHoverEnterNotifyEvent)
-  txtStartupQuery.connect("leave-notify-event", onWidgetFakeHoverLeaveNotifyEvent)
-  btnRemoveMovies.connect("clicked", onBtnRemoveMoviesClicked)
-  btnPatchClientMaps.connect("clicked", onBtnPatchClientMapsClicked)
-  btnPatchServerMaps.connect("clicked", onBtnPatchServerMapsClicked)
-  #
+proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) {.signal.} =
+  if pageNum == 1:
+    if txtHostIpAddress.text == "":
+      fillHostIpAddress()
 
-var signalsConnected: bool = false # TODO: Workaround, because gintro does not implement the disconnect template/macro in gimpl.nim
-proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context): bool =
-  if not signalsConnected:
-    connectSignals()
-    signalsConnected = true
+proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context): bool {.signalNoCheck.} =
+  if not windowShown:
+    windowShown = true
 
-proc onApplicationWindowDestroy(window: ApplicationWindow) =
-  if termBf2142ServerPid > 0:
+proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
+  if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
-    termBF2142Server.killProcess(termBf2142ServerPid)
+    killProcess(termBF2142ServerPid)
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
-    termLoginServer.killProcess(termLoginServerPid)
+    killProcess(termLoginServerPid)
+  when defined(windows):
+    if elevatedio.isServerRunning():
+      echo "KILLING ELEVATEDIO SERVER"
+      killElevatedIo()
 
 proc onApplicationActivate(application: Application) =
-  window = newApplicationWindow(application)
-  window.connect("draw", onApplicationWindowDraw)
-  window.connect("destroy", onApplicationWindowDestroy)
-  # discard window.setIconFromFile(os.getCurrentDir() / "bf2142unlocker.icon")
+  let builder = newBuilder()
+  discard builder.addFromFile("gui.glade")
+  window = builder.getApplicationWindow("window")
+  notebook = builder.getNotebook("notebook")
+  lbtnUnlockerGithub = builder.getLinkButton("lbtnUnlockerGithub")
+  lbtnUnlockerModdb = builder.getLinkButton("lbtnUnlockerModdb")
+  lbtnProjectRemaster = builder.getLinkButton("lbtnProjectRemaster")
+  lbtnReclamation = builder.getLinkButton("lbtnReclamation")
+  vboxJoin = builder.getBox("vboxJoin")
+  vboxJustPlay = builder.getBox("vboxJustPlay")
+  cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
+  txtPlayerName = builder.getEntry("txtPlayerName")
+  txtIpAddress = builder.getEntry("txtIpAddress")
+  chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
+  chbtnWindowMode = builder.getCheckButton("chbtnWindowMode")
+  btnJoin = builder.getButton("btnJoin")
+  btnJustPlay = builder.getButton("btnJustPlay")
+  btnJustPlayCancel = builder.getButton("btnJustPlayCancel")
+  vboxHost = builder.getBox("vboxHost")
+  tblHostSettings = builder.getGrid("tblHostSettings")
+  imgLevelPreview = builder.getImage("imgLevelPreview")
+  cbxHostMods = builder.getComboBoxText("cbxHostMods")
+  cbxGameMode = builder.getComboBoxText("cbxGameMode")
+  sbtnBotSkill = builder.getSpinButton("sbtnBotSkill")
+  scaleBotSkill = builder.getScale("scaleBotSkill")
+  sbtnTicketRatio = builder.getSpinButton("sbtnTicketRatio")
+  scaleTicketRatio = builder.getScale("scaleTicketRatio")
+  sbtnSpawnTime = builder.getSpinButton("sbtnSpawnTime")
+  scaleSpawnTime = builder.getScale("scaleSpawnTime")
+  sbtnRoundsPerMap = builder.getSpinButton("sbtnRoundsPerMap")
+  scaleRoundsPerMap = builder.getScale("scaleRoundsPerMap")
+  sbtnBots = builder.getSpinButton("sbtnBots")
+  scaleBots = builder.getScale("scaleBots")
+  sbtnMaxPlayers = builder.getSpinButton("sbtnMaxPlayers")
+  scaleMaxPlayers = builder.getScale("scaleMaxPlayers")
+  sbtnPlayersNeededToStart = builder.getSpinButton("sbtnPlayersNeededToStart")
+  scalePlayersNeededToStart = builder.getScale("scalePlayersNeededToStart")
+  chbtnFriendlyFire = builder.getCheckButton("chbtnFriendlyFire")
+  txtHostIpAddress = builder.getEntry("txtHostIpAddress")
+  hboxMaps = builder.getBox("hboxMaps")
+  listSelectableMaps = builder.getTreeView("listSelectableMaps")
+  listSelectedMaps = builder.getTreeView("listSelectedMaps")
+  btnAddMap = builder.getButton("btnAddMap")
+  btnRemoveMap = builder.getButton("btnRemoveMap")
+  btnMapMoveUp = builder.getButton("btnMapMoveUp")
+  btnMapMoveDown = builder.getButton("btnMapMoveDown")
+  btnHostLoginServer = builder.getButton("btnHostLoginServer")
+  btnHost = builder.getButton("btnHost")
+  btnHostCancel = builder.getButton("btnHostCancel")
+  hboxTerms = builder.getBox("hboxTerms")
+  lblBF2142Path = builder.getLabel("lblBF2142Path")
+  txtBF2142Path = builder.getEntry("txtBF2142Path")
+  btnBF2142Path = builder.getButton("btnBF2142Path")
+  lblBF2142ServerPath = builder.getLabel("lblBF2142ServerPath")
+  txtBF2142ServerPath = builder.getEntry("txtBF2142ServerPath")
+  btnBF2142ServerPath = builder.getButton("btnBF2142ServerPath")
+  lblWinePrefix = builder.getLabel("lblWinePrefix")
+  btnWinePrefix = builder.getButton("btnWinePrefix")
+  txtWinePrefix = builder.getEntry("txtWinePrefix")
+  lblStartupQuery = builder.getLabel("lblStartupQuery")
+  txtStartupQuery = builder.getEntry("txtStartupQuery")
+  btnRemoveMovies = builder.getButton("btnRemoveMovies")
+  btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
+  btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
+  btnRestore = builder.getButton("btnRestore")
+
+  ## Set LinkButton label (cannot be set in glade)
+  lbtnUnlockerGithub.label = "Github"
+  lbtnUnlockerModdb.label = "Moddb"
+  lbtnProjectRemaster.label = "Project Remaster Mod"
+  lbtnReclamation.label = "Play online"
+  #
+  ## Terminals # TODO: Create a custom widget for glade
+  termJustPlayServer = newTerminal()
+  termJustPlayServer.vexpand = true
+  vboxJustPlay.add(termJustPlayServer)
+  vboxJustPlay.reorderChild(termJustPlayServer, 0)
+  termLoginServer = newTerminal()
+  termLoginServer.hexpand = true
+  termBF2142Server = newTerminal()
+  termBF2142Server.hexpand = true
+  hboxTerms.add(termLoginServer)
+  hboxTerms.add(termBF2142Server)
+  #
+  ## Setting styles
   var cssProvider: CssProvider = newCssProvider()
-  discard cssProvider.loadFromData(GUI_CSS)
-  # discard cssProvider.loadFromPath("gui.css")
+  when defined(release):
+    discard cssProvider.loadFromData(GUI_CSS)
+  else:
+    discard cssProvider.loadFromPath("gui.css")
   getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
-  window.title = "BF2142Unlocker - Launcher"
-  window.defaultSize = (957, 600)
-  window.position = WindowPosition.center
-  vboxMain = newBox(Orientation.vertical, 0)
-  vboxMain.styleContext.addClass("box")
-  notebook = createNotebook()
-  notebook.vexpand = true
-  vboxMain.add(notebook)
-  actionBar = newActionBar()
-  actionbar.packEnd(newLinkButtonWithLabel("http://code0.xyz/", "code0"))
-  actionBar.packEnd(newLabel("Powered by"))
-  actionBar.packStart(newLabel("Version: " & VERSION))
-  vboxMain.add(actionBar)
-  window.add(vboxMain)
-  window.showAll()
+  #
+  ## Set Adwaita dark mode
+  when defined(windows):
+    var settings: gtk.Settings = getDefaultSettings()
+    var preferDarkTheme: Value
+    settings.getProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
+    if not preferDarkTheme.getBoolean():
+      preferDarkTheme.setBoolean(true)
+      settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
+  #
+
+  window.setApplication(application)
+  builder.connectSignals(cast[pointer](nil))
+  window.show()
   loadConfig()
   loadJoinMods()
   loadHostMods()
   if bf2142ServerPath != "":
     updatePathes()
+    fillHostMode()
     fillListSelectableMaps()
-    loadMapList()
-    loadServerSettings()
-    loadAiSettings()
-  hboxTerms.visible = false
-  termBF2142Server.visible = false
-  termLoginServer.visible = false
-  btnHostCancel.visible = false
+    discard loadMapList()
+    discard loadServerSettings()
+    discard loadAiSettings()
   when defined(windows):
     lblWinePrefix.visible = false
-    fchsrBtnWinePrefix.visible = false
+    txtWinePrefix.visible = false
+    btnWinePrefix.visible = false
+    lblStartupQuery.visible = false
+    txtStartupQuery.visible = false
     if not dirExists(TEMP_FILES_DIR):
       createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
-  preClientPatchCheck()
-  preServerPatchCheck()
+    vboxJoin.visible = false
+    vboxHost.visible = false
+  restoreCheck()
 
 proc main =
   application = newApplication()
   application.connect("activate", onApplicationActivate)
+  when defined(windows) and defined(release):
+    # Hiding cmd, because I could not compile it as gui.
+    # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
+    # TODO: This is a workaround.
+    ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
 
 main()

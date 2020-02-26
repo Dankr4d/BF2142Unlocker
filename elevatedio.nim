@@ -5,8 +5,12 @@ import asynchttpserver, asyncdispatch
 import httpclient
 when defined(windows):
   import winim
+  import getprocessbyname
+  import gethwndbypid
 
 const URI = parseUri("http://127.0.0.1:8085/")
+
+var pid: int = 0
 
 type Action {.pure.} = enum
   writeFile = "writeFile",
@@ -49,73 +53,15 @@ proc handleRequest(req: Request) {.async.} =
   of Action.existsOrCreateDir:
     let path: string = req.headers["path", 0]
     echo "* ExistsOrCreateDir ", path
-    var result: bool = existsOrCreateDir(path)
-    await req.respond(Http200, $result)
+    var res: bool = existsOrCreateDir(path)
+    await req.respond(Http200, $res)
     return
   of Action.closeServer:
     quit(0) # TODO: Should respons data and then quit
   await req.respond(Http200, "")
 
-proc writeFileElevated*(path, content: string) =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.writeFile)
-    headers.add("path", path)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, body = content, headers = headers)
-  else:
-    writeFile(path, content)
-
-proc copyFileElevated*(pathFrom, pathTo: string) =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.copyFile)
-    headers.add("pathFrom", pathFrom)
-    headers.add("pathTo", pathTo)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-  else:
-    copyFile(pathFrom, pathTo)
-
-proc copyDirElevated*(pathFrom, pathTo: string) =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.copyDir)
-    headers.add("pathFrom", pathFrom)
-    headers.add("pathTo", pathTo)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-  else:
-    copyDir(pathFrom, pathTo)
-
-proc removeFileElevated*(path: string) =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.removeFile)
-    headers.add("path", path)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-  else:
-    removeFile(path)
-
-proc createDirElevated*(path: string) =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.createDir)
-    headers.add("path", path)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-  else:
-    createDir(path)
-
-proc existsOrCreateDirElevated*(path: string): bool =
-  when defined(windows):
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.existsOrCreateDir)
-    headers.add("path", path)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-    return resp.body.parseBool()
-  else:
-    return existsOrCreateDir(path)
-
-
 when defined(windows):
-  proc elevate() =
+  proc elevate(): bool =
     var
       pathToExe: WideCString = newWideCString(getCurrentDir() / "elevatedio.exe") # TODO
       verb = newWideCString("runas")
@@ -127,31 +73,97 @@ when defined(windows):
         cast[LPWSTR](0),
         SW_SHOWNORMAL
       )
+    pid = getPidByName("elevatedio.exe") # TODO
+    return pid > 0
     # if lastError <= 32:
     #   raise newException(Exception, "Cannot elevate $1 ($2)" % [$pathToExe, $lastError])
 
-  proc isServerRunning*(): bool = # TODO: Should recv some data to determine if the server connecting to is our server
-    var socket = newSocket()
-    try:
-      socket.connect(URI.hostname, Port(URI.port.parseInt()))
-      socket.close()
-      return true
-    except OSError:
-      if osLastError() == OSErrorCode(10061): # WSAECONNREFUSED (https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--9000-11999-)
-        return false
-      else:
-        discard # TODO: Some error handling?
+  proc isServerRunning*(): bool =
+    return pid > 0
 
-  proc startServer*() =
-    elevate()
+  proc killElevatedIo*() =
+    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
+    discard hndlProcess.TerminateProcess(0)
 
-  proc closeServer() = # TODO
-    discard
-
-  when isMainModule:
-    var server = newAsyncHttpServer()
-    asyncCheck server.serve(Port(URI.port.parseInt()), handleRequest, "127.0.0.1")
-    runForever()
+proc writeFileElevated*(path, content: string): bool =
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.writeFile)
+    headers.add("path", path)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, body = content, headers = headers)
   else:
-    if not isServerRunning():
-      startServer()
+    writeFile(path, content)
+  return true
+
+proc copyFileElevated*(pathFrom, pathTo: string): bool =
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.copyFile)
+    headers.add("pathFrom", pathFrom)
+    headers.add("pathTo", pathTo)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    copyFile(pathFrom, pathTo)
+  return true
+
+proc copyDirElevated*(pathFrom, pathTo: string): bool =
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.copyDir)
+    headers.add("pathFrom", pathFrom)
+    headers.add("pathTo", pathTo)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    copyDir(pathFrom, pathTo)
+  return true
+
+proc removeFileElevated*(path: string): bool =
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.removeFile)
+    headers.add("path", path)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    removeFile(path)
+  return true
+
+proc createDirElevated*(path: string): bool =
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.createDir)
+    headers.add("path", path)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    createDir(path)
+  return true
+
+proc existsOrCreateDirElevated*(path: string): (bool, bool) = # First bool if elevation was successfull, second bool tells if dir already exists
+  when defined(windows):
+    if not isServerRunning() and not elevate():
+      return (false, false)
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.existsOrCreateDir)
+    headers.add("path", path)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+    return (true, resp.body.parseBool())
+  else:
+    return (true, existsOrCreateDir(path))
+
+when defined(windows) and isMainModule:
+  var server = newAsyncHttpServer()
+  asyncCheck server.serve(Port(URI.port.parseInt()), handleRequest, "127.0.0.1")
+  pid = GetCurrentProcessId()
+  var hwnd: HWND = getHWndByPid(pid)
+  when defined(release):
+    ShowWindow(hwnd, SW_HIDE)
+  runForever()

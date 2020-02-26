@@ -1,3 +1,10 @@
+#[
+  TODO: Encapsulate and refactor or rewrite!
+  Currently:
+    Do not create multiple processes or multiple forked processes.
+    Only one process and one forked process is allowed.
+]#
+
 import gintro/[gtk, glib, gobject, gio]
 
 import strutils
@@ -6,7 +13,6 @@ import os
 when defined(linux):
   import gintro/vte # Requierd for terminal (linux only feature)
   export vte
-  import posix # Requierd for kill process
 elif defined(windows):
   import osproc
   import streams
@@ -18,34 +24,38 @@ elif defined(windows):
     Terminal* = ref object of ScrolledWindow
   proc newTerminal*(): Terminal =
     var textView = newTextView()
+    # textView.monospace = true
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
+    scrolledWindow.propagateNaturalHeight = true
     scrolledWindow.add(textView)
     result = cast[Terminal](scrolledWindow)
-    # textView.buffer = result.getBuffer()
-  proc buffer*(terminal: Terminal): TextBuffer =
-    return cast[TextView](terminal.getChild()).getBuffer()
-
-proc `text=`*(terminal: Terminal, text: string) =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
+    result.styleContext.addClass("terminal")
+  proc textView(terminal: Terminal): TextView =
+    return cast[TextView](terminal.getChild())
+  proc buffer(terminal: Terminal): TextBuffer =
+    return terminal.textView.getBuffer()
+  proc `text=`(terminal: Terminal, text: string) =
     terminal.buffer.setText(text, text.len)
-
-proc text*(terminal: Terminal): string =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
+  proc text(terminal: Terminal): string =
     var startIter: TextIter
     var endIter: TextIter
     terminal.buffer.getStartIter(startIter)
     terminal.buffer.getEndIter(endIter)
     return terminal.buffer.getText(startIter, endIter, true)
+  proc visible*(terminal: Terminal): bool =
+    return terminal.textView.visible
+  proc `visible=`*(terminal: Terminal, visible: bool) =
+    cast[ScrolledWindow](terminal).visible = visible # TODO: Need to be casted otherwise it will visible infix proc
+    terminal.textView.visible = visible
 
-proc addText*(terminal: Terminal, text: string) =
+proc addText*(terminal: Terminal, text: string, scrollDown: bool = false) =
   when defined(linux):
     discard # TODO: implement
   elif defined(windows):
     terminal.text = terminal.text & text
+    if scrollDown:
+      var mark: TextMark = terminal.buffer.getInsert()
+      terminal.textView.scrollMarkOnScreen(mark)
 
 proc clear*(terminal: Terminal) =
   when defined(linux):
@@ -76,22 +86,38 @@ when defined(windows):
   # TODO: There are no multiple Terminals possible. That's because the two global channels.
   # These Channel should be in scope. This is not possible. Adding a global pragma doesn't resolve this.
   # This could be solved with a macro. Creating the channels on compiletime with different names.
-  var thread {.global.}: system.Thread[tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]]
+  var thread: system.Thread[Process]
+  var threadForked: system.Thread[int]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
   var channelTerminate: Channel[bool]
+  var channelTerminateForked: Channel[bool]
+  var channelStopTimerAdd: Channel[bool]
+  var channelStopTimerReplace: Channel[bool]
 
   proc timerReplaceTerminalText(timerData: TimerData): bool =
+    if channelStopTimerReplace.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
     var (hasData, data) = channelReplaceText.tryRecv()
     if hasData:
       timerData.terminal.text = data
     return SOURCE_CONTINUE
 
   proc timerAddTerminalText(timerData: TimerData): bool =
+    if channelStopTimerAdd.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
     var (hasData, data) = channelAddText.tryRecv()
     if hasData:
-      timerData.terminal.addText(data)
+      timerData.terminal.addText(data, scrollDown = true)
     return SOURCE_CONTINUE
+
+  proc terminateThread*() = # TODO
+    channelStopTimerAdd.send(true)
+    channelTerminate.send(true)
+
+  proc terminateForkedThread*() = # TODO
+    channelStopTimerReplace.send(true)
+    channelTerminateForked.send(true)
 
 proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
   when defined(linux):
@@ -129,41 +155,39 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
         sleep(500)
 
     if searchForkedProcess:
-      var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       channelReplaceText.open()
+      channelTerminateForked.open()
+      channelStopTimerReplace.open()
+      var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
-    else:
-      var timerDataAddText: TimerData = TimerData(terminal: terminal)
-      channelAddText.open()
-      discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
-
-    channelTerminate.open()
-
-    thread.createThread(proc (data: tuple[process: Process, terminal: Terminal, searchForkedProcess: bool, processId: int]) {.thread.} =
-      if data.searchForkedProcess:
-        var hwnd: HWND = getHWndByPid(data.processId)
+      threadForked.createThread(proc (processId: int) {.thread.} =
+        var hwnd: HWND = getHWndByPid(processId)
         while hwnd == 0: # Waiting until window can be accessed
           sleep(250)
-          hwnd = getHWndByPid(data.processId)
+          hwnd = getHWndByPid(processId)
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
-        while not channelTerminate.tryRecv().dataAvailable:
-          channelReplaceText.send(readStdOut(data.processId))
+        while true:
+          if channelTerminateForked.tryRecv().dataAvailable:
+            return
+          channelReplaceText.send(readStdOut(processId))
           sleep(250)
-      else:
-        while not isNil(data.process.outputStream) and not channelTerminate.tryRecv().dataAvailable:
-          channelAddText.send(data.process.outputStream.readAll())
+      , (result))
+    else:
+      channelAddText.open()
+      channelTerminate.open()
+      channelStopTimerAdd.open()
+      var timerDataAddText: TimerData = TimerData(terminal: terminal)
+      discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
+      thread.createThread(proc (process: Process) {.thread.} =
+        while true:
+          if channelTerminate.tryRecv().dataAvailable:
+            return
+          if process.outputStream.isNil:
+            return
+          channelAddText.send(process.outputStream.readAll())
           sleep(250)
-    , (process, terminal, searchForkedProcess, result))
+      , (process))
 ##########################
-
-proc killProcess*(terminal: Terminal, processId: int) = # TODO: Add some error handling; TODO: processId should be stored in startProcess and not passed
-  when defined(linux):
-    if kill(Pid(processId), SIGKILL) < 0:
-      echo "ERROR: Cannot kill bf2142 server! TODO: Handle this case"
-  elif defined(windows):
-    channelTerminate.send(true)
-    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, processId.DWORD)
-    discard hndlProcess.TerminateProcess(0)
 
 when isMainModule:
   proc appActivate (app: Application) =
