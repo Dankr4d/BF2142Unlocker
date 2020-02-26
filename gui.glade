@@ -111,6 +111,7 @@
                           <object class="GtkAlignment">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="bottom_padding">5</property>
                             <property name="left_padding">5</property>
                             <property name="right_padding">5</property>
                             <child>
@@ -208,6 +209,7 @@
                           <object class="GtkAlignment">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="bottom_padding">5</property>
                             <property name="left_padding">5</property>
                             <property name="right_padding">5</property>
                             <child>
@@ -316,7 +318,7 @@
                     <property name="can_focus">False</property>
                     <property name="margin_left">3</property>
                     <property name="margin_right">3</property>
-                    <property name="margin_top">1</property>
+                    <property name="margin_top">5</property>
                     <property name="margin_bottom">3</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">2</property>

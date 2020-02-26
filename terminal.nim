@@ -24,30 +24,29 @@ elif defined(windows):
     Terminal* = ref object of ScrolledWindow
   proc newTerminal*(): Terminal =
     var textView = newTextView()
+    # textView.monospace = true
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
+    scrolledWindow.propagateNaturalHeight = true
     scrolledWindow.add(textView)
     result = cast[Terminal](scrolledWindow)
     result.styleContext.addClass("terminal")
   proc textView(terminal: Terminal): TextView =
     return cast[TextView](terminal.getChild())
-  proc buffer*(terminal: Terminal): TextBuffer =
+  proc buffer(terminal: Terminal): TextBuffer =
     return terminal.textView.getBuffer()
-
-proc `text=`*(terminal: Terminal, text: string) =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
+  proc `text=`(terminal: Terminal, text: string) =
     terminal.buffer.setText(text, text.len)
-
-proc text*(terminal: Terminal): string =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
+  proc text(terminal: Terminal): string =
     var startIter: TextIter
     var endIter: TextIter
     terminal.buffer.getStartIter(startIter)
     terminal.buffer.getEndIter(endIter)
     return terminal.buffer.getText(startIter, endIter, true)
+  proc visible*(terminal: Terminal): bool =
+    return terminal.textView.visible
+  proc `visible=`*(terminal: Terminal, visible: bool) =
+    cast[ScrolledWindow](terminal).visible = visible # TODO: Need to be casted otherwise it will visible infix proc
+    terminal.textView.visible = visible
 
 proc addText*(terminal: Terminal, text: string, scrollDown: bool = false) =
   when defined(linux):
