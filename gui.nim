@@ -52,15 +52,6 @@ const FILE_BACKUP_SUFFIX: string = ".original"
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
 const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
-when defined(linux):
-  const
-    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c" # TODO: Remove, no need to support 32bit
-    ORIGINAL_SERVER_MD5_HASH_64: string = "ce720cbf34cf11460a69eaaae50dc917"
-elif defined(windows):
-  const
-    ORIGINAL_SERVER_MD5_HASH_32: string = "2380c7bc967f96aff1fbf83ce1b9390d"
-    ORIGINAL_SERVER_MD5_HASH_64: string = "2380c7bc967f96aff1fbf83ce1b9390d"
-
 
 const GAME_MODES: seq[tuple[id: string, name: string]] = @[
   (id: "gpm_cq", name: "Conquest"),
