@@ -126,7 +126,7 @@ proc copyFileElevated*(pathFrom, pathTo: string): bool =
     headers.add("pathTo", pathTo)
     var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
   else:
-    copyFile(pathFrom, pathTo)
+    copyFileWithPermissions(pathFrom, pathTo)
   return true
 
 proc copyDirElevated*(pathFrom, pathTo: string): bool =

@@ -1351,20 +1351,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnRestore">
-                        <property name="label" translatable="yes">Restore original files</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="hexpand">True</property>
-                        <signal name="clicked" handler="onBtnRestoreClicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="top_attach">7</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkButton" id="btnBF2142Path">
                         <property name="label" translatable="yes">Select</property>
                         <property name="visible">True</property>
@@ -1405,12 +1391,6 @@
                         <property name="left_attach">2</property>
                         <property name="top_attach">2</property>
                       </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

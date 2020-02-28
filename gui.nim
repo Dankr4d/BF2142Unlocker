@@ -37,7 +37,14 @@ var bf2142Profile0001Path: string
 
 const VERSION: string = "0.9.2"
 
+when defined(linux):
+  const BF2142_SRV_EXE_NAME: string = "bf2142"
+  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "bf2142Unlocker"
+else:
+  const BF2142_SRV_EXE_NAME: string = "BF2142_w32ded.exe"
+  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "BF2142_w32dedUnlocker.exe"
 const BF2142_EXE_NAME: string = "BF2142.exe"
+const BF2142_UNLOCKER_EXE_NAME: string = "BF2142Unlocker.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
 const FILE_BACKUP_SUFFIX: string = ".original"
@@ -47,7 +54,7 @@ const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 when defined(linux):
   const
-    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c"
+    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c" # TODO: Remove, no need to support 32bit
     ORIGINAL_SERVER_MD5_HASH_64: string = "ce720cbf34cf11460a69eaaae50dc917"
 elif defined(windows):
   const
@@ -195,7 +202,6 @@ var txtStartupQuery: Entry
 var btnRemoveMovies: Button
 var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
-var btnRestore: Button
 ##
 
 ### Helper procs
@@ -271,54 +277,32 @@ proc loadConfig() =
   else:
     chbtnWindowMode.active = false
 
-proc openspyBackupCheck() =
+proc backupOpenSpyIfExists() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
   let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
-  if fileExists(openspyDllPath) and fileExists(originalRendDX9Path):
-    let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
-    let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
-    if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
-      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
-      if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
-        return
-      if not copyFileElevated(originalRendDX9Path, openspyDllPath):
-        return
-      btnRestore.sensitive = true
+  if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
+  let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
+  if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
+    if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+      return
+    if not copyFileElevated(originalRendDX9Path, openspyDllPath):
+      return
 
-proc restoreCheck() =
-  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  if fileExists(clientExeBackupPath) or fileExists(openspyDllBackupPath):
-    btnRestore.sensitive = true
-  else:
-    btnRestore.sensitive = false
-
-proc serverPatchCheck(ipAddress: IpAddress): bool =
-  # when defined(windows):
-  #   raise newException(ValueError, "Windows server precheck not implemented")
-  #   return
-  var serverExePath = bf2142ServerPath
-  when defined(linux):
-    serverExePath = serverExePath / "bin"
-    when defined(cpu32):
-      serverExePath = serverExePath / "ia-32"
-    else:
-      serverExePath = serverExePath / "amd-64"
-    serverExePath = serverExePath / "bf2142"
-  elif defined(windows):
-    serverExePath = serverExePath / "BF2142_w32ded.exe"
-  if serverExePath == "" or not fileExists(serverExePath):
-    return false
-  var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-  var createBackup: bool = false
-  if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
-    echo "Found original server binary. Creating a backup and prepatching!"
-    createBackup = true
-  echo "Patching Battlefield 2142 server!"
-  if createBackup:
-    if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
-      return false
-  return patchServerElevated(serverExePath, ipAddress, Port(8080))
+  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  if not fileExists(openspyDllBackupPath):
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+  if openspyMd5Hash == OPENSPY_MD5_HASH:
+    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+    if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
+      return
+    if not removeFileElevated(openspyDllBackupPath):
+      return
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -676,9 +660,18 @@ proc startBF2142Server() =
   if symlinkExists(stupidPbSymlink):
     removeFile(stupidPbSymlink)
   when defined(linux):
-    termBF2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
+    let ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      workingDir = bf2142ServerPath,
+      env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
+    )
   elif defined(windows):
-    termBF2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      workingDir = bf2142ServerPath,
+      searchForkedProcess = true
+    )
 
 proc loadJoinMods() =
   cbxJoinMods.removeAll()
@@ -744,10 +737,13 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if not patchClientElevated(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
+  if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+    if not copyFileElevated(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+      return false
+  if not patchClientElevated(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
     return false
 
-  openspyBackupCheck()
+  backupOpenSpyIfExists()
 
   saveProfileAccountName()
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
@@ -761,7 +757,7 @@ proc patchAndStartLogic(): bool =
   when defined(linux):
     if txtStartupQuery.text != "":
       command.add(txtStartupQuery.text & ' ')
-  command.add(BF2142_EXE_NAME & ' ')
+  command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
   if chbtnWindowMode.active:
@@ -817,8 +813,6 @@ proc onBtnRemoveMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
-  if cbxGameMode.activeId == mapMode:
-    listSelectableMaps.appendMap(mapName, mapMode, mapSize)
   listSelectedMaps.removeSelected()
 
 proc onBtnMapMoveUpClicked(self: Button) {.signal.} =
@@ -835,7 +829,15 @@ proc onBtnHostClicked(self: Button) {.signal.} =
     return
   if not saveAiSettings():
     return
-  if not serverPatchCheck(txtHostIpAddress.text.parseIpAddress()):
+  var serverExePath = bf2142ServerPath
+  when defined(linux):
+    serverExePath = serverExePath / "bin" / "amd-64"
+  if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+    if not copyFileElevated(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+      return
+  serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
+  echo "Patching Battlefield 2142 server!"
+  if not patchServerElevated(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080)):
     return
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
@@ -917,8 +919,6 @@ proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
   vboxHost.visible = true
   bf2142Path = path
   txtBF2142Path.text = path
-  if btnRestore.sensitive == false:
-    restoreCheck()
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
@@ -1101,35 +1101,6 @@ proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
-
-proc onBtnRestoreClicked(self: Button) {.signal.} =
-  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
-  let clientExeRestorePath: string = bf2142Path / BF2142_EXE_NAME
-  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
-  var restoredFiles: bool = false
-  if bf2142Path == "":
-    return
-  if fileExists(clientExeBackupPath):
-    let clientMd5Hash: string = getMD5(clientExeBackupPath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo "Found original client binary (" & BF2142_EXE_NAME & "). Restoring!"
-      if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
-        return
-      if not removeFileElevated(clientExeBackupPath):
-        return
-      restoredFiles = true
-  if fileExists(openspyDllBackupPath):
-    let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
-    if openspyMd5Hash == OPENSPY_MD5_HASH:
-      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-      if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
-        return
-      if not removeFileElevated(openspyDllBackupPath):
-        return
-      restoredFiles = true
-  if restoredFiles:
-    btnRestore.sensitive = false
 #
 ##
 
@@ -1153,6 +1124,7 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
     if elevatedio.isServerRunning():
       echo "KILLING ELEVATEDIO SERVER"
       killElevatedIo()
+  restoreOpenSpyIfExists()
 
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
@@ -1219,7 +1191,6 @@ proc onApplicationActivate(application: Application) =
   btnRemoveMovies = builder.getButton("btnRemoveMovies")
   btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
-  btnRestore = builder.getButton("btnRestore")
 
   ## Set LinkButton label (cannot be set in glade)
   lbtnUnlockerGithub.label = "Github"
@@ -1280,7 +1251,6 @@ proc onApplicationActivate(application: Application) =
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false
     vboxHost.visible = false
-  restoreCheck()
 
 proc main =
   application = newApplication()
