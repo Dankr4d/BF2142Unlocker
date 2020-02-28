@@ -17,7 +17,6 @@ import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
 import checkpermission # Requierd to check if file has write permissions
-import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
 import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
