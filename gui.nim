@@ -357,24 +357,6 @@ proc moveSelectedUp(list: TreeView) =
 proc moveSelectedDown(list: TreeView) =
   list.moveSelectedUpDown(up = false)
 
-proc selectNext(list: TreeView) =
-  var iter: TreeIter
-  var store = listStore(list.getModel())
-  if not list.selection.getSelected(store, iter):
-    return
-  if store.iterNext(iter):
-    list.selection.selectIter(iter)
-
-proc removeSelected(list: TreeView) =
-  var
-    ls: ListStore
-    iter: TreeIter
-  let store = listStore(list.getModel())
-  if not store.getIterFirst(iter):
-      return
-  if getSelected(list.selection, ls, iter):
-    discard store.remove(iter)
-
 proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
   var
     val: Value
@@ -390,6 +372,44 @@ proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSiz
     result.mapMode = $val.getString()
     store.getValue(iter, 2, val)
     result.mapSize = $val.getString() # TODO: Should be int
+
+proc updateLevelPreview(mapName, mapMode, mapSize: string) =
+  var imgPath: string
+  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
+  if fileExists(imgPath):
+    var pixbuf = newPixbufFromFile(imgPath)
+    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
+    imgLevelPreview.setFromPixbuf(pixbuf)
+  elif fileExists(NO_PREVIEW_IMG_PATH):
+    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
+  else:
+    imgLevelPreview.clear()
+
+proc updateLevelPreview(treeView: TreeView) =
+  var mapName, mapMode, mapSize: string
+  (mapName, mapMode, mapSize) = treeView.selectedMap
+  updateLevelPreview(mapName, mapMode, mapSize)
+
+proc selectNext(treeView: TreeView) =
+  var iter: TreeIter
+  var store: ListStore = listStore(treeView.getModel())
+  if not treeView.selection.getSelected(store, iter):
+    return
+  if store.iterNext(iter):
+    treeView.selection.selectIter(iter)
+    treeView.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
+    treeView.updateLevelPreview()
+
+proc removeSelected(treeView: TreeView) =
+  var
+    ls: ListStore
+    iter: TreeIter
+  let store = listStore(treeView.getModel())
+  if not store.getIterFirst(iter):
+      return
+  if getSelected(treeView.selection, ls, iter):
+    discard store.remove(iter)
+    treeView.updateLevelPreview()
 
 iterator maps(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
   var
@@ -867,27 +887,11 @@ proc onCbxGameModeChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
-proc updateLevelPreview(mapName, mapMode, mapSize: string) =
-  var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
-  if fileExists(imgPath):
-    var pixbuf = newPixbufFromFile(imgPath)
-    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
-    imgLevelPreview.setFromPixbuf(pixbuf)
-  elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
-  else:
-    imgLevelPreview.clear()
-
 proc onListSelectableMapsCursorChanged(self: TreeView) {.signal.} =
-  var mapName, mapMode, mapSize: string
-  (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
-  updateLevelPreview(mapName, mapMode, mapSize)
+  listSelectableMaps.updateLevelPreview()
 
 proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) {.signal.} =
-  var mapName, mapMode, mapSize: string
-  (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
-  updateLevelPreview(mapName, mapMode, mapSize)
+  listSelectedMaps.updateLevelPreview()
 #
 ## Settings
 proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
