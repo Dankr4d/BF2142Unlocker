@@ -150,7 +150,6 @@ when isMainModule:
   mkDir(BUILD_DIR)
   installDeps()
   when defined(windows):
-    mkDir(BUILD_BIN_DIR / "tempfiles") # TODO: This folder should not be created here
     createStartupBatch()
   createIconRes()
   compileAll()

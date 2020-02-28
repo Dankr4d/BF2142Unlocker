@@ -30,8 +30,6 @@ when defined(linux):
   {.passC:"-Wl,--export-dynamic".}
   {.passL:"-lgmodule-2.0 -rdynamic".}
 
-const TEMP_FILES_DIR*: string = "tempfiles" # TODO
-
 var bf2142Path: string
 var bf2142ServerPath: string
 var documentsPath: string
@@ -274,29 +272,19 @@ proc loadConfig() =
   else:
     chbtnWindowMode.active = false
 
-proc preClientPatchCheck() =
+proc preClientPatchCheck(): bool =
   let clientExePath: string = bf2142Path / BF2142_EXE_NAME
-  if bf2142Path == "":
-    return
-  if fileExists(clientExePath):
-    let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
-      if hasWritePermission(clientExePath):
-        copyFile(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
-        preClientPatch(clientExePath)
-      else:
-        var writeSucceed: bool = false
-        let tmpExePath: string = TEMP_FILES_DIR / BF2142_EXE_NAME
-        if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
-          return
-        copyFile(clientExePath, tmpExePath)
-        preClientPatch(tmpExePath)
-        writeSucceed = copyFileElevated(tmpExePath, clientExePath)
-        removeFile(tmpExePath)
-        if not writeSucceed:
-          return
-      btnRestore.sensitive = true
+  if bf2142Path == "" or not fileExists(clientExePath):
+    return false
+  let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+  if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
+    echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
+    if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
+      return false
+    if not preClientPatch(clientExePath):
+      return false
+    btnRestore.sensitive = true
+  return true
 
 proc openspyBackupCheck() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
@@ -306,14 +294,10 @@ proc openspyBackupCheck() =
     let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
     if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
       echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
-      if hasWritePermission(openspyDllPath):
-        copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
-        copyFile(originalRendDX9Path, openspyDllPath)
-      else:
-        if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
-          return
-        if not copyFileElevated(originalRendDX9Path, openspyDllPath):
-          return
+      if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+        return
+      if not copyFileElevated(originalRendDX9Path, openspyDllPath):
+        return
       btnRestore.sensitive = true
 
 proc restoreCheck() =
@@ -324,7 +308,7 @@ proc restoreCheck() =
   else:
     btnRestore.sensitive = false
 
-proc preServerPatchCheck(ipAddress: IpAddress) =
+proc preServerPatchCheck(ipAddress: IpAddress): bool =
   # when defined(windows):
   #   raise newException(ValueError, "Windows server precheck not implemented")
   #   return
@@ -338,27 +322,18 @@ proc preServerPatchCheck(ipAddress: IpAddress) =
     serverExePath = serverExePath / "bf2142"
   elif defined(windows):
     serverExePath = serverExePath / "BF2142_w32ded.exe"
-  if serverExePath != "" and fileExists(serverExePath):
-    var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    var createBackup: bool = false
-    if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
-      echo "Found original server binary. Creating a backup and prepatching!"
-      createBackup = true
-    echo "Patching Battlefield 2142 server!"
-    if hasWritePermission(serverExePath):
-      if createBackup:
-        copyFile(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
-      preServerPatch(serverExePath, ipAddress, Port(8080))
-    else:
-      var fileSplit = splitFile(serverExePath)
-      let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
-      if createBackup:
-        if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
-          return
-      copyFile(serverExePath, tmpExePath)
-      preServerPatch(tmpExePath, ipAddress, Port(8080))
-      discard copyFileElevated(tmpExePath, serverExePath)
-      removeFile(tmpExePath)
+  if serverExePath == "" or not fileExists(serverExePath):
+    return false
+  var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
+  var createBackup: bool = false
+  if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
+    echo "Found original server binary. Creating a backup and prepatching!"
+    createBackup = true
+  echo "Patching Battlefield 2142 server!"
+  if createBackup:
+    if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
+      return false
+  return preServerPatchElevated(serverExePath, ipAddress, Port(8080))
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -598,10 +573,7 @@ proc loadSaveServerSettings(save: bool): bool =
       serverConfig.add(setting & ' ' & value & '\n')
   file.close()
   if save:
-    if hasWritePermission(currentServerSettingsPath):
-      writeFile(currentServerSettingsPath, serverConfig)
-    else:
-      return writeFileElevated(currentServerSettingsPath, serverConfig)
+    return writeFileElevated(currentServerSettingsPath, serverConfig)
   return true
 
 
@@ -654,10 +626,7 @@ proc loadSaveAiSettings(save: bool): bool =
       aiConfig.add(AISETTING_MAX_BOTS_INCLUDE_HUMANS & " 0")
 
   if save:
-    if hasWritePermission(currentAiSettingsPath):
-      writeFile(currentAiSettingsPath, aiConfig)
-    else:
-      return writeFileElevated(currentAiSettingsPath, aiConfig)
+    return writeFileElevated(currentAiSettingsPath, aiConfig)
   return true
 
 proc saveAiSettings(): bool =
@@ -670,11 +639,7 @@ proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
-  if hasWritePermission(currentMapListPath):
-    writeFile(currentMapListPath, mapListContent)
-  else:
-    return writeFileElevated(currentMapListPath, mapListContent)
-  return true
+  return writeFileElevated(currentMapListPath, mapListContent)
 
 proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
@@ -794,17 +759,10 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  preClientPatchCheck()
-  if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
-    patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
-  else:
-    var writeSucceed: bool
-    copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
-    patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
-    writeSucceed = copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
-    removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
-    if not writeSucceed:
-      return false
+  if not preClientPatchCheck():
+    return false
+  if not patchClientElevated(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
+    return false
 
   openspyBackupCheck()
 
@@ -894,9 +852,10 @@ proc onBtnHostClicked(self: Button) {.signal.} =
     return
   if not saveAiSettings():
     return
+  if not preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()):
+    return
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
-  preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
   txtIpAddress.text = txtHostIpAddress.text
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
@@ -1023,10 +982,7 @@ proc onBtnRemoveMoviesClicked(self: Button) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
-      if hasWritePermission(movie.path):
-        removeFile(movie.path)
-      else:
-        discard removeFileElevated(movie.path)
+      discard removeFileElevated(movie.path)
 
 proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
   result = true
@@ -1057,11 +1013,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
         if not copyDirElevated(srcPath, dstPath): # TODO: Check for write permission
           return false
       elif levelFiles.kind == pcFile:
-        if hasWritePermission(dstPath):
-          copyFile(srcPath, dstPath)
-        else:
-          if not copyFileElevated(srcPath, dstPath):
-            return false
+        if not copyFileElevated(srcPath, dstPath):
+          return false
     ## Move desc file # TODO: Create a recursive function that walks every file in each folder
     # if isServer: # Linux only # TODO: Refactor copyLevels
     if isServer: # Moving all files in levels info folder with lowercase namens
@@ -1087,11 +1040,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var rawLines: seq[string] = raw.splitLines()
               rawLines.delete(val - 1)
               when defined(windows):
-                if hasWritePermission(path / fileName):
-                  writeFile(path / fileName, rawLines.join("\n"))
-                else:
-                  if not writeFileElevated(path / fileName, rawLines.join("\n")):
-                    return false
+                if not writeFileElevated(path / fileName, rawLines.join("\n")):
+                  return false
               else:
                 writeFile(path / fileName.toLower(), rawLines.join("\n"))
               return true
@@ -1099,11 +1049,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var raw: string = readFile(path / fileName.toLower())
               raw.delete(valFrom - 1, valTo - 1)
               when defined(windows):
-                if hasWritePermission(path / fileName):
-                  writeFile(path / fileName, raw)
-                else:
-                  if not writeFileElevated(path / fileName, raw):
-                    return false
+                if not writeFileElevated(path / fileName, raw):
+                  return false
               else:
                 writeFile(path / fileName.toLower(), raw)
               return true
@@ -1184,27 +1131,19 @@ proc onBtnRestoreClicked(self: Button) {.signal.} =
     let clientMd5Hash: string = getMD5(clientExeBackupPath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
     if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
       echo "Found original client binary (" & BF2142_EXE_NAME & "). Restoring!"
-      if hasWritePermission(clientExeBackupPath):
-        copyFile(clientExeBackupPath, clientExeRestorePath)
-        removeFile(clientExeBackupPath)
-      else:
-        if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
-          return
-        if not removeFileElevated(clientExeBackupPath):
-          return
+      if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
+        return
+      if not removeFileElevated(clientExeBackupPath):
+        return
       restoredFiles = true
   if fileExists(openspyDllBackupPath):
     let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
     if openspyMd5Hash == OPENSPY_MD5_HASH:
       echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-      if hasWritePermission(openspyDllBackupPath):
-        copyFile(openspyDllBackupPath, openspyDllRestorePath)
-        removeFile(openspyDllBackupPath)
-      else:
-        if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
-          return
-        if not removeFileElevated(openspyDllBackupPath):
-          return
+      if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
+        return
+      if not removeFileElevated(openspyDllBackupPath):
+        return
       restoredFiles = true
   if restoredFiles:
     btnRestore.sensitive = false
@@ -1354,8 +1293,6 @@ proc onApplicationActivate(application: Application) =
     btnWinePrefix.visible = false
     lblStartupQuery.visible = false
     txtStartupQuery.visible = false
-    if not dirExists(TEMP_FILES_DIR):
-      createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false

@@ -1,8 +1,9 @@
 import os, strutils
 import uri
-import net # Requierd for isServerRunning
 import asynchttpserver, asyncdispatch
 import httpclient
+import checkpermission
+import nimBF2142IpPatcher
 when defined(windows):
   import winim
   import getprocessbyname
@@ -20,6 +21,9 @@ type Action {.pure.} = enum
   createDir = "createDir",
   existsOrCreateDir = "existsOrCreateDir",
   closeServer = "closeServer",
+  preClientPatch = "preClientPatch",
+  preServerPatch = "preServerPatch",
+  patchClient = "patchClient",
 
 var client: HttpClient = newHttpClient()
 proc handleRequest(req: Request) {.async.} =
@@ -56,6 +60,19 @@ proc handleRequest(req: Request) {.async.} =
     var res: bool = existsOrCreateDir(path)
     await req.respond(Http200, $res)
     return
+  of Action.preClientPatch:
+    let path: string = req.headers["path", 0]
+    preClientPatch(path)
+  of Action.preServerPatch:
+    let path: string = req.headers["path", 0]
+    let ip: IpAddress = req.headers["ip", 0].parseIpAddress()
+    let port: Port = req.headers["port", 0].parseInt().Port
+    preServerPatch(path, ip, port)
+  of Action.patchClient:
+    let path: string = req.headers["path", 0]
+    let ip: IpAddress = req.headers["ip", 0].parseIpAddress()
+    let port: Port = req.headers["port", 0].parseInt().Port
+    patchClient(path, ip, port)
   of Action.closeServer:
     quit(0) # TODO: Should respons data and then quit
   await req.respond(Http200, "")
@@ -87,6 +104,9 @@ when defined(windows):
 
 proc writeFileElevated*(path, content: string): bool =
   when defined(windows):
+    if hasWritePermission(path):
+      writeFile(path, content)
+      return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
@@ -99,6 +119,9 @@ proc writeFileElevated*(path, content: string): bool =
 
 proc copyFileElevated*(pathFrom, pathTo: string): bool =
   when defined(windows):
+    if hasWritePermission(pathTo):
+      copyFile(pathFrom, pathTo)
+      return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
@@ -112,6 +135,9 @@ proc copyFileElevated*(pathFrom, pathTo: string): bool =
 
 proc copyDirElevated*(pathFrom, pathTo: string): bool =
   when defined(windows):
+    if hasWritePermission(pathTo):
+      copyDir(pathFrom, pathTo)
+      return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
@@ -125,6 +151,9 @@ proc copyDirElevated*(pathFrom, pathTo: string): bool =
 
 proc removeFileElevated*(path: string): bool =
   when defined(windows):
+    if hasWritePermission(path):
+      removeFile(path)
+      return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
@@ -137,6 +166,9 @@ proc removeFileElevated*(path: string): bool =
 
 proc createDirElevated*(path: string): bool =
   when defined(windows):
+    if hasWritePermission(path):
+      createDir(path)
+      return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
@@ -149,6 +181,8 @@ proc createDirElevated*(path: string): bool =
 
 proc existsOrCreateDirElevated*(path: string): (bool, bool) = # First bool if elevation was successfull, second bool tells if dir already exists
   when defined(windows):
+    if hasWritePermission(path):
+      return (true, existsOrCreateDir(path))
     if not isServerRunning() and not elevate():
       return (false, false)
     var headers: HttpHeaders = newHttpHeaders()
@@ -158,6 +192,55 @@ proc existsOrCreateDirElevated*(path: string): (bool, bool) = # First bool if el
     return (true, resp.body.parseBool())
   else:
     return (true, existsOrCreateDir(path))
+
+proc preClientPatchElevated*(path: string): bool =
+  when defined(windows):
+    if hasWritePermission(path):
+      preClientPatch(path)
+      return true
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.preClientPatch)
+    headers.add("path", path)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    preClientPatch(path)
+  return true
+
+proc preServerPatchElevated*(path: string, ip: IpAddress, port: Port): bool =
+  when defined(windows):
+    if hasWritePermission(path):
+      preServerPatch(path)
+      return true
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.preServerPatch)
+    headers.add("path", path)
+    headers.add("ip", ip)
+    headers.add("port", port)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    preServerPatch(path, ip, port)
+  return true
+
+proc patchClientElevated*(path: string, ip: IpAddress, port: Port): bool =
+  when defined(windows):
+    if hasWritePermission(path):
+      patchClient(path)
+      return true
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.patchClient)
+    headers.add("path", path)
+    headers.add("ip", ip)
+    headers.add("port", port)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+  else:
+    patchClient(path, ip, port)
+  return true
 
 when defined(windows) and isMainModule:
   var server = newAsyncHttpServer()
