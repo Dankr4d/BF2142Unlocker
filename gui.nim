@@ -281,7 +281,7 @@ proc preClientPatchCheck(): bool =
     echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
     if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
       return false
-    if not preClientPatch(clientExePath):
+    if not preClientPatchElevated(clientExePath):
       return false
     btnRestore.sensitive = true
   return true

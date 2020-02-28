@@ -2,12 +2,12 @@ import os, strutils
 import uri
 import asynchttpserver, asyncdispatch
 import httpclient
+import net # Required for parseIpAddress
 import checkpermission
 import nimBF2142IpPatcher
 when defined(windows):
   import winim
   import getprocessbyname
-  import gethwndbypid
 
 const URI = parseUri("http://127.0.0.1:8085/")
 
@@ -211,15 +211,15 @@ proc preClientPatchElevated*(path: string): bool =
 proc preServerPatchElevated*(path: string, ip: IpAddress, port: Port): bool =
   when defined(windows):
     if hasWritePermission(path):
-      preServerPatch(path)
+      preServerPatch(path, ip, port)
       return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
     headers.add("action", $Action.preServerPatch)
     headers.add("path", path)
-    headers.add("ip", ip)
-    headers.add("port", port)
+    headers.add("ip", $ip)
+    headers.add("port", $port)
     var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
   else:
     preServerPatch(path, ip, port)
@@ -228,21 +228,22 @@ proc preServerPatchElevated*(path: string, ip: IpAddress, port: Port): bool =
 proc patchClientElevated*(path: string, ip: IpAddress, port: Port): bool =
   when defined(windows):
     if hasWritePermission(path):
-      patchClient(path)
+      patchClient(path, ip, port)
       return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
     headers.add("action", $Action.patchClient)
     headers.add("path", path)
-    headers.add("ip", ip)
-    headers.add("port", port)
+    headers.add("ip", $ip)
+    headers.add("port", $port)
     var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
   else:
     patchClient(path, ip, port)
   return true
 
 when defined(windows) and isMainModule:
+  import gethwndbypid
   var server = newAsyncHttpServer()
   asyncCheck server.serve(Port(URI.port.parseInt()), handleRequest, "127.0.0.1")
   pid = GetCurrentProcessId()
