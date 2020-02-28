@@ -21,8 +21,7 @@ type Action {.pure.} = enum
   createDir = "createDir",
   existsOrCreateDir = "existsOrCreateDir",
   closeServer = "closeServer",
-  preClientPatch = "preClientPatch",
-  preServerPatch = "preServerPatch",
+  patchServer = "patchServer",
   patchClient = "patchClient",
 
 var client: HttpClient = newHttpClient()
@@ -60,14 +59,11 @@ proc handleRequest(req: Request) {.async.} =
     var res: bool = existsOrCreateDir(path)
     await req.respond(Http200, $res)
     return
-  of Action.preClientPatch:
-    let path: string = req.headers["path", 0]
-    preClientPatch(path)
-  of Action.preServerPatch:
+  of Action.patchServer:
     let path: string = req.headers["path", 0]
     let ip: IpAddress = req.headers["ip", 0].parseIpAddress()
     let port: Port = req.headers["port", 0].parseInt().Port
-    preServerPatch(path, ip, port)
+    patchServer(path, ip, port)
   of Action.patchClient:
     let path: string = req.headers["path", 0]
     let ip: IpAddress = req.headers["ip", 0].parseIpAddress()
@@ -193,36 +189,21 @@ proc existsOrCreateDirElevated*(path: string): (bool, bool) = # First bool if el
   else:
     return (true, existsOrCreateDir(path))
 
-proc preClientPatchElevated*(path: string): bool =
+proc patchServerElevated*(path: string, ip: IpAddress, port: Port): bool =
   when defined(windows):
     if hasWritePermission(path):
-      preClientPatch(path)
+      patchServer(path, ip, port)
       return true
     if not isServerRunning() and not elevate():
       return false
     var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.preClientPatch)
-    headers.add("path", path)
-    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
-  else:
-    preClientPatch(path)
-  return true
-
-proc preServerPatchElevated*(path: string, ip: IpAddress, port: Port): bool =
-  when defined(windows):
-    if hasWritePermission(path):
-      preServerPatch(path, ip, port)
-      return true
-    if not isServerRunning() and not elevate():
-      return false
-    var headers: HttpHeaders = newHttpHeaders()
-    headers.add("action", $Action.preServerPatch)
+    headers.add("action", $Action.patchServer)
     headers.add("path", path)
     headers.add("ip", $ip)
     headers.add("port", $port)
     var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
   else:
-    preServerPatch(path, ip, port)
+    patchServer(path, ip, port)
   return true
 
 proc patchClientElevated*(path: string, ip: IpAddress, port: Port): bool =

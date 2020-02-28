@@ -271,20 +271,6 @@ proc loadConfig() =
   else:
     chbtnWindowMode.active = false
 
-proc preClientPatchCheck(): bool =
-  let clientExePath: string = bf2142Path / BF2142_EXE_NAME
-  if bf2142Path == "" or not fileExists(clientExePath):
-    return false
-  let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-  if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-    echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
-    if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
-      return false
-    if not preClientPatchElevated(clientExePath):
-      return false
-    btnRestore.sensitive = true
-  return true
-
 proc openspyBackupCheck() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
   let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
@@ -307,7 +293,7 @@ proc restoreCheck() =
   else:
     btnRestore.sensitive = false
 
-proc preServerPatchCheck(ipAddress: IpAddress): bool =
+proc serverPatchCheck(ipAddress: IpAddress): bool =
   # when defined(windows):
   #   raise newException(ValueError, "Windows server precheck not implemented")
   #   return
@@ -332,7 +318,7 @@ proc preServerPatchCheck(ipAddress: IpAddress): bool =
   if createBackup:
     if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
       return false
-  return preServerPatchElevated(serverExePath, ipAddress, Port(8080))
+  return patchServerElevated(serverExePath, ipAddress, Port(8080))
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -758,8 +744,6 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if not preClientPatchCheck():
-    return false
   if not patchClientElevated(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
     return false
 
@@ -851,7 +835,7 @@ proc onBtnHostClicked(self: Button) {.signal.} =
     return
   if not saveAiSettings():
     return
-  if not preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()):
+  if not serverPatchCheck(txtHostIpAddress.text.parseIpAddress()):
     return
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
