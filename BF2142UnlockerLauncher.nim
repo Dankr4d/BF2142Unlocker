@@ -6,4 +6,4 @@ when isMainModule and defined(windows):
     {.link: "icon.res".}
 
   setCurrentDir(getCurrentDir() / "bin")
-  discard startProcess("bin" / "BF2142Unlocker.exe")
+  echo execCmd("cmd /c " & "BF2142Unlocker.exe")
