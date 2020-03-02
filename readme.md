@@ -16,8 +16,8 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 
 ## How to use:
 - Start the BF2142Unlocker:
-  - Windows: BF2142Unlocker.bat
-  - Linux: gui
+  - Windows: BF2142Unlocker.exe
+  - Linux: BF2142Unlocker
 - Set at least your Battlefield 2142 client path in "Settings" tab (this will make the other tabs visible).
 - If your BF2142 game/server folder is read only, you need to allow the elevation request from elevatedio (to run as administrator). Elevatedio will be only started when it's required.
 - Goto "Join" tab and click on "Just play". You'll get logged in and can start playing in singleplayer or multiplayer/lan.<br />
