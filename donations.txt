@@ -1,0 +1,5 @@
+bountysource
+bitcoin
+etherium
+flattr
+patreon

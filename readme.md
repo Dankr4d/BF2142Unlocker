@@ -68,12 +68,13 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - `cd ..`
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
-- `nim build.nims # Installs the dependencies and compiles the BF2142Unlocker`
+- `nimble install -d # Install dependencies`
+- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Linux)
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
-- `nim build.nims`
-- `nim -d:mingw build.nims # Cross compile for windows, but currently not working`
+- `nimble install -d # Install dependencies`
+- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Docker)
 - `docker-compose up`

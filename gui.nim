@@ -35,7 +35,12 @@ var documentsPath: string
 var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
 
-const VERSION: string = "0.9.2"
+const VERSION: string = static:
+  var raw: string = staticRead("BF2142Unlocker.nimble")
+  var posVersionStart: int = raw.find("version")
+  var posQuoteStart: int = raw.find('"', posVersionStart)
+  var posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
+  raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
 
 when defined(linux):
   const BF2142_SRV_EXE_NAME: string = "bf2142"
@@ -122,6 +127,7 @@ var windowShown: bool = false
 var application: Application
 var window: ApplicationWindow
 var notebook: Notebook
+var lblVersion: Label
 var lbtnUnlockerGithub: LinkButton
 var lbtnUnlockerModdb: LinkButton
 var lbtnProjectRemaster: LinkButton
@@ -1126,6 +1132,7 @@ proc onApplicationActivate(application: Application) =
   discard builder.addFromFile("gui.glade")
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
+  lblVersion = builder.getLabel("lblVersion")
   lbtnUnlockerGithub = builder.getLinkButton("lbtnUnlockerGithub")
   lbtnUnlockerModdb = builder.getLinkButton("lbtnUnlockerModdb")
   lbtnProjectRemaster = builder.getLinkButton("lbtnProjectRemaster")
@@ -1186,6 +1193,10 @@ proc onApplicationActivate(application: Application) =
   btnRemoveMovies = builder.getButton("btnRemoveMovies")
   btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
+
+  ## Set version (statically) read out from nimble file
+  lblVersion.label = VERSION
+  #
 
   ## Set LinkButton label (cannot be set in glade)
   lbtnUnlockerGithub.label = "Github"
