@@ -12,4 +12,5 @@ ENV PATH="/opt/Nim/bin:${PATH}"
 ADD . /opt/nimBF2142Unlocker
 WORKDIR /opt/nimBF2142Unlocker/
 ENV PATH="/root/.nimble:${PATH}"
-RUN nim build.nims
+RUN nimble install -d
+RUN nimble release

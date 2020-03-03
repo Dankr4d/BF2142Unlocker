@@ -16,8 +16,8 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 
 ## How to use:
 - Start the BF2142Unlocker:
-  - Windows: BF2142Unlocker.bat
-  - Linux: gui
+  - Windows: BF2142Unlocker.exe
+  - Linux: BF2142Unlocker
 - Set at least your Battlefield 2142 client path in "Settings" tab (this will make the other tabs visible).
 - If your BF2142 game/server folder is read only, you need to allow the elevation request from elevatedio (to run as administrator). Elevatedio will be only started when it's required.
 - Goto "Join" tab and click on "Just play". You'll get logged in and can start playing in singleplayer or multiplayer/lan.<br />
@@ -68,12 +68,13 @@ The unlocker gives you the abillity to add 64 coop maps (see below *"Optional re
 - `cd ..`
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
-- `nim build.nims # Installs the dependencies and compiles the BF2142Unlocker`
+- `nimble install -d # Install dependencies`
+- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Linux)
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
-- `nim build.nims`
-- `nim -d:mingw build.nims # Cross compile for windows, but currently not working`
+- `nimble install -d # Install dependencies`
+- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Docker)
 - `docker-compose up`

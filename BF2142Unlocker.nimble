@@ -1,6 +1,26 @@
+### Package
+version       = "0.9.2"
+author        = "Dankrad"
+description   = "Play and host BF2142 server with all unlocks."
+license       = "MIT"
+srcDir        = "src"
+bin           = @[""]
+##
+
+### Dependencies
+requires "nim >= 1.0.4"
+requires "gintro >= 0.7.0"
+requires "winim >= 3.2.4"
+when defined(linux):
+  requires "psutil >= 0.5.7"
+##
+
+### imports
 from os import `/`
 from strformat import fmt
+##
 
+### Consts
 const
   BUILD_DIR: string = "build"
   OPENSSL_VERSION: string = "1.0.2r"
@@ -13,22 +33,26 @@ when defined(windows):
     BUILD_LIB_DIR: string = BUILD_DIR / "lib"
     BUILD_SHARE_DIR: string = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
+##
 
+### Procs
 proc createIconRes() =
   echo "Creating icon.res"
-  when defined(linux):
-    echo "NOT IMPLEMENTED ON LINUX" # TODO
-  elif defined(windows) and buildOS == "windows": # TODO: Should also be possible on linux
+  when defined(windows) and buildOS == "windows":
     exec("""windres.exe .\icon.rc -O coff -o icon.res""")
+
+when defined(windows):
+  proc compileLauncher() =
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
 
 proc compileGui() =
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
     else:
-      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "gui".toExe & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " gui")
 
 proc compileServer() =
   when defined(windows):
@@ -82,6 +106,7 @@ proc compileAll() =
   compileServer()
   when defined(windows):
     compileElevatedio()
+    compileLauncher()
 
 when defined(windows):
   const GTK_LIBS: seq[string] = @[
@@ -132,26 +157,15 @@ proc copyAll() =
   when defined(windows):
     copyGtk()
     copyOpenSSL()
+##
 
-when defined(windows):
-  proc createStartupBatch() =
-    writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
-@echo off
-cd bin
-cmd /c gui.exe
-    """)
-
-proc installDeps() =
-  exec("nim c -f -r instdeps.nim")
-
-when isMainModule:
+### Tasks
+task release, "Build and bundle a release.":
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
-  installDeps()
   when defined(windows):
-    mkDir(BUILD_BIN_DIR / "tempfiles") # TODO: This folder should not be created here
-    createStartupBatch()
-  createIconRes()
+    createIconRes()
   compileAll()
   copyAll()
+##

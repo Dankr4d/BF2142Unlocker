@@ -20,7 +20,22 @@ proc writeIpStr(fs: FileStream, pos: int, ip: IpAddress, port: Option[Port], wri
   for i in 1..writeLen - data.len:
     fs.write(byte(0x0))
 
-proc preClientPatch*(fs: FileStream) = # TODO: Concat bytes
+proc patchServer*(fs: FileStream, ip: IpAddress, port: Port) =
+  when defined(linux):
+    when defined(cpu32):
+      fs.writeIpStr(parseHexInt("869727"), ip, some(port), 24, true)
+    else:
+      fs.writeIpStr(parseHexInt("768FA7"), ip, some(port), 24, true)
+  elif defined(windows): # TODO: Only 32 bit implemented
+    fs.writeIpStr(parseHexInt("3CE617"), ip, some(port), 24, true)
+
+proc patchServer*(path: string, ip: IpAddress, port: Port) =
+  var fs: FileStream = newFileStream(path, fmReadWriteExisting)
+  fs.patchServer(ip, port)
+  fs.close()
+
+proc patchClient*(fs: FileStream, ip: IpAddress, port: Port) =
+  ## Previously preClientPatch
   fs.setPosition(parseHexInt("3293B0"))
   fs.write(byte(0x90))
   fs.write(byte(0x90))
@@ -59,28 +74,7 @@ proc preClientPatch*(fs: FileStream) = # TODO: Concat bytes
   fs.write(byte(0x00))
   fs.write(byte(0x00))
   fs.write(byte(0x00))
-
-proc preClientPatch*(path: string) =
-  var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.preClientPatch()
-  fs.close()
-
-proc preServerPatch*(fs: FileStream, ip: IpAddress, port: Port) =
-  when defined(linux):
-    when defined(cpu32):
-      fs.writeIpStr(parseHexInt("869727"), ip, some(port), 24, true)
-    else:
-      fs.writeIpStr(parseHexInt("768FA7"), ip, some(port), 24, true)
-  elif defined(windows): # Only 32 Bit available
-    fs.writeIpStr(parseHexInt("3CE617"), ip, some(port), 24, true)
-
-proc preServerPatch*(path: string, ip: IpAddress, port: Port) =
-  var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.preServerPatch(ip, port)
-  fs.close()
-
-
-proc patchClient*(fs: FileStream, ip: IpAddress, port: Port) =
+  #
   # TODO: Info: The following patch length is the minimum length to patch the whole original string.
   #             Some can be longer but not more then 23 (third patch .. should also check if this patch
   #             is necessary for e.g. tcp/udp or if it's not requiered)

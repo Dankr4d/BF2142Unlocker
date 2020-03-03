@@ -1351,20 +1351,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnRestore">
-                        <property name="label" translatable="yes">Restore original files</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="hexpand">True</property>
-                        <signal name="clicked" handler="onBtnRestoreClicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="top_attach">7</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkButton" id="btnBF2142Path">
                         <property name="label" translatable="yes">Select</property>
                         <property name="visible">True</property>
@@ -1427,12 +1413,6 @@
                     <child>
                       <placeholder/>
                     </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1468,10 +1448,21 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
+              <object class="GtkLabel" id="lblVersion">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">
+</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Version: 0.9.2</property>
+                <property name="label" translatable="yes">Version:</property>
               </object>
               <packing>
                 <property name="position">0</property>

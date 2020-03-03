@@ -17,7 +17,6 @@ import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
 import checkpermission # Requierd to check if file has write permissions
-import nimBF2142IpPatcher
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
 import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
@@ -30,17 +29,27 @@ when defined(linux):
   {.passC:"-Wl,--export-dynamic".}
   {.passL:"-lgmodule-2.0 -rdynamic".}
 
-const TEMP_FILES_DIR*: string = "tempfiles" # TODO
-
 var bf2142Path: string
 var bf2142ServerPath: string
 var documentsPath: string
 var bf2142ProfilesPath: string
 var bf2142Profile0001Path: string
 
-const VERSION: string = "0.9.2"
+const VERSION: string = static:
+  var raw: string = staticRead("BF2142Unlocker.nimble")
+  var posVersionStart: int = raw.find("version")
+  var posQuoteStart: int = raw.find('"', posVersionStart)
+  var posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
+  raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
 
+when defined(linux):
+  const BF2142_SRV_EXE_NAME: string = "bf2142"
+  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "bf2142Unlocker"
+else:
+  const BF2142_SRV_EXE_NAME: string = "BF2142_w32ded.exe"
+  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "BF2142_w32dedUnlocker.exe"
 const BF2142_EXE_NAME: string = "BF2142.exe"
+const BF2142_UNLOCKER_EXE_NAME: string = "BF2142Unlocker.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
 const FILE_BACKUP_SUFFIX: string = ".original"
@@ -48,15 +57,6 @@ const FILE_BACKUP_SUFFIX: string = ".original"
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
 const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
-when defined(linux):
-  const
-    ORIGINAL_SERVER_MD5_HASH_32: string = "9e9368e3ee5ffc0a533048685456cb8c"
-    ORIGINAL_SERVER_MD5_HASH_64: string = "ce720cbf34cf11460a69eaaae50dc917"
-elif defined(windows):
-  const
-    ORIGINAL_SERVER_MD5_HASH_32: string = "2380c7bc967f96aff1fbf83ce1b9390d"
-    ORIGINAL_SERVER_MD5_HASH_64: string = "2380c7bc967f96aff1fbf83ce1b9390d"
-
 
 const GAME_MODES: seq[tuple[id: string, name: string]] = @[
   (id: "gpm_cq", name: "Conquest"),
@@ -105,7 +105,9 @@ const
   PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
   PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
 
-const GUI_CSS: string = staticRead("gui.css")
+when defined(release):
+  const GUI_CSS: string = staticRead("gui.css")
+  const GUI_GLADE: string = staticRead("gui.glade")
 const
   CONFIG_FILE_NAME: string = "config.ini"
   CONFIG_SECTION_GENERAL: string = "General"
@@ -127,6 +129,7 @@ var windowShown: bool = false
 var application: Application
 var window: ApplicationWindow
 var notebook: Notebook
+var lblVersion: Label
 var lbtnUnlockerGithub: LinkButton
 var lbtnUnlockerModdb: LinkButton
 var lbtnProjectRemaster: LinkButton
@@ -198,7 +201,6 @@ var txtStartupQuery: Entry
 var btnRemoveMovies: Button
 var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
-var btnRestore: Button
 ##
 
 ### Helper procs
@@ -274,91 +276,32 @@ proc loadConfig() =
   else:
     chbtnWindowMode.active = false
 
-proc preClientPatchCheck() =
-  let clientExePath: string = bf2142Path / BF2142_EXE_NAME
-  if bf2142Path == "":
-    return
-  if fileExists(clientExePath):
-    let clientMd5Hash: string = getMD5(clientExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo fmt"Found original client binary ({BF2142_EXE_NAME}). Creating a backup and prepatching!"
-      if hasWritePermission(clientExePath):
-        copyFile(clientExePath, clientExePath & FILE_BACKUP_SUFFIX)
-        preClientPatch(clientExePath)
-      else:
-        var writeSucceed: bool = false
-        let tmpExePath: string = TEMP_FILES_DIR / BF2142_EXE_NAME
-        if not copyFileElevated(clientExePath, clientExePath & FILE_BACKUP_SUFFIX):
-          return
-        copyFile(clientExePath, tmpExePath)
-        preClientPatch(tmpExePath)
-        writeSucceed = copyFileElevated(tmpExePath, clientExePath)
-        removeFile(tmpExePath)
-        if not writeSucceed:
-          return
-      btnRestore.sensitive = true
-
-proc openspyBackupCheck() =
+proc backupOpenSpyIfExists() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
   let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
-  if fileExists(openspyDllPath) and fileExists(originalRendDX9Path):
-    let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
-    let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
-    if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
-      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
-      if hasWritePermission(openspyDllPath):
-        copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
-        copyFile(originalRendDX9Path, openspyDllPath)
-      else:
-        if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
-          return
-        if not copyFileElevated(originalRendDX9Path, openspyDllPath):
-          return
-      btnRestore.sensitive = true
+  if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
+  let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
+  if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
+    if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+      return
+    if not copyFileElevated(originalRendDX9Path, openspyDllPath):
+      return
 
-proc restoreCheck() =
-  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
+proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  if fileExists(clientExeBackupPath) or fileExists(openspyDllBackupPath):
-    btnRestore.sensitive = true
-  else:
-    btnRestore.sensitive = false
-
-proc preServerPatchCheck(ipAddress: IpAddress) =
-  # when defined(windows):
-  #   raise newException(ValueError, "Windows server precheck not implemented")
-  #   return
-  var serverExePath = bf2142ServerPath
-  when defined(linux):
-    serverExePath = serverExePath / "bin"
-    when defined(cpu32):
-      serverExePath = serverExePath / "ia-32"
-    else:
-      serverExePath = serverExePath / "amd-64"
-    serverExePath = serverExePath / "bf2142"
-  elif defined(windows):
-    serverExePath = serverExePath / "BF2142_w32ded.exe"
-  if serverExePath != "" and fileExists(serverExePath):
-    var serverMd5Hash: string = getMD5(serverExePath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    var createBackup: bool = false
-    if serverMd5Hash in [ORIGINAL_SERVER_MD5_HASH_32, ORIGINAL_SERVER_MD5_HASH_64]:
-      echo "Found original server binary. Creating a backup and prepatching!"
-      createBackup = true
-    echo "Patching Battlefield 2142 server!"
-    if hasWritePermission(serverExePath):
-      if createBackup:
-        copyFile(serverExePath, serverExePath & FILE_BACKUP_SUFFIX)
-      preServerPatch(serverExePath, ipAddress, Port(8080))
-    else:
-      var fileSplit = splitFile(serverExePath)
-      let tmpExePath: string = TEMP_FILES_DIR / fileSplit.name & fileSplit.ext
-      if createBackup:
-        if not copyFileElevated(serverExePath, serverExePath & FILE_BACKUP_SUFFIX):
-          return
-      copyFile(serverExePath, tmpExePath)
-      preServerPatch(tmpExePath, ipAddress, Port(8080))
-      discard copyFileElevated(tmpExePath, serverExePath)
-      removeFile(tmpExePath)
+  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  if not fileExists(openspyDllBackupPath):
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+  if openspyMd5Hash == OPENSPY_MD5_HASH:
+    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+    if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
+      return
+    if not removeFileElevated(openspyDllBackupPath):
+      return
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -422,24 +365,6 @@ proc moveSelectedUp(list: TreeView) =
 proc moveSelectedDown(list: TreeView) =
   list.moveSelectedUpDown(up = false)
 
-proc selectNext(list: TreeView) =
-  var iter: TreeIter
-  var store = listStore(list.getModel())
-  if not list.selection.getSelected(store, iter):
-    return
-  if store.iterNext(iter):
-    list.selection.selectIter(iter)
-
-proc removeSelected(list: TreeView) =
-  var
-    ls: ListStore
-    iter: TreeIter
-  let store = listStore(list.getModel())
-  if not store.getIterFirst(iter):
-      return
-  if getSelected(list.selection, ls, iter):
-    discard store.remove(iter)
-
 proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
   var
     val: Value
@@ -455,6 +380,44 @@ proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSiz
     result.mapMode = $val.getString()
     store.getValue(iter, 2, val)
     result.mapSize = $val.getString() # TODO: Should be int
+
+proc updateLevelPreview(mapName, mapMode, mapSize: string) =
+  var imgPath: string
+  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
+  if fileExists(imgPath):
+    var pixbuf = newPixbufFromFile(imgPath)
+    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
+    imgLevelPreview.setFromPixbuf(pixbuf)
+  elif fileExists(NO_PREVIEW_IMG_PATH):
+    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
+  else:
+    imgLevelPreview.clear()
+
+proc updateLevelPreview(treeView: TreeView) =
+  var mapName, mapMode, mapSize: string
+  (mapName, mapMode, mapSize) = treeView.selectedMap
+  updateLevelPreview(mapName, mapMode, mapSize)
+
+proc selectNext(treeView: TreeView) =
+  var iter: TreeIter
+  var store: ListStore = listStore(treeView.getModel())
+  if not treeView.selection.getSelected(store, iter):
+    return
+  if store.iterNext(iter):
+    treeView.selection.selectIter(iter)
+    treeView.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
+    treeView.updateLevelPreview()
+
+proc removeSelected(treeView: TreeView) =
+  var
+    ls: ListStore
+    iter: TreeIter
+  let store = listStore(treeView.getModel())
+  if not store.getIterFirst(iter):
+      return
+  if getSelected(treeView.selection, ls, iter):
+    discard store.remove(iter)
+    treeView.updateLevelPreview()
 
 iterator maps(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
   var
@@ -598,10 +561,7 @@ proc loadSaveServerSettings(save: bool): bool =
       serverConfig.add(setting & ' ' & value & '\n')
   file.close()
   if save:
-    if hasWritePermission(currentServerSettingsPath):
-      writeFile(currentServerSettingsPath, serverConfig)
-    else:
-      return writeFileElevated(currentServerSettingsPath, serverConfig)
+    return writeFileElevated(currentServerSettingsPath, serverConfig)
   return true
 
 
@@ -654,10 +614,7 @@ proc loadSaveAiSettings(save: bool): bool =
       aiConfig.add(AISETTING_MAX_BOTS_INCLUDE_HUMANS & " 0")
 
   if save:
-    if hasWritePermission(currentAiSettingsPath):
-      writeFile(currentAiSettingsPath, aiConfig)
-    else:
-      return writeFileElevated(currentAiSettingsPath, aiConfig)
+    return writeFileElevated(currentAiSettingsPath, aiConfig)
   return true
 
 proc saveAiSettings(): bool =
@@ -670,15 +627,12 @@ proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
-  if hasWritePermission(currentMapListPath):
-    writeFile(currentMapListPath, mapListContent)
-  else:
-    return writeFileElevated(currentMapListPath, mapListContent)
-  return true
+  return writeFileElevated(currentMapListPath, mapListContent)
 
 proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
   var line, mapName, mapMode, mapSize: string
+  listSelectedMaps.clear()
   while file.readLine(line):
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
@@ -726,9 +680,18 @@ proc startBF2142Server() =
   if symlinkExists(stupidPbSymlink):
     removeFile(stupidPbSymlink)
   when defined(linux):
-    termBF2142ServerPid = termBF2142Server.startProcess(command = "/bin/bash start.sh", workingDir = bf2142ServerPath, env = "TERM=xterm")
+    let ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      workingDir = bf2142ServerPath,
+      env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
+    )
   elif defined(windows):
-    termBF2142ServerPid = termBF2142Server.startProcess(command = "BF2142_w32ded.exe", workingDir = bf2142ServerPath, searchForkedProcess = true)
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      workingDir = bf2142ServerPath,
+      searchForkedProcess = true
+    )
 
 proc loadJoinMods() =
   cbxJoinMods.removeAll()
@@ -794,19 +757,13 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  preClientPatchCheck()
-  if hasWritePermission(bf2142Path / BF2142_EXE_NAME):
-    patchClient(bf2142Path / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
-  else:
-    var writeSucceed: bool
-    copyFile(bf2142Path / BF2142_EXE_NAME, TEMP_FILES_DIR / BF2142_EXE_NAME)
-    patchClient(TEMP_FILES_DIR / BF2142_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
-    writeSucceed = copyFileElevated(TEMP_FILES_DIR / BF2142_EXE_NAME, bf2142Path / BF2142_EXE_NAME)
-    removeFile(TEMP_FILES_DIR / BF2142_EXE_NAME)
-    if not writeSucceed:
+  if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+    if not copyFileElevated(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
       return false
+  if not patchClientElevated(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
+    return false
 
-  openspyBackupCheck()
+  backupOpenSpyIfExists()
 
   saveProfileAccountName()
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
@@ -820,7 +777,7 @@ proc patchAndStartLogic(): bool =
   when defined(linux):
     if txtStartupQuery.text != "":
       command.add(txtStartupQuery.text & ' ')
-  command.add(BF2142_EXE_NAME & ' ')
+  command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
   command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
   if chbtnWindowMode.active:
@@ -876,8 +833,6 @@ proc onBtnRemoveMapClicked(self: Button) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
-  if cbxGameMode.activeId == mapMode:
-    listSelectableMaps.appendMap(mapName, mapMode, mapSize)
   listSelectedMaps.removeSelected()
 
 proc onBtnMapMoveUpClicked(self: Button) {.signal.} =
@@ -894,9 +849,18 @@ proc onBtnHostClicked(self: Button) {.signal.} =
     return
   if not saveAiSettings():
     return
+  var serverExePath = bf2142ServerPath
+  when defined(linux):
+    serverExePath = serverExePath / "bin" / "amd-64"
+  if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+    if not copyFileElevated(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+      return
+  serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
+  echo "Patching Battlefield 2142 server!"
+  if not patchServerElevated(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080)):
+    return
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
-  preServerPatchCheck(txtHostIpAddress.text.parseIpAddress()) # TODO
   txtIpAddress.text = txtHostIpAddress.text
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
@@ -932,27 +896,11 @@ proc onCbxGameModeChanged(self: ComboBoxText) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
-proc updateLevelPreview(mapName, mapMode, mapSize: string) =
-  var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
-  if fileExists(imgPath):
-    var pixbuf = newPixbufFromFile(imgPath)
-    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
-    imgLevelPreview.setFromPixbuf(pixbuf)
-  elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
-  else:
-    imgLevelPreview.clear()
-
 proc onListSelectableMapsCursorChanged(self: TreeView) {.signal.} =
-  var mapName, mapMode, mapSize: string
-  (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
-  updateLevelPreview(mapName, mapMode, mapSize)
+  listSelectableMaps.updateLevelPreview()
 
 proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) {.signal.} =
-  var mapName, mapMode, mapSize: string
-  (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
-  updateLevelPreview(mapName, mapMode, mapSize)
+  listSelectedMaps.updateLevelPreview()
 #
 ## Settings
 proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
@@ -975,8 +923,6 @@ proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
   vboxHost.visible = true
   bf2142Path = path
   txtBF2142Path.text = path
-  if btnRestore.sensitive == false:
-    restoreCheck()
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
@@ -999,6 +945,10 @@ proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
   txtBF2142ServerPath.text = path
   updatePathes()
   loadHostMods()
+  fillListSelectableMaps()
+  discard loadMapList()
+  discard loadServerSettings()
+  discard loadAiSettings()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
@@ -1023,10 +973,7 @@ proc onBtnRemoveMoviesClicked(self: Button) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
-      if hasWritePermission(movie.path):
-        removeFile(movie.path)
-      else:
-        discard removeFileElevated(movie.path)
+      discard removeFileElevated(movie.path)
 
 proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
   result = true
@@ -1057,11 +1004,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
         if not copyDirElevated(srcPath, dstPath): # TODO: Check for write permission
           return false
       elif levelFiles.kind == pcFile:
-        if hasWritePermission(dstPath):
-          copyFile(srcPath, dstPath)
-        else:
-          if not copyFileElevated(srcPath, dstPath):
-            return false
+        if not copyFileElevated(srcPath, dstPath):
+          return false
     ## Move desc file # TODO: Create a recursive function that walks every file in each folder
     # if isServer: # Linux only # TODO: Refactor copyLevels
     if isServer: # Moving all files in levels info folder with lowercase namens
@@ -1087,11 +1031,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var rawLines: seq[string] = raw.splitLines()
               rawLines.delete(val - 1)
               when defined(windows):
-                if hasWritePermission(path / fileName):
-                  writeFile(path / fileName, rawLines.join("\n"))
-                else:
-                  if not writeFileElevated(path / fileName, rawLines.join("\n")):
-                    return false
+                if not writeFileElevated(path / fileName, rawLines.join("\n")):
+                  return false
               else:
                 writeFile(path / fileName.toLower(), rawLines.join("\n"))
               return true
@@ -1099,11 +1040,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var raw: string = readFile(path / fileName.toLower())
               raw.delete(valFrom - 1, valTo - 1)
               when defined(windows):
-                if hasWritePermission(path / fileName):
-                  writeFile(path / fileName, raw)
-                else:
-                  if not writeFileElevated(path / fileName, raw):
-                    return false
+                if not writeFileElevated(path / fileName, raw):
+                  return false
               else:
                 writeFile(path / fileName.toLower(), raw)
               return true
@@ -1171,43 +1109,6 @@ proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
-
-proc onBtnRestoreClicked(self: Button) {.signal.} =
-  let clientExeBackupPath: string = bf2142Path / BF2142_EXE_NAME & FILE_BACKUP_SUFFIX
-  let clientExeRestorePath: string = bf2142Path / BF2142_EXE_NAME
-  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
-  var restoredFiles: bool = false
-  if bf2142Path == "":
-    return
-  if fileExists(clientExeBackupPath):
-    let clientMd5Hash: string = getMD5(clientExeBackupPath.readFile()) # TODO: In a thread (slow gui startup) OR!! read file until first ground patched byte OR Create a check byte at the begining of the file
-    if clientMd5Hash == ORIGINAL_CLIENT_MD5_HASH:
-      echo "Found original client binary (" & BF2142_EXE_NAME & "). Restoring!"
-      if hasWritePermission(clientExeBackupPath):
-        copyFile(clientExeBackupPath, clientExeRestorePath)
-        removeFile(clientExeBackupPath)
-      else:
-        if not copyFileElevated(clientExeBackupPath, clientExeRestorePath):
-          return
-        if not removeFileElevated(clientExeBackupPath):
-          return
-      restoredFiles = true
-  if fileExists(openspyDllBackupPath):
-    let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
-    if openspyMd5Hash == OPENSPY_MD5_HASH:
-      echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-      if hasWritePermission(openspyDllBackupPath):
-        copyFile(openspyDllBackupPath, openspyDllRestorePath)
-        removeFile(openspyDllBackupPath)
-      else:
-        if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
-          return
-        if not removeFileElevated(openspyDllBackupPath):
-          return
-      restoredFiles = true
-  if restoredFiles:
-    btnRestore.sensitive = false
 #
 ##
 
@@ -1227,6 +1128,7 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
+  restoreOpenSpyIfExists()
   when defined(windows):
     if elevatedio.isServerRunning():
       echo "KILLING ELEVATEDIO SERVER"
@@ -1234,9 +1136,13 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
 
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
-  discard builder.addFromFile("gui.glade")
+  when defined(release):
+    discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
+  else:
+    discard builder.addFromFile("gui.glade")
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
+  lblVersion = builder.getLabel("lblVersion")
   lbtnUnlockerGithub = builder.getLinkButton("lbtnUnlockerGithub")
   lbtnUnlockerModdb = builder.getLinkButton("lbtnUnlockerModdb")
   lbtnProjectRemaster = builder.getLinkButton("lbtnProjectRemaster")
@@ -1297,7 +1203,10 @@ proc onApplicationActivate(application: Application) =
   btnRemoveMovies = builder.getButton("btnRemoveMovies")
   btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
-  btnRestore = builder.getButton("btnRestore")
+
+  ## Set version (statically) read out from nimble file
+  lblVersion.label = VERSION
+  #
 
   ## Set LinkButton label (cannot be set in glade)
   lbtnUnlockerGithub.label = "Github"
@@ -1341,9 +1250,9 @@ proc onApplicationActivate(application: Application) =
   loadConfig()
   loadJoinMods()
   loadHostMods()
+  fillHostMode()
   if bf2142ServerPath != "":
     updatePathes()
-    fillHostMode()
     fillListSelectableMaps()
     discard loadMapList()
     discard loadServerSettings()
@@ -1354,13 +1263,10 @@ proc onApplicationActivate(application: Application) =
     btnWinePrefix.visible = false
     lblStartupQuery.visible = false
     txtStartupQuery.visible = false
-    if not dirExists(TEMP_FILES_DIR):
-      createDir(TEMP_FILES_DIR)
   if bf2142Path == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false
     vboxHost.visible = false
-  restoreCheck()
 
 proc main =
   application = newApplication()
