@@ -87,6 +87,9 @@ proc patchClient*(fs: FileStream, ip: IpAddress, port: Port) =
   fs.writeIpStr(parseHexInt("6067A0"), ip, none(Port), 21) # TODO: Check if it's requierd
   fs.writeIpStr(parseHexInt("607180"), ip, none(Port), 16) # TODO: Check if it's requierd
   fs.writeIpStr(parseHexInt("6071C0"), ip, none(Port), 16) # TODO: Check if it's requierd
+  # Patching "Large Address Aware" from 2GB to 4GB
+  fs.setPosition(parseHexInt("00000146"))
+  fs.write(byte(0x2E))
 
 proc patchClient*(path: string, ip: IpAddress, port: Port) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
