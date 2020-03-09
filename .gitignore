@@ -21,6 +21,8 @@ signal
 signal.exe
 nimBF2142IpPatcher
 nimBF2142IpPatcher.exe
+BF2142UnlockerLauncher
+BF2142UnlockerLauncher.exe
 config.ini
 icon.res
 libeay32.dll

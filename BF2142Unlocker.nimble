@@ -41,14 +41,18 @@ proc createIconRes() =
   when defined(windows) and buildOS == "windows":
     exec("""windres.exe .\icon.rc -O coff -o icon.res""")
 
+when defined(windows):
+  proc compileLauncher() =
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
+
 proc compileGui() =
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
     else:
-      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "gui".toExe & " gui")
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "gui".toExe & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " gui")
 
 proc compileServer() =
   when defined(windows):
@@ -102,6 +106,7 @@ proc compileAll() =
   compileServer()
   when defined(windows):
     compileElevatedio()
+    compileLauncher()
 
 when defined(windows):
   const GTK_LIBS: seq[string] = @[
@@ -152,14 +157,6 @@ proc copyAll() =
   when defined(windows):
     copyGtk()
     copyOpenSSL()
-
-when defined(windows):
-  proc createStartupBatch() =
-    writeFile(BUILD_DIR / "BF2142Unlocker.bat", """
-@echo off
-cd bin
-cmd /c gui.exe
-    """)
 ##
 
 ### Tasks
@@ -168,7 +165,6 @@ task release, "Build and bundle a release.":
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
   when defined(windows):
-    createStartupBatch()
     createIconRes()
   compileAll()
   copyAll()

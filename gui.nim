@@ -105,7 +105,9 @@ const
   PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
   PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
 
-const GUI_CSS: string = staticRead("gui.css")
+when defined(release):
+  const GUI_CSS: string = staticRead("gui.css")
+  const GUI_GLADE: string = staticRead("gui.glade")
 const
   CONFIG_FILE_NAME: string = "config.ini"
   CONFIG_SECTION_GENERAL: string = "General"
@@ -630,6 +632,7 @@ proc saveMapList(): bool =
 proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
   var line, mapName, mapMode, mapSize: string
+  listSelectedMaps.clear()
   while file.readLine(line):
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
@@ -942,6 +945,10 @@ proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
   txtBF2142ServerPath.text = path
   updatePathes()
   loadHostMods()
+  fillListSelectableMaps()
+  discard loadMapList()
+  discard loadServerSettings()
+  discard loadAiSettings()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
@@ -1121,15 +1128,18 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
   if termLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
+  restoreOpenSpyIfExists()
   when defined(windows):
     if elevatedio.isServerRunning():
       echo "KILLING ELEVATEDIO SERVER"
       killElevatedIo()
-  restoreOpenSpyIfExists()
 
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
-  discard builder.addFromFile("gui.glade")
+  when defined(release):
+    discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
+  else:
+    discard builder.addFromFile("gui.glade")
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
@@ -1240,9 +1250,9 @@ proc onApplicationActivate(application: Application) =
   loadConfig()
   loadJoinMods()
   loadHostMods()
+  fillHostMode()
   if bf2142ServerPath != "":
     updatePathes()
-    fillHostMode()
     fillListSelectableMaps()
     discard loadMapList()
     discard loadServerSettings()
