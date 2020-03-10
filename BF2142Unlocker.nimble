@@ -41,6 +41,20 @@ proc createIconRes() =
   when defined(windows) and buildOS == "windows":
     exec("""windres.exe .\icon.rc -O coff -o icon.res""")
 
+proc createTranslation() =
+  exec("msgfmt -o locale/en/LC_MESSAGES/gui.mo locale/en.po")
+  exec("msgfmt -o locale/de/LC_MESSAGES/gui.mo locale/de.po")
+
+proc copyTranslation() =
+  when defined(window):
+    let path: string = BUILD_BIN_DIR
+  else:
+    let path: string = BUILD_DIR
+  mkDir(path / "locale" / "en" / "LC_MESSAGES")
+  mkDir(path / "locale" / "de" / "LC_MESSAGES")
+  cpFile("locale" / "en" / "LC_MESSAGES" / "gui.mo", path / "locale" / "en" / "LC_MESSAGES" / "gui.mo")
+  cpFile("locale" / "de" / "LC_MESSAGES" / "gui.mo", path / "locale" / "de" / "LC_MESSAGES" / "gui.mo")
+
 when defined(windows):
   proc compileLauncher() =
     exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
@@ -107,6 +121,7 @@ proc compileAll() =
   when defined(windows):
     compileElevatedio()
     compileLauncher()
+  createTranslation()
 
 when defined(windows):
   const GTK_LIBS: seq[string] = @[
@@ -157,10 +172,11 @@ proc copyAll() =
   when defined(windows):
     copyGtk()
     copyOpenSSL()
+  copyTranslation()
 ##
 
 ### Tasks
-task release, "Build and bundle a release.":
+task release, "Compile and bundle (release).":
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)

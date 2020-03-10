@@ -1,0 +1,6 @@
+# Don't remove the two lines below, they're required for gettext to work correctly.
+msgid ""
+msgstr ""
+
+msgid "TEST"
+msgstr ""

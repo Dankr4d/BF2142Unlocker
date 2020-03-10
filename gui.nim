@@ -204,6 +204,8 @@ var btnPatchServerMaps: Button
 ##
 
 ### Helper procs
+proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
+
 # proc areServerReachable(address: string): bool =
 #   if not isAddrReachable(address, Port(8080)):
 #     return false
@@ -1136,6 +1138,7 @@ proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
 
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
+  builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
   else:
@@ -1269,6 +1272,10 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
 
 proc main =
+  ## gettext boilerplate
+  discard setlocale(LC_ALL, "");
+  discard bindtextdomain("gui", os.getCurrentDir() / "locale");
+  #
   application = newApplication()
   application.connect("activate", onApplicationActivate)
   when defined(windows) and defined(release):
