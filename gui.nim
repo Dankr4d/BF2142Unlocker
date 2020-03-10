@@ -799,10 +799,10 @@ proc patchAndStartLogic(): bool =
   )
   return true
 
-proc onBtnJoinClicked(self: Button) {.signal.} =
+proc onBtnJoinClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
 
-proc onBtnJustPlayClicked(self: Button) {.signal.} =
+proc onBtnJustPlayClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
   txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
@@ -820,31 +820,31 @@ proc onBtnJustPlayClicked(self: Button) {.signal.} =
     chbtnAutoJoin.active = prevAutoJoinVal
     killProcess(termLoginServerPid)
 
-proc onBtnJustPlayCancelClicked(self: Button) {.signal.} =
+proc onBtnJustPlayCancelClicked(self: Button00) {.signal.} =
   killProcess(termLoginServerPid)
   applyJustPlayRunningSensitivity(false)
 
-proc onBtnAddMapClicked(self: Button) {.signal.} =
+proc onBtnAddMapClicked(self: Button00) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   listSelectableMaps.selectNext()
 
-proc onBtnRemoveMapClicked(self: Button) {.signal.} =
+proc onBtnRemoveMapClicked(self: Button00) {.signal.} =
   var mapName, mapMode, mapSize: string
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == "": return
   listSelectedMaps.removeSelected()
 
-proc onBtnMapMoveUpClicked(self: Button) {.signal.} =
+proc onBtnMapMoveUpClicked(self: Button00) {.signal.} =
   listSelectedMaps.moveSelectedUp()
 
-proc onBtnMapMoveDownClicked(self: Button) {.signal.} =
+proc onBtnMapMoveDownClicked(self: Button00) {.signal.} =
   listSelectedMaps.moveSelectedDown()
 #
 ## Host
-proc onBtnHostClicked(self: Button) {.signal.} =
+proc onBtnHostClicked(self: Button00) {.signal.} =
   if not saveMapList():
     return
   if not saveServerSettings():
@@ -870,7 +870,7 @@ proc onBtnHostClicked(self: Button) {.signal.} =
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
 
-proc onBtnHostLoginServerClicked(self: Button) {.signal.} =
+proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
   txtIpAddress.text = txtHostIpAddress.text
@@ -879,7 +879,7 @@ proc onBtnHostLoginServerClicked(self: Button) {.signal.} =
   termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
 
-proc onBtnHostCancelClicked(self: Button) {.signal.} =
+proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
   applyJustPlayRunningSensitivity(false)
   killProcess(termLoginServerPid)
@@ -887,21 +887,21 @@ proc onBtnHostCancelClicked(self: Button) {.signal.} =
   if termBF2142ServerPid > 0:
     killProcess(termBF2142ServerPid)
 
-proc onCbxHostModsChanged(self: ComboBoxText) {.signal.} =
+proc onCbxHostModsChanged(self: ComboBoxText00) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
   discard loadMapList()
   discard loadServerSettings()
   discard loadAiSettings()
 
-proc onCbxGameModeChanged(self: ComboBoxText) {.signal.} =
+proc onCbxGameModeChanged(self: ComboBoxText00) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
-proc onListSelectableMapsCursorChanged(self: TreeView) {.signal.} =
+proc onListSelectableMapsCursorChanged(self: TreeView00) {.signal.} =
   listSelectableMaps.updateLevelPreview()
 
-proc onListSelectedMapsRowActivated(self: TreeView, path: TreePath, column: TreeViewColumn) {.signal.} =
+proc onListSelectedMapsRowActivated(self: TreeView00, path: TreePath00, column: TreeViewColumn00) {.signal.} =
   listSelectedMaps.updateLevelPreview()
 #
 ## Settings
@@ -914,7 +914,7 @@ proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: 
   dialog.destroy()
   return (cast[ResponseType](responseId), path)
 
-proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
+proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -937,7 +937,7 @@ proc onBtnBF2142PathClicked(self: Button) {.signal.} = # TODO: Add checks
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
+proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
   var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -954,7 +954,7 @@ proc onBtnBF2142ServerPathClicked(self: Button) {.signal.} = # TODO: Add Checks
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnWinePrefixClicked(self: Button) {.signal.} = # TODO: Add checks
+proc onBtnWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
   if responseType != ResponseType.ok:
     return
@@ -967,11 +967,11 @@ proc onBtnWinePrefixClicked(self: Button) {.signal.} = # TODO: Add checks
     documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
-proc onTxtStartupQueryFocusOut(self: Entry, event: EventFocus): bool {.signal.} =
+proc onTxtStartupQueryFocusOut(self: Entry00, event: EventFocus00): bool {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnRemoveMoviesClicked(self: Button) {.signal.} =
+proc onBtnRemoveMoviesClicked(self: Button00) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
@@ -1084,7 +1084,7 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   else:
     dialog.destroy()
 
-proc onBtnPatchClientMapsClicked(self: Button) {.signal.} =
+proc onBtnPatchClientMapsClicked(self: Button00) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (client)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
@@ -1105,7 +1105,7 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   else:
     dialog.destroy()
 
-proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
+proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
   let chooser = newFileChooserDialog("Select levels folder to copy from (server)", nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
@@ -1114,16 +1114,16 @@ proc onBtnPatchServerMapsClicked(self: Button) {.signal.} =
 #
 ##
 
-proc onNotebookSwitchPage(self: Notebook, page: Widget, pageNum: int) {.signal.} =
+proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: int) {.signal.} =
   if pageNum == 1:
     if txtHostIpAddress.text == "":
       fillHostIpAddress()
 
-proc onApplicationWindowDraw(window: ApplicationWindow, context: cairo.Context): bool {.signalNoCheck.} =
+proc onApplicationWindowDraw(window: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
   if not windowShown:
     windowShown = true
 
-proc onApplicationWindowDestroy(window: ApplicationWindow) {.signal.} =
+proc onApplicationWindowDestroy(window: ApplicationWindow00) {.signal.} =
   if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
     killProcess(termBF2142ServerPid)
