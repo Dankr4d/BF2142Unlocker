@@ -6,9 +6,183 @@ msgstr ""
 "Language-Team: none\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "TEST"
-msgstr "THIS IS MY ENGLISH TRANSLATION!"
+msgid "JOIN_IP_ADDRESS"
+msgstr "IP-Address:"
+
+msgid "JOIN_IP_ADDRESS_TOOLTIP"
+msgstr ""
+"Enter the IP-Address of the target login-server you want to connect to.\n"
+"Default/Empty is your own computers IP-Address."
+
+msgid "JOIN_AUTO_JOIN_SERVER"
+msgstr "Auto join server:"
+
+msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
+
+msgid "JOIN_CONNECT"
+msgstr "Connect"
+
+msgid "JOIN_CONNECT_TOOLTIP"
+msgstr ""
+"Connect to the login-server by using the IP-Address entered.\n"
+"If the field is left empty your computers IP will be used."
+
+msgid "JOIN_MODS"
+msgstr "Mods:"
+
+msgid "JOIN_MODS_TOOLTIP"
+msgstr "Choose the mod that the game should start with"
+
+msgid "JOIN_PLAYER_NAME"
+msgstr "Player name:"
+
+msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgstr "Name of your Soldier that appears ingame"
+
+msgid "JOIN_WINDOW_MODE"
+msgstr "Window mode:"
+
+msgid "JOIN_WINDOW_MODE_TOOLTIP"
+msgstr "Starts the game in windowed mode"
+
+msgid "JOIN_JUST_PLAY_CANCEL"
+msgstr "Cancel"
+
+msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
+msgstr "Stop all servers"
+
+msgid "JOIN_JUST_PLAY"
+msgstr "Just play"
+
+msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgstr ""
+"Start the login-server with your computers IP-Adress and launch the game "
+"with it!\n"
+"This is a quick way into singleplayer."
+
+# ##
+# ##### Host
+msgid "JOIN_GAME_SETTINGS"
+msgstr "Game settings"
+
+msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgstr ""
+"Connection-settings that control how you get into your or any login-server"
+
+msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+
+# ##
+# ##### Host
+msgid "HOST_SETTINGS"
+msgstr "Settings"
+
+msgid "HOST_MODS"
+msgstr "Mods:"
+
+msgid "HOST_GAME_MODE"
+msgstr "Game mode:"
+
+msgid "HOST_BOT_SKILL"
+msgstr "Bot skill:"
+
+msgid "HOST_TICKET_RATIO"
+msgstr "Ticket ratio:"
+
+msgid "HOST_SPAWN_TIME"
+msgstr "Spawn time:"
+
+msgid "HOST_ROUNDS_PER_MAP"
+msgstr "Rounds per map:"
+
+msgid "HOST_BOT_AMOUNT"
+msgstr "Bot amount:"
+
+msgid "HOST_MAX_PLAYERS"
+msgstr "Max players:"
+
+msgid "HOST_PLAYERS_NEEDED_TO_START"
+msgstr "Players needed to start:"
+
+msgid "HOST_FRIENDLY_FIRE"
+msgstr "Friendly fire:"
+
+msgid "HOST_SERVER_IP_ADDRESS"
+msgstr "Server IP-Address:"
+
+msgid "HOST_MAPS"
+msgstr "Maps"
+
+msgid "HOST_TERMINALS"
+msgstr "Terminals"
+
+msgid "HOST_LOGIN_UNLOCK_SERVER"
+msgstr "Host login/unlock server"
+
+msgid "HOST_HOST"
+msgstr "Host"
+
+msgid "HOST_CANCEL"
+msgstr "Cancel"
+
+# ##
+# ##### Settings
+msgid "SETTINGS_BF2142_GAME_PATH"
+msgstr "Battlefield 2142 game path:"
+
+msgid "SETTINGS_BF2142_SERVER_PATH"
+msgstr "Battlefield 2142 server path:"
+
+msgid "SETTINGS_WINEPREFIX"
+msgstr "Wineprefix:"
+
+msgid "SETTINGS_STARTUP_QUERY"
+msgstr "Startup query:"
+
+msgid "SETTINGS_SELECT"
+msgstr "Select"
+
+msgid "SETTINGS_DELETE_INTRO_MOVIES"
+msgstr "Delete intro movies"
+
+msgid "SETTINGS_COPY_MAPS_CLIENT"
+msgstr "Copy maps (client)"
+
+msgid "SETTINGS_COPY_MAPS_SERVER"
+msgstr "Copy maps (server)"
+
+# ##
+# ##### Tabs
+msgid "TAB_JOIN"
+msgstr "Join"
+
+msgid "TAB_HOST"
+msgstr "Host"
+
+msgid "TAB_SETTINGS"
+msgstr "Settings"
+
+# ##
+# ##### Statusbar
+msgid "VERSION_TOOLTIP"
+msgstr "Current version"
+
+msgid "UNLOCKER_GITHUB_TOOLTIP"
+msgstr "Opens your web browser to this tools GitHub.\n"
+"Contribute!"
+
+msgid "UNLOCKER_MODDB_TOOLTIP"
+msgstr "Opens your web browser to this tools ModDB page."
+
+msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
+msgstr "Opens your web browser to Project Remaster's ModDB page.\n"
+"They remastered BF2142 to HD!"
+
+msgid "PLAY_ONLINE_TOOLTIP"
+msgstr "Opens your web browser to Reclamation's website.\n"
+"They host BF2142 online Multiplayer servers!"

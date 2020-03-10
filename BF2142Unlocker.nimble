@@ -27,6 +27,7 @@ const
   OPENSSL_DIR: string = "openssl-" & OPENSSL_VERSION
   OPENSSL_PATH: string = "deps" / "openssl"
   OPENSSL_URL: string = "https://www.openssl.org/source/openssl-" & OPENSSL_VERSION & ".tar.gz"
+  LANGUAGES: seq[string] = @["en", "de"]
 when defined(windows):
   const
     BUILD_BIN_DIR: string = BUILD_DIR / "bin"
@@ -41,19 +42,22 @@ proc createIconRes() =
   when defined(windows) and buildOS == "windows":
     exec("""windres.exe .\icon.rc -O coff -o icon.res""")
 
-proc createTranslation() =
-  exec("msgfmt -o locale/en/LC_MESSAGES/gui.mo locale/en.po")
-  exec("msgfmt -o locale/de/LC_MESSAGES/gui.mo locale/de.po")
+proc updateTranslationPo() =
+  for lang in LANGUAGES:
+    exec(fmt"msgmerge --update --no-fuzzy-matching locale/{lang}.po locale/gui.pot")
+
+proc createTranslationMo() =
+  for lang in LANGUAGES:
+    exec(fmt"msgfmt -o locale/{lang}/LC_MESSAGES/gui.mo locale/{lang}.po")
 
 proc copyTranslation() =
   when defined(window):
     let path: string = BUILD_BIN_DIR
   else:
     let path: string = BUILD_DIR
-  mkDir(path / "locale" / "en" / "LC_MESSAGES")
-  mkDir(path / "locale" / "de" / "LC_MESSAGES")
-  cpFile("locale" / "en" / "LC_MESSAGES" / "gui.mo", path / "locale" / "en" / "LC_MESSAGES" / "gui.mo")
-  cpFile("locale" / "de" / "LC_MESSAGES" / "gui.mo", path / "locale" / "de" / "LC_MESSAGES" / "gui.mo")
+  for lang in LANGUAGES:
+    mkDir(path / "locale" / lang / "LC_MESSAGES")
+    cpFile("locale" / lang / "LC_MESSAGES" / "gui.mo", path / "locale" / lang / "LC_MESSAGES" / "gui.mo")
 
 when defined(windows):
   proc compileLauncher() =
@@ -121,7 +125,7 @@ proc compileAll() =
   when defined(windows):
     compileElevatedio()
     compileLauncher()
-  createTranslation()
+  createTranslationMo()
 
 when defined(windows):
   const GTK_LIBS: seq[string] = @[
@@ -184,4 +188,12 @@ task release, "Compile and bundle (release).":
     createIconRes()
   compileAll()
   copyAll()
+
+task translatePo, "Update po files from pot file.":
+  mode = Verbose
+  updateTranslationPo()
+
+task translateMo, "Creates binary files from po files.":
+  mode = Verbose
+  createTranslationMo()
 ##

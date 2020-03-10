@@ -6,9 +6,178 @@ msgstr ""
 "Language-Team: none\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "TEST"
-msgstr "THIS IS MY GERMAN TRANSLATIO!"
+msgid "JOIN_IP_ADDRESS"
+msgstr "IP-Adresse:"
+
+msgid "JOIN_IP_ADDRESS_TOOLTIP"
+msgstr "Enter the IP-Address of the target login-server you want to connect to.\n"
+"Default/Empty is your own computers IP-Address."
+
+msgid "JOIN_AUTO_JOIN_SERVER"
+msgstr "Automatisch verbinden:"
+
+msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
+
+msgid "JOIN_CONNECT"
+msgstr "Verbinden"
+
+msgid "JOIN_CONNECT_TOOLTIP"
+msgstr "Connect to the login-server by using the IP-Address entered.\n"
+"If the field is left empty your computers IP will be used."
+
+msgid "JOIN_MODS"
+msgstr "Mods:"
+
+msgid "JOIN_MODS_TOOLTIP"
+msgstr "Choose the mod that the game should start with"
+
+msgid "JOIN_PLAYER_NAME"
+msgstr "Spielername:"
+
+msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgstr "Name of your Soldier that appears ingame"
+
+msgid "JOIN_WINDOW_MODE"
+msgstr "Fenstermodus:"
+
+msgid "JOIN_WINDOW_MODE_TOOLTIP"
+msgstr "Starts the game in windowed mode"
+
+msgid "JOIN_JUST_PLAY_CANCEL"
+msgstr "Abbrechen"
+
+msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
+msgstr "Stop all servers"
+
+msgid "JOIN_JUST_PLAY"
+msgstr "Einfach spielen"
+
+msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgstr "Start the login-server with your computers IP-Adress and launch the game with it!\n"
+"This is a quick way into singleplayer."
+
+# ##
+# ##### Host
+msgid "JOIN_GAME_SETTINGS"
+msgstr "Spieleinstellungen"
+
+msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgstr "Connection-settings that control how you get into your or any login-server"
+
+msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+
+# ##
+# ##### Host
+msgid "HOST_SETTINGS"
+msgstr "Einstellungen"
+
+msgid "HOST_MODS"
+msgstr "Mods:"
+
+msgid "HOST_GAME_MODE"
+msgstr "Spielmodus:"
+
+msgid "HOST_BOT_SKILL"
+msgstr "Bot Fähgikeit:"
+
+msgid "HOST_TICKET_RATIO"
+msgstr "Ticket verhältnis"
+
+msgid "HOST_SPAWN_TIME"
+msgstr "Spawn zeit:"
+
+msgid "HOST_ROUNDS_PER_MAP"
+msgstr "Runen pro Karte:"
+
+msgid "HOST_BOT_AMOUNT"
+msgstr "Bot anzahl:"
+
+msgid "HOST_MAX_PLAYERS"
+msgstr "Maximale Spieler"
+
+msgid "HOST_PLAYERS_NEEDED_TO_START"
+msgstr "Anzahl benötigter Spieler:"
+
+msgid "HOST_FRIENDLY_FIRE"
+msgstr "Teambeschuss:"
+
+msgid "HOST_SERVER_IP_ADDRESS"
+msgstr "Server IP-Adresse:"
+
+msgid "HOST_MAPS"
+msgstr "Karten"
+
+msgid "HOST_TERMINALS"
+msgstr "Terminals"
+
+msgid "HOST_LOGIN_UNLOCK_SERVER"
+msgstr "Anmelde-/Freischaltserver starten"
+
+msgid "HOST_HOST"
+msgstr "Alle server starten"
+
+msgid "HOST_CANCEL"
+msgstr "Abbrechen"
+
+# ##
+# ##### Settings
+msgid "SETTINGS_BF2142_GAME_PATH"
+msgstr "Battlefield 2142 Spielpfad:"
+
+msgid "SETTINGS_BF2142_SERVER_PATH"
+msgstr "Battlefield 2142 Serverpfad:"
+
+msgid "SETTINGS_WINEPREFIX"
+msgstr "Wineprefix:"
+
+msgid "SETTINGS_STARTUP_QUERY"
+msgstr "Startup query:"
+
+msgid "SETTINGS_SELECT"
+msgstr "Auswählen"
+
+msgid "SETTINGS_DELETE_INTRO_MOVIES"
+msgstr "Intro Videos löschen"
+
+msgid "SETTINGS_COPY_MAPS_CLIENT"
+msgstr "Karten kopieren (client)"
+
+msgid "SETTINGS_COPY_MAPS_SERVER"
+msgstr "Karten kopieren (server)"
+
+# ##
+# ##### Tabs
+msgid "TAB_JOIN"
+msgstr "Verbinden"
+
+msgid "TAB_HOST"
+msgstr "Bereitstellen"
+
+msgid "TAB_SETTINGS"
+msgstr "Einstellungen"
+
+# ##
+# ##### Statusbar
+msgid "VERSION_TOOLTIP"
+msgstr "Current version"
+
+msgid "UNLOCKER_GITHUB_TOOLTIP"
+msgstr "Opens your web browser to this tools GitHub.\n"
+"Contribute!"
+
+msgid "UNLOCKER_MODDB_TOOLTIP"
+msgstr "Opens your web browser to this tools ModDB page."
+
+msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
+msgstr "Opens your web browser to Project Remaster's ModDB page.\n"
+"They remastered BF2142 to HD!"
+
+msgid "PLAY_ONLINE_TOOLTIP"
+msgstr "Opens your web browser to Reclamation's website.\n"
+"They host BF2142 online Multiplayer servers!"

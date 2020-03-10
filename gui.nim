@@ -1273,8 +1273,13 @@ proc onApplicationActivate(application: Application) =
 
 proc main =
   ## gettext boilerplate
-  discard setlocale(LC_ALL, "");
+  var currentLocale: string = $setlocale(LC_ALL, "");
   discard bindtextdomain("gui", os.getCurrentDir() / "locale");
+  if currentLocale == "":
+    # Setting language to en_US.utf8 when locale is not supported
+    # TODO: Note, that this is not working if en_US.utf8 is not installed
+    disableSetlocale() # Required to set locale manually (in following line)
+    discard setlocale(LC_ALL, "en_US.utf8")
   #
   application = newApplication()
   application.connect("activate", onApplicationActivate)

@@ -119,14 +119,15 @@
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="tooltip_text" translatable="yes">Connection-settings that control how you get into your or any login-server</property>
+                                <property name="tooltip_text" translatable="yes">JOIN_CONNECT_FRAME_TOOLTIP</property>
                                 <property name="row_spacing">3</property>
                                 <property name="column_spacing">3</property>
                                 <child>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">IP-Address:</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_IP_ADDRESS</property>
                                     <property name="xalign">0</property>
                                   </object>
                                   <packing>
@@ -138,7 +139,8 @@
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Auto join server:</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_AUTO_JOIN_SERVER</property>
                                     <property name="xalign">0</property>
                                   </object>
                                   <packing>
@@ -150,8 +152,7 @@
                                   <object class="GtkEntry" id="txtIpAddress">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="tooltip_text" translatable="yes">Enter the IP-Address of the target login-server you want to connect to.
-Default/Empty is your own computers IP-Address.</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -163,7 +164,7 @@ Default/Empty is your own computers IP-Address.</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
-                                    <property name="tooltip_text" translatable="yes">Autojoin a gameserver if it listens to the same IP-Address as the login-server</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
                                     <property name="use_stock">True</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
@@ -174,12 +175,11 @@ Default/Empty is your own computers IP-Address.</property>
                                 </child>
                                 <child>
                                   <object class="GtkButton" id="btnJoin">
-                                    <property name="label" translatable="yes">Connect</property>
+                                    <property name="label" translatable="yes">JOIN_CONNECT</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
-                                    <property name="tooltip_text" translatable="yes">Connect to the login-server by using the IP-Address entered.
-If the field is left empty your computers IP will be used.</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_CONNECT_TOOLTIP</property>
                                     <signal name="clicked" handler="onBtnJoinClicked" swapped="no"/>
                                   </object>
                                   <packing>
@@ -196,7 +196,7 @@ If the field is left empty your computers IP will be used.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Connect</property>
+                            <property name="label" translatable="yes">JOIN_CONNECT</property>
                           </object>
                         </child>
                       </object>
@@ -223,14 +223,15 @@ If the field is left empty your computers IP will be used.</property>
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="tooltip_text" translatable="yes">Basic gamesettings that define how Battlefield 2142 will start</property>
+                                <property name="tooltip_text" translatable="yes">JOIN_GAME_SETTINGS_FRAME_TOOLTIP</property>
                                 <property name="row_spacing">3</property>
                                 <property name="column_spacing">3</property>
                                 <child>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Mods:</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_MODS_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_MODS</property>
                                     <property name="xalign">0</property>
                                   </object>
                                   <packing>
@@ -242,7 +243,8 @@ If the field is left empty your computers IP will be used.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Player name:</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_PLAYER_NAME</property>
                                     <property name="xalign">0</property>
                                   </object>
                                   <packing>
@@ -254,7 +256,8 @@ If the field is left empty your computers IP will be used.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Window mode:</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_WINDOW_MODE</property>
                                     <property name="xalign">0</property>
                                   </object>
                                   <packing>
@@ -266,7 +269,7 @@ If the field is left empty your computers IP will be used.</property>
                                   <object class="GtkEntry" id="txtPlayerName">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="tooltip_text" translatable="yes">Name of your Soldier that appears ingame</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -278,7 +281,7 @@ If the field is left empty your computers IP will be used.</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
-                                    <property name="tooltip_text" translatable="yes">Starts the game in windowed mode</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
                                     <property name="use_stock">True</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
@@ -291,7 +294,7 @@ If the field is left empty your computers IP will be used.</property>
                                   <object class="GtkComboBoxText" id="cbxJoinMods">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="tooltip_text" translatable="yes">Choose the mod that the game should start with</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_MODS_TOOLTIP</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -306,7 +309,7 @@ If the field is left empty your computers IP will be used.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Game settings</property>
+                            <property name="label" translatable="yes">JOIN_GAME_SETTINGS</property>
                           </object>
                         </child>
                       </object>
@@ -338,10 +341,10 @@ If the field is left empty your computers IP will be used.</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnJustPlayCancel">
-                        <property name="label" translatable="yes">Cancel</property>
+                        <property name="label" translatable="yes">JOIN_JUST_PLAY_CANCEL</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Stop all servers</property>
+                        <property name="tooltip_text" translatable="yes">JOIN_JUST_PLAY_CANCEL_TOOLTIP</property>
                         <signal name="clicked" handler="onBtnJustPlayCancelClicked" swapped="no"/>
                       </object>
                       <packing>
@@ -352,12 +355,11 @@ If the field is left empty your computers IP will be used.</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnJustPlay">
-                        <property name="label" translatable="yes">Just play</property>
+                        <property name="label" translatable="yes">JOIN_JUST_PLAY</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Start the login-server with your computers IP-Adress and launch the game with it!
-This is a quick way into singleplayer.</property>
+                        <property name="tooltip_text" translatable="yes">JOIN_JUST_PLAY_TOOLTIP</property>
                         <signal name="clicked" handler="onBtnJustPlayClicked" swapped="no"/>
                       </object>
                       <packing>
@@ -380,7 +382,7 @@ This is a quick way into singleplayer.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Settings to join a login-server</property>
-                <property name="label" translatable="yes">Join</property>
+                <property name="label" translatable="yes">TAB_JOIN</property>
               </object>
               <packing>
                 <property name="tab_fill">False</property>
@@ -437,7 +439,7 @@ This is a quick way into singleplayer.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Choose the mod the server should run with</property>
-                                                <property name="label" translatable="yes">Mods:</property>
+                                                <property name="label" translatable="yes">HOST_MODS</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -451,7 +453,7 @@ This is a quick way into singleplayer.</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Selection of available gameplay modes.
 Available maps depend on the chosen mode.</property>
-                                                <property name="label" translatable="yes">Game mode:</property>
+                                                <property name="label" translatable="yes">HOST_GAME_MODE</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -464,7 +466,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Controlls the difficulty of the bots</property>
-                                                <property name="label" translatable="yes">Bot skill:</property>
+                                                <property name="label" translatable="yes">HOST_BOT_SKILL</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -477,7 +479,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Tickets for each team in %</property>
-                                                <property name="label" translatable="yes">Ticket ratio:</property>
+                                                <property name="label" translatable="yes">HOST_TICKET_RATIO</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -490,7 +492,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Number of rounds to play each map before switching to the next one in the list</property>
-                                                <property name="label" translatable="yes">Rounds per map:</property>
+                                                <property name="label" translatable="yes">HOST_ROUNDS_PER_MAP</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -503,7 +505,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Time to wait before one can re-enter the battle if killed</property>
-                                                <property name="label" translatable="yes">Spawn time:</property>
+                                                <property name="label" translatable="yes">HOST_SPAWN_TIME</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -516,7 +518,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Total number of all bots on the map</property>
-                                                <property name="label" translatable="yes">Bot amount:</property>
+                                                <property name="label" translatable="yes">HOST_BOT_AMOUNT</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -530,7 +532,7 @@ Available maps depend on the chosen mode.</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Maximum number of human players on the map.
 Humans replace bots if value is lower than "Bot amount".</property>
-                                                <property name="label" translatable="yes">Max players:</property>
+                                                <property name="label" translatable="yes">HOST_MAX_PLAYERS</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -544,7 +546,7 @@ Humans replace bots if value is lower than "Bot amount".</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Number of human players that need to be connected into the game to make a round start
 </property>
-                                                <property name="label" translatable="yes">Players needed to start:</property>
+                                                <property name="label" translatable="yes">HOST_PLAYERS_NEEDED_TO_START</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -557,7 +559,7 @@ Humans replace bots if value is lower than "Bot amount".</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="tooltip_text" translatable="yes">Enables friendly fire</property>
-                                                <property name="label" translatable="yes">Friendly fire:</property>
+                                                <property name="label" translatable="yes">HOST_FRIENDLY_FIRE</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -572,7 +574,7 @@ Humans replace bots if value is lower than "Bot amount".</property>
                                                 <property name="tooltip_text" translatable="yes">Choose the IP-Address of the login and game-server.
 Default is your computers current IP-Address.
 Give this address to your friends so they can connect to you.</property>
-                                                <property name="label" translatable="yes">Server IP-Address:</property>
+                                                <property name="label" translatable="yes">HOST_SERVER_IP_ADDRESS</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -865,7 +867,7 @@ Available maps depend on the chosen mode.</property>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Settings</property>
+                                <property name="label" translatable="yes">HOST_SETTINGS</property>
                               </object>
                             </child>
                           </object>
@@ -1110,7 +1112,7 @@ This list is dependend on the gamemode you chose</property>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Maps</property>
+                                <property name="label" translatable="yes">HOST_MAPS</property>
                               </object>
                             </child>
                           </object>
@@ -1152,7 +1154,7 @@ This list is dependend on the gamemode you chose</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Terminals</property>
+                            <property name="label" translatable="yes">HOST_TERMINALS</property>
                           </object>
                         </child>
                       </object>
@@ -1185,11 +1187,11 @@ This list is dependend on the gamemode you chose</property>
                         <property name="homogeneous">True</property>
                         <child>
                           <object class="GtkButton" id="btnHostLoginServer">
-                            <property name="label" translatable="yes">Host login/unlock server</property>
+                            <property name="label" translatable="yes">HOST_LOGIN_UNLOCK_SERVER</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Start only the login-server </property>
+                            <property name="tooltip_text" translatable="yes">Start only the login-server</property>
                             <signal name="clicked" handler="onBtnHostLoginServerClicked" swapped="no"/>
                           </object>
                           <packing>
@@ -1200,7 +1202,7 @@ This list is dependend on the gamemode you chose</property>
                         </child>
                         <child>
                           <object class="GtkButton" id="btnHost">
-                            <property name="label" translatable="yes">Host</property>
+                            <property name="label" translatable="yes">HOST_HOST</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -1222,7 +1224,7 @@ This list is dependend on the gamemode you chose</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnHostCancel">
-                        <property name="label" translatable="yes">Cancel</property>
+                        <property name="label" translatable="yes">HOST_CANCEL</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Stop all servers!</property>
@@ -1251,7 +1253,7 @@ This list is dependend on the gamemode you chose</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Settings to host a login and game-server</property>
-                <property name="label" translatable="yes">Host</property>
+                <property name="label" translatable="yes">TAB_HOST</property>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -1278,7 +1280,7 @@ This list is dependend on the gamemode you chose</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Select your Battlefield 2142 game folder</property>
-                        <property name="label" translatable="yes">Battlefield 2142 path:</property>
+                        <property name="label" translatable="yes">SETTINGS_BF2142_GAME_PATH</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1292,7 +1294,7 @@ This list is dependend on the gamemode you chose</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Select your Battlefield 2142 server folder.
 This one is also known as "bf2142 unranked dedicated server".</property>
-                        <property name="label" translatable="yes">Battlefield 2142 server path:</property>
+                        <property name="label" translatable="yes">SETTINGS_BF2142_SERVER_PATH</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1305,7 +1307,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Any parameters for starting with wine</property>
-                        <property name="label" translatable="yes">Wineprefix:</property>
+                        <property name="label" translatable="yes">SETTINGS_WINEPREFIX</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1317,7 +1319,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                       <object class="GtkLabel" id="lblStartupQuery">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Startup query:</property>
+                        <property name="label" translatable="yes">SETTINGS_STARTUP_QUERY</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1376,7 +1378,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnRemoveMovies">
-                        <property name="label" translatable="yes">Delete intro movies</property>
+                        <property name="label" translatable="yes">SETTINGS_DELETE_INTRO_MOVIES</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1392,7 +1394,7 @@ Will not touch any mods!</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnPatchClientMaps">
-                        <property name="label" translatable="yes">Copy 64 coop maps (client)</property>
+                        <property name="label" translatable="yes">SETTINGS_COPY_MAPS_CLIENT</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1406,7 +1408,7 @@ Will not touch any mods!</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnPatchServerMaps">
-                        <property name="label" translatable="yes">Copy 64 coop maps (server)</property>
+                        <property name="label" translatable="yes">SETTINGS_COPY_MAPS_SERVER</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1420,7 +1422,7 @@ Will not touch any mods!</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnBF2142Path">
-                        <property name="label" translatable="yes">Select</property>
+                        <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1435,7 +1437,7 @@ Will not touch any mods!</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnBF2142ServerPath">
-                        <property name="label" translatable="yes">Select</property>
+                        <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1451,7 +1453,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                     </child>
                     <child>
                       <object class="GtkButton" id="btnWinePrefix">
-                        <property name="label" translatable="yes">Select</property>
+                        <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -1502,7 +1504,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">General settings</property>
-                <property name="label" translatable="yes">Settings</property>
+                <property name="label" translatable="yes">TAB_SETTINGS</property>
               </object>
               <packing>
                 <property name="position">2</property>
@@ -1524,7 +1526,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Current version</property>
+                <property name="tooltip_text" translatable="yes">VERSION_TOOLTIP</property>
                 <property name="label" translatable="yes">Version:</property>
               </object>
               <packing>
@@ -1535,6 +1537,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
               <object class="GtkLabel" id="lblVersion">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">VERSION_TOOLTIP</property>
                 <property name="label" translatable="yes">
 </property>
               </object>
@@ -1552,8 +1555,7 @@ This one is also known as "bf2142 unranked dedicated server".</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Opens your web browser to this tools GitHub.
-Contribute!</property>
+                    <property name="tooltip_text" translatable="yes">UNLOCKER_GITHUB_TOOLTIP</property>
                     <property name="relief">none</property>
                     <property name="uri">https://github.com/Dankr4d/BF2142Unlocker</property>
                   </object>
@@ -1581,7 +1583,7 @@ Contribute!</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Opens your web browser to this tools ModDB page. Get your new version here.</property>
+                    <property name="tooltip_text" translatable="yes">UNLOCKER_MODDB_TOOLTIP</property>
                     <property name="relief">none</property>
                     <property name="uri">https://www.moddb.com/mods/bf2142unlocker</property>
                   </object>
@@ -1609,8 +1611,7 @@ Contribute!</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Opens your web browser to Project Remaster's ModDB page.
-They remastered BF2142 to HD!</property>
+                    <property name="tooltip_text" translatable="yes">PROJECT_REMASTER_MODDB_TOOLTIP</property>
                     <property name="relief">none</property>
                     <property name="uri">https://www.moddb.com/mods/project-remaster</property>
                   </object>
@@ -1638,8 +1639,7 @@ They remastered BF2142 to HD!</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Opens your web browser to Reclamation's website.
-They host BF2142 online Multiplayer servers!</property>
+                    <property name="tooltip_text" translatable="yes">PLAY_ONLINE_TOOLTIP</property>
                     <property name="relief">none</property>
                     <property name="uri">https://battlefield2142.co</property>
                   </object>
