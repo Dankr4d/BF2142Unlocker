@@ -48,10 +48,11 @@ proc updateTranslationPo() =
 
 proc createTranslationMo() =
   for lang in LANGUAGES:
+    mkDir("locale" / lang / "LC_MESSAGES")
     exec(fmt"msgfmt -o locale/{lang}/LC_MESSAGES/gui.mo locale/{lang}.po")
 
 proc copyTranslation() =
-  when defined(window):
+  when defined(windows):
     let path: string = BUILD_BIN_DIR
   else:
     let path: string = BUILD_DIR

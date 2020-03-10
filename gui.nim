@@ -1,5 +1,7 @@
-import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf, gmodule]
+import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf]
 import gintro/gio except ListStore
+when defined(linux):
+  import gintro/gmodule # Required to automatically bind signals on linux
 
 import os
 import net # Requierd for ip parsing and type
@@ -16,7 +18,6 @@ import terminal # Terminal wrapper (uses vte on linux and textview on windows)
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
-import checkpermission # Requierd to check if file has write permissions
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
 import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
@@ -200,8 +201,6 @@ var btnPatchServerMaps: Button
 ##
 
 ### Helper procs
-proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
-
 # proc areServerReachable(address: string): bool =
 #   if not isAddrReachable(address, Port(8080)):
 #     return false
@@ -1257,9 +1256,16 @@ proc onApplicationActivate(application: Application) =
     vboxJoin.visible = false
     vboxHost.visible = false
 
+when defined(windows): # TODO: Cleanup
+  proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
+  var LC_ALL {.header: "<locale.h>", importc: "LC_ALL".}: int
+  proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
+else:
+  proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
+
 proc main =
   ## gettext boilerplate
-  var currentLocale: string = $setlocale(LC_ALL, "");
+  let currentLocale: string = $setlocale(LC_ALL, "");
   discard bindtextdomain("gui", os.getCurrentDir() / "locale");
   if currentLocale == "":
     # Setting language to en_US.utf8 when locale is not supported
@@ -1269,11 +1275,11 @@ proc main =
   #
   application = newApplication()
   application.connect("activate", onApplicationActivate)
-  when defined(windows) and defined(release):
-    # Hiding cmd, because I could not compile it as gui.
-    # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
-    # TODO: This is a workaround.
-    ShowWindow(GetConsoleWindow(), SW_HIDE)
+  # when defined(windows) and defined(release):
+  #   # Hiding cmd, because I could not compile it as gui.
+  #   # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
+  #   # TODO: This is a workaround.
+  #   ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
 
 main()
