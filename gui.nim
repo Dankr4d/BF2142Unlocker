@@ -1260,13 +1260,17 @@ when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
   var LC_ALL {.header: "<locale.h>", importc: "LC_ALL".}: int
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
+  proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
 
 proc main =
   ## gettext boilerplate
   let currentLocale: string = $setlocale(LC_ALL, "");
-  discard bindtextdomain("gui", os.getCurrentDir() / "locale");
+  discard bindtextdomain("gui", os.getCurrentDir() / "locale")
+  when defined(windows):
+    # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
+    discard bind_textdomain_codeset("gui", "UTF-8")
   if currentLocale == "":
     # Setting language to en_US.utf8 when locale is not supported
     # TODO: Note, that this is not working if en_US.utf8 is not installed
@@ -1275,11 +1279,11 @@ proc main =
   #
   application = newApplication()
   application.connect("activate", onApplicationActivate)
-  # when defined(windows) and defined(release):
-  #   # Hiding cmd, because I could not compile it as gui.
-  #   # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
-  #   # TODO: This is a workaround.
-  #   ShowWindow(GetConsoleWindow(), SW_HIDE)
+  when defined(windows) and defined(release):
+    # Hiding cmd, because I could not compile it as gui.
+    # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
+    # TODO: This is a workaround.
+    ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
 
 main()
