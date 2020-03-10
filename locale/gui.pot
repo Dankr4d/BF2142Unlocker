@@ -60,38 +60,72 @@ msgstr ""
 
 msgid "HOST_MODS"
 msgstr ""
+msgid "HOST_MODS_TOOLTIP"
+msgstr ""
 
 msgid "HOST_GAME_MODE"
+msgstr ""
+msgid "HOST_GAME_MODE_TOOLTIP"
 msgstr ""
 
 msgid "HOST_BOT_SKILL"
 msgstr ""
+msgid "HOST_BOT_SKILL_TOOLTIP"
+msgstr ""
 
 msgid "HOST_TICKET_RATIO"
+msgstr ""
+msgid "HOST_TICKET_RATIO_TOOLTIP"
 msgstr ""
 
 msgid "HOST_SPAWN_TIME"
 msgstr ""
+msgid "HOST_SPAWN_TIME_TOOLTIP"
+msgstr ""
 
 msgid "HOST_ROUNDS_PER_MAP"
+msgstr ""
+msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
 msgstr ""
 
 msgid "HOST_BOT_AMOUNT"
 msgstr ""
+msgid "HOST_BOT_AMOUNT_TOOLTIP"
+msgstr ""
 
 msgid "HOST_MAX_PLAYERS"
+msgstr ""
+msgid "HOST_MAX_PLAYERS_TOOLTIP"
 msgstr ""
 
 msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr ""
+msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
+msgstr ""
 
 msgid "HOST_FRIENDLY_FIRE"
+msgstr ""
+msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
 msgstr ""
 
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr ""
+msgid "HOST_SERVER_IP_ADDRESS_TOOLTIP"
+msgstr ""
 
 msgid "HOST_MAPS"
+msgstr ""
+msgid "HOST_SELECTABLE_MAPS_TOOLTIP"
+msgstr ""
+msgid "HOST_SELECTED_MAPS_TOOLTIP"
+msgstr ""
+msgid "HOST_MAPS_ADD_TOOLTIP"
+msgstr ""
+msgid "HOST_MAPS_REMOVE_TOOLTIP"
+msgstr ""
+msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
+msgstr ""
+msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
 msgstr ""
 
 msgid "HOST_TERMINALS"
@@ -99,31 +133,42 @@ msgstr ""
 
 msgid "HOST_LOGIN_UNLOCK_SERVER"
 msgstr ""
+msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
+msgstr ""
 
 msgid "HOST_HOST"
 msgstr ""
+msgid "HOST_HOST_TOOLTIP"
+msgstr ""
 
 msgid "HOST_CANCEL"
+msgstr ""
+msgid "HOST_CANCEL_TOOLTIP"
 msgstr ""
 ###
 
 ###### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr ""
+msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
+msgstr ""
 
 msgid "SETTINGS_BF2142_SERVER_PATH"
 msgstr ""
+msgid "SETTINGS_BF2142_SERVER_PATH_TOOLTIP"
+msgstr ""
 
 msgid "SETTINGS_WINEPREFIX"
+msgstr ""
+msgid "SETTINGS_WINEPREFIX_TOOLTIP"
 msgstr ""
 
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr ""
 
-msgid "SETTINGS_SELECT"
-msgstr ""
-
 msgid "SETTINGS_DELETE_INTRO_MOVIES"
+msgstr ""
+msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
 msgstr ""
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
@@ -131,17 +176,26 @@ msgstr ""
 
 msgid "SETTINGS_COPY_MAPS_SERVER"
 msgstr ""
+
+msgid "SETTINGS_SELECT"
+msgstr ""
 ###
 
 
 ###### Tabs
 msgid "TAB_JOIN"
 msgstr ""
+msgid "TAB_JOIN_TOOLTIP"
+msgstr ""
 
 msgid "TAB_HOST"
 msgstr ""
+msgid "TAB_HOST_TOOLTIP"
+msgstr ""
 
 msgid "TAB_SETTINGS"
+msgstr ""
+msgid "TAB_SETTINGS_TOOLTIP"
 msgstr ""
 ###
 
@@ -149,15 +203,23 @@ msgstr ""
 msgid "VERSION_TOOLTIP"
 msgstr ""
 
+msgid "UNLOCKER_GITHUB"
+msgstr ""
 msgid "UNLOCKER_GITHUB_TOOLTIP"
 msgstr ""
 
+msgid "UNLOCKER_MODDB"
+msgstr ""
 msgid "UNLOCKER_MODDB_TOOLTIP"
 msgstr ""
 
+msgid "PROJECT_REMASTER_MODDB"
+msgstr ""
 msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
 msgstr ""
 
+msgid "PLAY_ONLINE"
+msgstr ""
 msgid "PLAY_ONLINE_TOOLTIP"
 msgstr ""
 ###

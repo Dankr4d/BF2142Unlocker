@@ -14,20 +14,24 @@ msgid "JOIN_IP_ADDRESS"
 msgstr "IP-Adresse:"
 
 msgid "JOIN_IP_ADDRESS_TOOLTIP"
-msgstr "Enter the IP-Address of the target login-server you want to connect to.\n"
+msgstr ""
+"Enter the IP-Address of the target login-server you want to connect to.\n"
 "Default/Empty is your own computers IP-Address."
 
 msgid "JOIN_AUTO_JOIN_SERVER"
 msgstr "Automatisch verbinden:"
 
 msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
-msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
+msgstr ""
+"Autojoin a gameserver if it listens to the same IP-Address as the "
+"loginserver."
 
 msgid "JOIN_CONNECT"
 msgstr "Verbinden"
 
 msgid "JOIN_CONNECT_TOOLTIP"
-msgstr "Connect to the login-server by using the IP-Address entered.\n"
+msgstr ""
+"Connect to the login-server by using the IP-Address entered.\n"
 "If the field is left empty your computers IP will be used."
 
 msgid "JOIN_MODS"
@@ -58,7 +62,9 @@ msgid "JOIN_JUST_PLAY"
 msgstr "Einfach spielen"
 
 msgid "JOIN_JUST_PLAY_TOOLTIP"
-msgstr "Start the login-server with your computers IP-Adress and launch the game with it!\n"
+msgstr ""
+"Start the login-server with your computers IP-Adress and launch the game "
+"with it!\n"
 "This is a quick way into singleplayer."
 
 # ##
@@ -67,7 +73,8 @@ msgid "JOIN_GAME_SETTINGS"
 msgstr "Spieleinstellungen"
 
 msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr "Connection-settings that control how you get into your or any login-server"
+msgstr ""
+"Connection-settings that control how you get into your or any login-server"
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
@@ -80,38 +87,102 @@ msgstr "Einstellungen"
 msgid "HOST_MODS"
 msgstr "Mods:"
 
+msgid "HOST_MODS_TOOLTIP"
+msgstr "Choose the mod the server should run with"
+
 msgid "HOST_GAME_MODE"
 msgstr "Spielmodus:"
+
+msgid "HOST_GAME_MODE_TOOLTIP"
+msgstr ""
+"Selection of available gameplay modes.\n"
+"Available maps depend on the chosen mode."
 
 msgid "HOST_BOT_SKILL"
 msgstr "Bot Fähgikeit:"
 
+msgid "HOST_BOT_SKILL_TOOLTIP"
+msgstr "Controlls the difficulty of the bots"
+
 msgid "HOST_TICKET_RATIO"
 msgstr "Ticket verhältnis"
+
+msgid "HOST_TICKET_RATIO_TOOLTIP"
+msgstr "Tickets for each team in %"
 
 msgid "HOST_SPAWN_TIME"
 msgstr "Spawn zeit:"
 
+msgid "HOST_SPAWN_TIME_TOOLTIP"
+msgstr "Time to wait before one can re-enter the battle if killed"
+
 msgid "HOST_ROUNDS_PER_MAP"
 msgstr "Runen pro Karte:"
+
+msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
+msgstr ""
+"Number of rounds to play each map before switching to the next one in the "
+"list"
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot anzahl:"
 
+msgid "HOST_BOT_AMOUNT_TOOLTIP"
+msgstr "Total number of all bots on the map"
+
 msgid "HOST_MAX_PLAYERS"
 msgstr "Maximale Spieler"
+
+msgid "HOST_MAX_PLAYERS_TOOLTIP"
+msgstr ""
+"Maximum number of human players on the map.\n"
+"Humans replace bots if value is lower than \"Bot amount\"."
 
 msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Anzahl benötigter Spieler:"
 
+msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
+msgstr ""
+"Number of human players that need to be connected into the game to make a "
+"round start"
+
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Teambeschuss:"
+
+msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
+msgstr "Enables friendly fire"
 
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr "Server IP-Adresse:"
 
+msgid "HOST_SERVER_IP_ADDRESS_TOOLTIP"
+msgstr ""
+"Choose the IP-Address of the login and game-server.\n"
+"Default is your computers current IP-Address.\n"
+"Give this address to your friends so they can connect to you."
+
 msgid "HOST_MAPS"
 msgstr "Karten"
+
+msgid "HOST_SELECTABLE_MAPS_TOOLTIP"
+msgstr ""
+"List of maps available to play.\n"
+"This list is dependend on the gamemode you chose."
+
+msgid "HOST_SELECTED_MAPS_TOOLTIP"
+msgstr "List of maps already in your rotation"
+
+msgid "HOST_MAPS_ADD_TOOLTIP"
+msgstr "Add map to rotation"
+
+msgid "HOST_MAPS_REMOVE_TOOLTIP"
+msgstr "Remove map from rotation"
+
+msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
+msgstr "Move map upwards in the rotation"
+
+msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
+msgstr "Move map downwards in the rotation"
 
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
@@ -119,31 +190,53 @@ msgstr "Terminals"
 msgid "HOST_LOGIN_UNLOCK_SERVER"
 msgstr "Anmelde-/Freischaltserver starten"
 
+msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
+msgstr "Start only the login-server"
+
 msgid "HOST_HOST"
 msgstr "Alle server starten"
 
+msgid "HOST_HOST_TOOLTIP"
+msgstr "Start the login and game-server with the selected setting"
+
 msgid "HOST_CANCEL"
 msgstr "Abbrechen"
+
+msgid "HOST_CANCEL_TOOLTIP"
+msgstr "Stop all servers!"
 
 # ##
 # ##### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 Spielpfad:"
 
+msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
+msgstr "Select your Battlefield 2142 game folder"
+
 msgid "SETTINGS_BF2142_SERVER_PATH"
 msgstr "Battlefield 2142 Serverpfad:"
+
+msgid "SETTINGS_BF2142_SERVER_PATH_TOOLTIP"
+msgstr ""
+"Select your Battlefield 2142 server folder.\n"
+"This one is also known as \"bf2142 unranked dedicated server\"."
 
 msgid "SETTINGS_WINEPREFIX"
 msgstr "Wineprefix:"
 
+msgid "SETTINGS_WINEPREFIX_TOOLTIP"
+msgstr "Any parameters for starting with wine"
+
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr "Startup query:"
 
-msgid "SETTINGS_SELECT"
-msgstr "Auswählen"
-
 msgid "SETTINGS_DELETE_INTRO_MOVIES"
 msgstr "Intro Videos löschen"
+
+msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
+msgstr ""
+"Removes all intro movies from the bf2142 basegame.\n"
+"Will not touch any mods!"
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
 msgstr "Karten kopieren (client)"
@@ -151,33 +244,60 @@ msgstr "Karten kopieren (client)"
 msgid "SETTINGS_COPY_MAPS_SERVER"
 msgstr "Karten kopieren (server)"
 
+msgid "SETTINGS_SELECT"
+msgstr "Auswählen"
+
 # ##
 # ##### Tabs
 msgid "TAB_JOIN"
 msgstr "Verbinden"
 
+msgid "TAB_JOIN_TOOLTIP"
+msgstr "Settings to join a login-server"
+
 msgid "TAB_HOST"
 msgstr "Bereitstellen"
 
+msgid "TAB_HOST_TOOLTIP"
+msgstr "Settings to host a login and game-server"
+
 msgid "TAB_SETTINGS"
 msgstr "Einstellungen"
+
+msgid "TAB_SETTINGS_TOOLTIP"
+msgstr "General settings"
 
 # ##
 # ##### Statusbar
 msgid "VERSION_TOOLTIP"
 msgstr "Current version"
 
+msgid "UNLOCKER_GITHUB"
+msgstr "Github"
+
 msgid "UNLOCKER_GITHUB_TOOLTIP"
-msgstr "Opens your web browser to this tools GitHub.\n"
+msgstr ""
+"Opens your web browser to this tools GitHub.\n"
 "Contribute!"
+
+msgid "UNLOCKER_MODDB"
+msgstr "Moddb"
 
 msgid "UNLOCKER_MODDB_TOOLTIP"
 msgstr "Opens your web browser to this tools ModDB page."
 
+msgid "PROJECT_REMASTER_MODDB"
+msgstr "Project Remaster Mod"
+
 msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
-msgstr "Opens your web browser to Project Remaster's ModDB page.\n"
+msgstr ""
+"Opens your web browser to Project Remaster's ModDB page.\n"
 "They remastered BF2142 to HD!"
 
+msgid "PLAY_ONLINE"
+msgstr "Online spielen"
+
 msgid "PLAY_ONLINE_TOOLTIP"
-msgstr "Opens your web browser to Reclamation's website.\n"
+msgstr ""
+"Opens your web browser to Reclamation's website.\n"
 "They host BF2142 online Multiplayer servers!"

@@ -130,10 +130,6 @@ var application: Application
 var window: ApplicationWindow
 var notebook: Notebook
 var lblVersion: Label
-var lbtnUnlockerGithub: LinkButton
-var lbtnUnlockerModdb: LinkButton
-var lbtnProjectRemaster: LinkButton
-var lbtnReclamation: LinkButton
 ##
 ### Join controls
 var vboxJoin: Box
@@ -1146,10 +1142,6 @@ proc onApplicationActivate(application: Application) =
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
-  lbtnUnlockerGithub = builder.getLinkButton("lbtnUnlockerGithub")
-  lbtnUnlockerModdb = builder.getLinkButton("lbtnUnlockerModdb")
-  lbtnProjectRemaster = builder.getLinkButton("lbtnProjectRemaster")
-  lbtnReclamation = builder.getLinkButton("lbtnReclamation")
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
   cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
@@ -1211,12 +1203,6 @@ proc onApplicationActivate(application: Application) =
   lblVersion.label = VERSION
   #
 
-  ## Set LinkButton label (cannot be set in glade)
-  lbtnUnlockerGithub.label = "Github"
-  lbtnUnlockerModdb.label = "Moddb"
-  lbtnProjectRemaster.label = "Project Remaster Mod"
-  lbtnReclamation.label = "Play online"
-  #
   ## Terminals # TODO: Create a custom widget for glade
   termJustPlayServer = newTerminal()
   termJustPlayServer.vexpand = true
