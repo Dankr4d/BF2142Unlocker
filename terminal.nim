@@ -133,7 +133,7 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
     )
   elif defined(windows):
     var process: Process
-    if searchForkedProcess == true: # TODO: store command in variable
+    if searchForkedProcess: # TODO: store command in variable
       process = startProcess(
         command = """cmd /c """" & workingDir / command & '"',
         workingDir = workingDir,
@@ -146,6 +146,13 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
         options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
       )
     result = process.processID
+
+    var hwnd: HWND = getHWndByPid(process.processId)
+    while hwnd == 0: # Waiting until window can be accessed
+      sleep(250)
+      hwnd = getHWndByPid(process.processId)
+    ShowWindow(hwnd, SW_HIDE)
+
     if searchForkedProcess:
       var tryCounter: int = 0
       while tryCounter <= 10: # TODO: if result == 0 after all tries rais an exception
@@ -161,10 +168,10 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
       var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
       threadForked.createThread(proc (processId: int) {.thread.} =
-        var hwnd: HWND = getHWndByPid(processId)
-        while hwnd == 0: # Waiting until window can be accessed
-          sleep(250)
-          hwnd = getHWndByPid(processId)
+        # var hwnd: HWND = getHWndByPid(processId)
+        # while hwnd == 0: # Waiting until window can be accessed
+        #   sleep(250)
+        #   hwnd = getHWndByPid(processId)
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
         while true:
           if channelTerminateForked.tryRecv().dataAvailable:
