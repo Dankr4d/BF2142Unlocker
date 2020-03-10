@@ -44,7 +44,7 @@ proc createIconRes() =
 
 proc updateTranslationPo() =
   for lang in LANGUAGES:
-    exec(fmt"msgmerge --update --no-fuzzy-matching locale/{lang}.po locale/gui.pot")
+    exec(fmt"msgmerge --update --no-fuzzy-matching --no-wrap locale/{lang}.po locale/gui.pot")
 
 proc createTranslationMo() =
   for lang in LANGUAGES:
