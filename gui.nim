@@ -1139,7 +1139,7 @@ proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
       killElevatedIo()
 
 proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
-  if cbxLanguages.activeId == " ":
+  if cbxLanguages.active == 0:
     removeFile(LANGUAGE_FILE)
     return
   writeFile(LANGUAGE_FILE, cbxLanguages.activeId)
