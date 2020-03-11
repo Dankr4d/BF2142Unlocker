@@ -25,6 +25,7 @@ BF2142UnlockerLauncher
 BF2142UnlockerLauncher.exe
 locale/*/
 config.ini
+lang.txt
 icon.res
 libeay32.dll
 ssleay32.dll

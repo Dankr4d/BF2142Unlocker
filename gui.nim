@@ -94,6 +94,7 @@ var currentServerSettingsPath: string
 var currentMapListPath: string
 var currentLevelFolderPath: string
 var currentAiSettingsPath: string
+var currentLocale: string
 
 var termLoginServerPid: int = 0
 var termBF2142ServerPid: int = 0
@@ -121,6 +122,10 @@ const
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
 
+# Required, because config loads values into widgets after gui is created,
+# but the language must be set before gui init is called.
+const LANGUAGE_FILE: string = "lang.txt"
+
 const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
 var config: Config
@@ -131,6 +136,7 @@ var application: Application
 var window: ApplicationWindow
 var notebook: Notebook
 var lblVersion: Label
+var cbxLanguages: ComboBox
 ##
 ### Join controls
 var vboxJoin: Box
@@ -1115,11 +1121,11 @@ proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: int) {.sign
     if txtHostIpAddress.text == "":
       fillHostIpAddress()
 
-proc onApplicationWindowDraw(window: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
+proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
   if not windowShown:
     windowShown = true
 
-proc onApplicationWindowDestroy(window: ApplicationWindow00) {.signal.} =
+proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
   if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
     killProcess(termBF2142ServerPid)
@@ -1132,6 +1138,13 @@ proc onApplicationWindowDestroy(window: ApplicationWindow00) {.signal.} =
       echo "KILLING ELEVATEDIO SERVER"
       killElevatedIo()
 
+proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
+  if cbxLanguages.activeId == " ":
+    removeFile(LANGUAGE_FILE)
+    return
+  writeFile(LANGUAGE_FILE, cbxLanguages.activeId)
+  newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
+
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
@@ -1142,6 +1155,7 @@ proc onApplicationActivate(application: Application) =
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
+  cbxLanguages = builder.getComboBox("cbxLanguages")
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
   cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
@@ -1215,6 +1229,9 @@ proc onApplicationActivate(application: Application) =
   hboxTerms.add(termLoginServer)
   hboxTerms.add(termBF2142Server)
   #
+  ## Setting current language (or "Auto detect")
+  discard cbxLanguages.setActiveId(currentLocale)
+  #
   ## Setting styles
   var cssProvider: CssProvider = newCssProvider()
   when defined(release):
@@ -1232,7 +1249,6 @@ proc onApplicationActivate(application: Application) =
       preferDarkTheme.setBoolean(true)
       settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
-
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
   window.show()
@@ -1265,19 +1281,27 @@ when defined(windows): # TODO: Cleanup
 else:
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
 
-proc main =
-  ## gettext boilerplate
-  let currentLocale: string = $setlocale(LC_ALL, "");
+proc languageLogic() =
+  if fileExists(LANGUAGE_FILE):
+    currentLocale = readFile(LANGUAGE_FILE)
   discard bindtextdomain("gui", os.getCurrentDir() / "locale")
-  when defined(windows):
-    # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
-    discard bind_textdomain_codeset("gui", "UTF-8")
-  if currentLocale == "":
-    # Setting language to en_US.utf8 when locale is not supported
-    # TODO: Note, that this is not working if en_US.utf8 is not installed
-    disableSetlocale() # Required to set locale manually (in following line)
-    discard setlocale(LC_ALL, "en_US.utf8")
-  #
+  if currentLocale == "": # Is empty if no LANGUAGE_FILE file was found
+    currentLocale = $setlocale(LC_ALL, "");
+    when defined(windows):
+      # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
+      discard bind_textdomain_codeset("gui", "UTF-8")
+    if currentLocale == "":
+      disableSetlocale() # Required to set locale manually (in following line)
+      # Setting language to en_US.utf8 when locale is not supported
+      # TODO: Note, that this is not working if en_US.utf8 is not installed
+      discard setlocale(LC_ALL, "en_US.utf8")
+  else:
+      # Setting manually selected langauge
+      disableSetlocale() # Required to set locale manually (in following line)
+      discard setlocale(LC_ALL, currentLocale)
+
+proc main =
+  languageLogic()
   application = newApplication()
   application.connect("activate", onApplicationActivate)
   when defined(windows) and defined(release):
