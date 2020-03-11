@@ -24,9 +24,13 @@ from strformat import fmt
 const
   BUILD_DIR: string = "build"
   OPENSSL_VERSION: string = "1.0.2r"
-  OPENSSL_DIR: string = "openssl-" & OPENSSL_VERSION
+  NCURSES_VERSION: string = "5.9"
+  OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
   OPENSSL_PATH: string = "deps" / "openssl"
-  OPENSSL_URL: string = "https://www.openssl.org/source/openssl-" & OPENSSL_VERSION & ".tar.gz"
+  OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
+  NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
+  NCURSES_PATH: string = "deps" / "ncurses"
+  NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
   LANGUAGES: seq[string] = @["en", "de"]
 when defined(windows):
   const
@@ -91,8 +95,7 @@ when defined(windows):
       exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
 
 proc compileOpenSsl() =
-  if not dirExists("deps"):
-    mkDir("deps")
+  mkDir("deps")
   withDir("deps"):
     exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
     when defined(linux):
@@ -117,15 +120,31 @@ proc compileOpenSsl() =
       exec("make depend")
       exec("make -j4") # TODO: j parameter: `nproc`
 
+when defined(linux):
+  proc compileNcurses() =
+    mkDir("deps")
+    withDir("deps"):
+      exec(fmt"wget {NCURSES_URL} -O {NCURSES_DIR}.tar.gz")
+      mkDir("ncurses")
+      exec(fmt"tar xvzf {NCURSES_DIR}.tar.gz --strip=1 -C ncurses")
+    # Applying patch (fixes compilation with newer gcc)
+    withDir(NCURSES_PATH):
+      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patches/ncurses-5.9-gcc-5.patch")
+      # --without-cxx-binding is required or build fails
+      exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
+      exec("make -j4") # TODO: j parameter: `nproc`
+
 proc compileAll() =
-  # compileDownload()
-  if not fileExists("deps" / "openssl" / "libssl.a") or not fileExists("deps" / "openssl" / "libcrypto.a"):
+  if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
   compileGui()
   compileServer()
   when defined(windows):
     compileElevatedio()
     compileLauncher()
+  else:
+    if not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
+      compileNcurses()
   createTranslationMo()
 
 when defined(windows):
@@ -166,17 +185,21 @@ when defined(windows):
   proc copyOpenSSL() =
     cpFile(OPENSSL_PATH / "libeay32.dll", BUILD_BIN_DIR / "libeay32.dll")
     cpFile(OPENSSL_PATH / "ssleay32.dll", BUILD_BIN_DIR / "ssleay32.dll")
+else:
+  proc copyNcurses() =
+    cpFile(NCURSES_PATH / "lib" / "libncurses.so.5.9", BUILD_DIR / "libncurses.so.5")
+
 
 proc copyAll() =
   when defined(windows):
     cpDir("ssl_certs", BUILD_BIN_DIR / "ssl_certs")
     cpFile("nopreview.png", BUILD_BIN_DIR / "nopreview.png")
+    copyGtk()
+    copyOpenSSL()
   else:
     cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
     cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
-  when defined(windows):
-    copyGtk()
-    copyOpenSSL()
+    copyNcurses()
   copyTranslation()
 ##
 

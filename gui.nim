@@ -677,7 +677,8 @@ proc startBF2142Server() =
   if symlinkExists(stupidPbSymlink):
     removeFile(stupidPbSymlink)
   when defined(linux):
-    let ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    ldLibraryPath &= ":" & os.getCurrentDir()
     termBF2142ServerPid = termBF2142Server.startProcess(
       command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
       workingDir = bf2142ServerPath,
