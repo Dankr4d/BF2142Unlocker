@@ -110,15 +110,15 @@ proc compileOpenSsl() =
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
-        exec("make -j4") # TODO: j parameter: `nproc`
+        exec(fmt"make -j`nproc`")
       elif defined(windows):
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
-        exec("make -j4") # TODO: j parameter: `nproc`
+        exec(fmt"make -j`nproc`")
     elif buildOS == "windows":
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
-      exec("make -j4") # TODO: j parameter: `nproc`
+      exec(fmt"make -j`nproc`}")
 
 when defined(linux):
   proc compileNcurses() =
@@ -132,7 +132,7 @@ when defined(linux):
       exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patches/ncurses-5.9-gcc-5.patch")
       # --without-cxx-binding is required or build fails
       exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
-      exec("make -j4") # TODO: j parameter: `nproc`
+      exec(fmt"make -j`nproc`")
 
 proc compileAll() =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
