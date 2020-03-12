@@ -686,13 +686,13 @@ proc startBF2142Server() =
     var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
     termBF2142ServerPid = termBF2142Server.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeText,
       workingDir = bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
   elif defined(windows):
     termBF2142ServerPid = termBF2142Server.startProcess(
-      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      command = BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeText,
       workingDir = bf2142ServerPath,
       searchForkedProcess = true
     )
