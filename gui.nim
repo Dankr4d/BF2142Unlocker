@@ -81,6 +81,7 @@ const
   SETTING_MAX_PLAYERS: string = "sv.maxPlayers"
   SETTING_PLAYERS_NEEDED_TO_START: string = "sv.numPlayersNeededToStart"
   SETTING_SERVER_IP: string = "sv.serverIP"
+  SETTING_INTERNET: string = "sv.internet"
 
 const
   AISETTING_BOTS: string = "aiSettings.setMaxNBots"
@@ -558,6 +559,9 @@ proc loadSaveServerSettings(save: bool): bool =
       of SETTING_SERVER_IP:
         if save:
           value = "\"" & txtHostIpAddress.text & "\""
+      of SETTING_INTERNET:
+        if save:
+          value = "0" # TODO: Server crashes when internet is set to 1
       of SETTING_TEAM_RATIO:
         discard # TODO: Implement SETTING_TEAM_RATIO
     if save:
@@ -686,13 +690,15 @@ proc startBF2142Server() =
     var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
     termBF2142ServerPid = termBF2142Server.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeText,
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      params = "+modPath mods/" & cbxHostMods.activeText,
       workingDir = bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
   elif defined(windows):
     termBF2142ServerPid = termBF2142Server.startProcess(
-      command = BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeText,
+      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      params = "+modPath mods/" & cbxHostMods.activeText,
       workingDir = bf2142ServerPath,
       searchForkedProcess = true
     )
