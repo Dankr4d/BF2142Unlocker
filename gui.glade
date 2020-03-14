@@ -48,6 +48,56 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkListStore" id="listStoreHostMode">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Mode -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">gpm_cq</col>
+        <col id="1">Conquest</col>
+      </row>
+      <row>
+        <col id="0">gpm_ti</col>
+        <col id="1">Titan</col>
+      </row>
+      <row>
+        <col id="0">gpm_coop</col>
+        <col id="1">Coop</col>
+      </row>
+      <row>
+        <col id="0">gpm_sl</col>
+        <col id="1">SupplyLine</col>
+      </row>
+      <row>
+        <col id="0">gpm_nv</col>
+        <col id="1">NoVehicles</col>
+      </row>
+      <row>
+        <col id="0">gpm_ca</col>
+        <col id="1">ConquestAssault</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="listStoreHostMods">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Mod -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="listStoreJoinMods">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Mod -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="listStoreLanguages">
     <columns>
       <!-- column-name locale -->
@@ -312,10 +362,18 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkComboBoxText" id="cbxJoinMods">
+                                  <object class="GtkComboBox" id="cbxJoinMods">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="tooltip_text" translatable="yes">JOIN_MODS_TOOLTIP</property>
+                                    <property name="model">listStoreJoinMods</property>
+                                    <property name="has_entry">True</property>
+                                    <property name="entry_text_column">1</property>
+                                    <property name="id_column">0</property>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can_focus">False</property>
+                                      </object>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -819,11 +877,24 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkComboBoxText" id="cbxHostMods">
+                                              <object class="GtkComboBox" id="cbxHostMods">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
-                                                <property name="tooltip_text" translatable="yes">HOST_MODS_TOOLTIP</property>
-                                                <signal name="changed" handler="onCbxHostModsChanged" swapped="no"/>
+                                                <property name="model">listStoreHostMods</property>
+                                                <property name="has_entry">True</property>
+                                                <property name="entry_text_column">1</property>
+                                                <property name="id_column">0</property>
+                                                <child>
+                                                  <object class="GtkCellRendererText"/>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkCellRendererText"/>
+                                                </child>
+                                                <child internal-child="entry">
+                                                  <object class="GtkEntry">
+                                                    <property name="can_focus">False</property>
+                                                  </object>
+                                                </child>
                                               </object>
                                               <packing>
                                                 <property name="left_attach">1</property>
@@ -831,11 +902,19 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkComboBoxText" id="cbxGameMode">
+                                              <object class="GtkComboBox" id="cbxGameMode">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
-                                                <property name="tooltip_text" translatable="yes">HOST_GAME_MODE_TOOLTIP</property>
-                                                <signal name="changed" handler="onCbxGameModeChanged" swapped="no"/>
+                                                <property name="model">listStoreHostMode</property>
+                                                <property name="has_entry">True</property>
+                                                <property name="entry_text_column">1</property>
+                                                <property name="id_column">0</property>
+                                                <property name="active_id">gpm_coop</property>
+                                                <child internal-child="entry">
+                                                  <object class="GtkEntry">
+                                                    <property name="can_focus">False</property>
+                                                  </object>
+                                                </child>
                                               </object>
                                               <packing>
                                                 <property name="left_attach">1</property>
@@ -1547,6 +1626,18 @@
               </packing>
             </child>
             <child>
+              <object class="GtkLabel" id="lblVersion">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">VERSION_TOOLTIP</property>
+                <property name="label" translatable="yes">
+</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkComboBox" id="cbxLanguages">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -1565,18 +1656,6 @@
               </object>
               <packing>
                 <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="lblVersion">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">VERSION_TOOLTIP</property>
-                <property name="label" translatable="yes">
-</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
               </packing>
             </child>
             <child>

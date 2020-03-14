@@ -59,15 +59,6 @@ const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
 const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
-const GAME_MODES: seq[tuple[id: string, name: string]] = @[
-  (id: "gpm_cq", name: "Conquest"),
-  (id: "gpm_ti", name: "Titan"),
-  (id: "gpm_coop", name: "Coop"),
-  (id: "gpm_sl", name: "SupplyLine"),
-  (id: "gpm_nv", name: "NoVehicles"),
-  (id: "gpm_ca", name: "ConquestAssault")
-]
-
 const
   SETTING_BOT_SKILL: string = "sv.botSkill"
   SETTING_TICKET_RATIO: string = "sv.ticketRatio"
@@ -141,7 +132,7 @@ var cbxLanguages: ComboBox
 ### Join controls
 var vboxJoin: Box
 var vboxJustPlay: Box
-var cbxJoinMods: ComboBoxText
+var cbxJoinMods: ComboBox
 var txtPlayerName: Entry
 var txtIpAddress: Entry
 var chbtnAutoJoin: CheckButton
@@ -155,8 +146,8 @@ var termJustPlayServer: Terminal
 var vboxHost: Box
 var tblHostSettings: Grid
 var imgLevelPreview: Image
-var cbxHostMods: ComboBoxText
-var cbxGameMode: ComboBoxText
+var cbxHostMods: ComboBox
+var cbxGameMode: ComboBox
 var sbtnBotSkill: SpinButton
 var scaleBotSkill: Scale
 var sbtnTicketRatio: SpinButton
@@ -449,11 +440,6 @@ proc clear(list: TreeView) =
     return
   clear(store)
 
-proc fillHostMode() =
-  for mode in GAME_MODES:
-    cbxGameMode.append(mode.id, mode.name)
-  cbxGameMode.active = 2 # Coop
-
 proc fillListSelectableMaps() =
   listSelectableMaps.clear()
   var gameMode: string = cbxGameMode.activeId
@@ -498,7 +484,7 @@ proc initMapList(list: TreeView, titleMap: string, titleMapMode: string = "Mode"
   list.setModel(store)
 
 proc updatePathes() =
-  var currentModPath: string = bf2142ServerPath / "mods" / cbxHostMods.activeText
+  var currentModPath: string = bf2142ServerPath / "mods" / cbxHostMods.activeId
   currentModSettingsPath = currentModPath / "settings"
   currentServerSettingsPath = currentModSettingsPath / "serversettings.con"
   currentMapListPath = currentModSettingsPath / "maplist.con"
@@ -686,7 +672,7 @@ proc startBF2142Server() =
     var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
     termBF2142ServerPid = termBF2142Server.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeText,
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME & " +modPath mods/" & cbxHostMods.activeId,
       workingDir = bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
@@ -698,20 +684,36 @@ proc startBF2142Server() =
     )
 
 proc loadJoinMods() =
-  cbxJoinMods.removeAll()
-  if bf2142Path.len > 0:
+  var iter: TreeIter
+  let store = listStore(cbxJoinMods.getModel())
+  store.clear()
+  if bf2142Path != "":
     for folder in walkDir(bf2142Path / "mods", true):
       if folder.kind == pcDir:
-        cbxJoinMods.appendText(folder.path)
-  cbxJoinMods.active = 0
+        var valMod: Value
+        discard valMod.init(typeFromName("gchararray"))
+        valMod.setString(folder.path)
+        store.append(iter)
+        store.setValue(iter, 0, valMod)
+        store.setValue(iter, 1, valMod)
+  discard cbxJoinMods.setActiveId("bf2142")
 
 proc loadHostMods() =
-  cbxHostMods.removeAll()
-  if bf2142ServerPath.len > 0:
+  var iter: TreeIter
+  let store = listStore(cbxHostMods.getModel())
+  store.clear()
+  if bf2142ServerPath != "":
     for folder in walkDir(bf2142ServerPath / "mods", true):
       if folder.kind == pcDir:
-        cbxHostMods.appendText(folder.path)
-  cbxHostMods.active = 0
+        var valMod: Value
+        discard valMod.init(typeFromName("gchararray"))
+        valMod.setString(folder.path)
+        echo "folder.path: ", folder.path
+        echo "folder.path.len: ", folder.path.len
+        store.append(iter)
+        store.setValue(iter, 0, valMod)
+        store.setValue(iter, 1, valMod)
+  discard cbxHostMods.setActiveId("bf2142")
 
 proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
   tblHostSettings.sensitive = not running
@@ -782,7 +784,7 @@ proc patchAndStartLogic(): bool =
     if txtStartupQuery.text != "":
       command.add(txtStartupQuery.text & ' ')
   command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
-  command.add("+modPath mods/" &  cbxJoinMods.activeText & ' ')
+  command.add("+modPath mods/" &  cbxJoinMods.activeId & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
   if chbtnWindowMode.active:
     command.add("+fullscreen 0" & ' ')
@@ -889,14 +891,14 @@ proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   if termBF2142ServerPid > 0:
     killProcess(termBF2142ServerPid)
 
-proc onCbxHostModsChanged(self: ComboBoxText00) {.signal.} =
+proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
   discard loadMapList()
   discard loadServerSettings()
   discard loadAiSettings()
 
-proc onCbxGameModeChanged(self: ComboBoxText00) {.signal.} =
+proc onCbxGameModeChanged(self: ComboBox00) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
 
@@ -1097,7 +1099,7 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
   let
     response = ResponseType(responseId)
     srcLevelPath: string = dialog.getFilename()
-    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels"
+    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels" # TODO: Set mod when selecting src folder
   if response == ResponseType.ok:
     var writeSucceed: bool = copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
     dialog.destroy()
@@ -1158,7 +1160,7 @@ proc onApplicationActivate(application: Application) =
   cbxLanguages = builder.getComboBox("cbxLanguages")
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
-  cbxJoinMods = builder.getComboBoxText("cbxJoinMods")
+  cbxJoinMods = builder.getComboBox("cbxJoinMods")
   txtPlayerName = builder.getEntry("txtPlayerName")
   txtIpAddress = builder.getEntry("txtIpAddress")
   chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
@@ -1169,8 +1171,8 @@ proc onApplicationActivate(application: Application) =
   vboxHost = builder.getBox("vboxHost")
   tblHostSettings = builder.getGrid("tblHostSettings")
   imgLevelPreview = builder.getImage("imgLevelPreview")
-  cbxHostMods = builder.getComboBoxText("cbxHostMods")
-  cbxGameMode = builder.getComboBoxText("cbxGameMode")
+  cbxHostMods = builder.getComboBox("cbxHostMods")
+  cbxGameMode = builder.getComboBox("cbxGameMode")
   sbtnBotSkill = builder.getSpinButton("sbtnBotSkill")
   scaleBotSkill = builder.getScale("scaleBotSkill")
   sbtnTicketRatio = builder.getSpinButton("sbtnTicketRatio")
@@ -1255,7 +1257,6 @@ proc onApplicationActivate(application: Application) =
   loadConfig()
   loadJoinMods()
   loadHostMods()
-  fillHostMode()
   if bf2142ServerPath != "":
     updatePathes()
     fillListSelectableMaps()
