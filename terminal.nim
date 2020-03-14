@@ -119,12 +119,15 @@ when defined(windows):
     channelStopTimerReplace.send(true)
     channelTerminateForked.send(true)
 
-proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
+proc startProcess*(terminal: Terminal, command: string, params: string = "", workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
   when defined(linux):
+    var argv: seq[string] = command.strip().splitWhitespace()
+    if params != "":
+      argv.add(params)
     discard terminal.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
       workingDirectory = workingDir,
-      argv = command.strip().splitWhitespace(),
+      argv = argv,
       envv = env.strip().splitWhitespace(),
       spawnFlags = {glib.SpawnFlag.doNotReapChild},
       childSetup = nil,
@@ -135,13 +138,13 @@ proc startProcess*(terminal: Terminal, command: string, workingDir: string = os.
     var process: Process
     if searchForkedProcess == true: # TODO: store command in variable
       process = startProcess(
-        command = """cmd /c """" & workingDir / command & '"',
+        command = """cmd /c """" & workingDir / command & "\" " & params,
         workingDir = workingDir,
         options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
       )
     else:
       process = startProcess(
-        command = workingDir / command,
+        command = workingDir / command & " " & params,
         workingDir = workingDir,
         options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
       )
