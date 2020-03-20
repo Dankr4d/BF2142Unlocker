@@ -106,6 +106,7 @@ const
   CONFIG_FILE_NAME: string = "config.ini"
   CONFIG_SECTION_GENERAL: string = "General"
   CONFIG_SECTION_SETTINGS: string = "Settings"
+  CONFIG_SECTION_UNLOCKS: string = "Unlocks"
   CONFIG_KEY_BF2142_PATH: string = "bf2142_path"
   CONFIG_KEY_BF2142_SERVER_PATH: string = "bf2142_server_path"
   CONFIG_KEY_WINEPREFIX: string = "wineprefix"
@@ -113,6 +114,7 @@ const
   CONFIG_KEY_PLAYER_NAME: string = "playername"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
+  CONFIG_KEY_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
 
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
@@ -180,6 +182,9 @@ var btnHostCancel: Button
 var hboxTerms: Box
 var termLoginServer: Terminal
 var termBF2142Server: Terminal
+##
+### Unlock controls
+var chbtnUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
 var lblBF2142Path: Label
@@ -270,6 +275,12 @@ proc loadConfig() =
     chbtnWindowMode.active = windowModeStr.parseBool()
   else:
     chbtnWindowMode.active = false
+  let unlockSquadGadgetsStr = config.getSectionValue(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS)
+  if unlockSquadGadgetsStr != "":
+    chbtnUnlockSquadGadgets.active = unlockSquadGadgetsStr.parseBool()
+  else:
+    chbtnUnlockSquadGadgets.active = false
+
 
 proc backupOpenSpyIfExists() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
@@ -663,9 +674,9 @@ proc saveProfileAccountName() =
 proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
   when defined(linux):
-    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress}")
+    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
   elif defined(windows):
-    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress}")
+    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
 
 proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
@@ -1151,6 +1162,10 @@ proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
   writeFile(LANGUAGE_FILE, cbxLanguages.activeId)
   newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
 
+proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
+  config.writeConfig(CONFIG_FILE_NAME)
+
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
@@ -1204,6 +1219,7 @@ proc onApplicationActivate(application: Application) =
   btnHost = builder.getButton("btnHost")
   btnHostCancel = builder.getButton("btnHostCancel")
   hboxTerms = builder.getBox("hboxTerms")
+  chbtnUnlockSquadGadgets = builder.getCheckButton("chbtnUnlockSquadGadgets")
   lblBF2142Path = builder.getLabel("lblBF2142Path")
   txtBF2142Path = builder.getEntry("txtBF2142Path")
   btnBF2142Path = builder.getButton("btnBF2142Path")

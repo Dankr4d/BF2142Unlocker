@@ -22,9 +22,7 @@ msgid "JOIN_AUTO_JOIN_SERVER"
 msgstr "Automatisch verbinden:"
 
 msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
-msgstr ""
-"Autojoin a gameserver if it listens to the same IP-Address as the "
-"loginserver."
+msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
 
 msgid "JOIN_CONNECT"
 msgstr "Verbinden"
@@ -63,8 +61,7 @@ msgstr "Einfach spielen"
 
 msgid "JOIN_JUST_PLAY_TOOLTIP"
 msgstr ""
-"Start the login-server with your computers IP-Adress and launch the game "
-"with it!\n"
+"Start the login-server with your computers IP-Adress and launch the game with it!\n"
 "This is a quick way into singleplayer."
 
 # ##
@@ -73,8 +70,7 @@ msgid "JOIN_GAME_SETTINGS"
 msgstr "Spieleinstellungen"
 
 msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr ""
-"Connection-settings that control how you get into your or any login-server"
+msgstr "Connection-settings that control how you get into your or any login-server"
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
@@ -120,9 +116,7 @@ msgid "HOST_ROUNDS_PER_MAP"
 msgstr "Runen pro Karte:"
 
 msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
-msgstr ""
-"Number of rounds to play each map before switching to the next one in the "
-"list"
+msgstr "Number of rounds to play each map before switching to the next one in the list"
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot anzahl:"
@@ -142,9 +136,7 @@ msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Anzahl benötigter Spieler:"
 
 msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
-msgstr ""
-"Number of human players that need to be connected into the game to make a "
-"round start"
+msgstr "Number of human players that need to be connected into the game to make a round start"
 
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Teambeschuss:"
@@ -207,6 +199,14 @@ msgstr "Stop all servers!"
 
 # ##
 # ##### Settings
+msgid "UNLOCKS_SQUAD_GADGETS"
+msgstr "Squad gadgets entsperren:"
+
+msgid "UNLOCKS_SQUAD_GADGETS_INFO"
+msgstr "Aktuell kannst du nur die letzten zwei squad leader gadgets aktivieren/deaktivieren. Zu einem späteren Zeitpunkt wird dies durch eine vollständig funktionales Unlockmenu ersetzt, indem du alles aktivieren/deaktivieren kannst."
+
+# ##
+# ##### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 Spielpfad:"
 
@@ -260,6 +260,12 @@ msgstr "Bereitstellen"
 
 msgid "TAB_HOST_TOOLTIP"
 msgstr "Settings to host a login and game-server"
+
+msgid "TAB_UNLOCKS"
+msgstr "Unlocks"
+
+msgid "TAB_UNLOCKS_TOOLTIP"
+msgstr "Customize your available ingame unlocks here."
 
 msgid "TAB_SETTINGS"
 msgstr "Einstellungen"

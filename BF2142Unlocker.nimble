@@ -8,7 +8,7 @@ bin           = @[""]
 ##
 
 ### Dependencies
-requires "nim >= 1.0.4"
+requires "nim 1.0.6"
 requires "gintro >= 0.7.0"
 requires "winim >= 3.2.4"
 when defined(linux):

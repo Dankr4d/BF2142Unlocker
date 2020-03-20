@@ -4,7 +4,7 @@ from strutils import multiReplace
 import tables # Query params
 from strutils import split # Query params
 
-proc handleGetUnlocksInfo*(req: Request, params: Table[string, string]) {.async.} =
+proc handleGetUnlocksInfo*(req: Request, params: Table[string, string], unlockAllSquadGadgets: bool) {.async.} =
   var body: string
   body = "O\n"
   body &= "H\tpid\tnick\tasof\n"
@@ -23,7 +23,10 @@ proc handleGetUnlocksInfo*(req: Request, params: Table[string, string]) {.async.
   body &= "D\t415\n"
   body &= "D\t425\n"
   body &= "D\t516\n"
-  body &= "D\t521"
+  if unlockAllSquadGadgets:
+    body &= "D\t524"
+  else:
+    body &= "D\t521"
   # TODO: Unlocks should be configured via gui and stored in unlocks.ini
   # It's recomended to not unlock drones because most of the time bots are endless spawning drones
   # body &= "D\t524"

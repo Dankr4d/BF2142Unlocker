@@ -14,6 +14,14 @@ import pages/getawardsinfo
 import pages/getplayerprogress
 ##
 
+#[
+ TODO: This should be handled later by an unlocks config when all unlocks are customizable.
+ Currently for release 0.9.3 this is implemented to provide squad leader gadgets unlock
+ for mods that can handle this like Project Remaster. Bots in original game cannot handle
+ those squad leader gadgets.
+]#
+var unlockAllSquadGadgets: bool
+
 proc getQueryParams(query: string): Table[string, string] =
   # TODO: Crappy code
   result = initTable[string, string]()
@@ -51,7 +59,7 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
     of "/getplayerinfo.aspx":
       await req.handleGetPlayerInfo(params)
     of "/getunlocksinfo.aspx":
-      await req.handleGetUnlocksInfo(params)
+      await req.handleGetUnlocksInfo(params, unlockAllSquadGadgets)
     of "/getawardsinfo.aspx":
       await req.handleGetAwardsInfo(params)
     of "/getplayerprogress.aspx": # only mode: point .. mode also is ignored
@@ -59,11 +67,12 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
     else:
       await req.respond(Http200, "Hello World!")
 
-proc run*(ipAddress: IpAddress) =
+proc run*(data: tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]) =
   var server = newAsyncHttpServer()
   let port = Port(8080)
-  echo fmt"Unlock server running on {$ipAddress}:{$port} and waiting for clients!"
-  waitFor server.serve(port, handleClient, $ipAddress)
+  echo fmt"Unlock server running on {$data.ipAddress}:{$port} and waiting for clients!"
+  unlockAllSquadGadgets = data.unlockAllSquadGadgets
+  waitFor server.serve(port, handleClient, $data.ipAddress)
 
 when isMainModule:
-  run("0.0.0.0".parseIpAddress())
+  run("0.0.0.0".parseIpAddress(), false)

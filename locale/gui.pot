@@ -148,6 +148,13 @@ msgstr ""
 ###
 
 ###### Settings
+msgid "UNLOCKS_SQUAD_GADGETS"
+msgstr ""
+msgid "UNLOCKS_SQUAD_GADGETS_INFO"
+msgstr ""
+###
+
+###### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr ""
 msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
@@ -191,6 +198,11 @@ msgstr ""
 msgid "TAB_HOST"
 msgstr ""
 msgid "TAB_HOST_TOOLTIP"
+msgstr ""
+
+msgid "TAB_UNLOCKS"
+msgstr ""
+msgid "TAB_UNLOCKS_TOOLTIP"
 msgstr ""
 
 msgid "TAB_SETTINGS"

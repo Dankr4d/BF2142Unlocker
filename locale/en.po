@@ -22,9 +22,7 @@ msgid "JOIN_AUTO_JOIN_SERVER"
 msgstr "Auto join server:"
 
 msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
-msgstr ""
-"Autojoin a gameserver if it listens to the same IP-Address as the "
-"loginserver."
+msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
 
 msgid "JOIN_CONNECT"
 msgstr "Connect"
@@ -63,8 +61,7 @@ msgstr "Just play"
 
 msgid "JOIN_JUST_PLAY_TOOLTIP"
 msgstr ""
-"Start the login-server with your computers IP-Adress and launch the game "
-"with it!\n"
+"Start the login-server with your computers IP-Adress and launch the game with it!\n"
 "This is a quick way into singleplayer."
 
 # ##
@@ -73,8 +70,7 @@ msgid "JOIN_GAME_SETTINGS"
 msgstr "Game settings"
 
 msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr ""
-"Connection-settings that control how you get into your or any login-server"
+msgstr "Connection-settings that control how you get into your or any login-server"
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
@@ -120,9 +116,7 @@ msgid "HOST_ROUNDS_PER_MAP"
 msgstr "Rounds per map:"
 
 msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
-msgstr ""
-"Number of rounds to play each map before switching to the next one in the "
-"list"
+msgstr "Number of rounds to play each map before switching to the next one in the list"
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot amount:"
@@ -142,9 +136,7 @@ msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Players needed to start:"
 
 msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
-msgstr ""
-"Number of human players that need to be connected into the game to make a "
-"round start"
+msgstr "Number of human players that need to be connected into the game to make a round start"
 
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Friendly fire:"
@@ -207,6 +199,14 @@ msgstr "Stop all servers!"
 
 # ##
 # ##### Settings
+msgid "UNLOCKS_SQUAD_GADGETS"
+msgstr "Unlock squad gadgets:"
+
+msgid "UNLOCKS_SQUAD_GADGETS_INFO"
+msgstr "Currently you are only able to enable/disable the last two squad leader gadgets. At a later point this will be replaced by a full functional unlock customization screen where you could enable/disable all the unlocks available in game."
+
+# ##
+# ##### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 game path:"
 
@@ -260,6 +260,12 @@ msgstr "Host"
 
 msgid "TAB_HOST_TOOLTIP"
 msgstr "Settings to host a login and game-server"
+
+msgid "TAB_UNLOCKS"
+msgstr "Unlocks"
+
+msgid "TAB_UNLOCKS_TOOLTIP"
+msgstr "Customize your available ingame unlocks here."
 
 msgid "TAB_SETTINGS"
 msgstr "Settings"
