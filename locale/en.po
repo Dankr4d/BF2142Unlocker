@@ -16,7 +16,7 @@ msgstr "IP-Address:"
 msgid "JOIN_IP_ADDRESS_TOOLTIP"
 msgstr ""
 "Enter the IP-Address of the target login-server you want to connect to.\n"
-"Default/Empty is your own computers IP-Address."
+"Default/Empty is your own computers IP-Address if you click on \"Just play\"."
 
 msgid "JOIN_AUTO_JOIN_SERVER"
 msgstr "Auto join server:"
@@ -29,8 +29,7 @@ msgstr "Connect"
 
 msgid "JOIN_CONNECT_TOOLTIP"
 msgstr ""
-"Connect to the login-server by using the IP-Address entered.\n"
-"If the field is left empty your computers IP will be used."
+"Connect to the login-server by using the IP-Address entered."
 
 msgid "JOIN_MODS"
 msgstr "Mods:"
@@ -61,7 +60,7 @@ msgstr "Just play"
 
 msgid "JOIN_JUST_PLAY_TOOLTIP"
 msgstr ""
-"Start the login-server with your computers IP-Adress and launch the game with it!\n"
+"Start the login-/unlockserver with your computers IP-Adress and launch the game with it!\n"
 "This is a quick way into singleplayer."
 
 # ##
@@ -70,7 +69,7 @@ msgid "JOIN_GAME_SETTINGS"
 msgstr "Game settings"
 
 msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr "Connection-settings that control how you get into your or any login-server"
+msgstr "Connection-settings that control how you get into your or any login-/unlockserver"
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
@@ -183,13 +182,13 @@ msgid "HOST_LOGIN_UNLOCK_SERVER"
 msgstr "Host login/unlock server"
 
 msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Start only the login-server"
+msgstr "Start only the login-/unlockserver"
 
 msgid "HOST_HOST"
 msgstr "Host"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Start the login and game-server with the selected setting"
+msgstr "Start the login-/unlock and gameserver with the selected setting"
 
 msgid "HOST_CANCEL"
 msgstr "Cancel"
@@ -218,14 +217,14 @@ msgstr "Battlefield 2142 server path:"
 
 msgid "SETTINGS_BF2142_SERVER_PATH_TOOLTIP"
 msgstr ""
-"Select your Battlefield 2142 server folder.\n"
+"Select your Battlefield 2142 server folder (only required when launching gameserver within the \"Host\"-tab).\n"
 "This one is also known as \"bf2142 unranked dedicated server\"."
 
 msgid "SETTINGS_WINEPREFIX"
 msgstr "Wineprefix:"
 
 msgid "SETTINGS_WINEPREFIX_TOOLTIP"
-msgstr "Any parameters for starting with wine"
+msgstr "Select your wineprefix you want to start the game with (if possible this would be read out automatically)."
 
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr "Startup query:"
@@ -235,7 +234,7 @@ msgstr "Delete intro movies"
 
 msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
 msgstr ""
-"Removes all intro movies from the bf2142 basegame.\n"
+"Removes all intro movies from the bf2142 basegame (except Titan movie).\n"
 "Will not touch any mods!"
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"

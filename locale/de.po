@@ -15,54 +15,52 @@ msgstr "IP-Adresse:"
 
 msgid "JOIN_IP_ADDRESS_TOOLTIP"
 msgstr ""
-"Enter the IP-Address of the target login-server you want to connect to.\n"
-"Default/Empty is your own computers IP-Address."
+"Geben Sie die IP-Adresse des Anmeldeservers ein, zu dem Sie eine Verbindung herstellen möchten.\n"
+"Ist die IP-Adresse nicht ausgefüllt, wird diese automatisch ausgelesen, sobald du auf \"Einfach spielen\" klickst."
 
 msgid "JOIN_AUTO_JOIN_SERVER"
 msgstr "Automatisch verbinden:"
 
 msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
-msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
+msgstr "Trete dem Gameserver automatisch bei, wenn er auf dieselbe IP-Adresse wie der Anmeldeserver lauscht."
 
 msgid "JOIN_CONNECT"
 msgstr "Verbinden"
 
 msgid "JOIN_CONNECT_TOOLTIP"
-msgstr ""
-"Connect to the login-server by using the IP-Address entered.\n"
-"If the field is left empty your computers IP will be used."
+msgstr "Zum Anmeldeserver/Unlockserver der eingegebenen IP-Adresse verbinden."
 
 msgid "JOIN_MODS"
 msgstr "Mods:"
 
 msgid "JOIN_MODS_TOOLTIP"
-msgstr "Choose the mod that the game should start with"
+msgstr "Wähle die Modifikation aus mit der das Spiel gestartet werden soll."
 
 msgid "JOIN_PLAYER_NAME"
 msgstr "Spielername:"
 
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
-msgstr "Name of your Soldier that appears ingame"
+msgstr "Dein Spielername den du ingame siehst (Soldiername)."
 
 msgid "JOIN_WINDOW_MODE"
 msgstr "Fenstermodus:"
 
 msgid "JOIN_WINDOW_MODE_TOOLTIP"
-msgstr "Starts the game in windowed mode"
+msgstr "Startet das Spiel im Fenstermodus."
 
 msgid "JOIN_JUST_PLAY_CANCEL"
 msgstr "Abbrechen"
 
 msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr "Stop all servers"
+msgstr "Stoppt alle gestarteten server."
 
 msgid "JOIN_JUST_PLAY"
 msgstr "Einfach spielen"
 
 msgid "JOIN_JUST_PLAY_TOOLTIP"
 msgstr ""
-"Start the login-server with your computers IP-Adress and launch the game with it!\n"
-"This is a quick way into singleplayer."
+"Startet den Anmelde-/Unlockserver mit der erst ausgelesenen IP-Adresse, startet das spiel und meldet sich automatisch an.\n"
+"Dies ermöglicht ein schnellen Spielstart ohne weiteres Wissen/konfigurationen (für den Singleplayer ausgelegt)."
 
 # ##
 # ##### Host
@@ -70,10 +68,10 @@ msgid "JOIN_GAME_SETTINGS"
 msgstr "Spieleinstellungen"
 
 msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr "Connection-settings that control how you get into your or any login-server"
+msgstr "Verbindungseinstellungen zum verbinden mit dem Anmelde-/Unlockserver."
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
-msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+msgstr "Spieleeinstellungen mit denen Battlefield 2142 gestartet wird."
 
 # ##
 # ##### Host
@@ -84,97 +82,96 @@ msgid "HOST_MODS"
 msgstr "Mods:"
 
 msgid "HOST_MODS_TOOLTIP"
-msgstr "Choose the mod the server should run with"
+msgstr "Wähle die Mod aus, mit der der Gameserver gestartet werden soll."
 
 msgid "HOST_GAME_MODE"
 msgstr "Spielmodus:"
 
 msgid "HOST_GAME_MODE_TOOLTIP"
 msgstr ""
-"Selection of available gameplay modes.\n"
-"Available maps depend on the chosen mode."
+"Auswahl der verschiedenen Spielmodi.\n"
+"Wenn der Modus geändert wird, werden alle Maps des Modus aufgelistet."
 
 msgid "HOST_BOT_SKILL"
 msgstr "Bot Fähgikeit:"
 
 msgid "HOST_BOT_SKILL_TOOLTIP"
-msgstr "Controlls the difficulty of the bots"
+msgstr "Hiermit stellst du die Schwierigkeitsstufe der Bots ein."
 
 msgid "HOST_TICKET_RATIO"
 msgstr "Ticket verhältnis"
 
 msgid "HOST_TICKET_RATIO_TOOLTIP"
-msgstr "Tickets for each team in %"
+msgstr "Tickets für jedes Team in %"
 
 msgid "HOST_SPAWN_TIME"
 msgstr "Spawn zeit:"
 
 msgid "HOST_SPAWN_TIME_TOOLTIP"
-msgstr "Time to wait before one can re-enter the battle if killed"
+msgstr "Die Zeit die du warten musst, nachdem du auf dem Schlachtfeld getötet wurdest."
 
 msgid "HOST_ROUNDS_PER_MAP"
-msgstr "Runen pro Karte:"
+msgstr "Runden pro Karte:"
 
 msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
-msgstr "Number of rounds to play each map before switching to the next one in the list"
+msgstr "Anzahl der die pro Karte gespielt werden bevor die nächste Karte geladen wird."
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot anzahl:"
 
 msgid "HOST_BOT_AMOUNT_TOOLTIP"
-msgstr "Total number of all bots on the map"
+msgstr "Die Anzahl der Bots im Spiel. Diese ist bis auf 255 Bots einstellbar, kann aber Performance einbußungen/lags hervorrufen"
 
 msgid "HOST_MAX_PLAYERS"
 msgstr "Maximale Spieler"
 
 msgid "HOST_MAX_PLAYERS_TOOLTIP"
 msgstr ""
-"Maximum number of human players on the map.\n"
-"Humans replace bots if value is lower than \"Bot amount\"."
+"Maximale Anzahl an menschlichen Spielern, die verbinden können."
 
 msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Anzahl benötigter Spieler:"
 
 msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
-msgstr "Number of human players that need to be connected into the game to make a round start"
+msgstr "Anzahl der menschlichen Spieler die benötigt werden dass das Spiel/die Karte startet."
 
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Teambeschuss:"
 
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
-msgstr "Enables friendly fire"
+msgstr "Aktiviert/Deaktiviert Teambeschuss."
 
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr "Server IP-Adresse:"
 
 msgid "HOST_SERVER_IP_ADDRESS_TOOLTIP"
 msgstr ""
-"Choose the IP-Address of the login and game-server.\n"
-"Default is your computers current IP-Address.\n"
-"Give this address to your friends so they can connect to you."
+"Legt die IP-Address fest, auf der der Anmelde-/Unlock-/Gameserver lauschen soll.\n"
+"Der Standardwert ist die erste IP-Addresse die der Unlocker auslesen konnte.\n"
+"Die Addresse benötigen deine Freunde um zu dir Verbinden zu können. Prüfe bitte ob die IP-Adresse die du angeben möchtest auch von deinen Freunden erreichbar ist bevor du diese verbinden."
 
 msgid "HOST_MAPS"
 msgstr "Karten"
 
 msgid "HOST_SELECTABLE_MAPS_TOOLTIP"
 msgstr ""
-"List of maps available to play.\n"
-"This list is dependend on the gamemode you chose."
+"Liste der verfügbaren Karten die du spielen kannst.\n"
+"Diese hängt vom Spielmodi ab den du ausgewählt hast."
 
 msgid "HOST_SELECTED_MAPS_TOOLTIP"
-msgstr "List of maps already in your rotation"
+msgstr "Liste der hinzugefügten Karten."
 
 msgid "HOST_MAPS_ADD_TOOLTIP"
-msgstr "Add map to rotation"
+msgstr "Fügt die ausgewählte Karte hinzu."
 
 msgid "HOST_MAPS_REMOVE_TOOLTIP"
-msgstr "Remove map from rotation"
+msgstr "Entfernt die ausgewählte Karte."
 
 msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
-msgstr "Move map upwards in the rotation"
+msgstr "Verschiebt die ausgewählte Karte eins nach oben."
 
 msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
-msgstr "Move map downwards in the rotation"
+msgstr "Verschiebt die ausgewählte Karte ein nach unten."
 
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
@@ -183,19 +180,19 @@ msgid "HOST_LOGIN_UNLOCK_SERVER"
 msgstr "Anmelde-/Freischaltserver starten"
 
 msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Start only the login-server"
+msgstr "Startet nur den Anmelde-/Unlockserver"
 
 msgid "HOST_HOST"
 msgstr "Alle server starten"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Start the login and game-server with the selected setting"
+msgstr "Startet den Anmelde-/Unlock und Gameserver."
 
 msgid "HOST_CANCEL"
 msgstr "Abbrechen"
 
 msgid "HOST_CANCEL_TOOLTIP"
-msgstr "Stop all servers!"
+msgstr "Stoppt alle aktiven Server."
 
 # ##
 # ##### Settings
@@ -211,21 +208,19 @@ msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 Spielpfad:"
 
 msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
-msgstr "Select your Battlefield 2142 game folder"
+msgstr "Wähle deinen Battlefield 2142 Spielordner aus."
 
 msgid "SETTINGS_BF2142_SERVER_PATH"
 msgstr "Battlefield 2142 Serverpfad:"
 
 msgid "SETTINGS_BF2142_SERVER_PATH_TOOLTIP"
-msgstr ""
-"Select your Battlefield 2142 server folder.\n"
-"This one is also known as \"bf2142 unranked dedicated server\"."
+msgstr "Wähle dein Battlefield 2142 Serverpfad aus (nur notwendig wenn du den Gameserver über den \"Host\"-Tab starten möchtest)."
 
 msgid "SETTINGS_WINEPREFIX"
 msgstr "Wineprefix:"
 
 msgid "SETTINGS_WINEPREFIX_TOOLTIP"
-msgstr "Any parameters for starting with wine"
+msgstr "Setzte den Wineprefix mit dem das Spiel gestartet werden soll (wird wenn möglich automatisch ausgelesen)."
 
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr "Startup query:"
@@ -235,8 +230,8 @@ msgstr "Intro Videos löschen"
 
 msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
 msgstr ""
-"Removes all intro movies from the bf2142 basegame.\n"
-"Will not touch any mods!"
+"Löscht alle Introvideos aus dem ausgewählten Battlefield 2142 Ordner (ausgenommen dem Titanvideo).\n"
+"Dies beachtet nicht die ausgewählte Mod!"
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
 msgstr "Karten kopieren (client)"
@@ -253,57 +248,58 @@ msgid "TAB_JOIN"
 msgstr "Verbinden"
 
 msgid "TAB_JOIN_TOOLTIP"
-msgstr "Settings to join a login-server"
+msgstr "Einstellungen zum verbinden."
 
 msgid "TAB_HOST"
 msgstr "Bereitstellen"
 
 msgid "TAB_HOST_TOOLTIP"
-msgstr "Settings to host a login and game-server"
+msgstr "Einstellungen zum hosten des Anmelde-/Unlockserver und/oder Gameserver."
 
 msgid "TAB_UNLOCKS"
 msgstr "Unlocks"
 
 msgid "TAB_UNLOCKS_TOOLTIP"
-msgstr "Customize your available ingame unlocks here."
+msgstr "Einstellungen der freigeschalteten Waffen/Gadgets die ingame auswählbar sind."
 
 msgid "TAB_SETTINGS"
 msgstr "Einstellungen"
 
 msgid "TAB_SETTINGS_TOOLTIP"
-msgstr "General settings"
+msgstr "Allgemeine Einstellungen"
 
 # ##
 # ##### Statusbar
 msgid "VERSION_TOOLTIP"
-msgstr "Current version"
+msgstr "Aktuelle Version"
 
 msgid "UNLOCKER_GITHUB"
 msgstr "Github"
 
 msgid "UNLOCKER_GITHUB_TOOLTIP"
 msgstr ""
-"Opens your web browser to this tools GitHub.\n"
+"Öffnet die Projektseite (Github) des Unlockers.\n"
 "Contribute!"
 
 msgid "UNLOCKER_MODDB"
 msgstr "Moddb"
 
 msgid "UNLOCKER_MODDB_TOOLTIP"
-msgstr "Opens your web browser to this tools ModDB page."
+msgstr "Öffnet die Moddb Seite des Unlockers."
 
 msgid "PROJECT_REMASTER_MODDB"
 msgstr "Project Remaster Mod"
 
 msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
 msgstr ""
-"Opens your web browser to Project Remaster's ModDB page.\n"
-"They remastered BF2142 to HD!"
+"Öffnet die Moddb/Projektseite der Project Remater Modifikation (probiert die Mod aus, macht spass!)\n"
+"Project Remastered bringt HD-Texturen, neue Waffen, balancierte Waffen sowie neue Karten!"
 
 msgid "PLAY_ONLINE"
 msgstr "Online spielen"
 
 msgid "PLAY_ONLINE_TOOLTIP"
 msgstr ""
-"Opens your web browser to Reclamation's website.\n"
-"They host BF2142 online Multiplayer servers!"
+"Öffnet die Webseite zur Reclamation Modifikation.\n"
+"Diese gibt die die Möglichkeit online zu spielen.\n"
+"Aktuell läuft ein EU, ein US und ein Project Reamster Mod server."
