@@ -205,14 +205,14 @@ var btnPatchServerMaps: Button
 ##
 
 ### Helper procs
-# proc areServerReachable(address: string): bool =
-#   if not isAddrReachable(address, Port(8080)):
-#     return false
-#   if not isAddrReachable(address, Port(18300)):
-#     return false
-#   if not isAddrReachable(address, Port(29900)):
-#     return false
-#   return true
+proc areServerReachable(address: string): bool =
+  if not isAddrReachable(address, Port(8080)):
+    return false
+  if not isAddrReachable(address, Port(18300)):
+    return false
+  if not isAddrReachable(address, Port(29900)):
+    return false
+  return true
 
 proc fillHostIpAddress() =
   var addrs: seq[string] = getLocalAddrs()
@@ -788,6 +788,11 @@ proc patchAndStartLogic(): bool =
   backupOpenSpyIfExists()
 
   saveProfileAccountName()
+
+  if not areServerReachable(ipAddress):
+    newInfoDialog("Cannot connect", "Cannot connect to server")
+    return
+
   # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
   var command: string
   when defined(linux):
