@@ -14,6 +14,7 @@ when defined(linux):
 elif defined(windows):
   import winim
   import docpath
+  import cdkey # Required to set the cd key if it's not set (on startup)
 import terminal # Terminal wrapper (uses vte on linux and textview on windows)
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
@@ -1293,6 +1294,8 @@ proc onApplicationActivate(application: Application) =
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false
     vboxHost.visible = false
+  when defined(windows): # TODO: Reading/setting cd key on linux
+    setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
