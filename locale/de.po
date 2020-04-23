@@ -73,6 +73,22 @@ msgstr "Verbindungseinstellungen zum verbinden mit dem Anmelde-/Unlockserver."
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Spieleeinstellungen mit denen Battlefield 2142 gestartet wird."
 
+msgid "CHECK_CAN_NOT_CONNECT"
+msgstr "Es kann keine Verbindung zur angegeben IP-Adresse aufgebaut werden.\n"
+"Folgende Server sind nicht erreichbar:"
+
+msgid "CHECK_LOGIN_SERVER"
+msgstr "Anmelde-Server:"
+
+msgid "CHECK_GPCM_SERVER"
+msgstr "GPCM-Server:"
+
+msgid "CHECK_UNLOCK_SERVER"
+msgstr "Unlock-Server:"
+
+msgid "CHECK_CANCEL"
+msgstr "Abbrechen"
+
 # ##
 # ##### Host
 msgid "HOST_SETTINGS"
@@ -126,8 +142,7 @@ msgid "HOST_MAX_PLAYERS"
 msgstr "Maximale Spieler"
 
 msgid "HOST_MAX_PLAYERS_TOOLTIP"
-msgstr ""
-"Maximale Anzahl an menschlichen Spielern, die verbinden können."
+msgstr "Maximale Anzahl an menschlichen Spielern, die verbinden können."
 
 msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Anzahl benötigter Spieler:"

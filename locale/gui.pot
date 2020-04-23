@@ -51,6 +51,21 @@ msgid "JOIN_CONNECT_FRAME_TOOLTIP"
 msgstr ""
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr ""
+
+msgid "CHECK_CAN_NOT_CONNECT"
+msgstr ""
+
+msgid "CHECK_LOGIN_SERVER"
+msgstr ""
+
+msgid "CHECK_GPCM_SERVER"
+msgstr ""
+
+msgid "CHECK_UNLOCK_SERVER"
+msgstr ""
+
+msgid "CHECK_CANCEL"
+msgstr ""
 ###
 
 

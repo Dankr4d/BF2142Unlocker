@@ -145,6 +145,15 @@ var btnJoin: Button # TODO: Rename to btnConnect
 var btnJustPlay: Button
 var btnJustPlayCancel: Button
 var termJustPlayServer: Terminal
+var dlgCheckServers: Dialog
+var btnCheckCancel: Button
+var throbberLoginServer: Spinner
+var throbberGpcmServer: Spinner
+var throbberUnlockServer: Spinner
+var imgLoginServer: Image
+var imgGpcmServer: Image
+var imgUnlockServer: Image
+var btnCheckServerCancel: Button
 ##
 ### Host controls
 var vboxHost: Box
@@ -753,6 +762,7 @@ proc applyJustPlayRunningSensitivity(running: bool) =
 
 ### Events
 ## Join
+
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
   txtPlayerName.text = txtPlayerName.text.strip()
@@ -789,11 +799,51 @@ proc patchAndStartLogic(): bool =
 
   saveProfileAccountName()
 
-  if not areServerReachable(ipAddress):
-    newInfoDialog("Cannot connect", "Cannot connect to server")
+  ## Check Logic (TODO: Cleanup and check servers in thread)
+  var canConnect: bool = true
+  throbberLoginServer.visible = true
+  throbberGpcmServer.visible = true
+  throbberUnlockServer.visible = true
+  imgLoginServer.visible = false
+  imgGpcmServer.visible = false
+  imgUnlockServer.visible = false
+  # Login server
+  if isAddrReachable(ipAddress, Port(18300)):
+    throbberLoginServer.visible = false
+    imgLoginServer.visible = true
+    imgLoginServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberLoginServer.visible = false
+    imgLoginServer.visible = true
+    imgLoginServer.setFromIconName("gtk-cancel", 0)
+  # GPCM server
+  if isAddrReachable(ipAddress, Port(29900)):
+    throbberGpcmServer.visible = false
+    imgGpcmServer.visible = true
+    imgGpcmServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberGpcmServer.visible = false
+    imgGpcmServer.visible = true
+    imgGpcmServer.setFromIconName("gtk-cancel", 0)
+  # Unlock server
+  if isAddrReachable(ipAddress, Port(8080)):
+    throbberUnlockServer.visible = false
+    imgUnlockServer.visible = true
+    imgUnlockServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberUnlockServer.visible = false
+    imgUnlockServer.visible = true
+    imgUnlockServer.setFromIconName("gtk-cancel", 0)
+  if not canConnect:
+    dlgCheckServers.show()
+    # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
+    #       and if every server is reachable autoamtically hidden.
     return
+  #
 
-  # TODO: Check if server is reachable before starting BF2142 (try out all 3 port)
   var command: string
   when defined(linux):
     when not defined(release):
@@ -848,6 +898,9 @@ proc onBtnJustPlayClicked(self: Button00) {.signal.} =
 proc onBtnJustPlayCancelClicked(self: Button00) {.signal.} =
   killProcess(termLoginServerPid)
   applyJustPlayRunningSensitivity(false)
+
+proc onBtnCheckCancelClicked(self: Button00) {.signal.} =
+  dlgCheckServers.hide()
 
 proc onBtnAddMapClicked(self: Button00) {.signal.} =
   var mapName, mapMode, mapSize: string
@@ -1193,6 +1246,14 @@ proc onApplicationActivate(application: Application) =
   btnJoin = builder.getButton("btnJoin")
   btnJustPlay = builder.getButton("btnJustPlay")
   btnJustPlayCancel = builder.getButton("btnJustPlayCancel")
+  dlgCheckServers = builder.getDialog("dlgCheckServers")
+  btnCheckCancel = builder.getButton("btnCheckCancel")
+  throbberLoginServer = builder.getSpinner("throbberLoginServer")
+  throbberGpcmServer = builder.getSpinner("throbberGpcmServer")
+  throbberUnlockServer = builder.getSpinner("throbberUnlockServer")
+  imgLoginServer = builder.getImage("imgLoginServer")
+  imgGpcmServer = builder.getImage("imgGpcmServer")
+  imgUnlockServer = builder.getImage("imgUnlockServer")
   vboxHost = builder.getBox("vboxHost")
   tblHostSettings = builder.getGrid("tblHostSettings")
   imgLevelPreview = builder.getImage("imgLevelPreview")

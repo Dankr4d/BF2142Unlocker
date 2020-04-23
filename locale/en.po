@@ -28,8 +28,7 @@ msgid "JOIN_CONNECT"
 msgstr "Connect"
 
 msgid "JOIN_CONNECT_TOOLTIP"
-msgstr ""
-"Connect to the login-server by using the IP-Address entered."
+msgstr "Connect to the login-server by using the IP-Address entered."
 
 msgid "JOIN_MODS"
 msgstr "Mods:"
@@ -73,6 +72,22 @@ msgstr "Connection-settings that control how you get into your or any login-/unl
 
 msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+
+msgid "CHECK_CAN_NOT_CONNECT"
+msgstr "Couldn't connect to given IP-Address.\n"
+"Following server are not reachable:"
+
+msgid "CHECK_LOGIN_SERVER"
+msgstr "Login-Server:"
+
+msgid "CHECK_GPCM_SERVER"
+msgstr "GPCM-Server:"
+
+msgid "CHECK_UNLOCK_SERVER"
+msgstr "Unlock-Server:"
+
+msgid "CHECK_CANCEL"
+msgstr "Cancel"
 
 # ##
 # ##### Host
