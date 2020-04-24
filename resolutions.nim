@@ -37,7 +37,20 @@ when defined(linux):
       result.add((cast[int](sizes[i].width), cast[int](sizes[i].height)))
       inc(i)
 else:
-  discard # TODO: Implement for windows
+  import winim
+
+  proc getAvailableResolutions(): seq[tuple[width: int, height: int]] =
+    var dm: DEVMODE # = [0]
+    dm.dmSize = cast[WORD](sizeof((dm)))
+    var iModeNum: cint = 0
+    var lastResolution: tuple[width: int, height: int] = (0, 0)
+    while EnumDisplaySettings(nil, iModeNum, addr(dm)) != 0:
+      if dm.dmDisplayFixedOutput == 0:
+        if lastResolution != (cast[int](dm.dmPelsWidth), cast[int](dm.dmPelsHeight)):
+          result.add((cast[int](dm.dmPelsWidth), cast[int](dm.dmPelsHeight)))
+        lastResolution = (cast[int](dm.dmPelsWidth), cast[int](dm.dmPelsHeight))
+      inc(iModeNum)
+
 
 when isMainModule:
   echo getAvailableResolutions()
