@@ -34,6 +34,11 @@ msgstr ""
 msgid "JOIN_WINDOW_MODE_TOOLTIP"
 msgstr ""
 
+msgid "JOIN_RESOLUTION"
+msgstr ""
+msgid "JOIN_RESOLUTION_TOOLTIP"
+msgstr ""
+
 msgid "JOIN_JUST_PLAY_CANCEL"
 msgstr ""
 msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"

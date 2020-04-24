@@ -22,6 +22,7 @@ import times # Requierd for rudimentary level backup with epochtime suffix
 import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
 import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
+import resolutions # Required to read out all possible resolutions
 
 # Set icon (windres.exe .\icon.rc -O coff -o icon.res)
 when defined(gcc) and defined(windows):
@@ -116,6 +117,7 @@ const
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
   CONFIG_KEY_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
+  CONFIG_KEY_RESOLUTION: string = "resolution"
 
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
@@ -137,6 +139,8 @@ var cbxLanguages: ComboBox
 var vboxJoin: Box
 var vboxJustPlay: Box
 var cbxJoinMods: ComboBox
+var lblJoinResolutions: Label
+var cbxJoinResolutions: ComboBox
 var txtPlayerName: Entry
 var txtIpAddress: Entry
 var chbtnAutoJoin: CheckButton
@@ -290,7 +294,9 @@ proc loadConfig() =
     chbtnUnlockSquadGadgets.active = unlockSquadGadgetsStr.parseBool()
   else:
     chbtnUnlockSquadGadgets.active = false
-
+  let resolutionStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_RESOLUTION)
+  if resolutionStr != "":
+    discard cbxJoinResolutions.setActiveId(resolutionStr)
 
 proc backupOpenSpyIfExists() =
   let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
@@ -725,6 +731,41 @@ proc loadJoinMods() =
         store.setValue(iter, 1, valMod)
   discard cbxJoinMods.setActiveId("bf2142")
 
+proc loadJoinResolutions() =
+  var iter: TreeIter
+  let store = listStore(cbxJoinResolutions.getModel())
+  store.clear()
+  var idx: int = 0
+  for resolution in getAvailableResolutions():
+    var valResolution: Value
+    var valWidth: Value
+    var valHeight: Value
+    discard valResolution.init(typeFromName("gchararray"))
+    discard valWidth.init(typeFromName("guint"))
+    discard valHeight.init(typeFromName("guint"))
+    valResolution.setString($resolution.width & "x" & $resolution.height)
+    valWidth.setUint(cast[int](resolution.width))
+    valHeight.setUint(cast[int](resolution.height))
+    store.append(iter)
+    store.setValue(iter, 0, valResolution)
+    store.setValue(iter, 1, valResolution)
+    store.setValue(iter, 2, valWidth)
+    store.setValue(iter, 3, valHeight)
+    idx.inc()
+  cbxJoinResolutions.setActive(0)
+
+proc getSelectedResolution(): tuple[width, height: uint] =
+  var iter: TreeIter
+  let store = listStore(cbxJoinResolutions.getModel())
+  discard cbxJoinResolutions.getActiveIter(iter)
+  var valWidth: Value
+  var valHeight: Value
+  discard valWidth.init(typeFromName("guint"))
+  discard valHeight.init(typeFromName("guint"))
+  store.getValue(iter, 2, valWidth)
+  store.getValue(iter, 3, valHeight)
+  return (cast[uint](valWidth.getUint()), cast[uint](valHeight.getUint()))
+
 proc loadHostMods() =
   var iter: TreeIter
   let store = listStore(cbxHostMods.getModel())
@@ -787,6 +828,7 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_RESOLUTION, cbxJoinResolutions.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
@@ -855,10 +897,13 @@ proc patchAndStartLogic(): bool =
     if txtStartupQuery.text != "":
       command.add(txtStartupQuery.text & ' ')
   command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
-  command.add("+modPath mods/" &  cbxJoinMods.activeId & ' ')
+  command.add("+modPath mods/" & cbxJoinMods.activeId & ' ')
   command.add("+menu 1" & ' ') # TODO: Check if this is necessary
   if chbtnWindowMode.active:
     command.add("+fullscreen 0" & ' ')
+    var resolution: tuple[width, height: uint] = getSelectedResolution()
+    command.add("+szx " & $resolution.width & ' ')
+    command.add("+szy " & $resolution.height & ' ')
   command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
   command.add("+eaAccountName " & txtPlayerName.text & ' ')
   command.add("+eaAccountPassword A" & ' ')
@@ -876,6 +921,10 @@ proc patchAndStartLogic(): bool =
 
 proc onBtnJoinClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
+
+proc onChbtnWindowModeToggled(self: CheckButton00) {.signal.} =
+  lblJoinResolutions.visible = chbtnWindowMode.active
+  cbxJoinResolutions.visible = chbtnWindowMode.active
 
 proc onBtnJustPlayClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
@@ -1239,6 +1288,8 @@ proc onApplicationActivate(application: Application) =
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
   cbxJoinMods = builder.getComboBox("cbxJoinMods")
+  lblJoinResolutions = builder.getLabel("lblJoinResolutions")
+  cbxJoinResolutions = builder.getComboBox("cbxJoinResolutions")
   txtPlayerName = builder.getEntry("txtPlayerName")
   txtIpAddress = builder.getEntry("txtIpAddress")
   chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
@@ -1341,8 +1392,11 @@ proc onApplicationActivate(application: Application) =
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
   window.show()
+  loadJoinResolutions()
   loadConfig()
   loadJoinMods()
+  lblJoinResolutions.visible = chbtnWindowMode.active
+  cbxJoinResolutions.visible = chbtnWindowMode.active
   loadHostMods()
   if bf2142ServerPath != "":
     updatePathes()

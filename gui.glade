@@ -289,6 +289,18 @@
       </row>
     </data>
   </object>
+  <object class="GtkListStore" id="listStoreResolutions">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Resolution -->
+      <column type="gchararray"/>
+      <!-- column-name Width -->
+      <column type="guint"/>
+      <!-- column-name Height -->
+      <column type="guint"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="listStoreSelectableMaps">
     <columns>
       <!-- column-name Name -->
@@ -524,6 +536,7 @@
                                     <property name="tooltip_text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
                                     <property name="use_stock">True</property>
                                     <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -547,6 +560,37 @@
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="top_attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="lblJoinResolutions">
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
+                                    <property name="label" translatable="yes">JOIN_RESOLUTION</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">0</property>
+                                    <property name="top_attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBox" id="cbxJoinResolutions">
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
+                                    <property name="model">listStoreResolutions</property>
+                                    <property name="has_entry">True</property>
+                                    <property name="entry_text_column">1</property>
+                                    <property name="id_column">0</property>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can_focus">False</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="top_attach">3</property>
                                   </packing>
                                 </child>
                               </object>

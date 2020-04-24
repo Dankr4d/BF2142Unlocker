@@ -40,13 +40,19 @@ msgid "JOIN_PLAYER_NAME"
 msgstr "Player name:"
 
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
-msgstr "Name of your Soldier that appears ingame"
+msgstr "Name of your Soldier that appears ingame."
 
 msgid "JOIN_WINDOW_MODE"
 msgstr "Window mode:"
 
 msgid "JOIN_WINDOW_MODE_TOOLTIP"
-msgstr "Starts the game in windowed mode"
+msgstr "Starts the game in windowed mode."
+
+msgid "JOIN_RESOLUTION"
+msgstr "Resolution:"
+
+msgid "JOIN_RESOLUTION_TOOLTIP"
+msgstr "The resolution the game get started in windowed mode."
 
 msgid "JOIN_JUST_PLAY_CANCEL"
 msgstr "Cancel"
@@ -74,7 +80,8 @@ msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
 
 msgid "CHECK_CAN_NOT_CONNECT"
-msgstr "Couldn't connect to given IP-Address.\n"
+msgstr ""
+"Couldn't connect to given IP-Address.\n"
 "Following server are not reachable:"
 
 msgid "CHECK_LOGIN_SERVER"
