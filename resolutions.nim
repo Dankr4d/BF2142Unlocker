@@ -43,7 +43,7 @@ else:
     var dm: DEVMODE # = [0]
     dm.dmSize = cast[WORD](sizeof((dm)))
     var iModeNum: cint = 0
-    var lastResolution: tuple[width, height: uint] = (0, 0)
+    var lastResolution: tuple[width, height: uint] = (cast[uint](0), cast[uint](0))
     while EnumDisplaySettings(nil, iModeNum, addr(dm)) != 0:
       if dm.dmDisplayFixedOutput == 0:
         if lastResolution != (cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight)):
@@ -51,6 +51,16 @@ else:
         lastResolution = (cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight))
       inc(iModeNum)
 
+  when defined(pr):
+    ## Compile command: nim c --app:lib -d:pr -d:release --opt:size resolutions
+    proc resolutions(): cstring {.stdcall, exportc, dynlib.} =
+      var str: string
+      let resolutions: seq[tuple[width, height: uint]] = getAvailableResolutions()
+      for idx, resolution in resolutions:
+        str.add($resolution.width & "x" & $resolution.height)
+        if idx < resolutions.high:
+          str.add(";")
+      return cstring(str)
 
-when isMainModule:
+when isMainModule and not defined(pr):
   echo getAvailableResolutions()
