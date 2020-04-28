@@ -51,16 +51,5 @@ else:
         lastResolution = (cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight))
       inc(iModeNum)
 
-  when defined(pr):
-    ## Compile command: nim c --app:lib -d:pr -d:release --opt:size resolutions
-    proc resolutions(): cstring {.stdcall, exportc, dynlib.} =
-      var str: string
-      let resolutions: seq[tuple[width, height: uint]] = getAvailableResolutions()
-      for idx, resolution in resolutions:
-        str.add($resolution.width & "x" & $resolution.height)
-        if idx < resolutions.high:
-          str.add(";")
-      return cstring(str)
-
-when isMainModule and not defined(pr):
+when isMainModule:
   echo getAvailableResolutions()
