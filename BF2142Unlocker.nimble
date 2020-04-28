@@ -110,15 +110,15 @@ proc compileOpenSsl() =
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
-        exec(fmt"make -j`nproc`")
+        exec("make -j`nproc`")
       elif defined(windows):
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
-        exec(fmt"make -j`nproc`")
+        exec("make -j`nproc`")
     elif buildOS == "windows":
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
-      exec(fmt"make -j`nproc`}")
+      exec("make -j`nproc`")
 
 when defined(linux):
   proc compileNcurses() =

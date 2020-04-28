@@ -8,6 +8,7 @@ import nimBF2142IpPatcher
 when defined(windows):
   import winim
   import getprocessbyname
+  import cdkey
 
 const URI = parseUri("http://127.0.0.1:8085/")
 
@@ -23,6 +24,7 @@ type Action {.pure.} = enum
   closeServer = "closeServer",
   patchServer = "patchServer",
   patchClient = "patchClient",
+  setCdKeyIfNotExists = "setCdKeyIfNotExists",
 
 var client: HttpClient = newHttpClient()
 proc handleRequest(req: Request) {.async.} =
@@ -69,6 +71,8 @@ proc handleRequest(req: Request) {.async.} =
     let ip: IpAddress = req.headers["ip", 0].parseIpAddress()
     let port: Port = req.headers["port", 0].parseInt().Port
     patchClient(path, ip, port)
+  of Action.setCdKeyIfNotExists:
+    setCdKeyIfNotExists()
   of Action.closeServer:
     quit(0) # TODO: Should respons data and then quit
   await req.respond(Http200, "")
@@ -222,6 +226,19 @@ proc patchClientElevated*(path: string, ip: IpAddress, port: Port): bool =
   else:
     patchClient(path, ip, port)
   return true
+
+when defined(windows):
+  proc setCdKeyIfNotExistsElevated*(): bool =
+    # TODO: This function does not check if the programm is running elevated. Currently this function requires a running elevated server.
+    if IsUserAnAdmin():
+      setCdKeyIfNotExists()
+      return true
+    if not isServerRunning() and not elevate():
+      return false
+    var headers: HttpHeaders = newHttpHeaders()
+    headers.add("action", $Action.setCdKeyIfNotExists)
+    var resp: Response = client.request(url = $URI, httpMethod = HttpGet, headers = headers)
+    return true
 
 when defined(windows) and isMainModule:
   import gethwndbypid
