@@ -197,6 +197,7 @@ var termLoginServer: Terminal
 var termBF2142Server: Terminal
 ##
 ### Unlock controls
+var vboxUnlocks: Box
 var chbtnUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
@@ -1053,6 +1054,7 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
     return
   vboxJoin.visible = true
   vboxHost.visible = true
+  vboxUnlocks.visible = true
   bf2142Path = path
   txtBF2142Path.text = path
   loadJoinMods()
@@ -1340,6 +1342,7 @@ proc onApplicationActivate(application: Application) =
   btnHost = builder.getButton("btnHost")
   btnHostCancel = builder.getButton("btnHostCancel")
   hboxTerms = builder.getBox("hboxTerms")
+  vboxUnlocks = builder.getBox("vboxUnlocks")
   chbtnUnlockSquadGadgets = builder.getCheckButton("chbtnUnlockSquadGadgets")
   lblBF2142Path = builder.getLabel("lblBF2142Path")
   txtBF2142Path = builder.getEntry("txtBF2142Path")
@@ -1417,6 +1420,7 @@ proc onApplicationActivate(application: Application) =
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false
     vboxHost.visible = false
+    vboxUnlocks.visible = false
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}

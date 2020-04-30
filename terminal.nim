@@ -91,10 +91,14 @@ when defined(windows):
   var threadForked: system.Thread[int]
   var channelReplaceText: Channel[string]
   var channelAddText: Channel[string]
-  var channelTerminate: Channel[bool]
   var channelTerminateForked: Channel[bool]
   var channelStopTimerAdd: Channel[bool]
   var channelStopTimerReplace: Channel[bool]
+  channelReplaceText.open()
+  channelTerminateForked.open()
+  channelStopTimerReplace.open()
+  channelAddText.open()
+  channelStopTimerAdd.open()
 
   proc timerReplaceTerminalText(timerData: TimerData): bool =
     if channelStopTimerReplace.tryRecv().dataAvailable:
@@ -119,7 +123,6 @@ when defined(windows):
 
   proc terminateThread*() = # TODO
     channelStopTimerAdd.send(true)
-    channelTerminate.send(true)
 
   proc terminateForkedThread*(pid: int) = # TODO
     channelStopTimerReplace.send(true)
@@ -165,9 +168,6 @@ proc startProcess*(terminal: Terminal, command: string, params: string = "", wor
         sleep(500)
 
     if searchForkedProcess:
-      channelReplaceText.open()
-      channelTerminateForked.open()
-      channelStopTimerReplace.open()
       var timerDataReplaceText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
       threadForked.createThread(proc (processId: int) {.thread.} =
@@ -199,18 +199,16 @@ proc startProcess*(terminal: Terminal, command: string, params: string = "", wor
           sleep(250)
       , (result))
     else:
-      channelAddText.open()
-      channelTerminate.open()
-      channelStopTimerAdd.open()
       var timerDataAddText: TimerData = TimerData(terminal: terminal)
       discard timeoutAdd(250, timerAddTerminalText, timerDataAddText)
       thread.createThread(proc (process: Process) {.thread.} =
+        var exitCode: DWORD
+        var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, process.processId.DWORD)
         while true:
-          if channelTerminate.tryRecv().dataAvailable:
-            return
-          if process.outputStream.isNil:
-            return
-          channelAddText.send(process.outputStream.readAll())
+          if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
+            if process.outputStream.isNil:
+              return
+            channelAddText.send(process.outputStream.readAll())
           sleep(250)
       , (process))
 ##########################
