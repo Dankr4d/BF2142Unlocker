@@ -7,13 +7,6 @@ when defined(windows):
   import strutils
   import bitops
 
-  proc getAdapterInfo(): PIP_ADAPTER_INFO =
-    var size: ULONG = 0
-    GetAdaptersInfo(nil, addr size) # Reads out required memory size
-    result = cast[PIP_ADAPTER_INFO](alloc(size))
-    GetAdaptersInfo(result, addr size)
-    dealloc(result) # TODO: Why does this works?!?
-
   iterator adapterInfos(pIpAdapterInfo: PIP_ADAPTER_INFO): PIP_ADAPTER_INFO =
     var tmpPIpAdapterInfo: PIP_ADAPTER_INFO = pIpAdapterInfo
     yield tmpPIpAdapterInfo
@@ -45,7 +38,11 @@ when defined(windows):
     return braodcastSeq.join(".")
 
   proc net_if_addrs*(): OrderedTable[string, seq[Address]] =
-    var pIpAdapterInfo: PIP_ADAPTER_INFO = getAdapterInfo()
+    var size: ULONG = 0
+    discard GetAdaptersInfo(nil, addr size) # Reads out required memory size
+    var pIpAdapterInfo: PIP_ADAPTER_INFO = cast[PIP_ADAPTER_INFO](alloc(size)) # Allocate required size read out before
+    discard GetAdaptersInfo(pIpAdapterInfo, addr size) # Reading adapter info into buffer
+
     var adapterName: string
     for adapterInfo in pIpAdapterInfo.adapterInfos:
       adapterName = $adapterInfo.Description.cstring
@@ -57,6 +54,8 @@ when defined(windows):
         address.netmask = $ipAddrList.IpMask.String.cstring
         address.broadcast = calcBroadcastAddr(address.address, address.netmask)
         result[adapterName].add(address)
+
+    dealloc(pIpAdapterInfo)
   ##
 else:
   import psutil
