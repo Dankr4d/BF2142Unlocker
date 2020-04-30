@@ -25,6 +25,7 @@ elif defined(windows):
   proc newTerminal*(): Terminal =
     var textView = newTextView()
     # textView.monospace = true
+    textview.wrapMode =  WrapMode.word
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
     scrolledWindow.propagateNaturalHeight = true
     scrolledWindow.add(textView)
@@ -111,13 +112,19 @@ when defined(windows):
       timerData.terminal.addText(data, scrollDown = true)
     return SOURCE_CONTINUE
 
+  proc isProcessAlive(pid: int): bool =
+    var exitCode: DWORD
+    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
+    return hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE
+
   proc terminateThread*() = # TODO
     channelStopTimerAdd.send(true)
     channelTerminate.send(true)
 
-  proc terminateForkedThread*() = # TODO
+  proc terminateForkedThread*(pid: int) = # TODO
     channelStopTimerReplace.send(true)
-    channelTerminateForked.send(true)
+    if isProcessAlive(pid):
+      channelTerminateForked.send(true)
 
 proc startProcess*(terminal: Terminal, command: string, params: string = "", workingDir: string = os.getCurrentDir(), env: string = "", searchForkedProcess: bool = false): int = # TODO: processId should be stored and not returned
   when defined(linux):
@@ -165,14 +172,30 @@ proc startProcess*(terminal: Terminal, command: string, params: string = "", wor
       discard timeoutAdd(250, timerReplaceTerminalText, timerDataReplaceText)
       threadForked.createThread(proc (processId: int) {.thread.} =
         var hwnd: HWND = getHWndByPid(processId)
-        while hwnd == 0: # Waiting until window can be accessed
+        while hwnd == 0: # Wait until window is accessible
           sleep(250)
           hwnd = getHWndByPid(processId)
+        var exitCode: DWORD
+        var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, processId.DWORD)
         # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
         while true:
           if channelTerminateForked.tryRecv().dataAvailable:
+            discard CloseHandle(hndl)
             return
-          channelReplaceText.send(readStdOut(processId))
+          if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
+            var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(processId)
+            if stdoutTuple.lastError == 0:
+              channelReplaceText.send(stdoutTuple.stdout)
+            elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
+              # TODO: Sometimes it fails with invalid handle.
+              # Maybe this happens when the process get's killed during reading the stdout in this thread.
+              discard
+            else:
+              channelReplaceText.send("ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode))
+          else:
+            discard CloseHandle(hndl)
+            channelReplaceText.send(dgettext("gui", "GAMESERVER_CRASHED"))
+            return
           sleep(250)
       , (result))
     else:

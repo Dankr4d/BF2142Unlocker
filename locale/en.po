@@ -328,3 +328,9 @@ msgid "PLAY_ONLINE_TOOLTIP"
 msgstr ""
 "Opens your web browser to Reclamation's website.\n"
 "They host BF2142 online Multiplayer servers!"
+
+# ##
+# ## Other
+msgid "GAMESERVER_CRASHED"
+msgstr "ERROR: The Battlefield 2142 server crashed.\n"
+"This is most likely a map fault. Some maps doesn't work perfect and can crash the whole server."

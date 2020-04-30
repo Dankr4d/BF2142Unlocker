@@ -255,3 +255,8 @@ msgstr ""
 msgid "PLAY_ONLINE_TOOLTIP"
 msgstr ""
 ###
+
+### Other
+msgid "GAMESERVER_CRASHED"
+msgstr ""
+###

@@ -239,7 +239,7 @@ proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should 
       echo "ERROR: Cannot kill process!" # TODO: Create a popup
   elif defined(windows):
     if pid == termBF2142ServerPid:
-      terminateForkedThread() # TODO
+      terminateForkedThread(pid) # TODO
     elif pid == termLoginServerPid:
       terminateThread() # TODO
     var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
@@ -1420,7 +1420,7 @@ proc onApplicationActivate(application: Application) =
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
-  var LC_ALL {.header: "<locale.h>", importc: "LC_ALL".}: int
+  var LC_ALL {.header: "<locale.h>", importc.}: int
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
@@ -1441,9 +1441,9 @@ proc languageLogic() =
       # TODO: Note, that this is not working if en_US.utf8 is not installed
       discard setlocale(LC_ALL, "en_US.utf8")
   else:
-      # Setting manually selected langauge
-      disableSetlocale() # Required to set locale manually (in following line)
-      discard setlocale(LC_ALL, currentLocale)
+    # Setting manually selected langauge
+    disableSetlocale() # Required to set locale manually (in following line)
+    discard setlocale(LC_ALL, currentLocale)
 
 proc main =
   languageLogic()

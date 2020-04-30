@@ -325,3 +325,9 @@ msgstr ""
 "Öffnet die Webseite zur Reclamation Modifikation.\n"
 "Diese gibt die die Möglichkeit online zu spielen.\n"
 "Aktuell läuft ein EU, ein US und ein Project Reamster Mod server."
+
+# ##
+# ## Other
+msgid "GAMESERVER_CRASHED"
+msgstr "ERROR: Der Battlefield 2142 Server ist abgestürzt.\n"
+"Dies ist höchstwahrscheinlich die aktuelle Karte die du gespielt hast. Manche Karten laufen nicht einwandfrei und können den ganzen Server zum Absturtz bringen."

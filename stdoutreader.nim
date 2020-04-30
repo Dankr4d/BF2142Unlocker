@@ -13,12 +13,17 @@ proc stringify(buffer: PCHAR_INFO, length: int): string = # TODO: Array length
     charInfo = buffer[idx]
     result.add(charInfo.Char.AsciiChar)
 
-proc readStdOut*(pid: int): string =
-  discard FreeConsole()
-  discard AttachConsole(pid.DWORD)
-  var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE)
+proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
+  if FreeConsole().bool == false:
+    return (GetLastError().uint32, "")
+  if AttachConsole(pid.DWORD).bool == false:
+    return (GetLastError().uint32, "")
+  var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE) # INVALID_HANDLE_VALUE
+  if stdHandle == INVALID_HANDLE_VALUE:
+    return (GetLastError().uint32, "")
   var screenBufferInfo: CONSOLE_SCREEN_BUFFER_INFO
-  discard GetConsoleScreenBufferInfo(stdHandle, addr screenBufferInfo)
+  if GetConsoleScreenBufferInfo(stdHandle, addr screenBufferInfo).bool == false:
+    return (GetLastError().uint32, "")
   var bufferLen: int = screenBufferInfo.dwSize.X * screenBufferInfo.dwSize.Y
   var buffer: PCHAR_INFO
   buffer = resize(buffer, bufferLen)
@@ -33,23 +38,20 @@ proc readStdOut*(pid: int): string =
   lpReadRegion.Top = 0
   lpReadRegion.Right = screenBufferInfo.dwSize.X
   lpReadRegion.Bottom = screenBufferInfo.dwSize.Y
-  discard ReadConsoleOutput(
-    stdHandle,
-    buffer,
-    dwBufferSize,
-    dwBufferCoord,
-    addr lpReadRegion
-  )
-  discard FreeConsole()
-  discard AttachConsole(ATTACH_PARENT_PROCESS)
+  if ReadConsoleOutput(stdHandle, buffer, dwBufferSize, dwBufferCoord, addr lpReadRegion).bool == false:
+    return (GetLastError().uint32, "")
+  if FreeConsole().bool == false:
+    return (GetLastError().uint32, "")
+  if AttachConsole(ATTACH_PARENT_PROCESS).bool == false:
+    return (GetLastError().uint32, "")
 
-  result = stringify(buffer, bufferLen)
+  result = (0.uint32, stringify(buffer, bufferLen))
   dealloc(buffer)
 
   var cntNewLines: int = 0
   if dwBufferSize.X > 0:
-    for idx in countup(dwBufferSize.X.int, result.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
-      result.insert("\n", idx + cntNewLines)
+    for idx in countup(dwBufferSize.X.int, result.stdout.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
+      result.stdout.insert("\n", idx + cntNewLines)
       cntNewLines.inc()
 
 when isMainModule:
