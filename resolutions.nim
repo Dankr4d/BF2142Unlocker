@@ -39,7 +39,7 @@ when defined(linux):
 else:
   import winim
 
-  proc getAvailableResolutions(): seq[tuple[width, height: uint]] =
+  proc getAvailableResolutions*(): seq[tuple[width, height: uint]] =
     var dm: DEVMODE # = [0]
     dm.dmSize = cast[WORD](sizeof((dm)))
     var iModeNum: cint = 0
