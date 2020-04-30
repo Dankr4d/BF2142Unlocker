@@ -39,17 +39,16 @@ when defined(linux):
 else:
   import winim
 
-  proc getAvailableResolutions*(): seq[tuple[width, height: uint]] =
+  proc getAvailableResolutions(): seq[tuple[width, height: uint]] =
     var dm: DEVMODE # = [0]
     dm.dmSize = cast[WORD](sizeof((dm)))
     var iModeNum: cint = 0
-    var lastResolution: tuple[width, height: uint] = (cast[uint](0), cast[uint](0))
     while EnumDisplaySettings(nil, iModeNum, addr(dm)) != 0:
-      if dm.dmDisplayFixedOutput == 0:
-        if lastResolution != (cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight)):
-          result.add((cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight)))
-        lastResolution = (cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight))
+      if dm.dmPelsWidth >= 800 and dm.dmDisplayFrequency >= 60 and dm.dmBitsPerPel == 32 and
+      dm.dmDisplayFixedOutput == 0 and dm.dmDisplayFlags == 0:
+        result.add((cast[uint](dm.dmPelsWidth), cast[uint](dm.dmPelsHeight)))
       inc(iModeNum)
+
 
 when isMainModule:
   echo getAvailableResolutions()
