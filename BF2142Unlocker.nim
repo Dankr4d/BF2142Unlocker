@@ -18,18 +18,16 @@ import terminal # Terminal wrapper (uses vte on linux and textview on windows)
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
-import elevatedio # Requierd to write, copy and delete data elevated
 import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
 import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 import resolutions # Required to read out all possible resolutions
+import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
+import cdkey # Required to set an empty cd key if cd key not exists.
 
-# Set icon (windres.exe .\icon.rc -O coff -o icon.res)
-when defined(gcc) and defined(windows):
-  {.link: "icon.res".}
-
-when defined(linux):
-  {.passC:"-Wl,--export-dynamic".}
-  {.passL:"-lgmodule-2.0 -rdynamic".}
+# Create precompiled resource file
+when defined(windows):
+  static:
+    discard staticExec("windres.exe BF2142Unlocker.rc -O coff -o BF2142Unlocker.res")
 
 var bf2142Path: string
 var bf2142ServerPath: string
@@ -101,8 +99,8 @@ const
   PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
 
 when defined(release):
-  const GUI_CSS: string = staticRead("gui.css")
-  const GUI_GLADE: string = staticRead("gui.glade")
+  const GUI_CSS: string = staticRead("BF2142Unlocker.css")
+  const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
 const
   CONFIG_FILE_NAME: string = "config.ini"
   CONFIG_SECTION_GENERAL: string = "General"
@@ -307,10 +305,8 @@ proc backupOpenSpyIfExists() =
   let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
   if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
-    if not copyFileElevated(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
-      return
-    if not copyFileElevated(originalRendDX9Path, openspyDllPath):
-      return
+    copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
+    copyFile(originalRendDX9Path, openspyDllPath)
 
 proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
@@ -320,10 +316,8 @@ proc restoreOpenSpyIfExists() =
   let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
   if openspyMd5Hash == OPENSPY_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-    if not copyFileElevated(openspyDllBackupPath, openspyDllRestorePath):
-      return
-    if not removeFileElevated(openspyDllBackupPath):
-      return
+    copyFile(openspyDllBackupPath, openspyDllRestorePath)
+    removeFile(openspyDllBackupPath)
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -581,7 +575,7 @@ proc loadSaveServerSettings(save: bool): bool =
       serverConfig.add(setting & ' ' & value & '\n')
   file.close()
   if save:
-    return writeFileElevated(currentServerSettingsPath, serverConfig)
+     writeFile(currentServerSettingsPath, serverConfig)
   return true
 
 
@@ -634,7 +628,7 @@ proc loadSaveAiSettings(save: bool): bool =
       aiConfig.add(AISETTING_MAX_BOTS_INCLUDE_HUMANS & " 0")
 
   if save:
-    return writeFileElevated(currentAiSettingsPath, aiConfig)
+    writeFile(currentAiSettingsPath, aiConfig)
   return true
 
 proc saveAiSettings(): bool =
@@ -647,7 +641,8 @@ proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
-  return writeFileElevated(currentMapListPath, mapListContent)
+  writeFile(currentMapListPath, mapListContent)
+  return true
 
 proc loadMapList(): bool =
   var file = open(currentMapListPath, fmRead)
@@ -832,18 +827,15 @@ proc patchAndStartLogic(): bool =
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
-    if not copyFileElevated(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
-      return false
-  if not patchClientElevated(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080)):
-    return false
+    copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME)
+  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
 
   backupOpenSpyIfExists()
 
   saveProfileAccountName()
 
   when defined(windows): # TODO: Reading/setting cd key on linux
-    if not setCdKeyIfNotExistsElevated(): # Checking if cd key exists, if not an empty cd key is set
-      return false
+    setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
   ## Check Logic (TODO: Cleanup and check servers in thread)
   var canConnect: bool = true
@@ -986,12 +978,10 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   when defined(linux):
     serverExePath = serverExePath / "bin" / "amd-64"
   if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
-    if not copyFileElevated(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
-      return
+    copyFile(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME)
   serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
   echo "Patching Battlefield 2142 server!"
-  if not patchServerElevated(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080)):
-    return
+  patchServer(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080))
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
   txtIpAddress.text = txtHostIpAddress.text
@@ -1107,21 +1097,20 @@ proc onBtnRemoveMoviesClicked(self: Button00) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
-      discard removeFileElevated(movie.path)
+      removeFile(movie.path)
 
 proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
   result = true
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
   if createBackup:
     echo "Creating a Levels folder backup!"
-    if not copyDirElevated(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt()): # TODO: Check if dir could be copied as normal user
-      return false
+    copyDir(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt())
   for levelFolder in walkDir(srcLevelPath, true):
     levelName = levelFolder.path
     when defined(linux):
       if isServer:
         levelName = levelFolder.path.toLower()
-    if not existsOrCreateDirElevated(dstLevelPath / levelName)[0]: # TODO: Check for write permission
+    if not existsOrCreateDir(dstLevelPath / levelName):
       return false
     echo "Copying level: ", levelName
     for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
@@ -1135,11 +1124,9 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
         dstPath = dstPath / levelFiles.path
       srcPath = srcLevelPath / levelFolder.path / levelFiles.path
       if levelFiles.kind == pcDir:
-        if not copyDirElevated(srcPath, dstPath): # TODO: Check for write permission
-          return false
+        copyDir(srcPath, dstPath)
       elif levelFiles.kind == pcFile:
-        if not copyFileElevated(srcPath, dstPath):
-          return false
+        copyFile(srcPath, dstPath)
     ## Move desc file # TODO: Create a recursive function that walks every file in each folder
     # if isServer: # Linux only # TODO: Refactor copyLevels
     if isServer: # Moving all files in levels info folder with lowercase namens
@@ -1150,7 +1137,7 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
             let srcDescPath = infoPath / fileName.path
             let dstDescPath = infoPath / fileName.path.toLower()
             if srcDescPath != dstDescPath:
-              moveFile(srcDescPath, dstDescPath) # TODO: Move elevated on windows
+              moveFile(srcDescPath, dstDescPath)
 
           block FIX_INVALID_XML_FILES: # Fixes invalid xml files, should be deleted later
             const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
@@ -1165,8 +1152,7 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var rawLines: seq[string] = raw.splitLines()
               rawLines.delete(val - 1)
               when defined(windows):
-                if not writeFileElevated(path / fileName, rawLines.join("\n")):
-                  return false
+                writeFile(path / fileName, rawLines.join("\n"))
               else:
                 writeFile(path / fileName.toLower(), rawLines.join("\n"))
               return true
@@ -1174,8 +1160,7 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
               var raw: string = readFile(path / fileName.toLower())
               raw.delete(valFrom - 1, valTo - 1)
               when defined(windows):
-                if not writeFileElevated(path / fileName, raw):
-                  return false
+                writeFile(path / fileName, raw)
               else:
                 writeFile(path / fileName.toLower(), raw)
               return true
@@ -1263,10 +1248,6 @@ proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
     killProcess(termLoginServerPid)
   restoreOpenSpyIfExists()
-  when defined(windows):
-    if elevatedio.isServerRunning():
-      echo "KILLING ELEVATEDIO SERVER"
-      killElevatedIo()
 
 proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
   if cbxLanguages.active == 0:
@@ -1285,7 +1266,7 @@ proc onApplicationActivate(application: Application) =
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
   else:
-    discard builder.addFromFile("gui.glade")
+    discard builder.addFromFile("BF2142Unlocker.glade")
   window = builder.getApplicationWindow("window")
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
@@ -1383,7 +1364,7 @@ proc onApplicationActivate(application: Application) =
   when defined(release):
     discard cssProvider.loadFromData(GUI_CSS)
   else:
-    discard cssProvider.loadFromPath("gui.css")
+    discard cssProvider.loadFromPath("BF2142Unlocker.css")
   getDefaultScreen().addProviderForScreen(cssProvider, STYLE_PROVIDER_PRIORITY_USER)
   #
   ## Set Adwaita dark mode

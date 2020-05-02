@@ -41,11 +41,6 @@ when defined(windows):
 ##
 
 ### Procs
-proc createIconRes() =
-  echo "Creating icon.res"
-  when defined(windows) and buildOS == "windows":
-    exec("""windres.exe .\icon.rc -O coff -o icon.res""")
-
 proc updateTranslationPo() =
   for lang in LANGUAGES:
     exec(fmt"msgmerge --update --no-fuzzy-matching --no-wrap locale/{lang}.po locale/gui.pot")
@@ -71,11 +66,11 @@ when defined(windows):
 proc compileGui() =
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
+      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
     else:
-      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " gui")
+      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
-    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " gui")
+    exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
 
 proc compileServer() =
   when defined(windows):
@@ -85,14 +80,6 @@ proc compileServer() =
       exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
   else:
     exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "server".toExe & " server")
-
-
-when defined(windows):
-  proc compileElevatedio() =
-    if buildOS == "linux":
-      exec("nim c -d:release -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
-    else:
-      exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "elevatedio".toExe & " elevatedio")
 
 proc compileOpenSsl() =
   mkDir("deps")
@@ -137,10 +124,9 @@ when defined(linux):
 proc compileAll() =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
-  compileGui()
+  compileGui() # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
   when defined(windows):
-    compileElevatedio()
     compileLauncher()
   else:
     if not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
@@ -208,8 +194,6 @@ task release, "Compile and bundle (release).":
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
-  when defined(windows):
-    createIconRes()
   compileAll()
   copyAll()
 

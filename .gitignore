@@ -1,8 +1,5 @@
-instdeps
-instdeps.exe
-gui
-gui.exe
-elevatedio.exe
+BF2142Unlocker
+BF2142Unlocker.exe
 server
 server.exe
 fesl_server
@@ -19,8 +16,8 @@ stdoutreader
 stdoutreader.exe
 signal
 signal.exe
-nimBF2142IpPatcher
-nimBF2142IpPatcher.exe
+patcher
+patcher.exe
 BF2142UnlockerLauncher
 BF2142UnlockerLauncher.exe
 cdkey
@@ -31,7 +28,7 @@ resolutions.dll
 locale/*/
 config.ini
 lang.txt
-icon.res
+BF2142Unlocker.res
 libeay32.dll
 ssleay32.dll
 libncurses.so.5
