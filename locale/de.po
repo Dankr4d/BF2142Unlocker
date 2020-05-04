@@ -256,10 +256,10 @@ msgstr ""
 "Dies beachtet nicht die ausgewählte Mod!"
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
-msgstr "Karten kopieren (client)"
+msgstr "Karten zum client kopieren"
 
 msgid "SETTINGS_COPY_MAPS_SERVER"
-msgstr "Karten kopieren (server)"
+msgstr "Karten zum server kopieren"
 
 msgid "SETTINGS_SELECT"
 msgstr "Auswählen"

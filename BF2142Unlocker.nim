@@ -23,6 +23,7 @@ import signal # Required to use the custom signal pragma (checks windowShown fla
 import resolutions # Required to read out all possible resolutions
 import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import cdkey # Required to set an empty cd key if cd key not exists.
+import checkpermission # Required to check write permission before patching client
 
 # Create precompiled resource file
 when defined(windows):
@@ -318,9 +319,16 @@ proc removeDir(dir: string): bool = # TODO: in newer version, theres also a "che
 proc open(filename: string; mode: FileMode = fmRead; bufSize: int = -1): tuple[opened: bool, file: system.File] =
   try:
     return (true, system.open(filename, mode, bufSize))
-  except OSError as ex:
+  except system.IOError as ex:
     ex.handle()
     return (false, nil)
+
+proc existsOrCreateDir(dir: string): tuple[succeed: bool, exists: bool] =
+  try:
+    return (true, os.existsOrCreateDir(dir))
+  except OSError as ex:
+    ex.handle()
+    return (false, false)
 ##
 
 ### Fix procs TODO: delete later
@@ -488,6 +496,7 @@ proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedi
     dialog.destroy()
   btnOk.connect("clicked", onBtnOkClicked, dialog)
   dialog.contentArea.showAll()
+  dialog.setPosition(WindowPosition.center)
   discard dialog.run()
   dialog.destroy()
 
@@ -640,12 +649,13 @@ proc fillListSelectableMaps() =
       invalidXmlFiles.add(descPath)
   var notFixableXmlFiles: seq[string]
   for path in invalidXmlFiles:
-    discard
     if not fixMapDesc(path):
       notFixableXmlFiles.add(path)
-  echo "Could not read those files", notFixableXmlFiles
-    # Try to fix.
-    # Display list of not fixed files
+  if invalidXmlFiles.len > 0:
+    if notFixableXmlFiles.len == 0:
+      fillListSelectableMaps() # TODO: Fixed maps are only displayed if there's no non fixable map
+    else:
+      newInfoDialog("Invalid xml files", notFixableXmlFiles.join("\n"))
 
 proc initMapList(list: TreeView, titleMap: string, titleMapMode: string = "Mode", titleMapSize: string = "Size") =
   var renderer: CellRendererText
@@ -835,7 +845,7 @@ proc checkProfileFiles() =
     raise newException(ValueError, "checkProfileFiles - bf2142ProfilesPath == \"\"")
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
-  if not existsOrCreateDir(bf2142Profile0001Path):
+  if not existsOrCreateDir(bf2142Profile0001Path).exists:
     if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
       return
     if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
@@ -1014,6 +1024,9 @@ proc patchAndStartLogic(): bool =
   if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
     if not copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
       return
+  if not hasWritePermission(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+    newInfoDialog("No write permission", "You've no write permission for: " & bf2142Path / BF2142_UNLOCKER_EXE_NAME) # TODO: Translate
+    return
   patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
 
   backupOpenSpyIfExists()
@@ -1198,9 +1211,12 @@ proc onBtnHostCancelClicked(self: Button00) {.signal.} =
 proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   updatePathes()
   fillListSelectableMaps()
-  discard loadMapList()
-  discard loadServerSettings()
-  discard loadAiSettings()
+  if not loadMapList():
+    return
+  if not loadServerSettings():
+    return
+  if not loadAiSettings():
+    return
 
 proc onCbxGameModeChanged(self: ComboBox00) {.signal.} =
   updatePathes()
@@ -1227,7 +1243,7 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
   if responseType != ResponseType.ok:
     return
   if not fileExists(path / BF2142_EXE_NAME):
-    newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
+    newInfoDialog(fmt"Could not find {BF2142_EXE_NAME}", fmt"Could not find {BF2142_EXE_NAME}. Path is invalid!") # TODO: Translate
     return
   vboxJoin.visible = true
   vboxHost.visible = true
@@ -1250,8 +1266,8 @@ proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Check
   var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
-  if not fileExists(path / BF2142_EXE_NAME):
-    newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
+  if not fileExists(path / BF2142_SRV_EXE_NAME):
+    newInfoDialog(fmt"Could not find {BF2142_SRV_EXE_NAME}", fmt"Could not find {BF2142_SRV_EXE_NAME}. Path is invalid!") # TODO: Translate
     return
   if bf2142ServerPath == path:
     return
@@ -1260,9 +1276,12 @@ proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Check
   updatePathes()
   loadHostMods()
   fillListSelectableMaps()
-  discard loadMapList()
-  discard loadServerSettings()
-  discard loadAiSettings()
+  if not loadMapList():
+    return
+  if not loadServerSettings():
+    return
+  if not loadAiSettings():
+    return
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
@@ -1298,7 +1317,7 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): boo
     when defined(linux):
       if isServer:
         levelName = levelFolder.path.toLower()
-    if not existsOrCreateDir(dstLevelPath / levelName):
+    if not existsOrCreateDir(dstLevelPath / levelName).succeed:
       return false
     echo "Copying level: ", levelName
     for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
@@ -1337,12 +1356,12 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     var writeSucceed: bool = copyLevels(srcLevelPath, dstLevelPath)
     dialog.destroy()
     if writeSucceed:
-      newInfoDialog("Done", "Copied 64 coop maps (client)!")
+      newInfoDialog("Done", "Copied 64 coop maps (client)!") # TODO: Translate
   else:
     dialog.destroy()
 
 proc onBtnPatchClientMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog("Select levels folder to copy from (client)", nil, FileChooserAction.selectFolder)
+  let chooser = newFileChooserDialog("Select level folder to copy to client", nil, FileChooserAction.selectFolder) # TODO: Translate
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchClientMapsClickedResponse)
@@ -1358,12 +1377,12 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     dialog.destroy()
     if writeSucceed:
       fillListSelectableMaps()
-      newInfoDialog("Done", "Copied 64 coop maps (server)!")
+      newInfoDialog("Done", "Copied levels!") # TODO: Translate
   else:
     dialog.destroy()
 
 proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog("Select levels folder to copy from (server)", nil, FileChooserAction.selectFolder)
+  let chooser = newFileChooserDialog("Select level folder to copy to server", nil, FileChooserAction.selectFolder) # TODO: Translate
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
@@ -1531,9 +1550,9 @@ proc onApplicationActivate(application: Application) =
   if bf2142ServerPath != "":
     updatePathes()
     fillListSelectableMaps()
-    discard loadMapList()
-    discard loadServerSettings()
-    discard loadAiSettings()
+    if loadMapList() and loadServerSettings() and loadAiSettings():
+       # This if statments exists, if anything of this proc calls fails it wont continue with the next proc call
+      discard # Do not return, otherwise the following visibility logic will not be executed
   when defined(windows):
     lblWinePrefix.visible = false
     txtWinePrefix.visible = false

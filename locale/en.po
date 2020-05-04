@@ -260,10 +260,10 @@ msgstr ""
 "Will not touch any mods!"
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
-msgstr "Copy maps (client)"
+msgstr "Copy maps to client"
 
 msgid "SETTINGS_COPY_MAPS_SERVER"
-msgstr "Copy maps (server)"
+msgstr "Copy maps to server"
 
 msgid "SETTINGS_SELECT"
 msgstr "Select"
