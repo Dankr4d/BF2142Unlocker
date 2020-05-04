@@ -32,6 +32,7 @@ BF2142Unlocker.res
 libeay32.dll
 ssleay32.dll
 libncurses.so.5
+error.log
 deps/
 build/
 *.*~

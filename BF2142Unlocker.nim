@@ -215,6 +215,160 @@ var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
 ##
 
+### Exception procs
+proc onQuit()
+
+import logging
+var logger: FileLogger = newFileLogger("error.log", fmtStr = verboseFmtStr)
+addHandler(logger)
+
+proc `$`(ex: ref Exception): string =
+  result.add("Exception: \n\t" & $ex.name & "\n")
+  result.add("Message: \n\t" & ex.msg & "\n")
+  result.add("Stacktrace: \n")
+  for line in splitLines(getStackTrace()):
+    result.add("\t" & line & "\n")
+
+proc log(ex: ref Exception) =
+  error($ex)
+
+proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
+  var dialog: Dialog = newDialog()
+  dialog.title = "ERROR: " & osErrorMsg(osLastError())
+  var lblText: Label = newLabel($ex)
+  dialog.contentArea.add(lblText)
+  var vboxButtons: HBox = newHBox(true, 5)
+  dialog.contentArea.add(vboxButtons)
+  var btnOk: Button = newButton("Ok")
+  vboxButtons.add(btnOk)
+  proc onBtnOkClicked(self: Button, dialog: Dialog) =
+    dialog.destroy()
+  btnOk.connect("clicked", onBtnOkClicked, dialog)
+  var btnCloseAll: Button = newButton("Close BF2142Unlocker")
+  vboxButtons.add(btnCloseAll)
+  proc onBtnCloseAllClicked(self: Button, dialog: Dialog) =
+    onQuit()
+    quit(0)
+  btnCloseAll.connect("clicked", onBtnCloseAllClicked, dialog)
+  dialog.contentArea.showAll()
+  dialog.setPosition(WindowPosition.center)
+  discard dialog.run()
+  dialog.destroy()
+
+proc handle(ex: ref Exception) =
+  log(ex)
+  show(ex)
+
+proc writeFile(filename, content: string): bool =
+  try:
+    system.writeFile(filename, content)
+    return true
+  except system.IOError as ex:
+    ex.handle()
+    return false
+
+proc moveFile(source, dest: string): bool =
+  try:
+    os.moveFile(source, dest)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc moveDir(source, dest: string): bool =
+  try:
+    os.moveDir(source, dest)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc copyFile(source, dest: string): bool =
+  try:
+    os.copyFile(source, dest)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc copyDir(source, dest: string): bool =
+  try:
+    os.copyDir(source, dest)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc removeFile(file: string): bool =
+  try:
+    os.removeFile(file)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc removeDir(dir: string): bool = # TODO: in newer version, theres also a "checkDir = false" param
+  try:
+    os.removeDir(dir)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
+proc open(filename: string; mode: FileMode = fmRead; bufSize: int = -1): tuple[opened: bool, file: system.File] =
+  try:
+    return (true, system.open(filename, mode, bufSize))
+  except OSError as ex:
+    ex.handle()
+    return (false, nil)
+##
+
+### Fix procs TODO: delete later
+const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
+const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
+const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
+const OMAHA_BEACH_DESC_MD5_HASH: string = "0e28bad9b61224f7889cfffcded81182"
+const PANORAMA_DESC_MD5_HASH: string = "5288a6a0dded7df3c60341f5a20a5f0a"
+const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
+const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
+
+proc removeLine(path: string, val: int): bool =
+  var raw: string = readFile(path)
+  var rawLines: seq[string] = raw.splitLines()
+  rawLines.delete(val - 1)
+  return writeFile(path, rawLines.join("\n"))
+
+proc removeChars(path: string, valFrom, valTo: int): bool =
+  var raw: string = readFile(path)
+  raw.delete(valFrom - 1, valTo - 1)
+  return writeFile(path, raw)
+
+proc fixMapDesc(path: string): bool =
+  case extractFileName(path).toLower()
+  of "aegis_station.desc":
+    if getMd5(readFile(path)) == AEGIS_STATION_DESC_MD5_HASH:
+      return removeChars(path, 1464, 1464) # Fix: Remove char on position 1464
+  of "bloodgulch.desc":
+    if getMd5(readFile(path)) == BLOODGULCH_DESC_MD5_HASH:
+      return removeLine(path, 20) # Fix: Delete line 20
+  of "kilimandscharo.desc":
+    if getMd5(readFile(path)) == KILIMANDSCHARO_DESC_MD5_HASH:
+      return removeLine(path, 7) # Fix: Delete line 7
+  of "omaha_beach.desc":
+    if getMd5(readFile(path)) == OMAHA_BEACH_DESC_MD5_HASH:
+      return removeLine(path, 11) # Fix: Delete line 11
+  of "panorama.desc":
+    if getMd5(readFile(path)) == PANORAMA_DESC_MD5_HASH:
+      return removeLine(path, 14) # Fix: Delete line 14
+  of "severnaya.desc":
+    if getMd5(readFile(path)) == SEVERNAYA_DESC_MD5_HASH:
+      return removeLine(path, 16) # Fix: Delete line 16
+  of "street.desc":
+    if getMd5(readFile(path)) == STREET_DESC_MD5_HASH:
+      return removeLine(path, 9) # Fix: Delete line 9
+  return false
+##
+
 ### Helper procs
 proc areServerReachable(address: string): bool =
   if not isAddrReachable(address, Port(8080)):
@@ -305,8 +459,10 @@ proc backupOpenSpyIfExists() =
   let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
   if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
-    copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX)
-    copyFile(originalRendDX9Path, openspyDllPath)
+    if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
+      return
+    if not copyFile(originalRendDX9Path, openspyDllPath):
+      return
 
 proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
@@ -316,8 +472,9 @@ proc restoreOpenSpyIfExists() =
   let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
   if openspyMd5Hash == OPENSPY_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-    copyFile(openspyDllBackupPath, openspyDllRestorePath)
-    removeFile(openspyDllBackupPath)
+    if not copyFile(openspyDllBackupPath, openspyDllRestorePath):
+      return
+    discard removeFile(openspyDllBackupPath)
 
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -466,15 +623,29 @@ proc fillListSelectableMaps() =
   listSelectableMaps.clear()
   var gameMode: string = cbxGameMode.activeId
   var xmlMapInfo: XmlNode
+  var invalidXmlFiles: seq[string]
+  var descPath: string
   for folder in walkDir(currentLevelFolderPath, true):
     if folder.kind != pcDir:
       continue
-    xmlMapInfo = loadXml(currentLevelFolderPath / folder.path / "info" / folder.path & ".desc").child("modes")
-    for xmlMode in xmlMapInfo.findAll("mode"):
-      if xmlMode.attr("type") == gameMode:
-        for xmlMapType in xmlMode.findAll("maptype"):
-          listSelectableMaps.appendMap(folder.path, gameMode, xmlMapType.attr("players"))
-        break
+    try:
+      descPath = currentLevelFolderPath / folder.path / "info" / folder.path & ".desc"
+      xmlMapInfo = loadXml(descPath).child("modes")
+      for xmlMode in xmlMapInfo.findAll("mode"):
+        if xmlMode.attr("type") == gameMode:
+          for xmlMapType in xmlMode.findAll("maptype"):
+            listSelectableMaps.appendMap(folder.path, gameMode, xmlMapType.attr("players"))
+          break
+    except xmlparser.XmlError:
+      invalidXmlFiles.add(descPath)
+  var notFixableXmlFiles: seq[string]
+  for path in invalidXmlFiles:
+    discard
+    if not fixMapDesc(path):
+      notFixableXmlFiles.add(path)
+  echo "Could not read those files", notFixableXmlFiles
+    # Try to fix.
+    # Display list of not fixed files
 
 proc initMapList(list: TreeView, titleMap: string, titleMapMode: string = "Mode", titleMapSize: string = "Size") =
   var renderer: CellRendererText
@@ -519,10 +690,12 @@ proc loadSaveServerSettings(save: bool): bool =
     serverConfig: string
     setting: string
     value: string
-    file = open(currentServerSettingsPath, fmRead)
+    fileTpl: tuple[opened: bool, file: system.File] = open(currentServerSettingsPath, fmRead)
+  if not fileTpl.opened:
+    return false
 
   # Server config
-  while file.readLine(line):
+  while fileTpl.file.readLine(line):
     (setting, value) = line.splitWhitespace(maxsplit = 1)
     case setting:
       of SETTING_ROUNDS_PER_MINUTE:
@@ -573,9 +746,9 @@ proc loadSaveServerSettings(save: bool): bool =
         discard # TODO: Implement SETTING_TEAM_RATIO
     if save:
       serverConfig.add(setting & ' ' & value & '\n')
-  file.close()
+  fileTpl.file.close()
   if save:
-     writeFile(currentServerSettingsPath, serverConfig)
+    return writeFile(currentServerSettingsPath, serverConfig)
   return true
 
 
@@ -590,10 +763,12 @@ proc loadSaveAiSettings(save: bool): bool =
     line: string
     aiConfig: string
     inComment: bool = false
-    file = open(currentAiSettingsPath, fmRead)
+    fileTpl: tuple[opened: bool, file: system.File] = open(currentAiSettingsPath, fmRead)
+  if not fileTpl.opened:
+    return false
 
   # AI config
-  while file.readLine(line):
+  while fileTpl.file.readLine(line):
     if line.startsWith("beginrem"):
       inComment = true
     elif line.startsWith("endrem"):
@@ -618,7 +793,7 @@ proc loadSaveAiSettings(save: bool): bool =
         line = AISETTING_MAX_BOTS_INCLUDE_HUMANS & " 0" # To prevent wrong bot amount configured in gui
     if save:
       aiConfig.add(line & '\n')
-  file.close()
+  fileTpl.file.close()
 
   if not aiConfig.contains(AISETTING_OVERRIDE_MENU_SETTINGS): # Requiered to override bot amount
     if save:
@@ -628,7 +803,7 @@ proc loadSaveAiSettings(save: bool): bool =
       aiConfig.add(AISETTING_MAX_BOTS_INCLUDE_HUMANS & " 0")
 
   if save:
-    writeFile(currentAiSettingsPath, aiConfig)
+    return writeFile(currentAiSettingsPath, aiConfig)
   return true
 
 proc saveAiSettings(): bool =
@@ -641,17 +816,18 @@ proc saveMapList(): bool =
   var mapListContent: string
   for map in listSelectedMaps.maps:
     mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
-  writeFile(currentMapListPath, mapListContent)
-  return true
+  return writeFile(currentMapListPath, mapListContent)
 
 proc loadMapList(): bool =
-  var file = open(currentMapListPath, fmRead)
+  var fileTpl: tuple[opened: bool, file: system.File] = open(currentMapListPath, fmRead)
+  if not fileTpl.opened:
+    return false
   var line, mapName, mapMode, mapSize: string
   listSelectedMaps.clear()
-  while file.readLine(line):
+  while fileTpl.file.readLine(line):
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
-  file.close()
+  fileTpl.file.close()
   return true
 
 proc checkProfileFiles() =
@@ -660,27 +836,35 @@ proc checkProfileFiles() =
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
   if not existsOrCreateDir(bf2142Profile0001Path):
-    writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON)
-    writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON)
-    writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON)
-    writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON)
-    writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON)
-    writeFile(bf2142Profile0001Path / "Video.con", PROFILE_VIDEO_CON)
+    if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
+      return
+    if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
+      return
+    if not writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON):
+      return
+    if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
+      return
+    if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
+      return
+    if not writeFile(bf2142Profile0001Path / "Video.con", PROFILE_VIDEO_CON):
+      return
 
 proc saveProfileAccountName() =
   checkProfileFiles()
   var profileConPath: string = bf2142Profile0001Path / "Profile.con"
-  var file = open(profileConPath, fmRead)
+  var fileTpl: tuple[opened: bool, file: system.File] = open(profileConPath, fmRead)
+  if not fileTpl.opened:
+    return
   var line, profileContent: string
-  while file.readLine(line):
+  while fileTpl.file.readLine(line):
     if line.startsWith("LocalProfile.setEAOnlineMasterAccount"):
       profileContent.add("LocalProfile.setEAOnlineMasterAccount \"" & txtPlayerName.text & "\"\n" )
     elif line.startsWith("LocalProfile.setEAOnlineSubAccount"):
       profileContent.add("LocalProfile.setEAOnlineSubAccount \"" & txtPlayerName.text & "\"\n" )
     else:
       profileContent.add(line & '\n')
-  file.close()
-  writeFile(profileConPath, profileContent)
+  fileTpl.file.close()
+  discard writeFile(profileConPath, profileContent)
 
 proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
@@ -693,7 +877,8 @@ proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
   var stupidPbSymlink: string = bf2142ServerPath / "pb"
   if symlinkExists(stupidPbSymlink):
-    removeFile(stupidPbSymlink)
+    if not removeFile(stupidPbSymlink):
+      return
   when defined(linux):
     var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
@@ -827,7 +1012,8 @@ proc patchAndStartLogic(): bool =
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
-    copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME)
+    if not copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+      return
   patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
 
   backupOpenSpyIfExists()
@@ -978,7 +1164,8 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   when defined(linux):
     serverExePath = serverExePath / "bin" / "amd-64"
   if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
-    copyFile(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME)
+    if not copyFile(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+        return
   serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
   echo "Patching Battlefield 2142 server!"
   patchServer(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080))
@@ -1063,6 +1250,9 @@ proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Check
   var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
+  if not fileExists(path / BF2142_EXE_NAME):
+    newInfoDialog("Could not find BF2142.exe", "Could not find BF2142.exe. The path is invalid!")
+    return
   if bf2142ServerPath == path:
     return
   bf2142ServerPath = path
@@ -1097,14 +1287,12 @@ proc onBtnRemoveMoviesClicked(self: Button00) {.signal.} =
   for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
     if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
       echo "Removing movie: ", movie.path
-      removeFile(movie.path)
+      if not removeFile(movie.path):
+        return
 
-proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, isServer: bool = false): bool =
+proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): bool =
   result = true
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
-  if createBackup:
-    echo "Creating a Levels folder backup!"
-    copyDir(dstLevelPath, dstLevelPath & "_backup_" & $epochTime().toInt())
   for levelFolder in walkDir(srcLevelPath, true):
     levelName = levelFolder.path
     when defined(linux):
@@ -1124,68 +1312,20 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, createBackup: bool = false, 
         dstPath = dstPath / levelFiles.path
       srcPath = srcLevelPath / levelFolder.path / levelFiles.path
       if levelFiles.kind == pcDir:
-        copyDir(srcPath, dstPath)
+        if not copyDir(srcPath, dstPath):
+          return
       elif levelFiles.kind == pcFile:
-        copyFile(srcPath, dstPath)
-    ## Move desc file # TODO: Create a recursive function that walks every file in each folder
-    # if isServer: # Linux only # TODO: Refactor copyLevels
-    if isServer: # Moving all files in levels info folder with lowercase namens
-      let infoPath = dstLevelPath / levelName / "info"
-      for fileName in walkDir(infoPath, true):
-        if fileName.kind == pcFile:
-          when defined(linux):
+        if not copyFile(srcPath, dstPath):
+          return
+    when defined(linux):
+      if isServer: # Moving all files in levels info folder to lowercase names
+        let infoPath = dstLevelPath / levelName / "info"
+        for fileName in walkDir(infoPath, true):
+          if fileName.kind == pcFile:
             let srcDescPath = infoPath / fileName.path
             let dstDescPath = infoPath / fileName.path.toLower()
             if srcDescPath != dstDescPath:
               moveFile(srcDescPath, dstDescPath)
-
-          block FIX_INVALID_XML_FILES: # Fixes invalid xml files, should be deleted later
-            const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
-            const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
-            const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
-            const OMAHA_BEACH_DESC_MD5_HASH: string = "0e28bad9b61224f7889cfffcded81182"
-            const PANORAMA_DESC_MD5_HASH: string = "5288a6a0dded7df3c60341f5a20a5f0a"
-            const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
-            const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
-            proc removeLine(path, fileName: string, val: int): bool =
-              var raw: string = readFile(path / fileName.toLower())
-              var rawLines: seq[string] = raw.splitLines()
-              rawLines.delete(val - 1)
-              when defined(windows):
-                writeFile(path / fileName, rawLines.join("\n"))
-              else:
-                writeFile(path / fileName.toLower(), rawLines.join("\n"))
-              return true
-            proc removeChars(path: string, fileName: string, valFrom, valTo: int): bool =
-              var raw: string = readFile(path / fileName.toLower())
-              raw.delete(valFrom - 1, valTo - 1)
-              when defined(windows):
-                writeFile(path / fileName, raw)
-              else:
-                writeFile(path / fileName.toLower(), raw)
-              return true
-            if fileName.path.endsWith(".desc"):
-              if fileName.path.toLower() == "aegis_station.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == AEGIS_STATION_DESC_MD5_HASH:
-                if not removeChars(infoPath, fileName.path, 1464, 1464): # Fix: Remove char on position 1464
-                  return false
-              if fileName.path.toLower() == "bloodgulch.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == BLOODGULCH_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 20): # Fix: Delete line 20
-                  return false
-              if fileName.path.toLower() == "kilimandscharo.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == KILIMANDSCHARO_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 7): # Fix: Delete line 7
-                  return false
-              if fileName.path.toLower() == "omaha_beach.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == OMAHA_BEACH_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 11): # Fix: Delete line 11
-                  return false
-              if fileName.path.toLower() == "panorama.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == PANORAMA_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 14): # Fix: Delete line 14
-                  return false
-              if fileName.path.toLower() == "severnaya.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == SEVERNAYA_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 16): # Fix: Delete line 16
-                  return false
-              if fileName.path.toLower() == "street.desc" and getMd5(readFile(infoPath / fileName.path.toLower())) == STREET_DESC_MD5_HASH:
-                if not removeLine(infoPath, fileName.path, 9): # Fix: Delete line 9
-                  return false
 
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
@@ -1240,7 +1380,7 @@ proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00
   if not windowShown:
     windowShown = true
 
-proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
+proc onQuit() =
   if termBF2142ServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
     killProcess(termBF2142ServerPid)
@@ -1249,12 +1389,15 @@ proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
     killProcess(termLoginServerPid)
   restoreOpenSpyIfExists()
 
+proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
+  onQuit()
+
 proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
   if cbxLanguages.active == 0:
-    removeFile(LANGUAGE_FILE)
+    discard removeFile(LANGUAGE_FILE)
     return
-  writeFile(LANGUAGE_FILE, cbxLanguages.activeId)
-  newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
+  if writeFile(LANGUAGE_FILE, cbxLanguages.activeId):
+    newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
 
 proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
