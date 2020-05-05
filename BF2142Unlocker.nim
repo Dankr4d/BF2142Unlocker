@@ -823,10 +823,20 @@ proc loadAiSettings(): bool =
   return loadSaveAiSettings(save = false)
 
 proc saveMapList(): bool =
-  var mapListContent: string
+  var
+    mapListCon: string
+    line: string
+    fileTpl: tuple[opened: bool, file: system.File] = open(currentMapListPath, fmRead)
+  if not fileTpl.opened:
+    return false
+  while fileTpl.file.readLine(line):
+    if line.toLower().startsWith("maplist"):
+      continue
+    mapListCon.add(line & "\n")
+  fileTpl.file.close()
   for map in listSelectedMaps.maps:
-    mapListContent.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
-  return writeFile(currentMapListPath, mapListContent)
+    mapListCon.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
+  return writeFile(currentMapListPath, mapListCon)
 
 proc loadMapList(): bool =
   var fileTpl: tuple[opened: bool, file: system.File] = open(currentMapListPath, fmRead)
@@ -835,6 +845,8 @@ proc loadMapList(): bool =
   var line, mapName, mapMode, mapSize: string
   listSelectedMaps.clear()
   while fileTpl.file.readLine(line):
+    if not line.toLower().startsWith("maplist"):
+      continue
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
     listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   fileTpl.file.close()
