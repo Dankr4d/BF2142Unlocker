@@ -655,7 +655,7 @@ proc fillListSelectableMaps() =
     if notFixableXmlFiles.len == 0:
       fillListSelectableMaps() # TODO: Fixed maps are only displayed if there's no non fixable map
     else:
-      newInfoDialog("Invalid xml files", notFixableXmlFiles.join("\n"))
+      newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
 
 proc initMapList(list: TreeView, titleMap: string, titleMapMode: string = "Mode", titleMapSize: string = "Size") =
   var renderer: CellRendererText
@@ -1551,7 +1551,8 @@ proc onApplicationActivate(application: Application) =
     updatePathes()
     fillListSelectableMaps()
     if loadMapList() and loadServerSettings() and loadAiSettings():
-       # This if statments exists, if anything of this proc calls fails it wont continue with the next proc call
+       # This if statments exists, because if any of this proc calls above fails it wont continue with the next proc call
+       # TODO: Maybe create a loadAll proc because those procs are always called together
       discard # Do not return, otherwise the following visibility logic will not be executed
   when defined(windows):
     lblWinePrefix.visible = false
