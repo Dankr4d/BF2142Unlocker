@@ -227,7 +227,7 @@ addHandler(logger)
 
 proc `$`(ex: ref Exception): string =
   result.add("Exception: \n\t" & $ex.name & "\n")
-  result.add("Message: \n\t" & ex.msg & "\n")
+  result.add("Message: \n\t" & ex.msg.strip() & "\n")
   result.add("Stacktrace: \n")
   for line in splitLines(getStackTrace()):
     result.add("\t" & line & "\n")
@@ -474,18 +474,6 @@ proc backupOpenSpyIfExists() =
     if not copyFile(originalRendDX9Path, openspyDllPath):
       return
 
-proc restoreOpenSpyIfExists() =
-  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
-  if not fileExists(openspyDllBackupPath):
-    return
-  let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
-  if openspyMd5Hash == OPENSPY_MD5_HASH:
-    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-    if not copyFile(openspyDllBackupPath, openspyDllRestorePath):
-      return
-    discard removeFile(openspyDllBackupPath)
-
 proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
   dialog.title = title
@@ -501,6 +489,23 @@ proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedi
   dialog.setPosition(WindowPosition.center)
   discard dialog.run()
   dialog.destroy()
+
+proc restoreOpenSpyIfExists() =
+  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  if not fileExists(openspyDllBackupPath):
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+  if openspyMd5Hash == OPENSPY_MD5_HASH:
+    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+    try:
+      os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
+      os.removeFile(openspyDllBackupPath)
+    except OSError as ex:
+      newInfoDialog(
+        fmt"Could not restore {OPENSPY_DLL_NAME}",
+        fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
+      )
 
 proc typeTest(o: gobject.Object; s: string): bool =
   let gt = g_type_from_name(s)
@@ -1209,6 +1214,7 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   termLoginServer.clear()
   termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
   startBF2142Server()
+  discard cbxJoinMods.setActiveId(cbxHostMods.activeId)
 
 proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   applyJustPlayRunningSensitivity(false)
