@@ -163,6 +163,12 @@ msgstr "Teambeschuss:"
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
 msgstr "Aktiviert/Deaktiviert Teambeschuss."
 
+msgid "HOST_ALLOW_NOSE_CAM"
+msgstr "Nasenkamera erlauben: "
+
+msgid "HOST_ALLOW_NOSE_CAM_TOOLTIP"
+msgstr "Aktiviert/Deaktiviert die Nasenkamera."
+
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr "Server IP-Adresse:"
 
@@ -329,5 +335,6 @@ msgstr ""
 # ##
 # ## Other
 msgid "GAMESERVER_CRASHED"
-msgstr "ERROR: Der Battlefield 2142 Server ist abgestürzt.\n"
+msgstr ""
+"ERROR: Der Battlefield 2142 Server ist abgestürzt.\n"
 "Dies ist höchstwahrscheinlich die aktuelle Karte die du gespielt hast. Manche Karten laufen nicht einwandfrei und können den ganzen Server zum Absturtz bringen."

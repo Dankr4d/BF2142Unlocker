@@ -128,6 +128,11 @@ msgstr ""
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
 msgstr ""
 
+msgid "HOST_ALLOW_NOSE_CAM"
+msgstr ""
+msgid "HOST_ALLOW_NOSE_CAM_TOOLTIP"
+msgstr ""
+
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr ""
 msgid "HOST_SERVER_IP_ADDRESS_TOOLTIP"

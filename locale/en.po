@@ -163,7 +163,13 @@ msgid "HOST_FRIENDLY_FIRE"
 msgstr "Friendly fire:"
 
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
-msgstr "Enables friendly fire"
+msgstr "Enable/Disable friendly fire"
+
+msgid "HOST_ALLOW_NOSE_CAM"
+msgstr "Allow nose cam:"
+
+msgid "HOST_ALLOW_NOSE_CAM_TOOLTIP"
+msgstr "Enable/Disable if the nose cam is available in aircrafts."
 
 msgid "HOST_SERVER_IP_ADDRESS"
 msgstr "Server IP-Address:"
@@ -332,5 +338,6 @@ msgstr ""
 # ##
 # ## Other
 msgid "GAMESERVER_CRASHED"
-msgstr "ERROR: The Battlefield 2142 server crashed.\n"
+msgstr ""
+"ERROR: The Battlefield 2142 server crashed.\n"
 "This is most likely a map fault. Some maps doesn't work perfect and can crash the whole server."

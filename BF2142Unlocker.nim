@@ -73,6 +73,7 @@ const
   SETTING_PLAYERS_NEEDED_TO_START: string = "sv.numPlayersNeededToStart"
   SETTING_SERVER_IP: string = "sv.serverIP"
   SETTING_INTERNET: string = "sv.internet"
+  SETTING_ALLOW_NOSE_CAM: string = "sv.allowNoseCam"
 
 const
   AISETTING_BOTS: string = "aiSettings.setMaxNBots"
@@ -178,6 +179,7 @@ var scaleMaxPlayers: Scale
 var sbtnPlayersNeededToStart: SpinButton
 var scalePlayersNeededToStart: Scale
 var chbtnFriendlyFire: CheckButton
+var chbtnAllowNoseCam: CheckButton
   # teamratio (also for coop?)
   # autobalance (also for coop?)
 var txtHostIpAddress: Entry
@@ -736,6 +738,11 @@ proc loadSaveServerSettings(save: bool): bool =
           value = if chbtnFriendlyFire.active: "100" else: "0"
         else:
           chbtnFriendlyFire.active = if value == "100": true else: false
+      of SETTING_ALLOW_NOSE_CAM:
+        if save:
+          value = $chbtnAllowNoseCam.active.int
+        else:
+          chbtnAllowNoseCam.active = value.parseBool()
       of SETTING_MAX_PLAYERS:
         if save:
           value = $sbtnMaxPlayers.value.toInt()
@@ -1485,6 +1492,7 @@ proc onApplicationActivate(application: Application) =
   sbtnPlayersNeededToStart = builder.getSpinButton("sbtnPlayersNeededToStart")
   scalePlayersNeededToStart = builder.getScale("scalePlayersNeededToStart")
   chbtnFriendlyFire = builder.getCheckButton("chbtnFriendlyFire")
+  chbtnAllowNoseCam = builder.getCheckButton("chbtnAllowNoseCam")
   txtHostIpAddress = builder.getEntry("txtHostIpAddress")
   hboxMaps = builder.getBox("hboxMaps")
   listSelectableMaps = builder.getTreeView("listSelectableMaps")
