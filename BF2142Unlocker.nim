@@ -498,14 +498,20 @@ proc restoreOpenSpyIfExists() =
   let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
   if openspyMd5Hash == OPENSPY_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-    try:
-      os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
-      os.removeFile(openspyDllBackupPath)
-    except OSError as ex:
-      newInfoDialog(
-        fmt"Could not restore {OPENSPY_DLL_NAME}",
-        fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
-      )
+    var tryCnt: int = 0
+    while tryCnt < 4:
+      try:
+        os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
+        os.removeFile(openspyDllBackupPath)
+      except OSError as ex:
+        tryCnt.inc()
+        if tryCnt == 4:
+          newInfoDialog(
+            fmt"Could not restore {OPENSPY_DLL_NAME}",
+            fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
+          )
+        else:
+          sleep(500)
 
 proc typeTest(o: gobject.Object; s: string): bool =
   let gt = g_type_from_name(s)
