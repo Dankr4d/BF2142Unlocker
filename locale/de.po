@@ -338,3 +338,30 @@ msgid "GAMESERVER_CRASHED"
 msgstr ""
 "ERROR: Der Battlefield 2142 Server ist abgestürzt.\n"
 "Dies ist höchstwahrscheinlich die aktuelle Karte die du gespielt hast. Manche Karten laufen nicht einwandfrei und können den ganzen Server zum Absturtz bringen."
+
+msgid "NO_WRITE_PERMISSION_TITLE"
+msgstr "Keine Schreibberechtigung"
+
+msgid "NO_WRITE_PERMISSION_MSG"
+msgstr "Du hast keine Schreibberechtigungen auf: $#"
+
+msgid "COULD_NOT_FIND_TITLE"
+msgstr "$# konnte nicht gefunden werden"
+
+msgid "COULD_NOT_FIND_MSG"
+msgstr "$# konnte nicht gefunden werde. Der Pfad ist falsch!"
+
+msgid "COPIED_MAPS"
+msgstr "Karten wurden kopiert"
+
+msgid "COPIED_MAPS_CLIENT"
+msgstr "Die Karten wurden erfolgreich zum client kopiert!"
+
+msgid "COPIED_MAPS_SERVER"
+msgstr "Die Karten wurden erfolgreich zum server kopiert!"
+
+msgid "SELECT_MAPS_FOLDER_CLIENT"
+msgstr "Wähle den Karten Ordner aus der zu Client kopiert werden soll"
+
+msgid "SELECT_MAPS_FOLDER_SERVER"
+msgstr "Wähle den Karten Ordner aus der zu Server kopiert werden soll"

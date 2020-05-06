@@ -172,7 +172,7 @@ msgid "HOST_CANCEL_TOOLTIP"
 msgstr ""
 ###
 
-###### Settings
+###### Unlocks
 msgid "UNLOCKS_SQUAD_GADGETS"
 msgstr ""
 msgid "UNLOCKS_SQUAD_GADGETS_INFO"
@@ -263,5 +263,32 @@ msgstr ""
 
 ### Other
 msgid "GAMESERVER_CRASHED"
+msgstr ""
+
+msgid "NO_WRITE_PERMISSION_TITLE"
+msgstr ""
+
+msgid "NO_WRITE_PERMISSION_MSG"
+msgstr ""
+
+msgid "COULD_NOT_FIND_TITLE"
+msgstr ""
+
+msgid "COULD_NOT_FIND_MSG"
+msgstr ""
+
+msgid "COPIED_MAPS"
+msgstr ""
+
+msgid "COPIED_MAPS_CLIENT"
+msgstr ""
+
+msgid "COPIED_MAPS_SERVER"
+msgstr ""
+
+msgid "SELECT_MAPS_FOLDER_CLIENT"
+msgstr ""
+
+msgid "SELECT_MAPS_FOLDER_SERVER"
 msgstr ""
 ###

@@ -341,3 +341,30 @@ msgid "GAMESERVER_CRASHED"
 msgstr ""
 "ERROR: The Battlefield 2142 server crashed.\n"
 "This is most likely a map fault. Some maps doesn't work perfect and can crash the whole server."
+
+msgid "NO_WRITE_PERMISSION_TITLE"
+msgstr "No write permission"
+
+msgid "NO_WRITE_PERMISSION_MSG"
+msgstr "You've no write permission for: $#"
+
+msgid "COULD_NOT_FIND_TITLE"
+msgstr "Could not find $#"
+
+msgid "COULD_NOT_FIND_MSG"
+msgstr "Could not find $#. Path is invalid!"
+
+msgid "COPIED_MAPS"
+msgstr "Maps copied"
+
+msgid "COPIED_MAPS_CLIENT"
+msgstr "Copied maps to client successfully!"
+
+msgid "COPIED_MAPS_SERVER"
+msgstr "Copied maps to server successfully!"
+
+msgid "SELECT_MAPS_FOLDER_CLIENT"
+msgstr "Select level folder to copy to client"
+
+msgid "SELECT_MAPS_FOLDER_SERVER"
+msgstr "Select level folder to copy to server"

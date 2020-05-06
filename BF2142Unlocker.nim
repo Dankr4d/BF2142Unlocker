@@ -1096,7 +1096,10 @@ proc patchAndStartLogic(): bool =
     if not copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
       return
   if not hasWritePermission(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
-    newInfoDialog("No write permission", "You've no write permission for: " & bf2142Path / BF2142_UNLOCKER_EXE_NAME) # TODO: Translate
+    newInfoDialog(
+      dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142Path / BF2142_UNLOCKER_EXE_NAME]
+    )
     return
   patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
 
@@ -1269,7 +1272,10 @@ proc setBF2142Path(path: string) =
   if bf2142Path == path:
     return
   if not fileExists(path / BF2142_EXE_NAME):
-    newInfoDialog(fmt"Could not find {BF2142_EXE_NAME}", fmt"Could not find {BF2142_EXE_NAME}. Path is invalid!") # TODO: Translate
+    newInfoDialog(
+      dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_EXE_NAME],
+      dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_EXE_NAME],
+    )
     txtBF2142Path.text = bf2142Path
     return
   vboxJoin.visible = true
@@ -1303,7 +1309,10 @@ proc setBF2142ServerPath(path: string) =
   if bf2142ServerPath == path:
     return
   if not fileExists(path / BF2142_SRV_EXE_NAME):
-    newInfoDialog(fmt"Could not find {BF2142_SRV_EXE_NAME}", fmt"Could not find {BF2142_SRV_EXE_NAME}. Path is invalid!") # TODO: Translate
+    newInfoDialog(
+      dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_SRV_EXE_NAME],
+      dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_SRV_EXE_NAME],
+    )
     txtBF2142ServerPath.text = bf2142ServerPath
     return
   bf2142ServerPath = path
@@ -1404,12 +1413,12 @@ proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     var writeSucceed: bool = copyLevels(srcLevelPath, dstLevelPath)
     dialog.destroy()
     if writeSucceed:
-      newInfoDialog("Done", "Copied 64 coop maps (client)!") # TODO: Translate
+      newInfoDialog(dgettext("gui", "COPIED_MAPS"), dgettext("gui", "COPIED_MAPS_CLIENT"))
   else:
     dialog.destroy()
 
 proc onBtnPatchClientMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog("Select level folder to copy to client", nil, FileChooserAction.selectFolder) # TODO: Translate
+  let chooser = newFileChooserDialog(dgettext("gui", "SELECT_MAPS_FOLDER_CLIENT"), nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchClientMapsClickedResponse)
@@ -1425,12 +1434,12 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     dialog.destroy()
     if writeSucceed:
       fillListSelectableMaps()
-      newInfoDialog("Done", "Copied levels!") # TODO: Translate
+      newInfoDialog(dgettext("gui", "COPIED_MAPS"), dgettext("gui", "COPIED_MAPS_SERVER"))
   else:
     dialog.destroy()
 
 proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog("Select level folder to copy to server", nil, FileChooserAction.selectFolder) # TODO: Translate
+  let chooser = newFileChooserDialog(dgettext("gui", "SELECT_MAPS_FOLDER_SERVER"), nil, FileChooserAction.selectFolder)
   discard chooser.addButton("Ok", ResponseType.ok.ord)
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
