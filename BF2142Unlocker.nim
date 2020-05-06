@@ -1383,7 +1383,8 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): boo
             let srcDescPath = infoPath / fileName.path
             let dstDescPath = infoPath / fileName.path.toLower()
             if srcDescPath != dstDescPath:
-              moveFile(srcDescPath, dstDescPath)
+              if not moveFile(srcDescPath, dstDescPath):
+                return
 
 
 proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =

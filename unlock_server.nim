@@ -75,4 +75,4 @@ proc run*(data: tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]) =
   waitFor server.serve(port, handleClient, $data.ipAddress)
 
 when isMainModule:
-  run("0.0.0.0".parseIpAddress(), false)
+  run(("0.0.0.0".parseIpAddress(), false))
