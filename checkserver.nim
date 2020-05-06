@@ -1,13 +1,13 @@
 import net
 
-proc isAddrReachable*(ip: string, port: Port): bool =
+proc isAddrReachable*(ip: string, port: Port, timeout: int): bool =
   var socket: Socket
   try:
     socket = newSocket()
-    socket.connect(ip, port)
+    socket.connect(ip, port, timeout)
     socket.close()
     return true
-  except OSError: # TODO: Check "Connection refused" (error msg)
+  except OSError, TimeoutError: # TODO: Check "Connection refused" (error msg)
     socket.close()
     return false
 

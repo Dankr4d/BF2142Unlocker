@@ -380,15 +380,6 @@ proc fixMapDesc(path: string): bool =
 ##
 
 ### Helper procs
-proc areServerReachable(address: string): bool =
-  if not isAddrReachable(address, Port(8080)):
-    return false
-  if not isAddrReachable(address, Port(18300)):
-    return false
-  if not isAddrReachable(address, Port(29900)):
-    return false
-  return true
-
 proc fillHostIpAddress() =
   var addrs: seq[string] = getLocalAddrs()
   if addrs.len > 0:
@@ -1044,6 +1035,52 @@ proc patchAndStartLogic(): bool =
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
     return false
+
+  ## Check Logic (TODO: Cleanup and check servers in thread)
+  var canConnect: bool = true
+  throbberLoginServer.visible = true
+  throbberGpcmServer.visible = true
+  throbberUnlockServer.visible = true
+  imgLoginServer.visible = false
+  imgGpcmServer.visible = false
+  imgUnlockServer.visible = false
+  # Login server
+  if isAddrReachable(ipAddress, Port(18300), 1_000):
+    throbberLoginServer.visible = false
+    imgLoginServer.visible = true
+    imgLoginServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberLoginServer.visible = false
+    imgLoginServer.visible = true
+    imgLoginServer.setFromIconName("gtk-cancel", 0)
+  # GPCM server
+  if isAddrReachable(ipAddress, Port(29900), 1_000):
+    throbberGpcmServer.visible = false
+    imgGpcmServer.visible = true
+    imgGpcmServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberGpcmServer.visible = false
+    imgGpcmServer.visible = true
+    imgGpcmServer.setFromIconName("gtk-cancel", 0)
+  # Unlock server
+  if isAddrReachable(ipAddress, Port(8080), 1_000):
+    throbberUnlockServer.visible = false
+    imgUnlockServer.visible = true
+    imgUnlockServer.setFromIconName("gtk-apply", 0)
+  else:
+    canConnect = false
+    throbberUnlockServer.visible = false
+    imgUnlockServer.visible = true
+    imgUnlockServer.setFromIconName("gtk-cancel", 0)
+  if not canConnect:
+    dlgCheckServers.show()
+    # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
+    #       and if every server is reachable autoamtically hidden.
+    return
+  #
+
   # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
@@ -1065,51 +1102,6 @@ proc patchAndStartLogic(): bool =
 
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
-
-  ## Check Logic (TODO: Cleanup and check servers in thread)
-  var canConnect: bool = true
-  throbberLoginServer.visible = true
-  throbberGpcmServer.visible = true
-  throbberUnlockServer.visible = true
-  imgLoginServer.visible = false
-  imgGpcmServer.visible = false
-  imgUnlockServer.visible = false
-  # Login server
-  if isAddrReachable(ipAddress, Port(18300)):
-    throbberLoginServer.visible = false
-    imgLoginServer.visible = true
-    imgLoginServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberLoginServer.visible = false
-    imgLoginServer.visible = true
-    imgLoginServer.setFromIconName("gtk-cancel", 0)
-  # GPCM server
-  if isAddrReachable(ipAddress, Port(29900)):
-    throbberGpcmServer.visible = false
-    imgGpcmServer.visible = true
-    imgGpcmServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberGpcmServer.visible = false
-    imgGpcmServer.visible = true
-    imgGpcmServer.setFromIconName("gtk-cancel", 0)
-  # Unlock server
-  if isAddrReachable(ipAddress, Port(8080)):
-    throbberUnlockServer.visible = false
-    imgUnlockServer.visible = true
-    imgUnlockServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberUnlockServer.visible = false
-    imgUnlockServer.visible = true
-    imgUnlockServer.setFromIconName("gtk-cancel", 0)
-  if not canConnect:
-    dlgCheckServers.show()
-    # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
-    #       and if every server is reachable autoamtically hidden.
-    return
-  #
 
   var command: string
   when defined(linux):
