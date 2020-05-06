@@ -125,7 +125,11 @@ const LANGUAGE_FILE: string = "lang.txt"
 const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
 var config: Config
+
+### Required vars for signal module
 var windowShown: bool = false
+var ignoreEvents: bool = false
+##
 
 ### General controls
 var application: Application
@@ -1266,6 +1270,7 @@ proc setBF2142Path(path: string) =
     return
   if not fileExists(path / BF2142_EXE_NAME):
     newInfoDialog(fmt"Could not find {BF2142_EXE_NAME}", fmt"Could not find {BF2142_EXE_NAME}. Path is invalid!") # TODO: Translate
+    txtBF2142Path.text = bf2142Path
     return
   vboxJoin.visible = true
   vboxHost.visible = true
@@ -1299,12 +1304,14 @@ proc setBF2142ServerPath(path: string) =
     return
   if not fileExists(path / BF2142_SRV_EXE_NAME):
     newInfoDialog(fmt"Could not find {BF2142_SRV_EXE_NAME}", fmt"Could not find {BF2142_SRV_EXE_NAME}. Path is invalid!") # TODO: Translate
+    txtBF2142ServerPath.text = bf2142ServerPath
     return
   bf2142ServerPath = path
   if txtBF2142ServerPath.text != path:
     txtBF2142ServerPath.text = path
-  updatePathes()
+  ignoreEvents = true
   loadHostMods()
+  updatePathes()
   fillListSelectableMaps()
   if not loadMapList():
     return
@@ -1312,6 +1319,7 @@ proc setBF2142ServerPath(path: string) =
     return
   if not loadAiSettings():
     return
+  ignoreEvents = true
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 

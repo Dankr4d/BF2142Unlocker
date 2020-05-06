@@ -36,7 +36,20 @@ macro signal*(eventProc: untyped): untyped =
       )
     )
   )
+  let ignoreEventsStatement: NimNode =nnkStmtList.newTree(
+    nnkIfStmt.newTree(
+      nnkElifBranch.newTree(
+        newIdentNode("ignoreEvents"),
+        nnkStmtList.newTree(
+          nnkReturnStmt.newTree(
+            newEmptyNode()
+          )
+        )
+      )
+    )
+  )
   eventProc.body.insert(0, windowShownStatement)
+  eventProc.body.insert(1, ignoreEventsStatement)
   eventProc.pragma = pragmas
   result = quote do:
     `eventProc`
