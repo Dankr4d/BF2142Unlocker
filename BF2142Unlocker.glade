@@ -1783,6 +1783,7 @@
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
                         <property name="hexpand">True</property>
+                        <signal name="focus-out-event" handler="onTxtBF2142PathFocusOut" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1795,6 +1796,7 @@
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
                         <property name="hexpand">True</property>
+                        <signal name="focus-out-event" handler="onTxtBF2142ServerPathFocusOut" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
