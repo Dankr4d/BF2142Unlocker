@@ -1263,9 +1263,8 @@ proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: 
   dialog.destroy()
   return (cast[ResponseType](responseId), path)
 
-proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
-  var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
-  if responseType != ResponseType.ok:
+proc setBF2142Path(path: string) =
+  if bf2142Path == path:
     return
   if not fileExists(path / BF2142_EXE_NAME):
     newInfoDialog(fmt"Could not find {BF2142_EXE_NAME}", fmt"Could not find {BF2142_EXE_NAME}. Path is invalid!") # TODO: Translate
@@ -1274,7 +1273,8 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
   vboxHost.visible = true
   vboxUnlocks.visible = true
   bf2142Path = path
-  txtBF2142Path.text = path
+  if txtBF2142Path.text != path:
+    txtBF2142Path.text = path
   loadJoinMods()
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
   when defined(linux):
@@ -1287,17 +1287,24 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
-  var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
+proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
   if responseType != ResponseType.ok:
+    return
+  setBF2142Path(path)
+
+proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
+  setBF2142Path(txtBF2142Path.text.strip())
+
+proc setBF2142ServerPath(path: string) =
+  if bf2142ServerPath == path:
     return
   if not fileExists(path / BF2142_SRV_EXE_NAME):
     newInfoDialog(fmt"Could not find {BF2142_SRV_EXE_NAME}", fmt"Could not find {BF2142_SRV_EXE_NAME}. Path is invalid!") # TODO: Translate
     return
-  if bf2142ServerPath == path:
-    return
   bf2142ServerPath = path
-  txtBF2142ServerPath.text = path
+  if txtBF2142ServerPath.text != path:
+    txtBF2142ServerPath.text = path
   updatePathes()
   loadHostMods()
   fillListSelectableMaps()
@@ -1309,6 +1316,15 @@ proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Check
     return
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
+
+proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
+  var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
+  if responseType != ResponseType.ok:
+    return
+  setBF2142ServerPath(path)
+
+proc onTxtBF2142ServerPathFocusOut(self: Entry00) {.signal.} =
+  setBF2142ServerPath(txtBF2142ServerPath.text.strip())
 
 proc onBtnWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
