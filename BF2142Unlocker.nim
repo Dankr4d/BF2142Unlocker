@@ -392,7 +392,7 @@ proc fixMapDesc(path: string): bool =
 ##
 
 ### Helper procs
-proc fillHostIpAddress() =
+proc loadHostIpAddress() =
   var addrs: seq[string] = getLocalAddrs()
   if addrs.len > 0:
     txtHostIpAddress.text = addrs[0] # TODO: Validate interface and choose lan interfaces first
@@ -506,6 +506,7 @@ proc restoreOpenSpyIfExists() =
       try:
         os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
         os.removeFile(openspyDllBackupPath)
+        break
       except OSError as ex:
         tryCnt.inc()
         if tryCnt == 4:
@@ -513,6 +514,7 @@ proc restoreOpenSpyIfExists() =
             fmt"Could not restore {OPENSPY_DLL_NAME}",
             fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
           )
+          return
         else:
           sleep(500)
 
@@ -644,7 +646,7 @@ proc clear(list: TreeView) =
     return
   clear(store)
 
-proc fillListSelectableMaps() =
+proc loadSelectableMapList() =
   listSelectableMaps.clear()
   var gameMode: string = cbxGameMode.activeId
   var xmlMapInfo: XmlNode
@@ -669,7 +671,7 @@ proc fillListSelectableMaps() =
       notFixableXmlFiles.add(path)
   if invalidXmlFiles.len > 0:
     if notFixableXmlFiles.len == 0:
-      fillListSelectableMaps() # TODO: Fixed maps are only displayed if there's no non fixable map
+      loadSelectableMapList() # TODO: Fixed maps are only displayed if there's no non fixable map
     else:
       newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
 
@@ -1267,7 +1269,7 @@ proc onBtnHostCancelClicked(self: Button00) {.signal.} =
 
 proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   updatePathes()
-  fillListSelectableMaps()
+  loadSelectableMapList()
   if not loadMapList():
     return
   if not loadServerSettings():
@@ -1277,7 +1279,7 @@ proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
 
 proc onCbxGameModeChanged(self: ComboBox00) {.signal.} =
   updatePathes()
-  fillListSelectableMaps()
+  loadSelectableMapList()
 
 proc onListSelectableMapsCursorChanged(self: TreeView00) {.signal.} =
   listSelectableMaps.updateLevelPreview()
@@ -1348,14 +1350,14 @@ proc setBF2142ServerPath(path: string) =
   ignoreEvents = true
   loadHostMods()
   updatePathes()
-  fillListSelectableMaps()
+  loadSelectableMapList()
   if not loadMapList():
     return
   if not loadServerSettings():
     return
   if not loadAiSettings():
     return
-  ignoreEvents = true
+  ignoreEvents = false
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
@@ -1460,7 +1462,7 @@ proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: 
     var writeSucceed: bool = copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
     dialog.destroy()
     if writeSucceed:
-      fillListSelectableMaps()
+      loadSelectableMapList()
       newInfoDialog(dgettext("gui", "COPIED_MAPS"), dgettext("gui", "COPIED_MAPS_SERVER"))
   else:
     dialog.destroy()
@@ -1477,7 +1479,7 @@ proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: int) {.signal.} =
   if pageNum == 1:
     if txtHostIpAddress.text == "":
-      fillHostIpAddress()
+      loadHostIpAddress()
 
 proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
   if not windowShown:
@@ -1634,7 +1636,7 @@ proc onApplicationActivate(application: Application) =
   loadHostMods()
   if bf2142ServerPath != "":
     updatePathes()
-    fillListSelectableMaps()
+    loadSelectableMapList()
     if loadMapList() and loadServerSettings() and loadAiSettings():
        # This if statments exists, because if any of this proc calls above fails it wont continue with the next proc call
        # TODO: Maybe create a loadAll proc because those procs are always called together
