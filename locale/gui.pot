@@ -291,4 +291,22 @@ msgstr ""
 
 msgid "SELECT_MAPS_FOLDER_SERVER"
 msgstr ""
+
+msgid "NO_LOCAL_IP_ADDRESS_TITLE"
+msgstr ""
+
+msgid "NO_LOCAL_IP_ADDRESS_MSG"
+msgstr ""
+
+msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
+msgstr ""
+
+msgid "NO_PRIVATE_IP_ADDRESS_MSG"
+msgstr ""
+
+msgid "NO_VALID_IP_ADDRESS_TITLE"
+msgstr ""
+
+msgid "NO_VALID_IP_ADDRESS_MSG"
+msgstr ""
 ###

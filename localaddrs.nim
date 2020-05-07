@@ -80,5 +80,14 @@ proc getLocalAddrs*(): seq[string] =
         if not localAddr.address.startsWith("127") and not localAddr.address.startsWith("0."):
           result.add localAddr.address
 
+proc getPrivateAddrs*(): seq[string] =
+  for nic, addrs in net_if_addrs():
+    for localAddr in addrs:
+      if localAddr.family == Domain.AF_INET.uint16:
+        if localAddr.address.startsWith("10.") or
+        localAddr.address.startsWith("172.") or
+        localAddr.address.startsWith("192."):
+          result.add localAddr.address
+
 when isMainModule:
   echo getLocalAddrs()

@@ -298,6 +298,14 @@ proc copyFile(source, dest: string): bool =
     ex.handle()
     return false
 
+proc copyFileWithPermissions(source, dest: string, ignorePermissionErrors = true): bool =
+  try:
+    os.copyFileWithPermissions(source, dest, ignorePermissionErrors)
+    return true
+  except OSError as ex:
+    ex.handle()
+    return false
+
 proc copyDir(source, dest: string): bool =
   try:
     os.copyDir(source, dest)
@@ -1069,7 +1077,7 @@ proc patchAndStartLogic(): bool =
     imgGpcmServer.visible = true
     imgGpcmServer.setFromIconName("gtk-cancel", 0)
   # Unlock server
-  if isAddrReachable(ipAddress, Port(8080), 1_000):
+  if isAddrReachable(ipAddress, Port(8085), 1_000):
     throbberUnlockServer.visible = false
     imgUnlockServer.visible = true
     imgUnlockServer.setFromIconName("gtk-apply", 0)
@@ -1101,7 +1109,7 @@ proc patchAndStartLogic(): bool =
       dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142Path / BF2142_UNLOCKER_EXE_NAME]
     )
     return
-  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8080))
+  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8085))
 
   backupOpenSpyIfExists()
 
@@ -1151,7 +1159,11 @@ proc onChbtnWindowModeToggled(self: CheckButton00) {.signal.} =
   cbxJoinResolutions.visible = chbtnWindowMode.active
 
 proc onBtnJustPlayClicked(self: Button00) {.signal.} =
-  var ipAddress: IpAddress = getLocalAddrs()[0].parseIpAddress() # TODO: Add checks and warnings
+  var localIpAddrs: seq[string] = getLocalAddrs()
+  if localIpAddrs.len == 0:
+    newInfoDialog(dgettext("gui", "NO_LOCAL_IP_ADDRESS_TITLE"), dgettext("gui", "NO_LOCAL_IP_ADDRESS_MSG"))
+    return
+  var ipAddress: IpAddress = localIpAddrs[0].parseIpAddress()
   txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
@@ -1196,6 +1208,15 @@ proc onBtnMapMoveDownClicked(self: Button00) {.signal.} =
 #
 ## Host
 proc onBtnHostClicked(self: Button00) {.signal.} =
+  var privateIpAddrs: seq[string] = getPrivateAddrs()
+  if privateIpAddrs.len == 0:
+    newInfoDialog(dgettext("gui", "NO_PRIVATE_IP_ADDRESS_TITLE"), dgettext("gui", "NO_PRIVATE_IP_ADDRESS_MSG"))
+    return
+  if not txtHostIpAddress.text.strip().isIpAddress() or
+  txtHostIpAddress.text.strip().parseIpAddress().family != IPv4:
+    newInfoDialog(dgettext("gui", "NO_VALID_IP_ADDRESS_TITLE"), dgettext("gui", "NO_VALID_IP_ADDRESS_MSG"))
+    return
+  var ipAddress: IpAddress = txtHostIpAddress.text.strip().parseIpAddress()
   if not saveMapList():
     return
   if not saveServerSettings():
@@ -1206,29 +1227,35 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   when defined(linux):
     serverExePath = serverExePath / "bin" / "amd-64"
   if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
-    if not copyFile(serverExePath / BF2142_SRV_EXE_NAME, serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+    if not copyFileWithPermissions(serverExePath / BF2142_SRV_EXE_NAME,
+    serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME, false):
         return
   serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
   echo "Patching Battlefield 2142 server!"
-  patchServer(serverExePath, txtHostIpAddress.text.parseIpAddress(), Port(8080))
+  patchServer(serverExePath, privateIpAddrs[0].parseIpAddress(), Port(8085))
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
-  txtIpAddress.text = txtHostIpAddress.text
+  txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
-  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
+  termLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
   discard cbxJoinMods.setActiveId(cbxHostMods.activeId)
 
 proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
+  if not txtHostIpAddress.text.strip().isIpAddress() or
+  txtHostIpAddress.text.strip().parseIpAddress().family != IPv4:
+    newInfoDialog(dgettext("gui", "NO_VALID_IP_ADDRESS_TITLE"), dgettext("gui", "NO_VALID_IP_ADDRESS_MSG"))
+    return
+  var ipAddress: IpAddress = txtHostIpAddress.text.strip().parseIpAddress()
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
-  txtIpAddress.text = txtHostIpAddress.text
+  txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
-  termLoginServer.startLoginServer(txtHostIpAddress.text.parseIpAddress()) # TODO
+  termLoginServer.startLoginServer(ipAddress)
 
 proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)

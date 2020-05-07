@@ -111,5 +111,5 @@ when isMainModule:
     quit(1)
   var path: string = "/home/dankrad/.wine_bf2142/drive_c/Program Files (x86)/Electronic Arts/Battlefield 2142/BF2142.exe"
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.patchClient(ip, Port(8080))
+  fs.patchClient(ip, Port(8085))
   fs.close()

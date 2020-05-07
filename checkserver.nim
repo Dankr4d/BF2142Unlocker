@@ -14,7 +14,7 @@ proc isAddrReachable*(ip: string, port: Port, timeout: int): bool =
 when isMainModule:
   import localaddrs
   for localAddr in getLocalAddrs():
-    echo "Unlock server is reachable: ", isAddrReachable(localAddr, 8080)
+    echo "Unlock server is reachable: ", isAddrReachable(localAddr, 8085)
     echo "Fesl server is reachable: ", isAddrReachable(localAddr, 18300)
     echo "Gpcm server is reachable: ", isAddrReachable(localAddr, 29900)
     echo "TODO: Check BF2142 Server port" # Optional
