@@ -2,23 +2,52 @@ import os
 import strutils
 
 type
+  MapMode* = enum
+    Conquest = "gpm_cq",
+    Titan = "gpm_ti",
+    Coop = "gpm_coop",
+    SupplyLine = "gpm_sl",
+    NoVehicles = "gpm_nv",
+    ConquestAssault = "gpm_ca"
+
+  GsStatus* = enum
+    None = "", # This should not be in result from parseGsData proc
+    Pregame = "pregame",
+    Playing = "playing",
+    Endgame = "endgame"
+
   GsData* = object
-    mapName*: string
-    mapMode*: string
-    mapSize*: string
-    status*: string
+    mapName*: string # Should be in extra Map object
+    mapMode*: MapMode # Should be in extra Map object
+    mapSize*: int # uint8 and should be in extra Map object
+    status*: GsStatus
 
 proc parseGsData*(raw: string): GsData = # TODO: Write a real parser without substr and find
   var lines: seq[string] = raw.splitLines()
-  var line: string = lines[2]
-  var mapNamePosStart: int = line.find("Map: ") + 5
-  var mapnamePosEnd: int = line.find(" ", mapNamePosStart) - 1
+  var line: string
+  ## Map name
+  line = lines[2]
+  let mapNamePosStart: int = 46
+  let mapnamePosEnd: int = line.find(" ", mapNamePosStart) - 1
   result.mapName = line.substr(mapNamePosStart, mapnamePosEnd)
+  #
+  ## Map mode
   line = lines[3]
-  (result.mapMode, result.mapSize) = line.substr(11, line.find(" ", 11) - 1).split("/")
+  let mapModePosStart: int = 11
+  let mapModePosEnd: int = line.find("/", mapModePosStart) - 1
+  result.mapMode = parseEnum[MapMode](line.substr(mapModePosStart, mapModePosEnd))
+  #
+  ## Map size
+  # line = lines[3] # Not required, because this line is already set
+  let mapSizePosStart: int = line.find("/") + 1
+  let mapSizePosEnd: int = mapSizePosStart + 1
+  result.mapSize = parseInt(line.substr(mapSizePosStart, mapSizePosEnd))
+  ## Gs status
   line = lines[4]
-  var statusPosStart: int = line.find("Status: ") + 9
-  result.status = line.substr(statusPosStart, line.find(" ", statusPosStart) - 2)
+  var statusPosStart: int = 70
+  var statusPosEnd: int = line.find("]", statusPosStart) - 1
+  result.status = parseEnum[GsStatus](line.substr(statusPosStart, statusPosEnd))
+  #
 
 when isMainModule:
   import getprocessbyname

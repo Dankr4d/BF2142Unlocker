@@ -1,8 +1,5 @@
 import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf]
 import gintro/gio except ListStore
-when defined(linux):
-  import gintro/gmodule # Required to automatically bind signals on linux
-
 import os
 import net # Requierd for ip parsing and type
 import osproc # Requierd to start the process
@@ -11,6 +8,7 @@ import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
   import posix # Requierd for getlogin and killProcess
+  import gintro/gmodule # Required to automatically bind signals on linux
 elif defined(windows):
   import winim
   import docpath
@@ -36,6 +34,34 @@ elif defined(windows):
   import gethwndbypid # Required to get window handle from pid
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
+  ## Terminal newTerminal and related helper procs
+  proc newTerminal(): Terminal =
+    var textView = newTextView()
+    # textView.monospace = true
+    textview.wrapMode =  WrapMode.word
+    var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
+    scrolledWindow.propagateNaturalHeight = true
+    scrolledWindow.add(textView)
+    scrolledWindow.styleContext.addClass("terminal")
+    result = cast[Terminal](scrolledWindow)
+  proc textView(terminal: Terminal): TextView =
+    return cast[TextView](terminal.getChild())
+  proc buffer(terminal: Terminal): TextBuffer =
+    return terminal.textView.getBuffer()
+  proc `text=`(terminal: Terminal, text: string) =
+    terminal.buffer.setText(text, text.len)
+  proc text(terminal: Terminal): string =
+    var startIter: TextIter
+    var endIter: TextIter
+    terminal.buffer.getStartIter(startIter)
+    terminal.buffer.getEndIter(endIter)
+    return terminal.buffer.getText(startIter, endIter, true)
+  proc visible(terminal: Terminal): bool =
+    return terminal.textView.visible
+  proc `visible=`(terminal: Terminal, visible: bool) =
+    cast[ScrolledWindow](terminal).visible = visible
+    terminal.textView.visible = visible
+  #
 import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
 
 # Create precompiled resource file
@@ -102,7 +128,7 @@ var currentLevelFolderPath: string
 var currentAiSettingsPath: string
 var currentLocale: string
 
-var lastGsStatus: string
+var lastGsStatus: GsStatus = None
 var termLoginServerPid: int = 0
 var termBF2142ServerPid: int = 0
 
@@ -524,7 +550,7 @@ proc listStore(o: gobject.Object): gtk.ListStore =
   assert(typeTest(o, "GtkListStore"))
   cast[gtk.ListStore](o)
 
-proc appendMap(list: TreeView, mapName, mapMode, mapSize: string) =
+proc appendMap(list: TreeView, mapName, mapMode: string, mapSize: int) =
   var
     valMapName: Value
     valMapMode: Value
@@ -532,15 +558,16 @@ proc appendMap(list: TreeView, mapName, mapMode, mapSize: string) =
     iter: TreeIter
   let store = listStore(list.getModel())
   store.append(iter)
-  let gtype = typeFromName("gchararray")
-  discard valMapName.init(gtype)
+  let gchararray = typeFromName("gchararray")
+  let gint = typeFromName("gint")
+  discard valMapName.init(gchararray)
   valMapName.setString(mapName)
   store.setValue(iter, 0, valMapName)
-  discard valMapMode.init(gtype)
+  discard valMapMode.init(gchararray)
   valMapMode.setString(mapMode)
   store.setValue(iter, 1, valMapMode)
-  discard valMapSize.init(gtype)
-  valMapSize.setString(mapSize)
+  discard valMapSize.init(gint)
+  valMapSize.setInt(mapSize)
   store.setValue(iter, 2, valMapSize)
 
 proc moveSelectedUpDown(list: TreeView, up: bool) =
@@ -563,58 +590,61 @@ proc moveSelectedUp(list: TreeView) =
 proc moveSelectedDown(list: TreeView) =
   list.moveSelectedUpDown(up = false)
 
-proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
+proc selectedMap(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
   var
-    val: Value
+    valMapName: Value
+    valMapMode: Value
+    valMapSize: Value
     ls: ListStore
     iter: TreeIter
   let store = listStore(list.getModel())
-  if not store.getIterFirst(iter):
-      return ("", "", "")
   if getSelected(list.selection, ls, iter):
-    store.getValue(iter, 0, val)
-    result.mapName = val.getString()
-    store.getValue(iter, 1, val)
-    result.mapMode = val.getString()
-    store.getValue(iter, 2, val)
-    result.mapSize = val.getString()
+    store.getValue(iter, 0, valMapName)
+    result.mapName = valMapName.getString()
+    store.getValue(iter, 1, valMapMode)
+    result.mapMode = valMapMode.getString()
+    store.getValue(iter, 2, valMapSize)
+    result.mapSize = valMapSize.getInt()
 
 proc update(treeView: TreeView, gsdata: GsData) =
   var
     iter: TreeIter
-    valMapName: Value
-    valMapMode: Value
-    valMapSize: Value
-    valBackgroundColor: Value
   let store: ListStore = listStore(treeView.getModel())
   if not store.iterFirst(iter):
     return
   var doIter: bool = true
   while doIter:
+    var
+      valMapName: Value
+      valMapMode: Value
+      valMapSize: Value
+      valBackgroundColor: Value
     store.getValue(iter, 0, valMapName)
     store.getValue(iter, 1, valMapMode)
     store.getValue(iter, 2, valMapSize)
     store.getValue(iter, 3, valBackgroundColor)
-    if valMapName.getString() ==  gsdata.mapName and valMapMode.getString() == gsdata.mapMode and valMapSize.getString() == gsdata.mapSize: # Current map
+    if valMapName.getString() ==  $gsdata.mapName and $valMapMode.getString() == $gsdata.mapMode and
+    valMapSize.getInt() == gsdata.mapSize: # Current map. # TODO: This needs to be checked (get index from gs)
       var color: string
       case gsdata.status
-      of "pregame":
+      of Pregame:
         color = "Yellow"
-      of "playing":
+      of Playing:
         color = "Green"
-      of "endgame":
+      of Endgame:
         color = "Red"
+      else:
+        discard
       valBackgroundColor.setString(color)
       store.setValue(iter, 3, valBackgroundColor)
-    else: # TODO: Could be elif with following if statment?
-      if valBackgroundColor.getString() != "":
+    elif valBackgroundColor.getString() != "":
         valBackgroundColor.setString("")
         store.setValue(iter, 3, valBackgroundColor)
     doIter = store.iterNext(iter)
 
-proc updateLevelPreview(mapName, mapMode, mapSize: string) =
+proc updateLevelPreview(mapName, mapMode: string, mapSize: int) =
   var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & mapSize & "_menumap.png"
+  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & $mapSize & "_menumap.png" # TODO: Use fmt
   if fileExists(imgPath):
     var pixbuf = newPixbufFromFile(imgPath)
     pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
@@ -625,7 +655,8 @@ proc updateLevelPreview(mapName, mapMode, mapSize: string) =
     imgLevelPreview.clear()
 
 proc updateLevelPreview(treeView: TreeView) =
-  var mapName, mapMode, mapSize: string
+  var mapName, mapMode: string
+  var mapSize: int
   (mapName, mapMode, mapSize) = treeView.selectedMap
   updateLevelPreview(mapName, mapMode, mapSize)
 
@@ -650,23 +681,24 @@ proc removeSelected(treeView: TreeView) =
     discard store.remove(iter)
     treeView.updateLevelPreview()
 
-iterator maps(list: TreeView): tuple[mapName: string, mapMode: string, mapSize: string] =
+iterator maps(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
   var
     model: TreeModel = list.model()
     iter: TreeIter
-    val: Value
-    mapName: string
-    mapMode: string
-    mapSize: string
   var whileCond: bool = model.iterFirst(iter)
+  var result: tuple[mapName, mapMode: string, mapSize: int]
   while whileCond:
-    model.getValue(iter, 0, val)
-    mapName = $val.getString()
-    model.getValue(iter, 1, val)
-    mapMode = $val.getString()
-    model.getValue(iter, 2, val)
-    mapSize = $val.getString()
-    yield((mapName, mapMode, mapSize))
+    var
+      valMapName: Value
+      valMapMode: Value
+      valMapSize: Value
+    model.getValue(iter, 0, valMapName)
+    result.mapName = valMapName.getString()
+    model.getValue(iter, 1, valMapMode)
+    result.mapMode = valMapMode.getString()
+    model.getValue(iter, 2, valMapSize)
+    result.mapSize = valMapSize.getInt()
+    yield result
     whileCond = model.iterNext(iter)
 
 proc clear(list: TreeView) =
@@ -692,7 +724,7 @@ proc loadSelectableMapList() =
       for xmlMode in xmlMapInfo.findAll("mode"):
         if xmlMode.attr("type") == gameMode:
           for xmlMapType in xmlMode.findAll("maptype"):
-            listSelectableMaps.appendMap(folder.path, gameMode, xmlMapType.attr("players"))
+            listSelectableMaps.appendMap(folder.path, gameMode, parseInt(xmlMapType.attr("players")))
           break
     except xmlparser.XmlError:
       invalidXmlFiles.add(descPath)
@@ -705,35 +737,6 @@ proc loadSelectableMapList() =
       loadSelectableMapList() # TODO: Fixed maps are only displayed if there's no non fixable map
     else:
       newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
-
-proc initMapList(list: TreeView, titleMap: string, titleMapMode: string = "Mode", titleMapSize: string = "Size") =
-  var renderer: CellRendererText
-  var column: TreeViewColumn
-  # Map column
-  renderer = newCellRendererText()
-  column = newTreeViewColumn()
-  column.title = titleMap
-  column.packStart(renderer, true)
-  column.addAttribute(renderer, "text", 0)
-  discard list.appendColumn(column)
-  # Mapmode column
-  renderer = newCellRendererText()
-  column = newTreeViewColumn()
-  column.title = titleMapMode
-  column.packStart(renderer, true)
-  column.addAttribute(renderer, "text", 1)
-  discard list.appendColumn(column)
-  # Mapsize column
-  renderer = newCellRendererText()
-  column = newTreeViewColumn()
-  column.title = titleMapSize
-  column.packStart(renderer, true)
-  column.addAttribute(renderer, "text", 2)
-  discard list.appendColumn(column)
-
-  let gtypes = [typeFromName("gchararray"), typeFromName("gchararray"), typeFromName("gchararray")]
-  let store: ListStore = newListStore(3, unsafeAddr gtypes)
-  list.setModel(store)
 
 proc updatePathes() =
   var currentModPath: string = bf2142ServerPath / "mods" / cbxHostMods.activeId
@@ -889,7 +892,7 @@ proc saveMapList(): bool =
     mapListCon.add(line & "\n")
   fileTpl.file.close()
   for map in listSelectedMaps.maps:
-    mapListCon.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & map.mapSize & '\n')
+    mapListCon.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & $map.mapSize & '\n')
   return writeFile(currentMapListPath, mapListCon)
 
 proc loadMapList(): bool =
@@ -902,7 +905,7 @@ proc loadMapList(): bool =
     if not line.toLower().startsWith("maplist"):
       continue
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
-    listSelectedMaps.appendMap(mapName, mapMode, mapSize)
+    listSelectedMaps.appendMap(mapName, mapMode, parseInt(mapSize))
   fileTpl.file.close()
   return true
 
@@ -1027,34 +1030,6 @@ proc applyJustPlayRunningSensitivity(running: bool) =
 ##
 
 ### Terminal
-when defined(windows):
-  proc newTerminal(): Terminal =
-    var textView = newTextView()
-    # textView.monospace = true
-    textview.wrapMode =  WrapMode.word
-    var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
-    scrolledWindow.propagateNaturalHeight = true
-    scrolledWindow.add(textView)
-    result = cast[Terminal](scrolledWindow)
-    result.styleContext.addClass("terminal")
-  proc textView(terminal: Terminal): TextView =
-    return cast[TextView](terminal.getChild())
-  proc buffer(terminal: Terminal): TextBuffer =
-    return terminal.textView.getBuffer()
-  proc `text=`(terminal: Terminal, text: string) =
-    terminal.buffer.setText(text, text.len)
-  proc text(terminal: Terminal): string =
-    var startIter: TextIter
-    var endIter: TextIter
-    terminal.buffer.getStartIter(startIter)
-    terminal.buffer.getEndIter(endIter)
-    return terminal.buffer.getText(startIter, endIter, true)
-  proc visible(terminal: Terminal): bool =
-    return terminal.textView.visible
-  proc `visible=`(terminal: Terminal, visible: bool) =
-    cast[ScrolledWindow](terminal).visible = visible # TODO: Need to be casted otherwise it will visible infix proc
-    terminal.textView.visible = visible
-
 proc addText(terminal: Terminal, text: string, scrollDown: bool = false) =
   when defined(linux):
     discard # TODO: implement
@@ -1099,6 +1074,7 @@ when defined(windows):
       var gsdata: GsData = data.parseGsData()
       if gsdata.status != lastGsStatus:
         timerData.treeView.update(gsdata)
+        lastGsStatus = gsdata.status
     return SOURCE_CONTINUE
 
   proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
@@ -1420,16 +1396,19 @@ proc onBtnCheckCancelClicked(self: Button00) {.signal.} =
   dlgCheckServers.hide()
 
 proc onBtnAddMapClicked(self: Button00) {.signal.} =
-  var mapName, mapMode, mapSize: string
+  var mapName, mapMode: string
+  var mapSize: int
   (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
-  if mapName == "" or mapMode == "" or mapSize == "": return
+  if mapName == "" or mapMode == "" or mapSize == 0:
+    return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   listSelectableMaps.selectNext()
 
 proc onBtnRemoveMapClicked(self: Button00) {.signal.} =
-  var mapName, mapMode, mapSize: string
+  var mapName, mapMode: string
+  var mapSize: int
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
-  if mapName == "" or mapMode == "" or mapSize == "": return
+  if mapName == "" or mapMode == "" or mapSize == 0: return
   listSelectedMaps.removeSelected()
 
 proc onBtnMapMoveUpClicked(self: Button00) {.signal.} =

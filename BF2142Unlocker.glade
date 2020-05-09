@@ -308,7 +308,7 @@
       <!-- column-name Mode -->
       <column type="gchararray"/>
       <!-- column-name Size -->
-      <column type="gchararray"/>
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkListStore" id="listStoreSelectedMaps">
@@ -318,7 +318,7 @@
       <!-- column-name Mode -->
       <column type="gchararray"/>
       <!-- column-name Size -->
-      <column type="gchararray"/>
+      <column type="gint"/>
       <!-- column-name BackgroundColor -->
       <column type="gchararray"/>
     </columns>
