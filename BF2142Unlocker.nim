@@ -1045,57 +1045,48 @@ proc clear(terminal: Terminal) =
   elif defined(windows):
     terminal.text = ""
 
-when defined(windows):
-  type
-    TimerDataLoginUnlockServer = ref object
-      terminal: Terminal
-    TimerDataGameServer = ref object
-      terminal: Terminal
-      treeView: TreeView
-    ChannelDataGameServer = object
-      running: bool
-      stdout: string
-  var thread: system.Thread[Process]
-  var threadForked: system.Thread[int]
-  var channelGameServer: Channel[ChannelDataGameServer]
-  var channelAddText: Channel[string]
-  var channelStopTimerAdd: Channel[bool]
-  var channelStopTimerReplace: Channel[bool]
-  channelGameServer.open()
-  channelStopTimerReplace.open()
-  channelAddText.open()
-  channelStopTimerAdd.open()
+type
+  TimerDataLoginUnlockServer = ref object
+    terminal: Terminal
+  TimerDataGameServer = ref object
+    terminal: Terminal
+    treeView: TreeView
+  ChannelData = object
+    running: bool
+    data: string
+var threadLoginUnlockServer: system.Thread[Process]
+var threadGameServer: system.Thread[int]
+var channelGameServer: Channel[ChannelData]
+var channelLoginUnlockServer: Channel[ChannelData]
+channelGameServer.open()
+channelLoginUnlockServer.open()
 
-  proc timerGameServer(timerData: TimerDataGameServer): bool =
-    # if channelStopTimerReplace.tryRecv().dataAvailable:
-    #   return SOURCE_REMOVE
-    var (hasData, data) = channelGameServer.tryRecv()
-    if not hasData:
-      return SOURCE_CONTINUE
-    if data.stdout.strip() == "":
-      return SOURCE_CONTINUE
-    timerData.terminal.text = data.stdout
-    var gsdata: GsData
-    if data.running:
-      gsdata = data.stdout.parseGsData()
-    if gsdata.status != lastGsStatus:
-      timerData.treeView.update(gsdata)
-      lastGsStatus = gsdata.status
-    return data.running
-
-  proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
-    if channelStopTimerAdd.tryRecv().dataAvailable:
-      return SOURCE_REMOVE
-    var (hasData, data) = channelAddText.tryRecv()
-    if hasData:
-      timerData.terminal.addText(data, scrollDown = true)
+proc timerGameServer(timerData: TimerDataGameServer): bool =
+  # TODO: Always receive the last entry from channel, because
+  #       data is the whole stdout of the game server
+  var (hasData, channelData) = channelGameServer.tryRecv()
+  if not hasData:
     return SOURCE_CONTINUE
+  if channelData.data.strip() == "":
+    # Stdout of game server is at startup "empty"
+    return SOURCE_CONTINUE
+  timerData.terminal.text = channelData.data
+  var gsdata: GsData
+  if channelData.running:
+    gsdata = channelData.data.parseGsData()
+  if gsdata.status != lastGsStatus:
+    timerData.treeView.update(gsdata)
+    lastGsStatus = gsdata.status
+  return channelData.running
 
-  proc isProcessAlive(pid: int): bool = # TODO
-    var exitCode: DWORD
-    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
-    result = hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE
-    discard CloseHandle(hndl)
+proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
+  var (hasData, channelData) = channelLoginUnlockServer.tryRecv()
+  if not hasData:
+    return SOURCE_CONTINUE
+  if not channelData.running:
+    return SOURCE_REMOVE
+  timerData.terminal.addText(channelData.data, scrollDown = true)
+  return SOURCE_CONTINUE
 
 proc killProcess*(pid: int) = # TODO: Add some error handling
   when defined(linux):
@@ -1110,37 +1101,57 @@ proc killProcess*(pid: int) = # TODO: Add some error handling
   elif pid == termLoginServerPid:
     termLoginServerPid = 0
 
-proc threadGameServer(pid: int) {.thread.} =
-  var hwnd: HWND = getHWndByPid(pid)
-  while hwnd == 0: # Wait until window is accessible
-    sleep(250)
-    hwnd = getHWndByPid(pid)
+proc threadGameServerProc(pid: int) {.thread.} =
   var exitCode: DWORD
   var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
-  # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
-  var channelData: ChannelDataGameServer = ChannelDataGameServer(running: true, stdout: "")
+  var channelData: ChannelData = ChannelData(running: true, data: "")
+  if hndl == 0:
+    channelData.running = false
+    channelData.data = "ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError())
+    channelGameServer.send(channelData)
+    return
   while channelData.running:
-    if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
-      var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
-      if stdoutTuple.lastError == 0:
-        channelData.stdout = stdoutTuple.stdout
-        channelGameServer.send(channelData)
-      elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
-        # TODO: Sometimes it fails with invalid handle.
-        # Maybe this happens when the process is killed while reading from stdout.
-        discard
-      else:
-        channelData.stdout = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
-        channelGameServer.send(channelData)
-    else:
+    if GetExitCodeProcess(hndl, unsafeAddr exitCode).bool == false or exitCode != STILL_ACTIVE:
       channelData.running = false
-      channelData.stdout = dgettext("gui", "GAMESERVER_CRASHED")
+      channelData.data = dgettext("gui", "GAMESERVER_CRASHED")
       channelGameServer.send(channelData)
-      continue
+      continue # Continue to cleanup after while loop
+    var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
+    if stdoutTuple.lastError == 0:
+      channelData.data = stdoutTuple.stdout
+      channelGameServer.send(channelData)
+    elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
+      # TODO: Sometimes it fails with invalid handle.
+      # Maybe this happens when the process is killed while reading from stdout.
+      discard
+    else:
+      when defined(debug):
+        channelData.running = false
+      channelData.data = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
+      channelGameServer.send(channelData)
     sleep(250)
-  # Cleanup
+  ## Cleanup
   discard CloseHandle(hndl)
+  #
 
+proc threadLoginUnlockServerProc(process: Process) {.thread.} =
+  var channelData: ChannelData = ChannelData(running: true, data: "")
+  var exitCode: int
+  while channelData.running:
+    exitCode = process.peekExitCode()
+    if exitCode == 0:
+      channelData.running = false
+      channelData.data = ""
+      channelLoginUnlockServer.send(channelData)
+      return
+    elif exitCode > 0:
+      channelData.running = false
+      channelData.data = "" # TODO: Send error message through channel
+      channelLoginUnlockServer.send(channelData)
+      return
+    channelData.data = process.outputStream.readAll()
+    channelLoginUnlockServer.send(channelData)
+    sleep(250)
 
 proc startProcess(terminal: Terminal, command: string, params: string = "",
                   workingDir: string = os.getCurrentDir(), env: string = "",
@@ -1175,31 +1186,22 @@ proc startProcess(terminal: Terminal, command: string, params: string = "",
       )
     result = process.processID
     if searchForkedProcess:
+      # Gameserver
       var tryCounter: int = 0
-      while tryCounter <= 10: # TODO: Raise an exception if proess could not be found
+      while tryCounter < 10: # TODO: Raise an exception if proess could not be found
         result = getPidByName(command)
-        if result > 0: break
+        if result > 0:
+          break
         tryCounter.inc()
         sleep(500)
-
-    if searchForkedProcess: # Gameserver
       var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: terminal, treeView: listSelectedMaps)
       discard timeoutAdd(250, timerGameServer, timerDataGameServer)
-      threadForked.createThread(threadGameServer, (result))
-    else: # Login/unlock server
+      threadGameServer.createThread(threadGameServerProc, result) # result = pid
+    else:
+      # Login/unlock server
       var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
       discard timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer)
-      thread.createThread(proc (process: Process) {.thread.} =
-        var exitCode: DWORD
-        var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, process.processId.DWORD)
-        while true:
-          if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
-            if process.outputStream.isNil:
-              discard CloseHandle(hndl)
-              return
-            channelAddText.send(process.outputStream.readAll())
-          sleep(250)
-      , (process))
+      threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, process)
 
 proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
