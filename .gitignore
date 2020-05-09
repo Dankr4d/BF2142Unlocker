@@ -14,6 +14,10 @@ checkserver
 checkserver.exe
 stdoutreader
 stdoutreader.exe
+sendmsg
+sendmsg.exe
+gsapi
+gsapi.exe
 signal
 signal.exe
 patcher

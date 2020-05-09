@@ -11,15 +11,16 @@ import strutils
 import os
 
 when defined(linux):
-  import gintro/vte # Requierd for terminal (linux only feature)
+  import gintro/vte # Required for terminal (linux only feature)
   export vte
 elif defined(windows):
   import osproc
   import streams
   import winim
-  import getprocessbyname # requierd for getPidByName (processname)
-  import stdoutreader # requierd for read stdoutput form another process
-  import gethwndbypid # requierd for getHWndByPid to hide forked process
+  import getprocessbyname # Required for getPidByName (processname)
+  import stdoutreader # Required for read stdoutput form another process
+  import gsapi # Required to parse current map
+  import gethwndbypid # Required for getHWndByPid to hide forked process
   type
     Terminal* = ref object of ScrolledWindow
   proc newTerminal*(): Terminal =

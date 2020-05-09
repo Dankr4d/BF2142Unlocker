@@ -24,6 +24,9 @@ import resolutions # Required to read out all possible resolutions
 import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import cdkey # Required to set an empty cd key if cd key not exists.
 import checkpermission # Required to check write permission before patching client
+import sendmsg # Required for to write to bf2142 game server
+import math # Required for runtime configuration
+import gsapi # Required to parse data out of bf2142 game server
 
 # Create precompiled resource file
 when defined(windows):
@@ -63,7 +66,7 @@ const
   SETTING_BOT_SKILL: string = "sv.botSkill"
   SETTING_TICKET_RATIO: string = "sv.ticketRatio"
   SETTING_SPAWN_TIME: string = "sv.spawnTime"
-  SETTING_ROUNDS_PER_MINUTE: string = "sv.roundsPerMap"
+  SETTING_ROUNDS_PER_MAP: string = "sv.roundsPerMap"
   SETTING_SOLDIER_FRIENDLY_FIRE: string = "sv.soldierFriendlyFire"
   SETTING_VEHICLE_FRIENDLY_FIRE: string = "sv.vehicleFriendlyFire"
   SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE: string = "sv.soldierSplashFriendlyFire"
@@ -575,11 +578,58 @@ proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSiz
       return ("", "", "")
   if getSelected(list.selection, ls, iter):
     store.getValue(iter, 0, val)
-    result.mapName = $val.getString()
+    result.mapName = val.getString()
     store.getValue(iter, 1, val)
-    result.mapMode = $val.getString()
+    result.mapMode = val.getString()
     store.getValue(iter, 2, val)
-    result.mapSize = $val.getString() # TODO: Should be int
+    result.mapSize = val.getString()
+
+proc markMapRunning(treeView: TreeView, mapName, mapMode, mapSize, status: string) =
+  var
+    iter: TreeIter
+    valMapName: Value
+    valMapMode: Value
+    valMapSize: Value
+    valBackgroundColor: Value
+  let store: ListStore = listStore(treeView.getModel())
+  if not store.iterFirst(iter):
+    return
+  var doIter: bool = true
+  while doIter:
+    store.getValue(iter, 0, valMapName)
+    store.getValue(iter, 1, valMapMode)
+    store.getValue(iter, 2, valMapSize)
+    store.getValue(iter, 3, valBackgroundColor)
+    if valMapName.getString() ==  mapName and valMapMode.getString() == mapMode and valMapSize.getString() == mapSize: # Current map
+      var color: string
+      case status
+      of "pregame":
+        color = "Yellow"
+      of "playing":
+        color = "Green"
+      of "endgame":
+        color = "Red"
+      valBackgroundColor.setString(color)
+      store.setValue(iter, 3, valBackgroundColor)
+    else: # TODO: Could be elif with following if statment?
+      if valBackgroundColor.getString() != "":
+        valBackgroundColor.setString("")
+        store.setValue(iter, 3, valBackgroundColor)
+    doIter = store.iterNext(iter)
+
+var lastMapStatus: string
+proc timerMapStatus(t: TreeView): bool =
+  try:
+    if termBF2142ServerPid == 0:
+      discard
+    var mapName, mapMode, mapSize, mapStatus: string
+    (mapName, mapMode, mapSize, mapStatus) = parseCurrentMap(termBF2142ServerPid)
+    if lastMapStatus != mapStatus:
+      listSelectedMaps.markMapRunning(mapName, mapMode, mapSize, mapStatus)
+      lastMapStatus = mapStatus
+  except:
+    echo osErrorMsg(osLastError())
+  return SOURCE_CONTINUE
 
 proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   var imgPath: string
@@ -726,7 +776,7 @@ proc loadSaveServerSettings(save: bool): bool =
   while fileTpl.file.readLine(line):
     (setting, value) = line.splitWhitespace(maxsplit = 1)
     case setting:
-      of SETTING_ROUNDS_PER_MINUTE:
+      of SETTING_ROUNDS_PER_MAP:
         if save:
           value = $sbtnRoundsPerMap.value.toInt()
         else:
@@ -1007,8 +1057,8 @@ proc loadHostMods() =
   discard cbxHostMods.setActiveId("bf2142")
 
 proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
-  tblHostSettings.sensitive = not running
-  hboxMaps.sensitive = not running
+  # tblHostSettings.sensitive = not running
+  # hboxMaps.sensitive = not running
   btnHostLoginServer.visible = not running
   btnHost.visible = not running
   btnHostCancel.visible = running
@@ -1244,6 +1294,8 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   termLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
   discard cbxJoinMods.setActiveId(cbxHostMods.activeId)
+  sleep 1_000
+  discard timeoutAdd(250, timerMapStatus, listSelectedMaps)
 
 proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   if not txtHostIpAddress.text.strip().isIpAddress() or
@@ -1331,7 +1383,7 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
     return
   setBF2142Path(path)
 
-proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
+proc oxtBF2142PathFocusOut(self: Entry00) {.signal.} =
   setBF2142Path(txtBF2142Path.text.strip())
 
 proc setBF2142ServerPath(path: string) =
@@ -1473,6 +1525,52 @@ proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
   discard chooser.addButton("Cancel", ResponseType.cancel.ord)
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
+
+proc onBotSkillChanged(self: pointer) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
+
+proc onTicketRatioChanged(self: pointer) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
+
+proc onSpawnTimeChanged(self: pointer) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
+
+proc onRoundsPerMapChanged(self: pointer) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
+
+proc onPlayersNeededToStartChanged(self: pointer) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
+
+proc onFriendlyFireToggled(self: CheckButton00) {.signal.} =
+  var val: string = if chbtnFriendlyFire.active: "100" else: "0"
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
+    sendMsg(termBF2142ServerPid, SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
+    sendMsg(termBF2142ServerPid, SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+    sendMsg(termBF2142ServerPid, SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+
+proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
+  if termBF2142ServerPid > 0:
+    sendMsg(termBF2142ServerPid, SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
+
+type
+  GdkEventButton = object
+    `type`: ptr gdk.EventType
+
+proc onSelectableMapsButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.signal.} =
+  case e.`type`[]
+  of gdk.EventType.buttonPress:
+    discard
+  of gdk.EventType.doubleButtonPress:
+    discard
+  else:
+    discard
+  return EVENT_PROPAGATE
 #
 ##
 
