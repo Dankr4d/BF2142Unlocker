@@ -5,7 +5,7 @@ when defined(linux):
 
 import os
 import net # Requierd for ip parsing and type
-import osproc # Requierd for process starting
+import osproc # Requierd to start the process
 import strutils
 import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
@@ -26,7 +26,17 @@ import cdkey # Required to set an empty cd key if cd key not exists.
 import checkpermission # Required to check write permission before patching client
 import sendmsg # Required for to write to bf2142 game server
 import math # Required for runtime configuration
-import gsapi # Required to parse data out of bf2142 game server
+when defined(linux):
+  import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
+  export vte
+elif defined(windows):
+  import streams # Required to read from process stream (login/unlock server)
+  import getprocessbyname # Required to get pid from forked process
+  import stdoutreader # Required for read stdoutput from another process
+  import gethwndbypid # Required to get window handle from pid
+  type
+    Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
+import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
 
 # Create precompiled resource file
 when defined(windows):
@@ -92,6 +102,7 @@ var currentLevelFolderPath: string
 var currentAiSettingsPath: string
 var currentLocale: string
 
+var lastGsStatus: string
 var termLoginServerPid: int = 0
 var termBF2142ServerPid: int = 0
 
@@ -402,22 +413,6 @@ proc loadHostIpAddress() =
   else:
     txtHostIpAddress.text = ""
 
-proc killProcess*(pid: int) = # TODO: Add some error handling; TODO: pid should be stored in startProcess and not passed
-  when defined(linux):
-    if kill(Pid(pid), SIGKILL) < 0:
-      echo "ERROR: Cannot kill process!" # TODO: Create a popup
-  elif defined(windows):
-    if pid == termBF2142ServerPid:
-      terminateForkedThread(pid) # TODO
-    elif pid == termLoginServerPid:
-      terminateThread() # TODO
-    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
-    discard hndlProcess.TerminateProcess(0) # TODO: Check result
-  if pid == termBF2142ServerPid:
-    termBF2142ServerPid = 0
-  elif pid == termLoginServerPid:
-    termLoginServerPid = 0
-
 proc updateProfilePathes() =
   bf2142ProfilesPath = documentsPath / "Battlefield 2142" / "Profiles"
   bf2142Profile0001Path = bf2142ProfilesPath / "0001"
@@ -584,7 +579,7 @@ proc selectedMap(list: TreeView): tuple[mapName: string, mapMode: string, mapSiz
     store.getValue(iter, 2, val)
     result.mapSize = val.getString()
 
-proc markMapRunning(treeView: TreeView, mapName, mapMode, mapSize, status: string) =
+proc update(treeView: TreeView, gsdata: GsData) =
   var
     iter: TreeIter
     valMapName: Value
@@ -600,9 +595,9 @@ proc markMapRunning(treeView: TreeView, mapName, mapMode, mapSize, status: strin
     store.getValue(iter, 1, valMapMode)
     store.getValue(iter, 2, valMapSize)
     store.getValue(iter, 3, valBackgroundColor)
-    if valMapName.getString() ==  mapName and valMapMode.getString() == mapMode and valMapSize.getString() == mapSize: # Current map
+    if valMapName.getString() ==  gsdata.mapName and valMapMode.getString() == gsdata.mapMode and valMapSize.getString() == gsdata.mapSize: # Current map
       var color: string
-      case status
+      case gsdata.status
       of "pregame":
         color = "Yellow"
       of "playing":
@@ -616,20 +611,6 @@ proc markMapRunning(treeView: TreeView, mapName, mapMode, mapSize, status: strin
         valBackgroundColor.setString("")
         store.setValue(iter, 3, valBackgroundColor)
     doIter = store.iterNext(iter)
-
-var lastMapStatus: string
-proc timerMapStatus(t: TreeView): bool =
-  try:
-    if termBF2142ServerPid == 0:
-      discard
-    var mapName, mapMode, mapSize, mapStatus: string
-    (mapName, mapMode, mapSize, mapStatus) = parseCurrentMap(termBF2142ServerPid)
-    if lastMapStatus != mapStatus:
-      listSelectedMaps.markMapRunning(mapName, mapMode, mapSize, mapStatus)
-      lastMapStatus = mapStatus
-  except:
-    echo osErrorMsg(osLastError())
-  return SOURCE_CONTINUE
 
 proc updateLevelPreview(mapName, mapMode, mapSize: string) =
   var imgPath: string
@@ -961,36 +942,6 @@ proc saveProfileAccountName() =
   fileTpl.file.close()
   discard writeFile(profileConPath, profileContent)
 
-proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
-  term.setSizeRequest(0, 300)
-  when defined(linux):
-    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
-  elif defined(windows):
-    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
-
-proc startBF2142Server() =
-  termBF2142Server.setSizeRequest(0, 300)
-  var stupidPbSymlink: string = bf2142ServerPath / "pb"
-  if symlinkExists(stupidPbSymlink):
-    if not removeFile(stupidPbSymlink):
-      return
-  when defined(linux):
-    var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
-    ldLibraryPath &= ":" & os.getCurrentDir()
-    termBF2142ServerPid = termBF2142Server.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
-      params = "+modPath mods/" & cbxHostMods.activeId,
-      workingDir = bf2142ServerPath,
-      env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
-    )
-  elif defined(windows):
-    termBF2142ServerPid = termBF2142Server.startProcess(
-      command = BF2142_SRV_UNLOCKER_EXE_NAME,
-      params = "+modPath mods/" & cbxHostMods.activeId,
-      workingDir = bf2142ServerPath,
-      searchForkedProcess = true
-    )
-
 proc loadJoinMods() =
   var iter: TreeIter
   let store = listStore(cbxJoinMods.getModel())
@@ -1075,10 +1026,239 @@ proc applyJustPlayRunningSensitivity(running: bool) =
   btnJustPlayCancel.visible = running
 ##
 
+### Terminal
+when defined(windows):
+  proc newTerminal(): Terminal =
+    var textView = newTextView()
+    # textView.monospace = true
+    textview.wrapMode =  WrapMode.word
+    var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
+    scrolledWindow.propagateNaturalHeight = true
+    scrolledWindow.add(textView)
+    result = cast[Terminal](scrolledWindow)
+    result.styleContext.addClass("terminal")
+  proc textView(terminal: Terminal): TextView =
+    return cast[TextView](terminal.getChild())
+  proc buffer(terminal: Terminal): TextBuffer =
+    return terminal.textView.getBuffer()
+  proc `text=`(terminal: Terminal, text: string) =
+    terminal.buffer.setText(text, text.len)
+  proc text(terminal: Terminal): string =
+    var startIter: TextIter
+    var endIter: TextIter
+    terminal.buffer.getStartIter(startIter)
+    terminal.buffer.getEndIter(endIter)
+    return terminal.buffer.getText(startIter, endIter, true)
+  proc visible(terminal: Terminal): bool =
+    return terminal.textView.visible
+  proc `visible=`(terminal: Terminal, visible: bool) =
+    cast[ScrolledWindow](terminal).visible = visible # TODO: Need to be casted otherwise it will visible infix proc
+    terminal.textView.visible = visible
+
+proc addText(terminal: Terminal, text: string, scrollDown: bool = false) =
+  when defined(linux):
+    discard # TODO: implement
+  elif defined(windows):
+    terminal.text = terminal.text & text
+    if scrollDown:
+      var mark: TextMark = terminal.buffer.getInsert()
+      terminal.textView.scrollMarkOnScreen(mark)
+
+proc clear(terminal: Terminal) =
+  when defined(linux):
+    terminal.reset(true, true)
+  elif defined(windows):
+    terminal.text = ""
+
+when defined(windows):
+  type
+    TimerDataLoginUnlockServer = ref object
+      terminal: Terminal
+    TimerDataGameServer = ref object
+      terminal: Terminal
+      treeView: TreeView
+  var thread: system.Thread[Process]
+  var threadForked: system.Thread[int]
+  var channelReplaceText: Channel[string]
+  var channelAddText: Channel[string]
+  var channelTerminateForked: Channel[bool]
+  var channelStopTimerAdd: Channel[bool]
+  var channelStopTimerReplace: Channel[bool]
+  channelReplaceText.open()
+  channelTerminateForked.open()
+  channelStopTimerReplace.open()
+  channelAddText.open()
+  channelStopTimerAdd.open()
+
+  proc timerGameServer(timerData: TimerDataGameServer): bool =
+    if channelStopTimerReplace.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
+    var (hasData, data) = channelReplaceText.tryRecv()
+    if hasData and data.strip() != "":
+      timerData.terminal.text = data
+      var gsdata: GsData = data.parseGsData()
+      if gsdata.status != lastGsStatus:
+        timerData.treeView.update(gsdata)
+    return SOURCE_CONTINUE
+
+  proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
+    if channelStopTimerAdd.tryRecv().dataAvailable:
+      return SOURCE_REMOVE
+    var (hasData, data) = channelAddText.tryRecv()
+    if hasData:
+      timerData.terminal.addText(data, scrollDown = true)
+    return SOURCE_CONTINUE
+
+  proc isProcessAlive(pid: int): bool = # TODO
+    var exitCode: DWORD
+    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
+    result = hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE
+    discard CloseHandle(hndl)
+
+  proc terminateThread() = # TODO
+    channelStopTimerAdd.send(true)
+
+  proc terminateForkedThread(pid: int) = # TODO
+    channelStopTimerReplace.send(true)
+    if isProcessAlive(pid):
+      channelTerminateForked.send(true)
+
+proc killProcess*(pid: int) = # TODO: Add some error handling
+  when defined(linux):
+    if kill(Pid(pid), SIGKILL) < 0:
+      echo "ERROR: Cannot kill process!" # TODO: Create a popup
+  elif defined(windows):
+    if pid == termBF2142ServerPid:
+      terminateForkedThread(pid) # TODO
+    elif pid == termLoginServerPid:
+      terminateThread() # TODO
+    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
+    discard hndlProcess.TerminateProcess(0) # TODO: Check result
+    discard CloseHandle(hndlProcess)
+  if pid == termBF2142ServerPid:
+    termBF2142ServerPid = 0
+  elif pid == termLoginServerPid:
+    termLoginServerPid = 0
+
+proc startProcess(terminal: Terminal, command: string, params: string = "",
+                  workingDir: string = os.getCurrentDir(), env: string = "",
+                  searchForkedProcess: bool = false): int =
+  when defined(linux):
+    var argv: seq[string] = command.strip().splitWhitespace()
+    if params != "":
+      argv.add(params)
+    discard terminal.spawnSync(
+      ptyFlags = {PtyFlag.noLastlog},
+      workingDirectory = workingDir,
+      argv = argv,
+      envv = env.strip().splitWhitespace(),
+      spawnFlags = {glib.SpawnFlag.doNotReapChild},
+      childSetup = nil,
+      childSetupData = nil,
+      childPid = result
+    )
+  elif defined(windows):
+    var process: Process
+    if searchForkedProcess == true:
+      process = startProcess(
+        command = """cmd /c """" & workingDir / command & "\" " & params, # TODO: Use fmt
+        workingDir = workingDir,
+        options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
+      )
+    else:
+      process = startProcess(
+        command = workingDir / command & " " & params,
+        workingDir = workingDir,
+        options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
+      )
+    result = process.processID
+    if searchForkedProcess:
+      var tryCounter: int = 0
+      while tryCounter <= 10: # TODO: Raise an exception if proess could not be found
+        result = getPidByName(command)
+        if result > 0: break
+        tryCounter.inc()
+        sleep(500)
+
+    if searchForkedProcess: # Gameserver
+      var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: terminal, treeView: listSelectedMaps)
+      discard timeoutAdd(250, timerGameServer, timerDataGameServer)
+      threadForked.createThread(proc (processId: int) {.thread.} =
+        var hwnd: HWND = getHWndByPid(processId)
+        while hwnd == 0: # Wait until window is accessible
+          sleep(250)
+          hwnd = getHWndByPid(processId)
+        var exitCode: DWORD
+        var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, processId.DWORD)
+        # ShowWindow(hwnd, SW_HIDE) # TODO: Add checkbox to GUI
+        while true:
+          if channelTerminateForked.tryRecv().dataAvailable:
+            discard CloseHandle(hndl)
+            return
+          if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
+            var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(processId)
+            if stdoutTuple.lastError == 0:
+              channelReplaceText.send(stdoutTuple.stdout)
+            elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
+              # TODO: Sometimes it fails with invalid handle.
+              # Maybe this happens when the process is killed while reading from stdout.
+              discard
+            else:
+              channelReplaceText.send("ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode))
+          else:
+            discard CloseHandle(hndl)
+            channelReplaceText.send(dgettext("gui", "GAMESERVER_CRASHED"))
+            return
+          sleep(250)
+      , (result))
+    else: # Login/unlock server
+      var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
+      discard timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer)
+      thread.createThread(proc (process: Process) {.thread.} =
+        var exitCode: DWORD
+        var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, process.processId.DWORD)
+        while true:
+          if hndl > 0 and GetExitCodeProcess(hndl, unsafeAddr exitCode).bool and exitCode == STILL_ACTIVE:
+            if process.outputStream.isNil:
+              discard CloseHandle(hndl)
+              return
+            channelAddText.send(process.outputStream.readAll())
+          sleep(250)
+      , (process))
+
+proc startBF2142Server() =
+  termBF2142Server.setSizeRequest(0, 300)
+  var stupidPbSymlink: string = bf2142ServerPath / "pb"
+  if symlinkExists(stupidPbSymlink):
+    if not removeFile(stupidPbSymlink):
+      return
+  when defined(linux):
+    var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    ldLibraryPath &= ":" & os.getCurrentDir()
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      params = "+modPath mods/" & cbxHostMods.activeId,
+      workingDir = bf2142ServerPath,
+      env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
+    )
+  elif defined(windows):
+    termBF2142ServerPid = termBF2142Server.startProcess(
+      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      params = "+modPath mods/" & cbxHostMods.activeId,
+      workingDir = bf2142ServerPath,
+      searchForkedProcess = true
+    )
+
+proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
+  term.setSizeRequest(0, 300)
+  when defined(linux):
+    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
+  elif defined(windows):
+    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
+##
 
 ### Events
 ## Join
-
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
   txtPlayerName.text = txtPlayerName.text.strip()
@@ -1294,8 +1474,6 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   termLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
   discard cbxJoinMods.setActiveId(cbxHostMods.activeId)
-  sleep 1_000
-  discard timeoutAdd(250, timerMapStatus, listSelectedMaps)
 
 proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   if not txtHostIpAddress.text.strip().isIpAddress() or
@@ -1383,7 +1561,7 @@ proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
     return
   setBF2142Path(path)
 
-proc oxtBF2142PathFocusOut(self: Entry00) {.signal.} =
+proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
   setBF2142Path(txtBF2142Path.text.strip())
 
 proc setBF2142ServerPath(path: string) =

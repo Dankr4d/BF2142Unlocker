@@ -1,10 +1,15 @@
 import os
 import strutils
-import stdoutreader
 
-proc parseCurrentMap*(pid: int): tuple[mapName: string, mapMode: string, mapSize: string, status: string] =
-  var data: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
-  var lines: seq[string] = data.stdout.splitLines()
+type
+  GsData* = object
+    mapName*: string
+    mapMode*: string
+    mapSize*: string
+    status*: string
+
+proc parseGsData*(raw: string): GsData = # TODO: Write a real parser without substr and find
+  var lines: seq[string] = raw.splitLines()
   var line: string = lines[2]
   var mapNamePosStart: int = line.find("Map: ") + 5
   var mapnamePosEnd: int = line.find(" ", mapNamePosStart) - 1
@@ -17,8 +22,13 @@ proc parseCurrentMap*(pid: int): tuple[mapName: string, mapMode: string, mapSize
 
 when isMainModule:
   import getprocessbyname
+  import stdoutreader
   var pid: int = getPidByName("BF2142_w32dedUnlocker.exe")
   var cnt: int = 0
   while cnt < 3:
-    echo parseCurrentMap(pid)
+    var stdouTpl: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
+    if stdouTpl.lastError > 0:
+      echo osErrorMsg(osLastError())
+      break
+    echo parseGsData(stdouTpl.stdout)
     cnt.inc()
