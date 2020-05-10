@@ -343,7 +343,7 @@ msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr "Keine Schreibberechtigung"
 
 msgid "NO_WRITE_PERMISSION_MSG"
-msgstr "Du hast keine Schreibberechtigungen auf: $#"
+msgstr "Du hast keine Schreibberechtigungen auf:\n$#"
 
 msgid "COULD_NOT_FIND_TITLE"
 msgstr "$# konnte nicht gefunden werden"

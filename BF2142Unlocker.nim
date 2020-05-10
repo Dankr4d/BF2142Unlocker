@@ -1231,7 +1231,13 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
     if not copyFileWithPermissions(serverExePath / BF2142_SRV_EXE_NAME,
     serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME, false):
-        return
+      return
+  if not hasWritePermission(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+    newInfoDialog(
+      dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME]
+    )
+    return
   serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
   echo "Patching Battlefield 2142 server!"
   patchServer(serverExePath, privateIpAddrs[0].parseIpAddress(), Port(8085))

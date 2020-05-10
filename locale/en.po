@@ -346,7 +346,7 @@ msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr "No write permission"
 
 msgid "NO_WRITE_PERMISSION_MSG"
-msgstr "You've no write permission for: $#"
+msgstr "You've no write permission to:\n$#"
 
 msgid "COULD_NOT_FIND_TITLE"
 msgstr "Could not find $#"
