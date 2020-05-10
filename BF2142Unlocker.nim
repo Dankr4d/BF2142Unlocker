@@ -24,6 +24,7 @@ import resolutions # Required to read out all possible resolutions
 import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import cdkey # Required to set an empty cd key if cd key not exists.
 import checkpermission # Required to check write permission before patching client
+import options # Required for error/exception handling
 
 # Create precompiled resource file
 when defined(windows):
@@ -100,6 +101,10 @@ const
   PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
   PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
 
+const
+  BLANK_BIK: string = staticRead("blank.bik")
+  BLANK_BIK_HASH: string = static: getMd5(BLANK_BIK)
+
 when defined(release):
   const GUI_CSS: string = staticRead("BF2142Unlocker.css")
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
@@ -115,6 +120,7 @@ const
   CONFIG_KEY_PLAYER_NAME: string = "playername"
   CONFIG_KEY_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_WINDOW_MODE: string = "window_mode"
+  CONFIG_KEY_SKIP_MOVIES: string = "skip_movies"
   CONFIG_KEY_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
   CONFIG_KEY_RESOLUTION: string = "resolution"
 
@@ -147,6 +153,7 @@ var cbxJoinResolutions: ComboBox
 var txtPlayerName: Entry
 var txtIpAddress: Entry
 var chbtnAutoJoin: CheckButton
+var chbtnSkipMovies: CheckButton
 var chbtnWindowMode: CheckButton
 var btnJoin: Button # TODO: Rename to btnConnect
 var btnJustPlay: Button
@@ -217,12 +224,11 @@ var btnWinePrefix: Button
 var txtWinePrefix: Entry
 var lblStartupQuery: Label
 var txtStartupQuery: Entry
-var btnRemoveMovies: Button
 var btnPatchClientMaps: Button
 var btnPatchServerMaps: Button
 ##
 
-### Exception procs
+### Exception procs # TODO: Replace tuple results with Option
 proc onQuit()
 
 import logging
@@ -273,6 +279,13 @@ proc writeFile(filename, content: string): bool =
   except system.IOError as ex:
     ex.handle()
     return false
+
+proc readFile(filename: string): Option[TaintedString] =
+  try:
+    return some(system.readFile(filename))
+  except system.IOError as ex:
+    ex.handle()
+    return none(TaintedString)
 
 proc moveFile(source, dest: string): bool =
   try:
@@ -355,38 +368,46 @@ const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
 const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
 
 proc removeLine(path: string, val: int): bool =
-  var raw: string = readFile(path)
-  var rawLines: seq[string] = raw.splitLines()
+  var rawOpt: Option[TaintedString] = readFile(path)
+  if rawOpt.isNone:
+    return false
+  var rawLines: seq[string] = rawOpt.get().splitLines()
   rawLines.delete(val - 1)
   return writeFile(path, rawLines.join("\n"))
 
 proc removeChars(path: string, valFrom, valTo: int): bool =
-  var raw: string = readFile(path)
-  raw.delete(valFrom - 1, valTo - 1)
-  return writeFile(path, raw)
+  var rawOpt: Option[TaintedString] = readFile(path)
+  if rawOpt.isNone:
+    return false
+  rawOpt.get().delete(valFrom - 1, valTo - 1)
+  return writeFile(path, rawOpt.get())
 
 proc fixMapDesc(path: string): bool =
+  var rawOpt: Option[TaintedString] = readFile(path)
+  if rawOpt.isNone:
+    return false
+  var raw: string = rawOpt.get()
   case extractFileName(path).toLower()
   of "aegis_station.desc":
-    if getMd5(readFile(path)) == AEGIS_STATION_DESC_MD5_HASH:
+    if getMd5(raw) == AEGIS_STATION_DESC_MD5_HASH:
       return removeChars(path, 1464, 1464) # Fix: Remove char on position 1464
   of "bloodgulch.desc":
-    if getMd5(readFile(path)) == BLOODGULCH_DESC_MD5_HASH:
+    if getMd5(raw) == BLOODGULCH_DESC_MD5_HASH:
       return removeLine(path, 20) # Fix: Delete line 20
   of "kilimandscharo.desc":
-    if getMd5(readFile(path)) == KILIMANDSCHARO_DESC_MD5_HASH:
+    if getMd5(raw) == KILIMANDSCHARO_DESC_MD5_HASH:
       return removeLine(path, 7) # Fix: Delete line 7
   of "omaha_beach.desc":
-    if getMd5(readFile(path)) == OMAHA_BEACH_DESC_MD5_HASH:
+    if getMd5(raw) == OMAHA_BEACH_DESC_MD5_HASH:
       return removeLine(path, 11) # Fix: Delete line 11
   of "panorama.desc":
-    if getMd5(readFile(path)) == PANORAMA_DESC_MD5_HASH:
+    if getMd5(raw) == PANORAMA_DESC_MD5_HASH:
       return removeLine(path, 14) # Fix: Delete line 14
   of "severnaya.desc":
-    if getMd5(readFile(path)) == SEVERNAYA_DESC_MD5_HASH:
+    if getMd5(raw) == SEVERNAYA_DESC_MD5_HASH:
       return removeLine(path, 16) # Fix: Delete line 16
   of "street.desc":
-    if getMd5(readFile(path)) == STREET_DESC_MD5_HASH:
+    if getMd5(raw) == STREET_DESC_MD5_HASH:
       return removeLine(path, 9) # Fix: Delete line 9
   return false
 ##
@@ -449,6 +470,11 @@ proc loadConfig() =
     chbtnAutoJoin.active = autoJoinStr.parseBool()
   else:
     chbtnAutoJoin.active = false
+  let skipMoviesStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_SKIP_MOVIES)
+  if skipMoviesStr != "":
+    chbtnSkipMovies.active = skipMoviesStr.parseBool()
+  else:
+    chbtnSkipMovies.active = false
   let windowModeStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE)
   if windowModeStr != "":
     chbtnWindowMode.active = windowModeStr.parseBool()
@@ -468,8 +494,14 @@ proc backupOpenSpyIfExists() =
   let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
   if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
     return
-  let openspyMd5Hash: string = getMD5(openspyDllPath.readFile())
-  let originalRendDX9Hash: string = getMD5(originalRendDX9Path.readFile())
+  let openspyDllRawOpt: Option[TaintedString] = readFile(openspyDllPath)
+  if openspyDllRawOpt.isNone:
+    return
+  let originalRendDX9RawOpt: Option[TaintedString] = readFile(originalRendDX9Path)
+  if originalRendDX9RawOpt.isNone:
+    return
+  let openspyMd5Hash: string = getMD5(openspyDllRawOpt.get())
+  let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
   if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
     if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
@@ -498,18 +530,21 @@ proc restoreOpenSpyIfExists() =
   let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
   if not fileExists(openspyDllBackupPath):
     return
-  let openspyMd5Hash: string = getMD5(openspyDllBackupPath.readFile())
+  let openspyMd5RawOpt: Option[TaintedString] = readFile(openspyDllBackupPath)
+  if openspyMd5RawOpt.isNone:
+    return
+  let openspyMd5Hash: string = getMD5(openspyMd5RawOpt.get())
   if openspyMd5Hash == OPENSPY_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
     var tryCnt: int = 0
-    while tryCnt < 4:
+    while tryCnt < 8:
       try:
         os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
         os.removeFile(openspyDllBackupPath)
         break
       except OSError as ex:
         tryCnt.inc()
-        if tryCnt == 4:
+        if tryCnt == 8:
           newInfoDialog(
             fmt"Could not restore {OPENSPY_DLL_NAME}",
             fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
@@ -1023,6 +1058,40 @@ proc applyJustPlayRunningSensitivity(running: bool) =
   termJustPlayServer.visible = running
   btnJustPlay.visible = not running
   btnJustPlayCancel.visible = running
+
+proc enableDisableIntroMovies(path: string, enable: bool): bool =
+  var moviePathSplit: tuple[dir, name, ext: string]
+  for moviePath in walkDir(path):
+    if moviePath.kind != pcFile:
+      continue
+    moviePathSplit = splitFile(moviePath.path)
+    if moviePathSplit.name == "titan_tutorial":
+      continue
+    if enable:
+      if moviePathSplit.ext == ".bik":
+        if moviePathSplit.name == "Dice":
+          # Fixes game crashes on pressing alt+tab when playing online.
+          # https://github.com/Dankr4d/BF2142Unlocker/issues/42
+          var diceBikRawOpt: Option[TaintedString] = readFile(moviePath.path)
+          if diceBikRawOpt.isNone:
+            return false
+          if getMd5(diceBikRawOpt.get()) == BLANK_BIK_HASH:
+            continue
+          if not moveFile(moviePath.path, moviePathSplit.dir / moviePathSplit.name & FILE_BACKUP_SUFFIX):
+            return false
+          if not writeFile(moviePath.path, BLANK_BIK):
+            return false
+        else:
+          if not moveFile(moviePath.path, moviePathSplit.dir / moviePathSplit.name & FILE_BACKUP_SUFFIX):
+            return false
+    else:
+      if moviePathSplit.ext == FILE_BACKUP_SUFFIX:
+        if moviePathSplit.name == "Dice" and fileExists(moviePathSplit.dir / moviePathSplit.name & ".bik"):
+          if not removeFile(moviePathSplit.dir / moviePathSplit.name & ".bik"):
+            return false
+        if not moveFile(moviePath.path, moviePathSplit.dir / moviePathSplit.name & ".bik"):
+          return false
+  return true
 ##
 
 
@@ -1098,6 +1167,7 @@ proc patchAndStartLogic(): bool =
   # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
+  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_SKIP_MOVIES, $chbtnSkipMovies.active)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
   config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_RESOLUTION, cbxJoinResolutions.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
@@ -1120,9 +1190,12 @@ proc patchAndStartLogic(): bool =
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
+  if not enableDisableIntroMovies(bf2142Path / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
+    return
+
   var command: string
   when defined(linux):
-    when not defined(release):
+    when defined(debug):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
     if txtWinePrefix.text != "":
       command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
@@ -1394,13 +1467,6 @@ proc onTxtStartupQueryFocusOut(self: Entry00, event: EventFocus00): bool {.signa
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnRemoveMoviesClicked(self: Button00) {.signal.} =
-  for movie in walkDir(bf2142Path / "mods" / "bf2142" / "Movies"): # TODO: Hacky, make it cleaner
-    if movie.kind == pcFile and not movie.path.endsWith("titan_tutorial.bik"):
-      echo "Removing movie: ", movie.path
-      if not removeFile(movie.path):
-        return
-
 proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): bool =
   result = true
   var srcPath, dstPath, dstArchiveMd5Path, levelName: string
@@ -1534,6 +1600,7 @@ proc onApplicationActivate(application: Application) =
   txtPlayerName = builder.getEntry("txtPlayerName")
   txtIpAddress = builder.getEntry("txtIpAddress")
   chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
+  chbtnSkipMovies = builder.getCheckButton("chbtnSkipMovies")
   chbtnWindowMode = builder.getCheckButton("chbtnWindowMode")
   btnJoin = builder.getButton("btnJoin")
   btnJustPlay = builder.getButton("btnJustPlay")
@@ -1592,7 +1659,6 @@ proc onApplicationActivate(application: Application) =
   txtWinePrefix = builder.getEntry("txtWinePrefix")
   lblStartupQuery = builder.getLabel("lblStartupQuery")
   txtStartupQuery = builder.getEntry("txtStartupQuery")
-  btnRemoveMovies = builder.getButton("btnRemoveMovies")
   btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
 
@@ -1672,7 +1738,9 @@ else:
 
 proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
-    currentLocale = readFile(LANGUAGE_FILE)
+    var currentLocaleRawOpt: Option[TaintedString] = readFile(LANGUAGE_FILE)
+    if currentLocaleRawOpt.isSome:
+      currentLocale = currentLocaleRawOpt.get()
   discard bindtextdomain("gui", os.getCurrentDir() / "locale")
   if currentLocale == "": # Is empty if no LANGUAGE_FILE file was found
     currentLocale = $setlocale(LC_ALL, "");
