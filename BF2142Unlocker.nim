@@ -1353,6 +1353,7 @@ proc setBF2142ServerPath(path: string) =
   bf2142ServerPath = path
   if txtBF2142ServerPath.text != path:
     txtBF2142ServerPath.text = path
+  btnHost.sensitive = bf2142ServerPath != ""
   ignoreEvents = true
   loadHostMods()
   updatePathes()
@@ -1658,6 +1659,8 @@ proc onApplicationActivate(application: Application) =
     vboxJoin.visible = false
     vboxHost.visible = false
     vboxUnlocks.visible = false
+  if bf2142ServerPath == "":
+    btnHost.sensitive = false
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
