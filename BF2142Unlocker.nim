@@ -950,6 +950,14 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
   when defined(linux):
     termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
+    # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
+    var tryCnt: int = 0
+    while tryCnt < 3:
+      if isAddrReachable($ipAddress, Port(18300), 1_000):
+        break
+      else:
+        tryCnt.inc()
+        sleep(250)
   elif defined(windows):
     termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
 
@@ -1416,7 +1424,11 @@ proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
 proc setBF2142ServerPath(path: string) =
   if bf2142ServerPath == path:
     return
-  if not fileExists(path / BF2142_SRV_EXE_NAME):
+  when defined(windows):
+    let serverExePath: string = path / BF2142_SRV_EXE_NAME
+  elif defined(linux):
+    let serverExePath: string = path / "bin" / "amd-64" / BF2142_SRV_EXE_NAME
+  if not fileExists(serverExePath):
     newInfoDialog(
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_SRV_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_SRV_EXE_NAME],
