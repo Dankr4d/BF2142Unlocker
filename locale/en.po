@@ -42,6 +42,12 @@ msgstr "Player name:"
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr "Name of your Soldier that appears ingame."
 
+msgid "JOIN_SKIP_MOVIES"
+msgstr "Skip intro movies:"
+
+msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgstr "Skips the intro movies on startup."
+
 msgid "JOIN_WINDOW_MODE"
 msgstr "Window mode:"
 
@@ -257,14 +263,6 @@ msgstr "Select your wineprefix you want to start the game with (if possible this
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr "Startup query:"
 
-msgid "SETTINGS_DELETE_INTRO_MOVIES"
-msgstr "Delete intro movies"
-
-msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
-msgstr ""
-"Removes all intro movies from the bf2142 basegame (except Titan movie).\n"
-"Will not touch any mods!"
-
 msgid "SETTINGS_COPY_MAPS_CLIENT"
 msgstr "Copy maps to client"
 
@@ -346,7 +344,9 @@ msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr "No write permission"
 
 msgid "NO_WRITE_PERMISSION_MSG"
-msgstr "You've no write permission for: $#"
+msgstr ""
+"You've no write permission to:\n"
+"$#"
 
 msgid "COULD_NOT_FIND_TITLE"
 msgstr "Could not find $#"
@@ -373,14 +373,16 @@ msgid "NO_LOCAL_IP_ADDRESS_TITLE"
 msgstr "No local ip address read out"
 
 msgid "NO_LOCAL_IP_ADDRESS_MSG"
-msgstr "No local ip address could be read out.\n"
+msgstr ""
+"No local ip address could be read out.\n"
 "Please connect to router (with DHCP enabled) or configure one manually."
 
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
 msgstr "No private local ip address read out"
 
 msgid "NO_PRIVATE_IP_ADDRESS_MSG"
-msgstr "No local private ip address could be read out.\n"
+msgstr ""
+"No local private ip address could be read out.\n"
 "Please connect to router (with DHCP enabled) or configure one manually."
 
 msgid "NO_VALID_IP_ADDRESS_TITLE"

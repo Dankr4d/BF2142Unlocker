@@ -42,6 +42,12 @@ msgstr "Spielername:"
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr "Dein Spielername den du ingame siehst (Soldiername)."
 
+msgid "JOIN_SKIP_MOVIES"
+msgstr "Intro Movies überspringen:"
+
+msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgstr "Überspringt die intro Movies beim Spielstart."
+
 msgid "JOIN_WINDOW_MODE"
 msgstr "Fenstermodus:"
 
@@ -253,14 +259,6 @@ msgstr "Setzte den Wineprefix mit dem das Spiel gestartet werden soll (wird wenn
 msgid "SETTINGS_STARTUP_QUERY"
 msgstr "Startup query:"
 
-msgid "SETTINGS_DELETE_INTRO_MOVIES"
-msgstr "Intro Videos löschen"
-
-msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
-msgstr ""
-"Löscht alle Introvideos aus dem ausgewählten Battlefield 2142 Ordner (ausgenommen dem Titanvideo).\n"
-"Dies beachtet nicht die ausgewählte Mod!"
-
 msgid "SETTINGS_COPY_MAPS_CLIENT"
 msgstr "Karten zum client kopieren"
 
@@ -343,7 +341,9 @@ msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr "Keine Schreibberechtigung"
 
 msgid "NO_WRITE_PERMISSION_MSG"
-msgstr "Du hast keine Schreibberechtigungen auf: $#"
+msgstr ""
+"Du hast keine Schreibberechtigungen auf:\n"
+"$#"
 
 msgid "COULD_NOT_FIND_TITLE"
 msgstr "$# konnte nicht gefunden werden"
@@ -370,14 +370,16 @@ msgid "NO_LOCAL_IP_ADDRESS_TITLE"
 msgstr "Keine lokale IP-Adresse ausgelesen"
 
 msgid "NO_LOCAL_IP_ADDRESS_MSG"
-msgstr "Es konnte keine lokale IP-Adresse ausgelesen werden.\n"
+msgstr ""
+"Es konnte keine lokale IP-Adresse ausgelesen werden.\n"
 "Bitte verbinde zu deinem Router (mit DHCP aktiviert) oder konfiguriere eine manuell."
 
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
 msgstr "Keine lokale private IP-Adresse ausgelesen"
 
 msgid "NO_PRIVATE_IP_ADDRESS_MSG"
-msgstr "Es konnte keine private lokale IP-Adresse ausgelesen werden.\n"
+msgstr ""
+"Es konnte keine private lokale IP-Adresse ausgelesen werden.\n"
 "Bitte verbinde zu deinem Router (mit DHCP aktiviert) oder konfiguriere eine manuell."
 
 msgid "NO_VALID_IP_ADDRESS_TITLE"

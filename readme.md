@@ -2,55 +2,53 @@
 ![Logo](bf2142unlocker.png)
 
 ## Description
-This project aims to unlock all weapons in BF2142! You can equip/customize your soldier ingame. <br />
-The unlocker emulates the necessary login and unlock server to play with your friends in coop/multiplayer with all features (except squad drones, because bot's cannot handle them). <br />
-The unlocker gives you the abillity to add 64 coop maps (see below *"Optional requirements"*). <br />
-**Warning:** *The actual version is slightly hacky and not stable!*
+This project unlock all weapons in Battlefield 2142! You are able to customize your soldier i ngame. The squad drones are on default deactivated (you can enable them in "Unlocks" tab). But be warned, bots in vanilla game cannot handle them. This got fixed in Project Remaster mod.<br />
+BF2142Unlocker emulates the necessary login and unlock server to be able to play Battlefield 2142 in singleplayer and multiplayer (also through vpn) with all features. Also you could host a dedicated server with (currently restricted/not all settings are available) gui interface.<br />
 
 ## Requirements:
-- Battlefield 2142 with the original executable.
+- Battlefield 2142 updated to version 1.51.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9.2 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.2/BF2142Unlocker_v0.9.2_win.zip)
-- [Download BF2142 Unlocker v0.9.2 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.2/BF2142Unlocker_v0.9.2_linux.zip)
+- [Download BF2142 Unlocker v0.9.3 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_win.zip)
+- [Download BF2142 Unlocker v0.9.3 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_linux.zip)
 
-## How to use:
+## Instructions / How to play:
 - Start the BF2142Unlocker:
   - Windows: BF2142Unlocker.exe
   - Linux: BF2142Unlocker
-- Set at least your Battlefield 2142 client path in "Settings" tab (this will make the other tabs visible).
-- If your BF2142 game/server folder is read only, you need to allow the elevation request from elevatedio (to run as administrator). Elevatedio will be only started when it's required.
-- Goto "Join" tab and click on "Just play". You'll get logged in and can start playing in singleplayer or multiplayer/lan.<br />
-  *Info: "Just play" read out ip addresses and chooses the first. When coop/lan is not working with your friends goto the next step.*
-- Goto "Host" tab and enter your IP address in "Server IP-Address", the login, unlock and BF2142 game server should listen to (it's prefilled with the first ip address the unlocker read out). Start login/unlock server by clicking on "Host login server only".
-- Goto "Join" tab and click on connect (IP address will be set after you launched the login/unlock server). Tell your friends the ip address to connect to.<br />
-  *Info: localhost and ipv6 addresses are not supported. Also be carefull with the ip address you want to join. If BF2142 cannot connect to given ip address, BF2142 will stuck in a black screen.*
-- *Optional: You could also set the Battlefield 2142 Server path in "Settings" tab to configure server settings and start the game server in "Host" tab. To host login/unlock and game server, just click on "Host". If you want, you could enable "Auto join server" in "Join" tab to automatically join the game server.<br />
-  Info: This works well on windows. On linux you currently need to add the ncurses version 5 shared library to your game servers bin/amd-64/ path. (libncurses.so.5 and libtinfo.so.5)*
+- Set your Battlefield 2142 path in "Settings" tab.
+- Goto "Join" tab and click on "Just play". You'll get logged in and can start playing in singleplayer or multiplayer/lan (with unlocks). Tell your friends your ip address they need to connect to. You can also host the login/unlock server in "Host" tab by clicking on "Host login/unlock server". If you want or need to, you can set your ip address in "Settings" in "Host" tab (you maybe need to scroll down).
+
+## Host dedicated server:
+- Set your Battlefield 2142 game serer path in "Settings" tab.
+- Goto "Host" tab and enter your IP address in "Server IP-Address" on which the login, unlock and BF2142 game server should listen (it's pre filled with the first ip address BF2142Unlocker could read out).<br />
+  *Info: To play through VPN you need to set the "Server IP-Address" to: 0.0.0.0*
+- Goto "Join" tab and click on connect (the ip address is set after you launched the server). Tell your friends the ip address to connect to.<br />
+  *Info: If your hosting through vpn, then you need to enter your private local ip address into "IP-Address" field in "Join" tab. Your friends need to connect to the vpn ip address. Setting "Auto join server" connects you automatically to your game server.*
 
 
 ## Screenshots (Linux version)
 ### GUI:
 |   |   |
 | - | - |
-| ![Host menu](screenshots/gui_host.png) | ![Settings menu](screenshots/gui_settings.png) |
-| ![Join menu](screenshots/gui_join.png) | ![Join menu just play](screenshots/gui_join_justplay.png) |
-### Ingame:
+| ![Host menu](screenshots/gui_join.png) | ![Settings menu](screenshots/gui_host.png) |
+| ![Join menu](screenshots/gui_unlocks.png) | ![Join menu just play](screenshots/gui_settings.png) |
+### In game:
 |   |   |
 | - | - |
 | ![Ingame Recon](screenshots/ingame_recon.png) | ![Ingame Assault](screenshots/ingame_assault.png) |
 | ![Ingame Engineer](screenshots/ingame_engineer.png) | ![Ingame Support](screenshots/ingame_support.png) |
 
 ## Optional requirements
-### Install the Battlefield 2142 Server (to enable configuration in the Host tab)
+### Battlefield 2142 Dedicated Server
 - Windows: ftp://ftp.bf-games.net/server-files/bf2142/Battlefield_2142_Server_Unranked.exe
 - Linux: ftp://ftp.bf-games.net/server-files/bf2142/bf2142-linuxded-1.10.112.0-installer.rar
-### 64 Coop Maps
+### Mappack for vanilla game
 - Goto https://battlefield2142.co/ and click on "Download Map Pack".
 - Unzip downloaded mappack.
 - Start BF2142Unlocker and go to "Settings" tab.
-- Click on "Copy 64 coop maps (client)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 client path must be set*).
-- Click on "Copy 64 coop maps (server)" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 server path must be set*).
+- Click on "Copy maps to client" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 client path must be set*).
+- Click on "Copy maps to server" and select the Levels folder from extracted zip file (*Warning: Battlefield 2142 server path must be set*).
 
 ---
 

@@ -29,6 +29,11 @@ msgstr ""
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr ""
 
+msgid "JOIN_SKIP_MOVIES"
+msgstr ""
+msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgstr ""
+
 msgid "JOIN_WINDOW_MODE"
 msgstr ""
 msgid "JOIN_WINDOW_MODE_TOOLTIP"
@@ -196,11 +201,6 @@ msgid "SETTINGS_WINEPREFIX_TOOLTIP"
 msgstr ""
 
 msgid "SETTINGS_STARTUP_QUERY"
-msgstr ""
-
-msgid "SETTINGS_DELETE_INTRO_MOVIES"
-msgstr ""
-msgid "SETTINGS_DELETE_INTRO_MOVIES_TOOLTIP"
 msgstr ""
 
 msgid "SETTINGS_COPY_MAPS_CLIENT"
