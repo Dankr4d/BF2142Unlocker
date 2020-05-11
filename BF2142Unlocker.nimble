@@ -1,5 +1,5 @@
 ### Package
-version       = "0.9.2"
+version       = "0.9.3"
 author        = "Dankrad"
 description   = "Play and host BF2142 server with all unlocks."
 license       = "MIT"
