@@ -1,5 +1,5 @@
-import os
-import strutils
+import parseutils # Required for for parsing gs output
+import strutils # Required for parseEnum
 
 type
   MapMode* = enum
@@ -20,44 +20,46 @@ type
     mapName*: string # Should be in extra Map object
     mapMode*: MapMode # Should be in extra Map object
     mapSize*: int # uint8 and should be in extra Map object
+    `mod`*: string
+    players*: int
+    maxPlayers*: int
+    round*: int
+    rounds*: int
     status*: GsStatus
 
-proc parseGsData*(raw: string): GsData = # TODO: Write a real parser without substr and find
-  var lines: seq[string] = raw.splitLines()
-  var line: string
-  ## Map name
-  line = lines[2]
-  let mapNamePosStart: int = 46
-  let mapnamePosEnd: int = line.find(" ", mapNamePosStart) - 1
-  result.mapName = line.substr(mapNamePosStart, mapnamePosEnd)
-  #
-  ## Map mode
-  line = lines[3]
-  let mapModePosStart: int = 11
-  let mapModePosEnd: int = line.find("/", mapModePosStart) - 1
-  result.mapMode = parseEnum[MapMode](line.substr(mapModePosStart, mapModePosEnd))
-  #
-  ## Map size
-  # line = lines[3] # Not required, because this line is already set
-  let mapSizePosStart: int = line.find("/") + 1
-  let mapSizePosEnd: int = mapSizePosStart + 1
-  result.mapSize = parseInt(line.substr(mapSizePosStart, mapSizePosEnd))
-  ## Gs status
-  line = lines[4]
-  var statusPosStart: int = 70
-  var statusPosEnd: int = line.find("]", statusPosStart) - 1
-  result.status = parseEnum[GsStatus](line.substr(statusPosStart, statusPosEnd))
-  #
+proc parse(str, `from`, to: string, pos: var int): string =
+  var parsedChars: int
+  parsedChars = str.parseUntil(result, `from`, pos)
+  pos += parsedChars + `from`.len
+  parsedChars = str.parseUntil(result, to, pos)
+  pos += parsedChars + to.len
+
+proc parseGsData*(raw: string): GsData =
+  var currentPosition: int = 0
+  result.mapName = raw.parse("Map: ", " ", currentPosition)
+  result.mapMode = parseEnum[MapMode](raw.parse("Game mode: ", "/", currentPosition))
+  result.mapSize = parseInt(raw.parse("", " ", currentPosition))
+  result.`mod` = raw.parse("Mod: ", " ", currentPosition)
+  result.players = parseInt(raw.parse("Players: ", "/", currentPosition))
+  result.maxPlayers = parseInt(raw.parse("", " ", currentPosition))
+  result.round = parseInt(raw.parse("Round: ", "/", currentPosition))
+  result.rounds = parseInt(raw.parse("", " ", currentPosition))
+  result.status = parseEnum[GsStatus](raw.parse("Status: [", "]", currentPosition))
 
 when isMainModule:
+  import os
   import getprocessbyname
+  import gethwndbypid
   import stdoutreader
+  import winim
   var pid: int = getPidByName("BF2142_w32dedUnlocker.exe")
+  var hwnd: HWND = getHWndByPid(pid)
+  SetWindowLongPtrA(hwnd, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
   var cnt: int = 0
   while cnt < 3:
-    var stdouTpl: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
-    if stdouTpl.lastError > 0:
+    var stdoutTpl: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
+    if stdoutTpl.lastError > 0:
       echo osErrorMsg(osLastError())
       break
-    echo parseGsData(stdouTpl.stdout)
+    echo parseGsData(stdoutTpl.stdout)
     cnt.inc()

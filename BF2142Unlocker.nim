@@ -1175,6 +1175,9 @@ proc killProcess*(pid: int) = # TODO: Add some error handling
 proc threadGameServerProc(pid: int) {.thread.} =
   var exitCode: DWORD
   var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
+  # Disable resizing and maximize button (this breaks readability and
+  # stdoutreader fails if region rect is wrong because of resizing)
+  SetWindowLongPtrA(hwnd, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
   var channelData: ChannelData = ChannelData(running: true, data: "")
   if hndl == 0:
     channelData.running = false

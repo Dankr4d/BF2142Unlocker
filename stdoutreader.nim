@@ -13,12 +13,12 @@ proc stringify(buffer: PCHAR_INFO, length: int): string = # TODO: Array length
     charInfo = buffer[idx]
     result.add(charInfo.Char.AsciiChar)
 
-proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
+proc readStdOut*(pid: int, addNewLines: bool = false): tuple[lastError: uint32, stdout: string] =
   if FreeConsole().bool == false:
     return (GetLastError().uint32, "")
   if AttachConsole(pid.DWORD).bool == false:
     return (GetLastError().uint32, "")
-  var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE) # INVALID_HANDLE_VALUE
+  var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE)
   if stdHandle == INVALID_HANDLE_VALUE:
     return (GetLastError().uint32, "")
   var screenBufferInfo: CONSOLE_SCREEN_BUFFER_INFO
@@ -48,11 +48,12 @@ proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
   result = (0.uint32, stringify(buffer, bufferLen))
   dealloc(buffer)
 
-  var cntNewLines: int = 0
-  if dwBufferSize.X > 0:
-    for idx in countup(dwBufferSize.X.int, result.stdout.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
-      result.stdout.insert("\n", idx + cntNewLines)
-      cntNewLines.inc()
+  if addNewLines:
+    var cntNewLines: int = 0
+    if dwBufferSize.X > 0:
+      for idx in countup(dwBufferSize.X.int, result.stdout.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
+        result.stdout.insert("\n", idx + cntNewLines)
+        cntNewLines.inc()
 
 when isMainModule:
   import os
