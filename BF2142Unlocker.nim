@@ -168,6 +168,7 @@ const
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
 const LANGUAGE_FILE: string = "lang.txt"
+const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE"]
 
 const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
@@ -1840,9 +1841,6 @@ proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
   onQuit()
 
 proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
-  if cbxLanguages.active == 0:
-    discard removeFile(LANGUAGE_FILE)
-    return
   if writeFile(LANGUAGE_FILE, cbxLanguages.activeId):
     newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
 
@@ -2009,22 +2007,23 @@ proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
     var currentLocaleRawOpt: Option[TaintedString] = readFile(LANGUAGE_FILE)
     if currentLocaleRawOpt.isSome:
-      currentLocale = currentLocaleRawOpt.get()
+      currentLocale = currentLocaleRawOpt.get().strip()
   discard bindtextdomain("gui", os.getCurrentDir() / "locale")
-  if currentLocale == "": # Is empty if no LANGUAGE_FILE file was found
-    currentLocale = $setlocale(LC_ALL, "");
+  disableSetlocale()
+  if currentLocale in AVAILABLE_LANGUAGES:
     when defined(windows):
-      # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
-      discard bind_textdomain_codeset("gui", "UTF-8")
-    if currentLocale == "":
-      disableSetlocale() # Required to set locale manually (in following line)
-      # Setting language to en_US.utf8 when locale is not supported
-      # TODO: Note, that this is not working if en_US.utf8 is not installed
-      discard setlocale(LC_ALL, "en_US.utf8")
+      var lcid: LCID =  LocaleNameToLCID(currentLocale.replace("_", "-"), LOCALE_ALLOW_NEUTRAL_NAMES)
+      discard SetThreadLocale(lcid)
+    else:
+      discard setlocale(LC_ALL, currentLocale)
   else:
-    # Setting manually selected langauge
-    disableSetlocale() # Required to set locale manually (in following line)
-    discard setlocale(LC_ALL, currentLocale)
+    # locale in lang.txt is empty or locale.txt does not exists or is not available
+    currentLocale = "auto" # Set currentLocale to "auto" if not already set
+    when defined(windows):
+      var lcid: LCID = LocaleNameToLCID("en-US", LOCALE_ALLOW_NEUTRAL_NAMES)
+      discard SetThreadLocale(lcid)
+    else:
+      discard setlocale(LC_ALL, "en_US")
 
 proc main =
   languageLogic()

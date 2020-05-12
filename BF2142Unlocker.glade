@@ -276,15 +276,15 @@
     </columns>
     <data>
       <row>
-        <col id="0"> </col>
+        <col id="0">auto</col>
         <col id="1">Auto detect</col>
       </row>
       <row>
-        <col id="0">en_US.utf8</col>
-        <col id="1">English</col>
+        <col id="0">en_US</col>
+        <col id="1">Englisch</col>
       </row>
       <row>
-        <col id="0">de_DE.utf8</col>
+        <col id="0">de_DE</col>
         <col id="1">German</col>
       </row>
     </data>
@@ -2018,11 +2018,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="model">listStoreLanguages</property>
-                <property name="active">1</property>
                 <property name="has_entry">True</property>
                 <property name="entry_text_column">1</property>
                 <property name="id_column">0</property>
-                <property name="active_id"> </property>
+                <property name="active_id">auto</property>
                 <signal name="changed" handler="onCbxLanguagesChanged" swapped="no"/>
                 <child internal-child="entry">
                   <object class="GtkEntry">
