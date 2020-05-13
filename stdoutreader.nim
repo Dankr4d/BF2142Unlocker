@@ -1,24 +1,23 @@
 import winim
-import getprocessbyname
 
-# Templates copied form: https://forum.nim-lang.org/t/1188#7366
+# Templates copied from: https://forum.nim-lang.org/t/1188#7366
 template `+`*[T](p: ptr T, off: int): ptr T =
   cast[ptr type(p[])](cast[ByteAddress](p) +% off * sizeof(p[]))
 template `[]`*[T](p: ptr T, off: int): T =
   (p + off)[]
 
-proc stringify(buffer: PCHAR_INFO, length: int): string = # TODO: Array length
+proc stringify(buffer: PCHAR_INFO, length: int): string =
   var charInfo: CHAR_INFO
   for idx in 0..length - 1:
     charInfo = buffer[idx]
     result.add(charInfo.Char.AsciiChar)
 
-proc readStdOut*(pid: int, addNewLines: bool = false): tuple[lastError: uint32, stdout: string] =
+proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
   if FreeConsole().bool == false:
     return (GetLastError().uint32, "")
   if AttachConsole(pid.DWORD).bool == false:
     return (GetLastError().uint32, "")
-  var stdHandle: Handle = GetStdHandle(STD_OUTPUT_HANDLE)
+  var stdHandle: HANDLE = GetStdHandle(STD_OUTPUT_HANDLE)
   if stdHandle == INVALID_HANDLE_VALUE:
     return (GetLastError().uint32, "")
   var screenBufferInfo: CONSOLE_SCREEN_BUFFER_INFO
@@ -48,17 +47,17 @@ proc readStdOut*(pid: int, addNewLines: bool = false): tuple[lastError: uint32, 
   result = (0.uint32, stringify(buffer, bufferLen))
   dealloc(buffer)
 
-  if addNewLines:
-    var cntNewLines: int = 0
-    if dwBufferSize.X > 0:
-      for idx in countup(dwBufferSize.X.int, result.stdout.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
-        result.stdout.insert("\n", idx + cntNewLines)
-        cntNewLines.inc()
+  var cntNewLines: int = 0
+  if dwBufferSize.X > 0:
+    for idx in countup(dwBufferSize.X.int, result.stdout.len - dwBufferSize.X, dwBufferSize.X): # Add newline after last chracter in row
+      result.stdout.insert("\n", idx + cntNewLines)
+      cntNewLines.inc()
 
 when isMainModule:
   import os
+  import getprocessbyname
   var pid: int = getPidByName("BF2142_w32ded.exe")
   echo "PID: ", $pid
-  while true:
+  while pid != 0:
     echo readStdOut(pid)
     sleep 50
