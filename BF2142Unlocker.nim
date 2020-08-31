@@ -57,7 +57,7 @@ const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamati
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
-const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
+const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"]
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -502,7 +502,7 @@ proc backupOpenSpyIfExists() =
     return
   let openspyMd5Hash: string = getMD5(openspyDllRawOpt.get())
   let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
     if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
       return
@@ -534,7 +534,7 @@ proc restoreOpenSpyIfExists() =
   if openspyMd5RawOpt.isNone:
     return
   let openspyMd5Hash: string = getMD5(openspyMd5RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
     var tryCnt: int = 0
     while tryCnt < 8:

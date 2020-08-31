@@ -1,5 +1,5 @@
 ### Package
-version       = "0.9.3"
+version       = "0.9.4"
 author        = "Dankrad"
 description   = "Play and host BF2142 server with all unlocks."
 license       = "MIT"
@@ -11,6 +11,8 @@ bin           = @[""]
 requires "nim 1.0.6"
 requires "gintro >= 0.7.0"
 requires "winim >= 3.2.4"
+when defined(windows):
+  requires "winregistry >= 0.2.1"
 when defined(linux):
   requires "psutil >= 0.5.7"
 ##
@@ -137,7 +139,7 @@ when defined(windows):
   const GTK_LIBS: seq[string] = @[
     "gdbus.exe", "gspawn-win64-helper-console.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
     "libcairo-gobject-2.dll", "libcroco-0.6-3.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll",
-    "libffi-6.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll",
+    "libffi-7.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll",
     "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
     "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
     "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",

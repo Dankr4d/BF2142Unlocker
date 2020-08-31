@@ -9,8 +9,8 @@ BF2142Unlocker emulates the necessary login and unlock server to be able to play
 - Battlefield 2142 updated to version 1.51.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9.3 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_win.zip)
-- [Download BF2142 Unlocker v0.9.3 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_linux.zip)
+- [Download BF2142 Unlocker v0.9.4 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.4/BF2142Unlocker_v0.9.4_win.zip)
+- [Download BF2142 Unlocker v0.9.4 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.4/BF2142Unlocker_v0.9.4_linux.zip)
 
 ## Instructions / How to play:
 - Start the BF2142Unlocker:
