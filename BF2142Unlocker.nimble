@@ -14,7 +14,7 @@ requires "winim >= 3.4.0"
 when defined(windows):
   requires "winregistry >= 0.2.1"
 when defined(linux):
-  requires "psutil >= 0.5.7"
+  requires "psutil >= 0.6.0"
 ##
 
 ### imports

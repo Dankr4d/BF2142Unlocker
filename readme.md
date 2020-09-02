@@ -59,7 +59,7 @@ BF2142Unlocker emulates the necessary login and unlock server to be able to play
 - `pacman -Syu # Upgrade all packages`
 - `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject make tar git`
 - `cd /c/Users/$USER; mkdir projects; cd projects;`
-- `git clone https://github.com/nim-lang/Nim.git`
+- `git clone -b version-1-2 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
 - `./build_all.bat # Build nim and all tools (like nimble)`
 - `export PATH="$PATH:/c/Users/$USER/projects/Nim/bin"`
