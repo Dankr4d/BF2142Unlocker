@@ -53,7 +53,7 @@ BF2142Unlocker emulates the necessary login and unlock server to be able to play
 ---
 
 ## Compile (Windows 64 bit)
-- Install MSYS2 (https://www.msys2.org/)
+- Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 64bit" at the end of installation wizard]
 - Start MSYS2 MINGW64
 - `pacman -Syu # Upgrade base`
 - `pacman -Syu # Upgrade all packages`

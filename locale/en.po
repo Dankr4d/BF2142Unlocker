@@ -325,6 +325,14 @@ msgstr ""
 "Opens your web browser to Project Remaster's ModDB page.\n"
 "They remastered BF2142 to HD!"
 
+msgid "FIRST_STRIKE_MODDB"
+msgstr "First Strike Mod"
+
+msgid "FIRST_STRIKE_MODDB_TOOLTIP"
+msgstr ""
+"Opens your web browser to First Strike's ModDB page.\n"
+"They made a Star Wars mod!"
+
 msgid "PLAY_ONLINE"
 msgstr "Play online"
 
