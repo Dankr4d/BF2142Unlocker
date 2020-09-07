@@ -15,12 +15,7 @@ proc handleClient(client: Socket) =
     discard
   echo "GPCM - Received: ", data
   sdata = """\lc\2\sesskey\""" & $playerId & """\proof\\userid\""" & $playerId & """\profileid\""" & $playerId & """\uniquenick\\id\1\final\"""
-  try:
-    client.send(sdata)
-  except OSError:
-    return # TODO: This may crash in the connection testing state from the gui.
-           # It fails with: An connection was forcibly closed by the remote host.
-           #                Additional info: "Could not send all data."
+  client.send(sdata)
   echo "GPCM - Send: ", sdata
   playerId.inc()
   while true:
