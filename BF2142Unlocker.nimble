@@ -33,7 +33,7 @@ const
   NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
   NCURSES_PATH: string = "deps" / "ncurses"
   NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
-  LANGUAGES: seq[string] = @["en", "de"]
+  LANGUAGES: seq[string] = @["en", "de", "ru"]
 when defined(windows):
   const
     BUILD_BIN_DIR: string = BUILD_DIR / "bin"

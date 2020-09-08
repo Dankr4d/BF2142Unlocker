@@ -287,6 +287,10 @@
         <col id="0">de_DE.utf8</col>
         <col id="1">German</col>
       </row>
+      <row>
+        <col id="0" translatable="yes">ru_RU.utf8</col>
+        <col id="1" translatable="yes">Russian</col>
+      </row>
     </data>
   </object>
   <object class="GtkListStore" id="listStoreResolutions">

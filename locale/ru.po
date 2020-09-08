@@ -1,0 +1,390 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: BF 2142Unlocker\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: CptGnezdilov\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 2.4.1\n"
+
+msgid "JOIN_IP_ADDRESS"
+msgstr "IP адрес:"
+
+msgid "JOIN_IP_ADDRESS_TOOLTIP"
+msgstr ""
+"Введите IP целевого логин-сервера,к которому хотите подключиться.\n"
+"Стандарт/Пусто - это ваш компютер,если нажать \"Только играть\"."
+
+msgid "JOIN_AUTO_JOIN_SERVER"
+msgstr "Автоприсоединение к серверу:"
+
+msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgstr "Автоматически подключитесь к игровому серверу, если он прослушивает тот же IP-адрес, что и логин-сервер."
+
+msgid "JOIN_CONNECT"
+msgstr "Подключиться"
+
+msgid "JOIN_CONNECT_TOOLTIP"
+msgstr "Подключитесь к логин-серверу, используя введенный IP-адрес."
+
+msgid "JOIN_MODS"
+msgstr "Модификации:"
+
+msgid "JOIN_MODS_TOOLTIP"
+msgstr "Выберете модификацию для запуска игры"
+
+msgid "JOIN_PLAYER_NAME"
+msgstr "Имя игрока:"
+
+msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgstr "Позывной в игре."
+
+msgid "JOIN_SKIP_MOVIES"
+msgstr "Пропуск втупительных роликов"
+
+msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgstr "Пропустить видео при запуске"
+
+msgid "JOIN_WINDOW_MODE"
+msgstr "Оконный режим"
+
+msgid "JOIN_WINDOW_MODE_TOOLTIP"
+msgstr "Запуск игры в оконном режиме."
+
+msgid "JOIN_RESOLUTION"
+msgstr "Разрешение:"
+
+msgid "JOIN_RESOLUTION_TOOLTIP"
+msgstr "Разрешение экрана в оконном режиме"
+
+msgid "JOIN_JUST_PLAY_CANCEL"
+msgstr "Отмена"
+
+msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
+msgstr "Остановить все сервера"
+
+msgid "JOIN_JUST_PLAY"
+msgstr "Только играть"
+
+msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgstr ""
+"Запустите логин сервер или сервер с анлокми с IP aдресом вашего компьютера и запустите игру с ним.\n"
+"Это быстрый способ запустить одиночный режим"
+
+msgid "JOIN_GAME_SETTINGS"
+msgstr "Настройки игры"
+
+msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgstr "Настройки подключения для серверов"
+
+msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgstr "Базовые настройки, с кроторыми запуститя игра"
+
+msgid "CHECK_CAN_NOT_CONNECT"
+msgstr ""
+"Не удалось подключиться к данному IP-адресу.\n"
+"Cледующий сервер недоступен:"
+
+msgid "CHECK_LOGIN_SERVER"
+msgstr "Логин-Сервер:"
+
+msgid "CHECK_GPCM_SERVER"
+msgstr "Сервер GPCM :"
+
+msgid "CHECK_UNLOCK_SERVER"
+msgstr "Сервер с разблокировкой:"
+
+msgid "CHECK_CANCEL"
+msgstr "Отмена"
+
+msgid "HOST_SETTINGS"
+msgstr "Настройки"
+
+msgid "HOST_MODS"
+msgstr "Модификации:"
+
+msgid "HOST_MODS_TOOLTIP"
+msgstr "Выбрать модификацию, с которой запустится сервер"
+
+msgid "HOST_GAME_MODE"
+msgstr "Режим игры:"
+
+msgid "HOST_GAME_MODE_TOOLTIP"
+msgstr ""
+"Выбор доступных режимов игры.\n"
+"Доступность карт зависит от выбранного режима."
+
+msgid "HOST_BOT_SKILL"
+msgstr "Сложность ботов:"
+
+msgid "HOST_BOT_SKILL_TOOLTIP"
+msgstr "Настроить сложность ботов"
+
+msgid "HOST_TICKET_RATIO"
+msgstr "Соотношение очков подкрепления:"
+
+msgid "HOST_TICKET_RATIO_TOOLTIP"
+msgstr "Очки подкрепления для каждой команды в %"
+
+msgid "HOST_SPAWN_TIME"
+msgstr "Время возрождения:"
+
+msgid "HOST_SPAWN_TIME_TOOLTIP"
+msgstr "Сколько ждать после смерти, прежде чем можно снова вступить в бой"
+
+msgid "HOST_ROUNDS_PER_MAP"
+msgstr "Раундов за карту:"
+
+msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
+msgstr ""
+"Количество раундов для игры на каждой карте перед переключением на следующую в списке\n"
+"Сколько раундов играть на"
+
+msgid "HOST_BOT_AMOUNT"
+msgstr "Кол-во ботов:"
+
+msgid "HOST_BOT_AMOUNT_TOOLTIP"
+msgstr "Всего ботов на карте"
+
+msgid "HOST_MAX_PLAYERS"
+msgstr "Макс. число игроков:"
+
+msgid "HOST_MAX_PLAYERS_TOOLTIP"
+msgstr ""
+"Всего живых игроков на карте.\n"
+"Человек заменит бота,если количество меньше чем \"Количество ботов\"."
+
+msgid "HOST_PLAYERS_NEEDED_TO_START"
+msgstr "Нужно игроков,чтобы начать:"
+
+msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
+msgstr "Сколько живых игроков необходимо подключить к игре, чтобы начать раунд"
+
+msgid "HOST_FRIENDLY_FIRE"
+msgstr "Огонь по своим:"
+
+msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
+msgstr "Вкл/откл огонь по своим"
+
+msgid "HOST_ALLOW_NOSE_CAM"
+msgstr "Разрешить камеру \"из глаз\":"
+
+msgid "HOST_ALLOW_NOSE_CAM_TOOLTIP"
+msgstr "Вкл/Откл камеру на носу самолета или \"из глаз\"."
+
+msgid "HOST_SERVER_IP_ADDRESS"
+msgstr " IP адрес сервера :"
+
+msgid "HOST_SERVER_IP_ADDRESS_TOOLTIP"
+msgstr ""
+"Выберите IP-адрес логина и игрового сервера.\n"
+"По умолчанию текущий IP-адрес вашего компьютера\n"
+"Сообщите этот адрес своим друзьям, чтобы они могли подключиться к вам."
+
+msgid "HOST_MAPS"
+msgstr "Карты"
+
+msgid "HOST_SELECTABLE_MAPS_TOOLTIP"
+msgstr ""
+"Список карт,доступных для игры.\n"
+"Зависит от выбранного режима игры"
+
+msgid "HOST_SELECTED_MAPS_TOOLTIP"
+msgstr "Сколько карт в списке"
+
+msgid "HOST_MAPS_ADD_TOOLTIP"
+msgstr "Добавить карты в список"
+
+msgid "HOST_MAPS_REMOVE_TOOLTIP"
+msgstr "Удалить из списка"
+
+msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
+msgstr "Переместить вверх по списку"
+
+msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
+msgstr "Переместить вниз по списку"
+
+msgid "HOST_TERMINALS"
+msgstr "Терминалы"
+
+msgid "HOST_LOGIN_UNLOCK_SERVER"
+msgstr "Хост сервера с разболкировками"
+
+msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
+msgstr "Старт только логин/разблокировочного севрера"
+
+msgid "HOST_HOST"
+msgstr "Хост"
+
+msgid "HOST_HOST_TOOLTIP"
+msgstr "Запустить логин-сервер / серве разблокировок с выбранной настройкой"
+
+msgid "HOST_CANCEL"
+msgstr "Отмена"
+
+msgid "HOST_CANCEL_TOOLTIP"
+msgstr "Остановить все сервера!"
+
+msgid "UNLOCKS_SQUAD_GADGETS"
+msgstr "Разблокировать устройства для отрядов:"
+
+msgid "UNLOCKS_SQUAD_GADGETS_INFO"
+msgstr "Cейчас вы можете включить / отключить только два последних устройства для командира отряда. Позже он будет заменен полнофункциональным экраном настройки разблокировок, где  вы сможете включить / отключить все разблокировки, доступные в игре."
+
+msgid "SETTINGS_BF2142_GAME_PATH"
+msgstr "Путь к игре Battlefield 2142 :"
+
+msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
+msgstr "Выберите папку с Battlefield 2142 "
+
+msgid "SETTINGS_BF2142_SERVER_PATH"
+msgstr "Путь к серверной версии Battlefield 2142:"
+
+msgid "SETTINGS_BF2142_SERVER_PATH_TOOLTIP"
+msgstr ""
+"Выберите папку с BF2142 (нужно только для старта с -Host).\n"
+"Это выделенный неранговый сервер"
+
+msgid "SETTINGS_WINEPREFIX"
+msgstr "Префикс Wine:"
+
+msgid "SETTINGS_WINEPREFIX_TOOLTIP"
+msgstr "Выберите префикс, чтобы начать игру (если возможно,он прочтется автоматом)."
+
+msgid "SETTINGS_STARTUP_QUERY"
+msgstr "Ключ запуска :"
+
+msgid "SETTINGS_COPY_MAPS_CLIENT"
+msgstr "Копир. карты на клиент"
+
+msgid "SETTINGS_COPY_MAPS_SERVER"
+msgstr "Копир. карты на сервер"
+
+msgid "SETTINGS_SELECT"
+msgstr "Выбрать"
+
+msgid "TAB_JOIN"
+msgstr "Присоедениться"
+
+msgid "TAB_JOIN_TOOLTIP"
+msgstr "Настройки для присоединения к серверу"
+
+msgid "TAB_HOST"
+msgstr "Хост"
+
+msgid "TAB_HOST_TOOLTIP"
+msgstr "Настройки хоста"
+
+msgid "TAB_UNLOCKS"
+msgstr "Разблокировано"
+
+msgid "TAB_UNLOCKS_TOOLTIP"
+msgstr "Здесь вы можете изменить доступные разблокированные элементы экипировки."
+
+msgid "TAB_SETTINGS"
+msgstr "Настройки"
+
+msgid "TAB_SETTINGS_TOOLTIP"
+msgstr "Основные настройки"
+
+msgid "VERSION_TOOLTIP"
+msgstr "Текущая версия"
+
+msgid "UNLOCKER_GITHUB"
+msgstr "Github"
+
+msgid "UNLOCKER_GITHUB_TOOLTIP"
+msgstr ""
+"Открыть страницу инструмента на GitHub.\n"
+"Вкладывайтесь!"
+
+msgid "UNLOCKER_MODDB"
+msgstr "Moddb"
+
+msgid "UNLOCKER_MODDB_TOOLTIP"
+msgstr "Открыть страницу инструмента на ModDB."
+
+msgid "PROJECT_REMASTER_MODDB"
+msgstr "Project Remaster Mod"
+
+msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
+msgstr ""
+"Перейти на страницу Project Remaster's на  ModDB.\n"
+"Они сделали BF2142 в HD!"
+
+msgid "FIRST_STRIKE_MODDB"
+msgstr "First Strike Mod"
+
+msgid "FIRST_STRIKE_MODDB_TOOLTIP"
+msgstr ""
+"Перейти на страницу проекта First Strike на ModDB.\n"
+"Они создали мод \"Звездные войны\"!"
+
+msgid "PLAY_ONLINE"
+msgstr "Играть онлайн"
+
+msgid "PLAY_ONLINE_TOOLTIP"
+msgstr ""
+"Откройте браузер на сайте проекта Reclamation's .\n"
+"Они держат онлайн-сервера BF2142!"
+
+msgid "GAMESERVER_CRASHED"
+msgstr ""
+"Ошибка: Отказ сервера Battlefield 2142.\n"
+"Скорее всего, это ошибка карты. Некоторые карты не работают идеально и могут привести к сбою всего сервера."
+
+msgid "NO_WRITE_PERMISSION_TITLE"
+msgstr "Нет прав на запись"
+
+msgid "NO_WRITE_PERMISSION_MSG"
+msgstr ""
+"Нет прав на запись:\n"
+"$#"
+
+msgid "COULD_NOT_FIND_TITLE"
+msgstr "Невозможно найти $#"
+
+msgid "COULD_NOT_FIND_MSG"
+msgstr "Не найдено $#. Неверный путь!"
+
+msgid "COPIED_MAPS"
+msgstr "Карты скопированы"
+
+msgid "COPIED_MAPS_CLIENT"
+msgstr "Карты успешно скопированы на клиент!"
+
+msgid "COPIED_MAPS_SERVER"
+msgstr "Карты успешно скопированы на сервер!"
+
+msgid "SELECT_MAPS_FOLDER_CLIENT"
+msgstr "Выберите папку с уровнями чтобы скопировать на клиент"
+
+msgid "SELECT_MAPS_FOLDER_SERVER"
+msgstr "Выберите папку с уровнями чтобы скопировать на сервер"
+
+msgid "NO_LOCAL_IP_ADDRESS_TITLE"
+msgstr "Не найден локальный IP"
+
+msgid "NO_LOCAL_IP_ADDRESS_MSG"
+msgstr ""
+"Не найден локальный IP\n"
+"Подключитесь к маршрутизатору (с включенным DHCP) или настройте его вручную."
+
+msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
+msgstr "Не найден приватный локальный IP"
+
+msgid "NO_PRIVATE_IP_ADDRESS_MSG"
+msgstr ""
+"Не удалось прочитать локальный приватный IP.\n"
+"Подключитесь к маршрутизатору (с включенным DHCP) или настройте его вручную."
+
+msgid "NO_VALID_IP_ADDRESS_TITLE"
+msgstr "Неверный IP"
+
+msgid "NO_VALID_IP_ADDRESS_MSG"
+msgstr "Введенный IP-адрес не является действительным IPv4-адресом."

@@ -9,7 +9,7 @@ when isMainModule and defined(windows):
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
   var LC_ALL {.header: "<locale.h>", importc.}: int
   const LANGUAGE_FILE: string = "lang.txt"
-  const AVAILABLE_LANGUAGES: seq[string] = @["en_US.utf8", "de_DE.utf8"]
+  const AVAILABLE_LANGUAGES: seq[string] = @["en_US.utf8", "de_DE.utf8", "ru_RU.utf8"]
   const DEFAULT_LANGUAGE: string = "en_US.utf8"
   var lang: string
   if fileExists(LANGUAGE_FILE):
@@ -22,6 +22,8 @@ when isMainModule and defined(windows):
       putEnv("LANG", "en_US.utf8")
     elif lang.startsWith("German"):
       putEnv("LANG", "de_DE.utf8")
+    elif lang.startsWith("Russian"):
+      putEnv("LANG", "ru_RU.utf8")
     else:
       putEnv("LANG", DEFAULT_LANGUAGE)
   #
