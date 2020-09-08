@@ -2,6 +2,7 @@ import net
 import os
 import tables, strutils
 import strformat # Required for fmt macro
+import pure/terminal
 
 const MESSAGE_PREFIX_LEN: int = 12
 
@@ -180,17 +181,16 @@ proc parseData(data: string): Table[string, string] =
     if keyVal.len == 1: break
     result.add(keyVal[0], keyVal[1])
 
-proc send(client: Socket, data: string) =
-  net.send(client, data)
-  var txnPos: int = data.find("TXN=", MESSAGE_PREFIX_LEN) + 4
-  echo "FESL - Send: ", data.substr(txnPos, data.find({' ', '\n'}, txnPos))
+proc send(client: Socket, data: EaMessageOut, id: uint8) =
+  net.send(client, data.serialize(id))
+  stdout.styledWriteLine(fgGreen, "<== ", fgCyan, "LOGIN: ", resetStyle, $data) # data.substr(txnPos, data.find({' ', '\n'}, txnPos)))
 
 proc pingInterval(data: tuple[client: Socket, channelKillThread: ptr Channel[void]]) {.thread.} =
   while true:
     sleep(30_000)
     if cast[var Channel[void]](data.channelKillThread).peek() == -1: # TODO: Need to cast every loop, because cast creates a new object
       return
-    data.client.send(newPingOut().serialize(0))
+    data.client.send(newPingOut(), 0)
 
 
 proc handleFeslClient(client: Socket) {.thread.} =
@@ -219,26 +219,26 @@ proc handleFeslClient(client: Socket) {.thread.} =
       break
     dataTbl = data.parseData()
     if dataTbl.contains("TXN"):
-      echo "FESL - Received: ", dataTbl
+      stdout.styledWriteLine(fgGreen, "==> ", fgCyan, "LOGIN: ", resetStyle, $dataTbl)
       case dataTbl["TXN"]:
         of "Hello":
-          client.send(newHelloOut().serialize(id))
-          client.send(newMemCheckOut().serialize(id))
+          client.send(newHelloOut(), id)
+          client.send(newMemCheckOut(), id)
         of "Login":
           playerName = dataTbl["name"]
-          client.send(newLoginOut(playerName).serialize(id))
+          client.send(newLoginOut(playerName), id)
         of "GetEntitlementByBundle":
-          client.send(newGetEntitlementByBundleOut().serialize(id))
+          client.send(newGetEntitlementByBundleOut(), id)
         of "GetObjectInventory":
-          client.send(newGetObjectInventoryOut().serialize(id))
+          client.send(newGetObjectInventoryOut(), id)
         of "GetSubAccounts":
-          client.send(newGetSubAccountsOut(playerName).serialize(id))
+          client.send(newGetSubAccountsOut(playerName), id)
         of "LoginSubAccount":
-          client.send(newLoginSubAccountOut().serialize(id))
+          client.send(newLoginSubAccountOut(), id)
         of "GetAccount":
-          client.send(newGetAccountOut(playerName).serialize(id))
+          client.send(newGetAccountOut(playerName), id)
         of "GameSpyPreAuth":
-          client.send(newGameSpyPreAuthOut().serialize(id))
+          client.send(newGameSpyPreAuthOut(), id)
           channelKillThread.open()
           threadPingInterval.createThread(pingInterval, (client, addr channelKillThread))
         else:
@@ -248,7 +248,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
   channelKillThread.close()
   if threadPingInterval.running:
     threadPingInterval.joinThread() # Waiting for ping thread is closed
-  echo "FESL - Client disconnected!"
+  stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") disconnected!")
 
 proc run*(ipAddress: IpAddress) {.thread.} =
   var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "ssl_certs" / "cert.pem", keyFile = "ssl_certs" / "key.pem")
@@ -263,14 +263,13 @@ proc run*(ipAddress: IpAddress) {.thread.} =
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo fmt"Fesl server running on {$ipAddress}:{$port} and waiting for clients!"
+  echo fmt"Login server running on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
     try:
       server.acceptAddr(client, address)
-      echo("FESL => Client connected from: ", address)
-      echo "FESL => Client.isSsl: ", client.isSsl
+      stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") connected from: ", address)
       thread.createThread(handleFeslClient, client)
     except: # TODO: If clients sends wrong data (like ddos or something else)
       discard
