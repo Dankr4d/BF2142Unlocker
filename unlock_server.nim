@@ -38,6 +38,7 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
     query = query[1 .. ^1]
   var params: Table[string, string] = getQueryParams(query)
   stdout.styledWriteLine(fgGreen, "==> ", fgMagenta, "UNLOCK: ", resetStyle, "Request to '", req.url.path, "?", req.url.query, "'.")
+  stdout.flushFile()
 
   # var isServer: bool = false
   # if params.hasKey("auth"):
@@ -58,18 +59,23 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
   of "/getbackendinfo.aspx":
     await req.handleGetBackendInfo(params)
     stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getbackendinfo'")
+    stdout.flushFile()
   of "/getplayerinfo.aspx":
     await req.handleGetPlayerInfo(params)
     stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerinfo'")
+    stdout.flushFile()
   of "/getunlocksinfo.aspx":
     await req.handleGetUnlocksInfo(params, unlockAllSquadGadgets)
     stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getunlocksinfo'")
+    stdout.flushFile()
   of "/getawardsinfo.aspx":
     await req.handleGetAwardsInfo(params)
     stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getawardsinfo'")
+    stdout.flushFile()
   of "/getplayerprogress.aspx": # only mode: point .. mode also is ignored
     await req.handleGetPlayerProgress(params)
     stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerprogress'")
+    stdout.flushFile()
   else:
     await req.respond(Http200, "Hello World!")
 

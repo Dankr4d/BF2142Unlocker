@@ -184,6 +184,7 @@ proc parseData(data: string): Table[string, string] =
 proc send(client: Socket, data: EaMessageOut, id: uint8) =
   net.send(client, data.serialize(id))
   stdout.styledWriteLine(fgGreen, "<== ", fgCyan, "LOGIN: ", resetStyle, $data) # data.substr(txnPos, data.find({' ', '\n'}, txnPos)))
+  stdout.flushFile()
 
 proc pingInterval(data: tuple[client: Socket, channelKillThread: ptr Channel[void]]) {.thread.} =
   while true:
@@ -220,6 +221,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
     dataTbl = data.parseData()
     if dataTbl.contains("TXN"):
       stdout.styledWriteLine(fgGreen, "==> ", fgCyan, "LOGIN: ", resetStyle, $dataTbl)
+      stdout.flushFile()
       case dataTbl["TXN"]:
         of "Hello":
           client.send(newHelloOut(), id)
@@ -249,6 +251,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
   if threadPingInterval.running:
     threadPingInterval.joinThread() # Waiting for ping thread is closed
   stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") disconnected!")
+  stdout.flushFile()
 
 proc run*(ipAddress: IpAddress) {.thread.} =
   var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "ssl_certs" / "cert.pem", keyFile = "ssl_certs" / "key.pem")
@@ -270,6 +273,7 @@ proc run*(ipAddress: IpAddress) {.thread.} =
     try:
       server.acceptAddr(client, address)
       stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") connected from: ", address)
+      stdout.flushFile()
       thread.createThread(handleFeslClient, client)
     except: # TODO: If clients sends wrong data (like ddos or something else)
       discard
