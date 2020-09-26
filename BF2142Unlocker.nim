@@ -1755,10 +1755,7 @@ proc languageLogic() =
       currentLocale = currentLocaleRawOpt.get()
   discard bindtextdomain("gui", os.getCurrentDir() / "locale")
   if currentLocale == "": # Is empty if no LANGUAGE_FILE file was found
-    currentLocale = $setlocale(LC_ALL, "");
-    when defined(windows):
-      # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
-      discard bind_textdomain_codeset("gui", "UTF-8")
+    currentLocale = $setlocale(LC_ALL, "")
     if currentLocale == "":
       disableSetlocale() # Required to set locale manually (in following line)
       # Setting language to en_US.utf8 when locale is not supported
@@ -1768,6 +1765,12 @@ proc languageLogic() =
     # Setting manually selected langauge
     disableSetlocale() # Required to set locale manually (in following line)
     discard setlocale(LC_ALL, currentLocale)
+  when defined(windows):
+    # Setting codeset
+    if currentLocale.startsWith("ru_RU"):
+      discard bind_textdomain_codeset("gui", "KOI8-R")
+    else:
+      discard bind_textdomain_codeset("gui", "ISO-8859-1")
 
 proc main =
   languageLogic()
