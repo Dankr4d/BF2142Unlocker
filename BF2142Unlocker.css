@@ -1,16 +1,21 @@
-/* .justPlay {
-  font-weight: bold;
-  font-size: 2em;
-} */
 actionbar button.link {
   padding: 0 0.5em 0 0.5em;
 }
 
+
+/* Windows only
+   Info: Terminal class is only added on windows build,
+         because VTE is not supported on windows.
+         It is replaced with a TextView.
+*/
 .terminal > .view, .terminal > .view text {
   background-color: black;
 }
 
 .terminal.view text {
   color: white;
-  font-size: 2px;
+}
+
+.terminal {
+  font-family: Consolas;
 }

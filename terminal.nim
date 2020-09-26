@@ -24,8 +24,8 @@ elif defined(windows):
     Terminal* = ref object of ScrolledWindow
   proc newTerminal*(): Terminal =
     var textView = newTextView()
-    # textView.monospace = true
-    textview.wrapMode =  WrapMode.word
+    textView.wrapMode = WrapMode.wordChar
+    textView.editable = false
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
     scrolledWindow.propagateNaturalHeight = true
     scrolledWindow.add(textView)
@@ -49,12 +49,62 @@ elif defined(windows):
     cast[ScrolledWindow](terminal).visible = visible # TODO: Need to be casted otherwise it will visible infix proc
     terminal.textView.visible = visible
 
-proc addText*(terminal: Terminal, text: string, scrollDown: bool = false) =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
-    terminal.text = terminal.text & text
+when defined(windows):
+  # ... I know, it's ugly.
+  proc addTextColorizedWorkaround(terminal: Terminal, text: string, scrollDown: bool = false) =
+    var buffer: string
+    var textLineSplit: seq[string] = text.splitLines()
+    for idx, line in textLineSplit:
+      var lineSplit: seq[string]
+
+      if line.len < 3:
+        buffer.add(glib.markupEscapeText(line.cstring, line.len))
+        if idx + 1 != textLineSplit.high: # TODO: Why?
+          buffer.add("\n")
+        continue
+
+      lineSplit.add(line[0..2])
+      if not (lineSplit[0] in @["###", "<==", "==>"]):
+        buffer.add(glib.markupEscapeText(line.cstring, line.len))
+        if idx + 1 != textLineSplit.high: # TODO: Why?
+          buffer.add("\n")
+        continue
+
+      lineSplit.add(line[4..^1].split(':', 1))
+      var colorPrefix, colorServer: string
+      const FORMATTED_COLORIZE: string = """<span foreground="$#">$#</span> <span foreground="$#">$#:</span>$#"""
+      case lineSplit[0]:
+        of "###":
+          colorPrefix = "blue"
+        of "<==", "==>":
+          colorPrefix = "green"
+        else:
+          colorPrefix = "red"
+      case lineSplit[1]:
+        of "LOGIN":
+          colorServer = "darkcyan"
+        of "LOGIN_UDP":
+          colorServer = "goldenrod"
+        of "UNLOCK":
+          colorServer = "darkmagenta"
+        else:
+          colorServer = "red"
+      buffer.add(FORMATTED_COLORIZE % [
+        colorPrefix,
+        glib.markupEscapeText(lineSplit[0], lineSplit[0].len),
+        colorServer,
+        glib.markupEscapeText(lineSplit[1], lineSplit[1].len),
+        glib.markupEscapeText(lineSplit[2], lineSplit[2].len)
+      ])
+
+      if idx + 1 != textLineSplit.high:
+        buffer.add("\n")
+
+    var iterEnd: TextIter
+    terminal.buffer.getEndIter(iterEnd)
+    terminal.buffer.insertMarkup(iterEnd, buffer, buffer.len)
     if scrollDown:
+      terminal.buffer.placeCursor(iterEnd)
       var mark: TextMark = terminal.buffer.getInsert()
       terminal.textView.scrollMarkOnScreen(mark)
 
@@ -62,21 +112,10 @@ proc clear*(terminal: Terminal) =
   when defined(linux):
     terminal.reset(true, true)
   elif defined(windows):
-    terminal.text = ""
-
-# proc processId*(terminal: Terminal): int =
-#   discard
-#   # var valProcessId: Value
-#   # terminal.getProperty("processId", valProcessId)
-#   # return valProcessId.getInt()
-
-# proc `processId=`(terminal: Terminal, processId: int) =
-#   discard
-#   # var valProcessId: Value
-#   # valProcessId.setInt(processId)
-#   # terminal.setProperty("processId", valProcessId)
-#   # # echo "processId: ", terminal.processId
-
+    var iterStart, iterEnd: TextIter
+    terminal.buffer.getStartIter(iterStart)
+    terminal.buffer.getEndIter(iterEnd)
+    terminal.buffer.delete(iterStart, iterEnd)
 ##########################
 
 when defined(windows):
@@ -113,7 +152,7 @@ when defined(windows):
       return SOURCE_REMOVE
     var (hasData, data) = channelAddText.tryRecv()
     if hasData:
-      timerData.terminal.addText(data, scrollDown = true)
+      timerData.terminal.addTextColorizedWorkaround(data, scrollDown = true)
     return SOURCE_CONTINUE
 
   proc isProcessAlive(pid: int): bool =
@@ -220,7 +259,7 @@ when isMainModule:
     window.defaultSize = (250, 50)
     let terminal: Terminal = newTerminal()
     terminal.text = "TEST: Hallo, was geht?\n"
-    terminal.addText("ARSCH:  Gut und dir?\n")
+    terminal.addTextColorizedWorkaround("ARSCH:  Gut und dir?\n")
     window.add(terminal)
     window.showAll()
     when defined(linux):
