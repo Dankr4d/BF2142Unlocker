@@ -310,15 +310,15 @@ msgid "UNLOCKER_MODDB_TOOLTIP"
 msgstr "Открыть страницу инструмента на ModDB."
 
 msgid "PROJECT_REMASTER_MODDB"
-msgstr "Project Remaster Mod"
+msgstr "Project Remaster Мод"
 
 msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
 msgstr ""
-"Перейти на страницу Project Remaster's на  ModDB.\n"
+"Перейти на страницу Project Remaster's на ModDB.\n"
 "Они сделали BF2142 в HD!"
 
 msgid "FIRST_STRIKE_MODDB"
-msgstr "First Strike Mod"
+msgstr "First Strike Мод"
 
 msgid "FIRST_STRIKE_MODDB_TOOLTIP"
 msgstr ""
