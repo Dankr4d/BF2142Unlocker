@@ -1747,6 +1747,7 @@ when defined(windows): # TODO: Cleanup
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
+  proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.header: "<libintl.h>", importc.}
 
 proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
@@ -1765,12 +1766,11 @@ proc languageLogic() =
     # Setting manually selected langauge
     disableSetlocale() # Required to set locale manually (in following line)
     discard setlocale(LC_ALL, currentLocale)
-  when defined(windows):
-    # Setting codeset
-    if currentLocale.startsWith("ru_RU"):
-      discard bind_textdomain_codeset("gui", "KOI8-R")
-    else:
-      discard bind_textdomain_codeset("gui", "ISO-8859-1")
+  # Setting codeset
+  if currentLocale.startsWith("ru_RU"):
+    discard bind_textdomain_codeset("gui", "KOI8-R")
+  else:
+    discard bind_textdomain_codeset("gui", "ISO-8859-1")
 
 proc main =
   languageLogic()
