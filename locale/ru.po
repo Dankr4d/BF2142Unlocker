@@ -45,13 +45,13 @@ msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr "Позывной в игре."
 
 msgid "JOIN_SKIP_MOVIES"
-msgstr "Пропуск втупительных роликов"
+msgstr "Пропуск втупительных роликов:"
 
 msgid "JOIN_SKIP_MOVIES_TOOLTIP"
 msgstr "Пропустить видео при запуске"
 
 msgid "JOIN_WINDOW_MODE"
-msgstr "Оконный режим"
+msgstr "Оконный режим:"
 
 msgid "JOIN_WINDOW_MODE_TOOLTIP"
 msgstr "Запуск игры в оконном режиме."
