@@ -24,7 +24,8 @@ cdkey
 cdkey.exe
 resolutions
 resolutions.exe
-resolutions.dll
+terminal
+terminal.exe
 locale/*/
 config.ini
 lang.txt

@@ -3,6 +3,7 @@ import tables # Query params
 import strutils
 import strformat # Required for fmt macro
 import net # Required for IpAddress type
+import pure/terminal
 
 # import ea
 
@@ -36,7 +37,8 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
   if query.startsWith("&"):
     query = query[1 .. ^1]
   var params: Table[string, string] = getQueryParams(query)
-  echo "Got Request to: ", req.url
+  stdout.styledWriteLine(fgGreen, "==> ", fgMagenta, "UNLOCK: ", resetStyle, "Request to '", req.url.path, "?", req.url.query, "'.")
+  stdout.flushFile()
 
   # var isServer: bool = false
   # if params.hasKey("auth"):
@@ -54,18 +56,28 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
     BF2142.exe makes multiple requests to at least getplayerinfo.aspx
   ]#
   case req.url.path
-    of "/getbackendinfo.aspx":
-      await req.handleGetBackendInfo(params)
-    of "/getplayerinfo.aspx":
-      await req.handleGetPlayerInfo(params)
-    of "/getunlocksinfo.aspx":
-      await req.handleGetUnlocksInfo(params, unlockAllSquadGadgets)
-    of "/getawardsinfo.aspx":
-      await req.handleGetAwardsInfo(params)
-    of "/getplayerprogress.aspx": # only mode: point .. mode also is ignored
-      await req.handleGetPlayerProgress(params)
-    else:
-      await req.respond(Http200, "Hello World!")
+  of "/getbackendinfo.aspx":
+    await req.handleGetBackendInfo(params)
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getbackendinfo'")
+    stdout.flushFile()
+  of "/getplayerinfo.aspx":
+    await req.handleGetPlayerInfo(params)
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerinfo'")
+    stdout.flushFile()
+  of "/getunlocksinfo.aspx":
+    await req.handleGetUnlocksInfo(params, unlockAllSquadGadgets)
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getunlocksinfo'")
+    stdout.flushFile()
+  of "/getawardsinfo.aspx":
+    await req.handleGetAwardsInfo(params)
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getawardsinfo'")
+    stdout.flushFile()
+  of "/getplayerprogress.aspx": # only mode: point .. mode also is ignored
+    await req.handleGetPlayerProgress(params)
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerprogress'")
+    stdout.flushFile()
+  else:
+    await req.respond(Http200, "Hello World!")
 
 proc run*(data: tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]) =
   var server = newAsyncHttpServer()

@@ -57,7 +57,7 @@ const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamati
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
-const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
+const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"]
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -502,7 +502,7 @@ proc backupOpenSpyIfExists() =
     return
   let openspyMd5Hash: string = getMD5(openspyDllRawOpt.get())
   let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
     if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
       return
@@ -534,7 +534,7 @@ proc restoreOpenSpyIfExists() =
   if openspyMd5RawOpt.isNone:
     return
   let openspyMd5Hash: string = getMD5(openspyMd5RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
     var tryCnt: int = 0
     while tryCnt < 8:
@@ -1747,6 +1747,7 @@ when defined(windows): # TODO: Cleanup
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
+  proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.header: "<libintl.h>", importc.}
 
 proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
@@ -1755,10 +1756,7 @@ proc languageLogic() =
       currentLocale = currentLocaleRawOpt.get()
   discard bindtextdomain("gui", os.getCurrentDir() / "locale")
   if currentLocale == "": # Is empty if no LANGUAGE_FILE file was found
-    currentLocale = $setlocale(LC_ALL, "");
-    when defined(windows):
-      # Required because of umlauts (Pango-WARNING **: 20:41:14.325: Invalid UTF-8 string passed to pango_layout_set_text())
-      discard bind_textdomain_codeset("gui", "UTF-8")
+    currentLocale = $setlocale(LC_ALL, "")
     if currentLocale == "":
       disableSetlocale() # Required to set locale manually (in following line)
       # Setting language to en_US.utf8 when locale is not supported
@@ -1768,6 +1766,11 @@ proc languageLogic() =
     # Setting manually selected langauge
     disableSetlocale() # Required to set locale manually (in following line)
     discard setlocale(LC_ALL, currentLocale)
+  # Setting codeset
+  if currentLocale.startsWith("ru_RU"):
+    discard bind_textdomain_codeset("gui", "KOI8-R")
+  else:
+    discard bind_textdomain_codeset("gui", "ISO-8859-1")
 
 proc main =
   languageLogic()

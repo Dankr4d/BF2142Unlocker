@@ -1,5 +1,5 @@
 ### Package
-version       = "0.9.3"
+version       = "0.9.4"
 author        = "Dankrad"
 description   = "Play and host BF2142 server with all unlocks."
 license       = "MIT"
@@ -8,11 +8,13 @@ bin           = @[""]
 ##
 
 ### Dependencies
-requires "nim 1.0.6"
-requires "gintro >= 0.7.0"
-requires "winim >= 3.2.4"
+requires "nim >= 1.2.6"
+requires "gintro >= 0.8.1"
+requires "winim >= 3.4.0"
+when defined(windows):
+  requires "winregistry >= 0.2.1"
 when defined(linux):
-  requires "psutil >= 0.5.7"
+  requires "psutil >= 0.6.0"
 ##
 
 ### imports
@@ -31,13 +33,14 @@ const
   NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
   NCURSES_PATH: string = "deps" / "ncurses"
   NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
-  LANGUAGES: seq[string] = @["en", "de"]
+  LANGUAGES: seq[string] = @["en", "de", "ru"]
 when defined(windows):
   const
     BUILD_BIN_DIR: string = BUILD_DIR / "bin"
     BUILD_LIB_DIR: string = BUILD_DIR / "lib"
     BUILD_SHARE_DIR: string = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
+const CPU_CORES: string = gorgeEx("nproc").output
 ##
 
 ### Procs
@@ -97,15 +100,15 @@ proc compileOpenSsl() =
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
-        exec("make -j`nproc`")
+        exec(fmt"make -j{CPU_CORES}")
       elif defined(windows):
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
-        exec("make -j`nproc`")
+        exec(fmt"make -j{CPU_CORES}")
     elif buildOS == "windows":
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
-      exec("make -j`nproc`")
+      exec(fmt"make -j{CPU_CORES}")
 
 when defined(linux):
   proc compileNcurses() =
@@ -119,7 +122,7 @@ when defined(linux):
       exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patches/ncurses-5.9-gcc-5.patch")
       # --without-cxx-binding is required or build fails
       exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
-      exec(fmt"make -j`nproc`")
+      exec(fmt"make -j{CPU_CORES}")
 
 proc compileAll() =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
@@ -136,13 +139,14 @@ proc compileAll() =
 when defined(windows):
   const GTK_LIBS: seq[string] = @[
     "gdbus.exe", "gspawn-win64-helper-console.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
-    "libcairo-gobject-2.dll", "libcroco-0.6-3.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll",
-    "libffi-6.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll",
+    "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libssp-0.dll",
+    "libffi-7.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll", "libgcc_s_seh-1.dll",
     "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
     "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
     "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",
     "libpangowin32-1.0-0.dll", "libpcre-1.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll",
-    "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll"
+    "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll", "libbrotlidec.dll",
+    "libbrotlicommon.dll"
   ]
   proc copyGtk() =
     mkDir(BUILD_LIB_DIR)
