@@ -29,8 +29,9 @@ type
 
 proc parse(str, `from`, to: string, pos: var int): string =
   var parsedChars: int
-  parsedChars = str.parseUntil(result, `from`, pos)
-  pos += parsedChars + `from`.len
+  if `from` != "":
+    parsedChars = str.parseUntil(result, `from`, pos)
+    pos += parsedChars + `from`.len
   parsedChars = str.parseUntil(result, to, pos)
   pos += parsedChars + to.len
 
@@ -42,8 +43,12 @@ proc parseGsData*(raw: string): GsData =
   result.`mod` = raw.parse("Mod: ", " ", currentPosition)
   result.players = parseInt(raw.parse("Players: ", "/", currentPosition))
   result.maxPlayers = parseInt(raw.parse("", " ", currentPosition))
-  result.round = parseInt(raw.parse("Round: ", "/", currentPosition))
-  result.rounds = parseInt(raw.parse("", " ", currentPosition))
+  var round: string = raw.parse("Round: ", "/", currentPosition)
+  if round != "N":
+    result.round = parseInt(round)
+  var rounds: string = raw.parse("", " ", currentPosition)
+  if rounds != "A":
+    result.rounds = parseInt(rounds)
   result.status = parseEnum[GsStatus](raw.parse("Status: [", "]", currentPosition))
 
 when isMainModule:

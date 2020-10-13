@@ -2,15 +2,15 @@
 ![Logo](bf2142unlocker.png)
 
 ## Description
-This project unlock all weapons in Battlefield 2142! You are able to customize your soldier i ngame. The squad drones are on default deactivated (you can enable them in "Unlocks" tab). But be warned, bots in vanilla game cannot handle them. This got fixed in Project Remaster mod.<br />
+This project unlock all weapons in Battlefield 2142! You are able to customize your soldier ingame. The squad drones are on default deactivated (you can enable them in "Unlocks" tab). But be warned, bots in vanilla game cannot handle them. This got fixed in Project Remaster mod.<br />
 BF2142Unlocker emulates the necessary login and unlock server to be able to play Battlefield 2142 in singleplayer and multiplayer (also through vpn) with all features. Also you could host a dedicated server with (currently restricted/not all settings are available) gui interface.<br />
 
 ## Requirements:
 - Battlefield 2142 updated to version 1.51.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9.3 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_win.zip)
-- [Download BF2142 Unlocker v0.9.3 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.3/BF2142Unlocker_v0.9.3_linux.zip)
+- [Download BF2142 Unlocker v0.9.4 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.4/BF2142Unlocker_v0.9.4_win.zip)
+- [Download BF2142 Unlocker v0.9.4 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.4/BF2142Unlocker_v0.9.4_linux.zip)
 
 ## Instructions / How to play:
 - Start the BF2142Unlocker:
@@ -53,13 +53,13 @@ BF2142Unlocker emulates the necessary login and unlock server to be able to play
 ---
 
 ## Compile (Windows 64 bit)
-- Install MSYS2 (https://www.msys2.org/)
+- Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 64bit" at the end of installation wizard]
 - Start MSYS2 MINGW64
 - `pacman -Syu # Upgrade base`
 - `pacman -Syu # Upgrade all packages`
 - `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject make tar git`
 - `cd /c/Users/$USER; mkdir projects; cd projects;`
-- `git clone https://github.com/nim-lang/Nim.git`
+- `git clone -b version-1-2 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
 - `./build_all.bat # Build nim and all tools (like nimble)`
 - `export PATH="$PATH:/c/Users/$USER/projects/Nim/bin"`

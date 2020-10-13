@@ -6,7 +6,7 @@ msgstr ""
 "Language-Team: none\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -324,6 +324,14 @@ msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
 msgstr ""
 "Opens your web browser to Project Remaster's ModDB page.\n"
 "They remastered BF2142 to HD!"
+
+msgid "FIRST_STRIKE_MODDB"
+msgstr "First Strike Mod"
+
+msgid "FIRST_STRIKE_MODDB_TOOLTIP"
+msgstr ""
+"Opens your web browser to First Strike's ModDB page.\n"
+"They made a Star Wars mod!"
 
 msgid "PLAY_ONLINE"
 msgstr "Play online"

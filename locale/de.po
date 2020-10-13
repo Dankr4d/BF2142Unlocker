@@ -6,7 +6,7 @@ msgstr ""
 "Language-Team: none\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -320,6 +320,14 @@ msgid "PROJECT_REMASTER_MODDB_TOOLTIP"
 msgstr ""
 "Öffnet die Moddb/Projektseite der Project Remater Modifikation (probiert die Mod aus, macht spass!)\n"
 "Project Remastered bringt HD-Texturen, neue Waffen, balancierte Waffen sowie neue Karten!"
+
+msgid "FIRST_STRIKE_MODDB"
+msgstr "First Strike Mod"
+
+msgid "FIRST_STRIKE_MODDB_TOOLTIP"
+msgstr ""
+"Öffnet die Moddb/Projektseite der First Strike Modifikation.\n"
+"Hierbei handelt es sich um eine Star Wars Modifikation!"
 
 msgid "PLAY_ONLINE"
 msgstr "Online spielen"

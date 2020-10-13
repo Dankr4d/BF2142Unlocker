@@ -40,8 +40,8 @@ elif defined(windows):
   ## Terminal newTerminal and related helper procs
   proc newTerminal(): Terminal =
     var textView = newTextView()
-    # textView.monospace = true
-    textview.wrapMode =  WrapMode.word
+    textView.wrapMode = WrapMode.wordChar
+    textView.editable = false
     var scrolledWindow = newScrolledWindow(textView.getHadjustment(), textView.getVadjustment())
     scrolledWindow.propagateNaturalHeight = true
     scrolledWindow.add(textView)
@@ -97,7 +97,7 @@ const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamati
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
-const OPENSPY_MD5_HASH: string = "c74f5a6b4189767dd82ccfcb13fc23c4"
+const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"]
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -168,7 +168,7 @@ const
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
 const LANGUAGE_FILE: string = "lang.txt"
-const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE"]
+const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE", "ru_RU"]
 
 const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
 
@@ -528,7 +528,7 @@ proc backupOpenSpyIfExists() =
     return
   let openspyMd5Hash: string = getMD5(openspyDllRawOpt.get())
   let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
     if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
       return
@@ -560,7 +560,7 @@ proc restoreOpenSpyIfExists() =
   if openspyMd5RawOpt.isNone:
     return
   let openspyMd5Hash: string = getMD5(openspyMd5RawOpt.get())
-  if openspyMd5Hash == OPENSPY_MD5_HASH:
+  if openspyMd5Hash in OPENSPY_MD5_HASHES:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
     var tryCnt: int = 0
     while tryCnt < 8:
@@ -1101,12 +1101,62 @@ proc enableDisableIntroMovies(path: string, enable: bool): bool =
 ##
 
 ### Terminal
-proc addText(terminal: Terminal, text: string, scrollDown: bool = false) =
-  when defined(linux):
-    discard # TODO: implement
-  elif defined(windows):
-    terminal.text = terminal.text & text
+when defined(windows):
+  # ... I know, it's ugly.
+  proc addTextColorizedWorkaround(terminal: Terminal, text: string, scrollDown: bool = false) =
+    var buffer: string
+    var textLineSplit: seq[string] = text.splitLines()
+    for idx, line in textLineSplit:
+      var lineSplit: seq[string]
+
+      if line.len < 3:
+        buffer.add(glib.markupEscapeText(line.cstring, line.len))
+        if idx + 1 != textLineSplit.high: # TODO: Why?
+          buffer.add("\n")
+        continue
+
+      lineSplit.add(line[0..2])
+      if not (lineSplit[0] in @["###", "<==", "==>"]):
+        buffer.add(glib.markupEscapeText(line.cstring, line.len))
+        if idx + 1 != textLineSplit.high: # TODO: Why?
+          buffer.add("\n")
+        continue
+
+      lineSplit.add(line[4..^1].split(':', 1))
+      var colorPrefix, colorServer: string
+      const FORMATTED_COLORIZE: string = """<span foreground="$#">$#</span> <span foreground="$#">$#:</span>$#"""
+      case lineSplit[0]:
+        of "###":
+          colorPrefix = "blue"
+        of "<==", "==>":
+          colorPrefix = "green"
+        else:
+          colorPrefix = "red"
+      case lineSplit[1]:
+        of "LOGIN":
+          colorServer = "darkcyan"
+        of "LOGIN_UDP":
+          colorServer = "goldenrod"
+        of "UNLOCK":
+          colorServer = "darkmagenta"
+        else:
+          colorServer = "red"
+      buffer.add(FORMATTED_COLORIZE % [
+        colorPrefix,
+        glib.markupEscapeText(lineSplit[0], lineSplit[0].len),
+        colorServer,
+        glib.markupEscapeText(lineSplit[1], lineSplit[1].len),
+        glib.markupEscapeText(lineSplit[2], lineSplit[2].len)
+      ])
+
+      if idx + 1 != textLineSplit.high:
+        buffer.add("\n")
+
+    var iterEnd: TextIter
+    terminal.buffer.getEndIter(iterEnd)
+    terminal.buffer.insertMarkup(iterEnd, buffer, buffer.len)
     if scrollDown:
+      terminal.buffer.placeCursor(iterEnd)
       var mark: TextMark = terminal.buffer.getInsert()
       terminal.textView.scrollMarkOnScreen(mark)
 
@@ -1114,7 +1164,10 @@ proc clear(terminal: Terminal) =
   when defined(linux):
     terminal.reset(true, true)
   elif defined(windows):
-    terminal.text = ""
+    var iterStart, iterEnd: TextIter
+    terminal.buffer.getStartIter(iterStart)
+    terminal.buffer.getEndIter(iterEnd)
+    terminal.buffer.delete(iterStart, iterEnd)
 
 type
   TimerDataLoginUnlockServer = ref object
@@ -1156,7 +1209,7 @@ proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
     return SOURCE_CONTINUE
   if not channelData.running:
     return SOURCE_REMOVE
-  timerData.terminal.addText(channelData.data, scrollDown = true)
+  timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
   return SOURCE_CONTINUE
 
 proc killProcess*(pid: int) = # TODO: Add some error handling
@@ -1948,7 +2001,7 @@ proc onApplicationActivate(application: Application) =
   hboxTerms.add(termLoginServer)
   hboxTerms.add(termBF2142Server)
   #
-  ## Setting current language (or "Auto detect")
+  ## Setting current language
   discard cbxLanguages.setActiveId(currentLocale)
   #
   ## Setting styles
@@ -2005,6 +2058,7 @@ when defined(windows): # TODO: Cleanup
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.header: "<libintl.h>", importc.}
+  proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.header: "<libintl.h>", importc.}
 
 proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
@@ -2017,14 +2071,19 @@ proc languageLogic() =
     when defined(windows):
       var lcid: LCID =  LocaleNameToLCID(currentLocale.replace("_", "-"), LOCALE_ALLOW_NEUTRAL_NAMES)
       discard SetThreadLocale(lcid)
+      if currentLocale == "ru_RU":
+        discard bind_textdomain_codeset("gui", "KOI8-R")
+      else:
+        discard bind_textdomain_codeset("gui", "ISO-8859-1")
     else:
       discard setlocale(LC_ALL, currentLocale)
   else:
     # locale in lang.txt is empty or locale.txt does not exists or is not available
-    currentLocale = "auto" # Set currentLocale to "auto" if not already set
+    currentLocale = "en_US" # Set currentLocale to "auto" if not already set
     when defined(windows):
       var lcid: LCID = LocaleNameToLCID("en-US", LOCALE_ALLOW_NEUTRAL_NAMES)
       discard SetThreadLocale(lcid)
+      discard bind_textdomain_codeset("gui", "ISO-8859-1")
     else:
       discard setlocale(LC_ALL, "en_US")
 

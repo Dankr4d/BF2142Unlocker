@@ -28,7 +28,6 @@ cdkey
 cdkey.exe
 resolutions
 resolutions.exe
-resolutions.dll
 locale/*/
 config.ini
 lang.txt
