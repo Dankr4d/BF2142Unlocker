@@ -12,7 +12,7 @@ when defined(linux):
 elif defined(windows):
   import winim
   import docpath
-import terminal # Terminal wrapper (uses vte on linux and textview on windows)
+  import sendmsg # Required for to write to bf2142 game server
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
@@ -22,7 +22,6 @@ import resolutions # Required to read out all possible resolutions
 import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import cdkey # Required to set an empty cd key if cd key not exists.
 import checkpermission # Required to check write permission before patching client
-import sendmsg # Required for to write to bf2142 game server
 import math # Required for runtime configuration
 import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
 import options # Required for error/exception handling
@@ -249,6 +248,8 @@ var btnHostCancel: Button
 var hboxTerms: Box
 var termLoginServer: Terminal
 var termBF2142Server: Terminal
+when defined(linux):
+  var swinBF2142Server: ScrolledWindow
 ##
 ### Unlock controls
 var vboxUnlocks: Box
@@ -1056,9 +1057,15 @@ proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = fa
   hboxTerms.visible = running
   termLoginServer.visible = running
   if bf2142ServerInvisible:
-    termBF2142Server.visible = false
+    when defined(windows):
+      termBF2142Server.visible = false
+    elif defined(linux):
+      swinBF2142Server.visible = false
   else:
-    termBF2142Server.visible = running
+    when defined(windows):
+      termBF2142Server.visible = running
+    elif defined(linux):
+      swinBF2142Server.visible = running
 
 proc applyJustPlayRunningSensitivity(running: bool) =
   termJustPlayServer.visible = running
@@ -1169,48 +1176,49 @@ proc clear(terminal: Terminal) =
     terminal.buffer.getEndIter(iterEnd)
     terminal.buffer.delete(iterStart, iterEnd)
 
-type
-  TimerDataLoginUnlockServer = ref object
-    terminal: Terminal
-  TimerDataGameServer = ref object
-    terminal: Terminal
-    treeView: TreeView
-  ChannelData = object
-    running: bool
-    data: string
-var threadLoginUnlockServer: system.Thread[Process]
-var threadGameServer: system.Thread[int]
-var channelGameServer: Channel[ChannelData]
-var channelLoginUnlockServer: Channel[ChannelData]
-channelGameServer.open()
-channelLoginUnlockServer.open()
+when defined(windows):
+  type
+    TimerDataLoginUnlockServer = ref object
+      terminal: Terminal
+    TimerDataGameServer = ref object
+      terminal: Terminal
+      treeView: TreeView
+    ChannelData = object
+      running: bool
+      data: string
+  var threadLoginUnlockServer: system.Thread[Process]
+  var threadGameServer: system.Thread[int]
+  var channelGameServer: Channel[ChannelData]
+  var channelLoginUnlockServer: Channel[ChannelData]
+  channelGameServer.open()
+  channelLoginUnlockServer.open()
 
-proc timerGameServer(timerData: TimerDataGameServer): bool =
-  # TODO: Always receive the last entry from channel, because
-  #       data is the whole stdout of the game server
-  var (hasData, channelData) = channelGameServer.tryRecv()
-  if not hasData:
-    return SOURCE_CONTINUE
-  if channelData.data.strip() == "":
-    # Stdout of game server is at startup "empty"
-    return SOURCE_CONTINUE
-  timerData.terminal.text = channelData.data
-  var gsdata: GsData
-  if channelData.running:
-    gsdata = channelData.data.parseGsData()
-  if gsdata.status != lastGsStatus:
-    timerData.treeView.update(gsdata)
-    lastGsStatus = gsdata.status
-  return channelData.running
+  proc timerGameServer(timerData: TimerDataGameServer): bool =
+    # TODO: Always receive the last entry from channel, because
+    #       data is the whole stdout of the game server
+    var (hasData, channelData) = channelGameServer.tryRecv()
+    if not hasData:
+      return SOURCE_CONTINUE
+    if channelData.data.strip() == "":
+      # Stdout of game server is at startup "empty"
+      return SOURCE_CONTINUE
+    timerData.terminal.text = channelData.data
+    var gsdata: GsData
+    if channelData.running:
+      gsdata = channelData.data.parseGsData()
+    if gsdata.status != lastGsStatus:
+      timerData.treeView.update(gsdata)
+      lastGsStatus = gsdata.status
+    return channelData.running
 
-proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
-  var (hasData, channelData) = channelLoginUnlockServer.tryRecv()
-  if not hasData:
+  proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
+    var (hasData, channelData) = channelLoginUnlockServer.tryRecv()
+    if not hasData:
+      return SOURCE_CONTINUE
+    if not channelData.running:
+      return SOURCE_REMOVE
+    timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
     return SOURCE_CONTINUE
-  if not channelData.running:
-    return SOURCE_REMOVE
-  timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
-  return SOURCE_CONTINUE
 
 proc killProcess*(pid: int) = # TODO: Add some error handling
   when defined(linux):
@@ -1225,60 +1233,73 @@ proc killProcess*(pid: int) = # TODO: Add some error handling
   elif pid == termLoginServerPid:
     termLoginServerPid = 0
 
-proc threadGameServerProc(pid: int) {.thread.} =
-  var exitCode: DWORD
-  var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
-  # Disable resizing and maximize button (this breaks readability and
-  # stdoutreader fails if region rect is wrong because of resizing)
-  SetWindowLongPtrA(hndl, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
-  var channelData: ChannelData = ChannelData(running: true, data: "")
-  if hndl == 0:
-    channelData.running = false
-    channelData.data = "ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError())
-    channelGameServer.send(channelData)
-    return
-  while channelData.running:
-    if GetExitCodeProcess(hndl, unsafeAddr exitCode).bool == false or exitCode != STILL_ACTIVE:
+when defined(windows):
+  proc threadGameServerProc(pid: int) {.thread.} =
+    var exitCode: DWORD
+    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
+    # Disable resizing and maximize button (this breaks readability and
+    # stdoutreader fails if region rect is wrong because of resizing)
+    SetWindowLongPtrA(hndl, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
+    var channelData: ChannelData = ChannelData(running: true, data: "")
+    if hndl == 0:
       channelData.running = false
-      channelData.data = dgettext("gui", "GAMESERVER_CRASHED")
+      channelData.data = "ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError())
       channelGameServer.send(channelData)
-      continue # Continue to cleanup after while loop
-    var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
-    if stdoutTuple.lastError == 0:
-      channelData.data = stdoutTuple.stdout
-      channelGameServer.send(channelData)
-    elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
-      # TODO: Sometimes it fails with invalid handle.
-      # Maybe this happens when the process is killed while reading from stdout.
-      discard
-    else:
-      when defined(debug):
+      return
+    while channelData.running:
+      if GetExitCodeProcess(hndl, unsafeAddr exitCode).bool == false or exitCode != STILL_ACTIVE:
         channelData.running = false
-      channelData.data = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
-      channelGameServer.send(channelData)
-    sleep(250)
-  ## Cleanup
-  discard CloseHandle(hndl)
-  #
+        channelData.data = dgettext("gui", "GAMESERVER_CRASHED")
+        channelGameServer.send(channelData)
+        continue # Continue to cleanup after while loop
+      var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
+      if stdoutTuple.lastError == 0:
+        channelData.data = stdoutTuple.stdout
+        channelGameServer.send(channelData)
+      elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
+        # TODO: Sometimes it fails with invalid handle.
+        # Maybe this happens when the process is killed while reading from stdout.
+        discard
+      else:
+        when defined(debug):
+          channelData.running = false
+        channelData.data = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
+        channelGameServer.send(channelData)
+      sleep(250)
+    ## Cleanup
+    discard CloseHandle(hndl)
+    #
 
-proc threadLoginUnlockServerProc(process: Process) {.thread.} =
-  var channelData: ChannelData = ChannelData(running: true, data: "")
-  var exitCode: int
-  while channelData.running:
-    exitCode = process.peekExitCode()
-    if exitCode == 0:
-      channelData.running = false
-      channelData.data = ""
+  proc threadLoginUnlockServerProc(process: Process) {.thread.} =
+    var channelData: ChannelData = ChannelData(running: true, data: "")
+    var exitCode: int
+    while channelData.running:
+      exitCode = process.peekExitCode()
+      if exitCode == 0:
+        channelData.running = false
+        channelData.data = ""
+        channelLoginUnlockServer.send(channelData)
+        return
+      elif exitCode > 0:
+        channelData.running = false
+        channelData.data = "" # TODO: Send error message through channel
+        channelLoginUnlockServer.send(channelData)
+        return
+      channelData.data = process.outputStream.readAll()
       channelLoginUnlockServer.send(channelData)
+      sleep(250)
+elif defined(linux):
+  proc onTermBF2142ServerContentsChanged(terminal: Terminal) =
+    var text: string = termBF2142Server.getText(nil, nil, cast[var ptr GArray00](nil))
+    if text.strip() == "":
       return
-    elif exitCode > 0:
-      channelData.running = false
-      channelData.data = "" # TODO: Send error message through channel
-      channelLoginUnlockServer.send(channelData)
-      return
-    channelData.data = process.outputStream.readAll()
-    channelLoginUnlockServer.send(channelData)
-    sleep(250)
+    var gsdata: GsData = text.parseGsData()
+    if gsdata.status != lastGsStatus:
+      listSelectedMaps.update(gsdata)
+      lastGsStatus = gsdata.status
+  proc onTermBF2142ServerChildExited(terminal: Terminal, exitCode: int) =
+    # Clears the colorized rows.
+    listSelectedMaps.update(GsData())
 
 proc startProcess(terminal: Terminal, command: string, params: string = "",
                   workingDir: string = os.getCurrentDir(), env: string = "",
@@ -1357,6 +1378,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
   when defined(linux):
     # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
+    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
     var tryCnt: int = 0
     while tryCnt < 3:
       if isAddrReachable($ipAddress, Port(18300), 1_000):
@@ -1364,7 +1386,6 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
       else:
         tryCnt.inc()
         sleep(250)
-    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
   elif defined(windows):
     termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
 ##
@@ -1829,35 +1850,42 @@ proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
 
 proc onBotSkillChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
 
 proc onTicketRatioChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
 
 proc onSpawnTimeChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
 
 proc onRoundsPerMapChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
 
 proc onPlayersNeededToStartChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
 
 proc onFriendlyFireToggled(self: CheckButton00) {.signal.} =
   var val: string = if chbtnFriendlyFire.active: "100" else: "0"
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
-    sendMsg(termBF2142ServerPid, SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
-    sendMsg(termBF2142ServerPid, SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
-    sendMsg(termBF2142ServerPid, SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
+      sendMsg(termBF2142ServerPid, SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
+      sendMsg(termBF2142ServerPid, SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+      sendMsg(termBF2142ServerPid, SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
 
 proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
   if termBF2142ServerPid > 0:
-    sendMsg(termBF2142ServerPid, SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
+    when defined(windows):
+      sendMsg(termBF2142ServerPid, SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
 
 type
   GdkEventButton = object
@@ -1999,7 +2027,23 @@ proc onApplicationActivate(application: Application) =
   termBF2142Server = newTerminal()
   termBF2142Server.hexpand = true
   hboxTerms.add(termLoginServer)
-  hboxTerms.add(termBF2142Server)
+  when defined(windows):
+    hboxTerms.add(termBF2142Server)
+  elif defined(linux):
+    # Adding a horizontal scrollbar to display the whole server output.
+    # This is required to parse the content otherwise the content is cutted.
+    termBF2142Server.connect("contents-changed", onTermBF2142ServerContentsChanged)
+    termBF2142Server.connect("child-exited", onTermBF2142ServerChildExited)
+    termBF2142Server.visible = true
+    var box: Box = newHBox(false, 0)
+    box.visible = true
+    box.setSizeRequest(termBF2142Server.getCharWidth().int * 80, -1)
+    box.add(termBF2142Server)
+    swinBF2142Server = newScrolledWindow(nil, nil)
+    swinBF2142Server.setSizeRequest(0, 300)
+    swinBF2142Server.hexpand = true
+    swinBF2142Server.add(box)
+    hboxTerms.add(swinBF2142Server)
   #
   ## Setting current language
   discard cbxLanguages.setActiveId(currentLocale)

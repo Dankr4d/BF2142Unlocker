@@ -27,20 +27,24 @@ type
     rounds*: int
     status*: GsStatus
 
-proc parse(str, `from`, to: string, pos: var int): string =
+proc parse(str, `from`: string, to: string | set[char], pos: var int): string =
   var parsedChars: int
   if `from` != "":
     parsedChars = str.parseUntil(result, `from`, pos)
     pos += parsedChars + `from`.len
   parsedChars = str.parseUntil(result, to, pos)
-  pos += parsedChars + to.len
+  pos += parsedChars
+  if to is string:
+    pos += to.len
+  else:
+    pos += 1
 
 proc parseGsData*(raw: string): GsData =
   var currentPosition: int = 0
-  result.mapName = raw.parse("Map: ", " ", currentPosition)
+  result.mapName = raw.parse("Map: ", {' ', '\n'}, currentPosition)
   result.mapMode = parseEnum[MapMode](raw.parse("Game mode: ", "/", currentPosition))
   result.mapSize = parseInt(raw.parse("", " ", currentPosition))
-  result.`mod` = raw.parse("Mod: ", " ", currentPosition)
+  result.`mod` = raw.parse("Mod: ", {' ', '\n'}, currentPosition)
   result.players = parseInt(raw.parse("Players: ", "/", currentPosition))
   result.maxPlayers = parseInt(raw.parse("", " ", currentPosition))
   var round: string = raw.parse("Round: ", "/", currentPosition)
