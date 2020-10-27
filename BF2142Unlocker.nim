@@ -28,7 +28,6 @@ import options # Required for error/exception handling
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
-  export vte
 elif defined(windows):
   import streams # Required to read from process stream (login/unlock server)
   import getprocessbyname # Required to get pid from forked process
@@ -1848,44 +1847,43 @@ proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
   chooser.connect("response", onBtnPatchServerMapsClickedResponse)
   chooser.show()
 
+proc execBF2142ServerCommand(command: string) =
+  when defined(windows):
+    sendMsg(termBF2142ServerPid, command)
+  elif defined(linux):
+    termBF2142Server.feedChild(command)
+
 proc onBotSkillChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
+    execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
 
 proc onTicketRatioChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
+    execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
 
 proc onSpawnTimeChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
+    execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
 
 proc onRoundsPerMapChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
+    execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
 
 proc onPlayersNeededToStartChanged(self: pointer) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
+    execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
 
 proc onFriendlyFireToggled(self: CheckButton00) {.signal.} =
   var val: string = if chbtnFriendlyFire.active: "100" else: "0"
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
-      sendMsg(termBF2142ServerPid, SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
-      sendMsg(termBF2142ServerPid, SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
-      sendMsg(termBF2142ServerPid, SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+    execBF2142ServerCommand(SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
+    execBF2142ServerCommand(SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
+    execBF2142ServerCommand(SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+    execBF2142ServerCommand(SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
 
 proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
   if termBF2142ServerPid > 0:
-    when defined(windows):
-      sendMsg(termBF2142ServerPid, SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
+    execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
 
 type
   GdkEventButton = object
