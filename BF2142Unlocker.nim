@@ -209,6 +209,13 @@ var imgGpcmServer: Image
 var imgUnlockServer: Image
 var btnCheckServerCancel: Button
 ##
+### Server list
+var listServer: TreeView
+var listPlayerInfo1: TreeView
+var listPlayerInfo2: TreeView
+var lblTeam1: Label
+var lblTeam2: Label
+##
 ### Host controls
 var vboxHost: Box
 var tblHostSettings: Grid
@@ -1413,48 +1420,48 @@ proc patchAndStartLogic(): bool =
     return false
 
   ## Check Logic (TODO: Cleanup and check servers in thread)
-  var canConnect: bool = true
-  throbberLoginServer.visible = true
-  throbberGpcmServer.visible = true
-  throbberUnlockServer.visible = true
-  imgLoginServer.visible = false
-  imgGpcmServer.visible = false
-  imgUnlockServer.visible = false
-  # Login server
-  if isAddrReachable(ipAddress, Port(18300), 1_000):
-    throbberLoginServer.visible = false
-    imgLoginServer.visible = true
-    imgLoginServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberLoginServer.visible = false
-    imgLoginServer.visible = true
-    imgLoginServer.setFromIconName("gtk-cancel", 0)
-  # GPCM server
-  if isAddrReachable(ipAddress, Port(29900), 1_000):
-    throbberGpcmServer.visible = false
-    imgGpcmServer.visible = true
-    imgGpcmServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberGpcmServer.visible = false
-    imgGpcmServer.visible = true
-    imgGpcmServer.setFromIconName("gtk-cancel", 0)
-  # Unlock server
-  if isAddrReachable(ipAddress, Port(8085), 1_000):
-    throbberUnlockServer.visible = false
-    imgUnlockServer.visible = true
-    imgUnlockServer.setFromIconName("gtk-apply", 0)
-  else:
-    canConnect = false
-    throbberUnlockServer.visible = false
-    imgUnlockServer.visible = true
-    imgUnlockServer.setFromIconName("gtk-cancel", 0)
-  if not canConnect:
-    dlgCheckServers.show()
-    # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
-    #       and if every server is reachable autoamtically hidden.
-    return
+  # var canConnect: bool = true
+  # throbberLoginServer.visible = true
+  # throbberGpcmServer.visible = true
+  # throbberUnlockServer.visible = true
+  # imgLoginServer.visible = false
+  # imgGpcmServer.visible = false
+  # imgUnlockServer.visible = false
+  # # Login server
+  # if isAddrReachable(ipAddress, Port(18300), 1_000):
+  #   throbberLoginServer.visible = false
+  #   imgLoginServer.visible = true
+  #   imgLoginServer.setFromIconName("gtk-apply", 0)
+  # else:
+  #   canConnect = false
+  #   throbberLoginServer.visible = false
+  #   imgLoginServer.visible = true
+  #   imgLoginServer.setFromIconName("gtk-cancel", 0)
+  # # GPCM server
+  # if isAddrReachable(ipAddress, Port(29900), 1_000):
+  #   throbberGpcmServer.visible = false
+  #   imgGpcmServer.visible = true
+  #   imgGpcmServer.setFromIconName("gtk-apply", 0)
+  # else:
+  #   canConnect = false
+  #   throbberGpcmServer.visible = false
+  #   imgGpcmServer.visible = true
+  #   imgGpcmServer.setFromIconName("gtk-cancel", 0)
+  # # Unlock server
+  # if isAddrReachable(ipAddress, Port(8085), 1_000):
+  #   throbberUnlockServer.visible = false
+  #   imgUnlockServer.visible = true
+  #   imgUnlockServer.setFromIconName("gtk-apply", 0)
+  # else:
+  #   canConnect = false
+  #   throbberUnlockServer.visible = false
+  #   imgUnlockServer.visible = true
+  #   imgUnlockServer.setFromIconName("gtk-cancel", 0)
+  # if not canConnect:
+  #   dlgCheckServers.show()
+  #   # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
+  #   #       and if every server is reachable autoamtically hidden.
+  #   return
   #
 
   # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
@@ -1930,6 +1937,139 @@ proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
+
+
+
+
+
+
+import masterserver, gspy
+proc updateServer() =
+  var gslist: seq[tuple[ip: IpAddress, port: Port]] = queryGameServerList("stella.ms5.openspy.net", Port(28900))
+  var gspyServer: GSpyServer
+  var
+    valName, valCurrentPlayer, valMaxPlayer, valMap: Value
+    valMode, valMod, valIp, valPort: Value
+    valMasterServerIP, valMasterServerPort: Value
+    valPing, valRanked, valMapSize, valGSpyPort: Value
+    iter: TreeIter
+  let store = listStore(listServer.getModel())
+  let gchararray = typeFromName("gchararray")
+  let guint = typeFromName("guint")
+  let gboolean = typeFromName("gboolean")
+  discard valName.init(gchararray)
+  discard valCurrentPlayer.init(guint)
+  discard valMaxPlayer.init(guint)
+  discard valMap.init(gchararray)
+  discard valMode.init(gchararray)
+  discard valMod.init(gchararray)
+  discard valIp.init(gchararray)
+  discard valPort.init(guint)
+  discard valGSpyPort.init(guint)
+  discard valMasterServerIP.init(gchararray)
+  discard valMasterServerPort.init(guint)
+  discard valPing.init(guint)
+  discard valRanked.init(gboolean)
+  discard valMapSize.init(guint)
+  for gs in gslist:
+    # try:
+    gspyServer = queryAll($gs.ip, gs.port).server
+    store.append(iter)
+    valName.setString(gspyServer.hostname)
+    store.setValue(iter, 0, valName)
+    valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 1, valCurrentPlayer)
+    valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 2, valMaxPlayer)
+    valMap.setString(gspyServer.mapname)
+    store.setValue(iter, 3, valMap)
+    valMode.setString(gspyServer.gametype)
+    store.setValue(iter, 4, valMode)
+    valMod.setString(gspyServer.gamevariant)
+    store.setValue(iter, 5, valMod)
+    valIp.setString($gs.ip)
+    store.setValue(iter, 6, valIp)
+    valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 7, valPort)
+    valMasterServerIP.setString("stella.ms5.openspy.net")
+    store.setValue(iter, 8, valMasterServerIP)
+    valMasterServerPort.setUInt(28900)
+    store.setValue(iter, 9, valMasterServerPort)
+    valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 10, valPing)
+    valRanked.setBoolean(gspyServer.bf2142_ranked)
+    store.setValue(iter, 11, valRanked)
+    valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 12, valMapSize)
+    valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 13, valGSpyPort)
+    # except:
+    #   echo getCurrentExceptionMsg()
+
+
+proc onListServerCursorChanged(self: TreeView00) {.signal.} =
+  var gspyIP: string
+  var gspyPort: Port
+  var
+    valIP: Value
+    valGSpyPort: Value
+    lsServer: ListStore
+    iterServer: TreeIter
+  let storeServer = listStore(listServer.getModel())
+  if getSelected(listServer.selection, lsServer, iterServer):
+    storeServer.getValue(iterServer, 6, valIP)
+    gspyIP = valIP.getString()
+    storeServer.getValue(iterServer, 13, valGSpyPort)
+    gspyPort = Port(valGSpyPort.getUint())  # TODO: getUInt returns an int, but should return an uint
+
+
+
+
+  var
+    valPID, valName, valScore, valKills, valDeaths, valPing: Value
+    iter: TreeIter
+  let storePlayerInfo1 = listStore(listPlayerInfo1.getModel())
+  let storePlayerInfo2 = listStore(listPlayerInfo2.getModel())
+  let gchararray = typeFromName("gchararray")
+  let gint = typeFromName("gint")
+  let guint = typeFromName("guint")
+  # let gboolean = typeFromName("gboolean") # Maybe for an "Is bot" column
+  discard valPID.init(guint)
+  discard valName.init(gchararray)
+  discard valScore.init(gint)
+  discard valKills.init(guint)
+  discard valDeaths.init(guint)
+  discard valPing.init(guint)
+  let gspy: tuple[server: GSpyServer, player: GSpyPlayer, team: GSpyTeam] = queryAll(gspyIP, gspyPort)
+  let gspyPlayer: GSpyPlayer = gspy.player
+  let gspyTeam: GSpyTeam = gspy.team
+  listPlayerInfo1.clear()
+  listPlayerInfo2.clear()
+  var store: ListStore
+  for idx in 0..gspyPlayer.pid.high:
+    if gspyPlayer.team[idx] == 1:
+      store = storePlayerInfo1
+    else:
+      store = storePlayerInfo2
+    store.append(iter)
+    valPID.setUint(gspyPlayer.pid[idx].int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 0, valPID)
+    # TODO: Add clan tag column and split first whitespace occurrence
+    valName.setString(gspyPlayer.player[idx])
+    store.setValue(iter, 1, valName)
+    valScore.setInt(gspyPlayer.score[idx])
+    store.setValue(iter, 2, valScore)
+    valKills.setUInt(gspyPlayer.skill[idx].int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 3, valKills)
+    valDeaths.setUInt(gspyPlayer.deaths[idx].int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 4, valDeaths)
+    valPing.setUInt(gspyPlayer.ping[idx].int) # TODO: setUInt should take an uint param, not int
+    store.setValue(iter, 5, valPing)
+
+    lblTeam1.text = gspyTeam.team_t[0].toUpper()
+    lblTeam2.text = gspyTeam.team_t[1].toUpper()
+
+
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
@@ -2010,6 +2150,12 @@ proc onApplicationActivate(application: Application) =
   txtStartupQuery = builder.getEntry("txtStartupQuery")
   btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
   btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
+
+  listServer = builder.getTreeView("listServer")
+  listPlayerInfo1 = builder.getTreeView("listPlayerInfo1")
+  listPlayerInfo2 = builder.getTreeView("listPlayerInfo2")
+  lblTeam1 = builder.getLabel("lblTeam1")
+  lblTeam2 = builder.getLabel("lblTeam2")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
@@ -2092,6 +2238,8 @@ proc onApplicationActivate(application: Application) =
     vboxUnlocks.visible = false
   if bf2142ServerPath == "":
     btnHost.sensitive = false
+
+  updateServer()
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}

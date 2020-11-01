@@ -178,6 +178,9 @@ when defined(windows):
 else:
   proc copyNcurses() =
     cpFile(NCURSES_PATH / "lib" / "libncurses.so.5.9", BUILD_DIR / "libncurses.so.5")
+  proc copyOpenSSL() =
+    cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
+    cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
 
 
 proc copyAll() =
@@ -190,6 +193,7 @@ proc copyAll() =
     cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
     cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
     copyNcurses()
+    copyOpenSSL()
   copyTranslation()
 ##
 
