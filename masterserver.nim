@@ -93,12 +93,10 @@ proc gsseckey(dst: var string, src: var string, key: string, enctype: int): stri
     p[pIdx] = (p[pIdx].int xor enctmp[(x + y) and 0xff].int).char
     pIdx.inc()
   # }
-  # size = cast[int](p) - cast[int](src.addr)
-  # size = p - src; <--- C++ code, src is in this state 0?
-  size = pIdx - 0
+  size = (cast[int](p) + pIdx) - cast[int](src.addr)
   block: # TODO: Remove, just for testing
-    echo "cast[int](p): ", cast[int](p)
-    echo "cast[int](src): ", cast[int](src.addr)
+    echo "(cast[int](p) + pIdx): ", (cast[int](p) + pIdx)
+    echo "cast[int](src.addr): ", cast[int](src.addr)
     echo "size: ", size
 
 #   # /* 4) enctype management */
@@ -165,15 +163,17 @@ proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, por
   client.connect(url, port)
   var resp: string
   try:
-    discard client.recv(resp, 512, 1000)
+    discard client.recv(resp, 512, 5000)
   except TimeoutError:
     discard
   echo repr resp
 
   var secureCode: string = resp[15 .. 20]
   var validate: string
-  var msggamekey: string = "FIlaPo" # "d4kZca"
+  var msggamekey: string = "FIlaPo" # "M8o1Qw" # "d4kZca"
   var enctype: int = 1
+
+  echo "secureCode: ", secureCode
 
   discard gsseckey(validate, secureCode, msggamekey, enctype);
 
@@ -186,6 +186,7 @@ proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, por
     discard client.recv(resp, 512, 1000)
   except TimeoutError:
     discard
+  echo repr resp
 
   var respLen: cint = resp.len.cint
   # var decoded: string = $enctype1_decoder(secureCodeUnmodified.cstring, resp.cstring, respLen.unsafeAddr)
