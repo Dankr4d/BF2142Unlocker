@@ -2046,34 +2046,32 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
   discard valKills.init(guint)
   discard valDeaths.init(guint)
   discard valPing.init(guint)
-  let gspy: tuple[server: GSpyServer, player: GSpyPlayer, team: GSpyTeam] = queryAll(gspyIP, gspyPort)
-  let gspyPlayer: GSpyPlayer = gspy.player
-  let gspyTeam: GSpyTeam = gspy.team
+  let gspy: GSpy = queryAll(gspyIP, gspyPort)
   listPlayerInfo1.clear()
   listPlayerInfo2.clear()
   var store: ListStore
-  for idx in 0..gspyPlayer.pid.high:
-    if gspyPlayer.team[idx] == 1:
+  for idx in 0..gspy.player.pid.high:
+    if gspy.player.team[idx] == 1:
       store = storePlayerInfo1
     else:
       store = storePlayerInfo2
     store.append(iter)
-    valPID.setUint(gspyPlayer.pid[idx].int) # TODO: setUInt should take an uint param, not int
+    valPID.setUint(gspy.player.pid[idx].int) # TODO: setUInt should take an uint param, not int
     store.setValue(iter, 0, valPID)
     # TODO: Add clan tag column and split first whitespace occurrence
-    valName.setString(gspyPlayer.player[idx])
+    valName.setString(gspy.player.player[idx])
     store.setValue(iter, 1, valName)
-    valScore.setInt(gspyPlayer.score[idx])
+    valScore.setInt(gspy.player.score[idx])
     store.setValue(iter, 2, valScore)
-    valKills.setUInt(gspyPlayer.skill[idx].int) # TODO: setUInt should take an uint param, not int
+    valKills.setUInt(gspy.player.skill[idx].int) # TODO: setUInt should take an uint param, not int
     store.setValue(iter, 3, valKills)
-    valDeaths.setUInt(gspyPlayer.deaths[idx].int) # TODO: setUInt should take an uint param, not int
+    valDeaths.setUInt(gspy.player.deaths[idx].int) # TODO: setUInt should take an uint param, not int
     store.setValue(iter, 4, valDeaths)
-    valPing.setUInt(gspyPlayer.ping[idx].int) # TODO: setUInt should take an uint param, not int
+    valPing.setUInt(gspy.player.ping[idx].int) # TODO: setUInt should take an uint param, not int
     store.setValue(iter, 5, valPing)
 
-    lblTeam1.text = gspyTeam.team_t[0].toUpper()
-    lblTeam2.text = gspyTeam.team_t[1].toUpper()
+    lblTeam1.text = gspy.team.team_t[0].toUpper()
+    lblTeam2.text = gspy.team.team_t[1].toUpper()
 
 
 proc onApplicationActivate(application: Application) =

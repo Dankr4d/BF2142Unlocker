@@ -1,23 +1,3 @@
-# Incoming and outgoing traffic must be configured for the following GameSpy ports:
-# 6667 (IRC)
-# 27900 (Master Server UDP Heartbeat)
-# 28900 (Master Server List Request)
-# 29900 (GP Connection Manager)
-# 29901 (GP Search Manager)
-# 13139 (Custom UDP Pings)
-# 6515 (Dplay UDP)
-# 6500 (Query Port)
-# ----------------------------------------------
-# Outgoing UDP 27900
-# Outgoing UDP 29910
-# Outgoing UDP 29960
-# Outgoing TCP 80
-# Incoming UDP 16567 (might be different - see sv.gameport in your mods/bf2/settings/serversettings.con)
-# Incoming UDP 29900 (might be different - see sv.gameSpyPort in your mods/bf2/settings/serversettings.con)
-# ----------------------------------------------
-# https://bf2tech.uturista.pt/index.php/GameSpy_Protocol
-
-
 import asyncnet, asyncdispatch, net
 # import times
 import parseutils
@@ -116,21 +96,29 @@ type
     team*: seq[uint8] # Or bool, because there are only two teams
     ping*: seq[uint16]
     player*: seq[string]
+  GSpy* = object
+    server*: GSpyServer
+    player*: GSpyPlayer
+    team*: GSpyTeam
+
 
 proc newHeader00(protocolId: ProtocolId = Protocol00, timeStamp: TimeStamp = TimeStamp.high): Header00 =
   result.magic = MAGIC_VALUE
   result.protocolId = protocolId
   result.timeStamp = timeStamp
 
+
 proc newProtocol00B*(): Protocol00B =
   result.header = newHeader00()
+
 
 proc serialize(protocol00B: Protocol00B): string =
   result = newString(sizeof(protocol00B))
   copyMem(addr result[0], unsafeAddr protocol00B, sizeof(Protocol00B))
   result.add(char(0x01))
 
-proc recvProto00*(address: string, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
+
+proc recvProto00B*(address: string, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
   var messages: Table[int, string]
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
   await socket.sendTo(address, port, protocol00B.serialize())
@@ -143,242 +131,238 @@ proc recvProto00*(address: string, port: Port, protocol00B: Protocol00B, timeout
       if await withTimeout(respFuture, timeout):
         resp = await respFuture
       else:
-        echo "TIMEOUTED QUERYING GAMESPY ... GOING TO BREAK"
+        echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
         break
     else:
       resp = await respFuture
 
-    # echo repr resp
-    # echo "PACKAGE: ", repr resp.data
     var response: Response00
     response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
     # response.timeStamp = cast[TimeStamp](resp[1..5])
     response.splitNum = resp.data[13].byte
     var lastAndMessageNum: byte = resp.data[14].byte
     var isLastMessage: bool = lastAndMessageNum.shr(7).bool
-    # echo "isLastMessage: ", isLastMessage
     response.messageNumber = lastAndMessageNum.shl(1).shr(1)
-    # echo "response.messageNumber: ", response.messageNumber
     response.data = resp.data[15..^1]
-    # echo repr response.data
     messages[response.messageNumber.int] = response.data
     if isLastMessage:
       break
   for idx in 0 .. messages.len - 1:
     result.add messages[idx]
 
-proc parseCstr*(msg: string, pos: var int): string =
-  pos += msg.parseUntil(result, 0x00.char, pos)
-  pos.inc() # skip 0x00
+
+proc parseCStr(message: string, pos: var int): string =
+  pos += message.parseUntil(result, char(0x0), pos)
+  pos.inc()
 
 
-proc parseGSpyServer*(msg: string, pos: var int): GSpyServer =
+proc parseGSpyServer*(message: string, server: var GSpyServer, pos: var int) =
   while true:
-    var key = msg.parseCstr(pos)
-    var val = msg.parseCstr(pos)
+    var key: string = message.parseCStr(pos)
+    var val: string = message.parseCStr(pos)
 
     case key:
     of "hostport":
-      result.hostport = parseUInt(val).uint16
+      server.hostport = parseUInt(val).uint16
     of "gamemode":
-      result.gamemode = val
+      server.gamemode = val
     of "bf2142_spawntime":
-      result.bf2142_spawntime = parseFloat(val)
+      server.bf2142_spawntime = parseFloat(val)
     of "bf2142_pure":
-      result.bf2142_pure = parseBool(val)
+      server.bf2142_pure = parseBool(val)
     of "bf2142_d_idx":
-      result.bf2142_d_idx = val
+      server.bf2142_d_idx = val
     of "bf2142_team2":
-      result.bf2142_team2 = val
+      server.bf2142_team2 = val
     of "numplayers":
-      result.numplayers = parseUInt(val).uint8
+      server.numplayers = parseUInt(val).uint8
     of "bf2142_maxrank":
-      result.bf2142_maxrank = parseUInt(val).uint16
+      server.bf2142_maxrank = parseUInt(val).uint16
     of "bf2142_teamratio":
-      result.bf2142_teamratio = parseFloat(val)
+      server.bf2142_teamratio = parseFloat(val)
     of "bf2142_custom_map_url":
-      result.bf2142_custom_map_url = val
+      server.bf2142_custom_map_url = val
     of "mapname":
-      result.mapname = val
+      server.mapname = val
     of "bf2142_globalunlocks":
-      result.bf2142_globalunlocks = parseBool(val)
+      server.bf2142_globalunlocks = parseBool(val)
     of "bf2142_ticketratio":
-      result.bf2142_ticketratio = parseUInt(val).uint8
+      server.bf2142_ticketratio = parseUInt(val).uint8
     of "password":
-      result.password = parseBool(val)
+      server.password = parseBool(val)
     of "bf2142_d_dl":
-      result.bf2142_d_dl = val
+      server.bf2142_d_dl = val
     of "bf2142_sponsortext":
-      result.bf2142_sponsortext = val
+      server.bf2142_sponsortext = val
     of "bf2142_region":
-      result.bf2142_region = val
+      server.bf2142_region = val
     of "gamevariant":
-      result.gamevariant = val
+      server.gamevariant = val
     of "gametype":
-      result.gametype = val
+      server.gametype = val
     of "bf2142_ranked":
-      result.bf2142_ranked = parseBool(val)
+      server.bf2142_ranked = parseBool(val)
     of "bf2142_averageping":
-      result.bf2142_averageping = parseUInt(val).uint16
+      server.bf2142_averageping = parseUInt(val).uint16
     of "bf2142_provider":
-      result.bf2142_provider = val
+      server.bf2142_provider = val
     of "bf2142_ranked_tournament":
-      result.bf2142_ranked_tournament = parseBool(val)
+      server.bf2142_ranked_tournament = parseBool(val)
     of "bf2142_anticheat":
-      result.bf2142_anticheat = parseBool(val)
+      server.bf2142_anticheat = parseBool(val)
     of "bf2142_friendlyfire":
-      result.bf2142_friendlyfire = parseBool(val)
+      server.bf2142_friendlyfire = parseBool(val)
     of "bf2142_communitylogo_url":
-      result.bf2142_communitylogo_url = val
+      server.bf2142_communitylogo_url = val
     of "maxplayers":
-      result.maxplayers = parseUInt(val).uint8
+      server.maxplayers = parseUInt(val).uint8
     of "bf2142_voip":
-      result.bf2142_voip = parseBool(val)
+      server.bf2142_voip = parseBool(val)
     of "bf2142_reservedslots":
-      result.bf2142_reservedslots = parseUInt(val).uint8
+      server.bf2142_reservedslots = parseUInt(val).uint8
     of "bf2142_type":
-      result.bf2142_type = val
+      server.bf2142_type = val
     of "gamename":
-      result.gamename = val
+      server.gamename = val
     of "bf2142_mapsize":
-      result.bf2142_mapsize = parseUInt(val).uint8
+      server.bf2142_mapsize = parseUInt(val).uint8
     of "bf2142_scorelimit":
-      result.bf2142_scorelimit = parseUInt(val)
+      server.bf2142_scorelimit = parseUInt(val)
     of "bf2142_allow_spectators":
-      result.bf2142_allow_spectators = parseBool(val)
+      server.bf2142_allow_spectators = parseBool(val)
     of "gamever":
-      result.gamever = val
+      server.gamever = val
     of "bf2142_tkmode":
-      result.bf2142_tkmode = val
+      server.bf2142_tkmode = val
     of "bf2142_autobalanced":
-      result.bf2142_autobalanced = parseBool(val)
+      server.bf2142_autobalanced = parseBool(val)
     of "bf2142_team1":
-      result.bf2142_team1 = val
+      server.bf2142_team1 = val
     of "bf2142_autorec":
-      result.bf2142_autorec = parseBool(val)
+      server.bf2142_autorec = parseBool(val)
     of "bf2142_sponsorlogo_url":
-      result.bf2142_sponsorlogo_url = val
+      server.bf2142_sponsorlogo_url = val
     of "timelimit":
-      result.timelimit = parseUInt(val).uint16
+      server.timelimit = parseUInt(val).uint16
     of "hostname":
-      result.hostname = val
+      server.hostname = val
     of "roundtime":
-      result.roundtime = parseUInt(val).uint8
+      server.roundtime = parseUInt(val).uint8
     of "bf2142_startdelay":
-      result.bf2142_startdelay = parseUInt(val).uint8
+      server.bf2142_startdelay = parseUInt(val).uint8
 
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
-      pos += msg.skip($(0x01.char), pos)
-      return
-
-############# TODO: Get rid of this redundance
-proc parseListUInt8(msg: string, pos: var int): seq[uint8] =
-  pos.inc() # skip the byte start starts the list 0x00, 0x01 (offset?)
-  while pos < msg.len:
-    let linebuf = msg.parseCstr(pos)
-    if pos == msg.len:
-      return
-    result.add(parseUInt(linebuf).uint8)
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
+    if message[pos - 1 .. pos] == "\0\0": # pos - 1 because parseCStr skips the first 0x0 byte
+      pos.inc(1)
       return
 
-proc parseListInt16(msg: string, pos: var int): seq[int16] =
-  pos.inc() # skip the byte start starts the list 0x00, 0x01 (offset?)
-  while pos < msg.len:
-    let linebuf = msg.parseCstr(pos)
-    if pos == msg.len:
-      return
-    result.add(parseInt(linebuf).int16)
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
+
+proc parseList[T](message: string, pos: var int): seq[T] =
+  if message[pos .. pos + 2] == "\0\0\0": # Empty list
+    echo "EMPTY LIST!!!"
+    pos.inc(3)
+    return
+  pos.inc(2) # Skip 00 byte and offset # TODO: offset (currently ignored because the last entry isn't added)
+  while true:
+    let val: string = message.parseCstr(pos)
+    if pos == message.len:
+      return # End of message
+
+    when T is string:
+      result.add(val)
+    elif T is int8 or T is int16 or T is int32:
+      result.add(T(parseInt(val)))
+    elif T is uint8 or T is uint16 or T is uint32:
+      result.add(T(parseUInt(val)))
+
+    if message[pos - 1 .. pos] == "\0\0":
+      pos.inc()
       return
 
-proc parseListUInt16(msg: string, pos: var int): seq[uint16] =
-  pos.inc() # skip the byte start starts the list 0x00, 0x01 (offset?)
-  while pos < msg.len:
-    let linebuf = msg.parseCstr(pos)
-    if pos == msg.len:
+
+proc parseGSpyPlayer(message: string, player: var GSpyPlayer, pos: var int) =
+  while true:
+    var key: string = message.parseCStr(pos)
+    pos.dec() # Because parseCStr skips the 0x0 byte
+    if message.len == pos:
       return
-    result.add(parseUInt(linebuf).uint16)
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
+    case key:
+    of "deaths_":
+      player.deaths.add(parseList[uint16](message, pos))
+    of "pid_":
+      player.pid.add(parseList[uint32](message, pos))
+    of "score_":
+      player.score.add(parseList[int16](message, pos))
+    of "skill_":
+      player.skill.add(parseList[uint16](message, pos))
+    of "team_":
+      player.team.add(parseList[uint8](message, pos))
+    of "ping_":
+      player.ping.add(parseList[uint16](message, pos))
+    of "player_":
+      player.player.add(parseList[string](message, pos))
+    if message.len == pos: # TODO: This check is done twice. Before parseList and here
+      return
+    if message[pos - 2 .. pos] == "\0\0\0":
+      pos.inc()
       return
 
-proc parseListUInt32(msg: string, pos: var int): seq[uint32] =
-  pos.inc() # skip the byte start starts the list 0x00, 0x01 (offset?)
-  while pos < msg.len:
-    let linebuf = msg.parseCstr(pos)
-    if pos == msg.len:
+
+proc parseGSpyTeam(message: string, team: var GSpyTeam, pos: var int) =
+  while true:
+    var key: string = message.parseCStr(pos)
+    pos.dec() # Because parseCStr skips the 0x0 byte
+    if message.len == pos:
       return
-    result.add(parseUInt(linebuf).uint32)
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
+    case key:
+    of "team_t":
+      team.team_t.add(parseList[string](message, pos))
+    of "score_t":
+      team.score_t.add(parseList[uint16](message, pos))
+    if message.len == pos: # TODO: This check is done twice. Before parseList and here
+      return
+    if message[pos - 2 .. pos] == "\0\0\0":
+      pos.inc()
       return
 
-proc parseListStr(msg: string, pos: var int): seq[string] =
-  pos.inc() # skip the byte start starts the list 0x00, 0x01 (offset?)
-  while pos < msg.len:
-    let linebuf = msg.parseCstr(pos)
-    if pos == msg.len:
-      return
-    result.add(linebuf)
-    if msg[pos] == 0x00.char:
-      pos.inc() # skip 0x00
-      return
-########################
 
-proc queryAll*(url: string, port: Port, timeout: int = 0): tuple[server: GSpyServer, player: GSpyPlayer, team: GSpyTeam] =
-  var messages = waitFor recvProto00(url, port, newProtocol00B(), timeout)
+proc parseProto00B(message: string, gspy: var GSpy, pos: var int) =
+  if pos >= message.len:
+    return
+
+  case message[pos]:
+  of char(0x0): # Server
+    echo "SERVER"
+    pos.inc() # Skip server identifier byte (0x0)
+    parseGSpyServer(message, gspy.server, pos)
+    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
+  of char(0x1): # Player
+    echo "PLAYER"
+    pos.inc() # Skip player identifier byte (0x1)
+    parseGSpyPlayer(message, gspy.player, pos)
+    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
+  of char(0x2): # Team
+    echo "TEAM"
+    pos.inc() # Skip player identifier byte (0x1)
+    parseGSpyTeam(message, gspy.team, pos)
+    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
+  else:
+    discard
+
+  parseProto00B(message, gspy, pos)
+
+
+proc queryAll*(url: string, port: Port, timeout: int = 0): GSpy =
   # var messages = @["\x00hostname\x00Reclamation Remaster\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Leipzig\x00gametype\x00gpm_coop\x00gamevariant\x00project_remaster_mp\x00numplayers\x002\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0032\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00EU\x00bf2142_type\x000\x00bf2142_averageping\x001\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\x01player_\x00\x00 ddre\x00NineEleven Hijackers\x00Sir Smokealot\x00DSquarius Green\x00Guy Nutter\x00Jack Ghoff\x00DGlester Hardunkichud\x00Bang-Ding Ow\x00LORD Voldemort\x00Rick Titball\x00Michael Myers\x00Harry Palmer\x00Justin Sider\x00Hans Gruber\x00Professor Chaos\x00Nyquillus Dillwad\x00Dylan Weed\x00Ben Dover\x00Vin Diesel\x00Harry Beaver\x00Jack Mehoff\x00Jawana Die\x00Mr Slave\x00 Boomer-UK\x00X-Wing AtAliciousness\x00Bloody Glove\x00MaryJane Potman\x00Tits McGee\x00Phat Ho\x00Dee Capitated\x00T 1\x00", "\x01player_\x00\x1ET 1000\x00Quackadilly Blip\x00No Collusion\x00\x00score_\x00\x0037\x0021\x0018\x0018\x0016\x0015\x0013\x0012\x0010\x0010\x009\x009\x008\x008\x008\x007\x007\x007\x006\x006\x006\x005\x005\x004\x003\x003\x003\x003\x002\x001\x001\x001\x000\x00\x00ping_\x00\x0041\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0023\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00team_\x00\x002\x002\x002\x002\x001\x001\x002\x002\x002\x002\x002\x002\x001\x002\x002\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x00\x00deaths_\x00\x006\x004\x005\x005\x006\x0011\x004\x004\x0010\x005\x008\x006\x008\x005\x007\x006\x009\x004\x005\x007\x006\x007\x0010\x000\x007\x007\x008\x007\x007\x007\x004\x006\x006\x00\x00pid_\x00\x0030748\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0032963\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00skill_\x00\x0031\x006\x0011\x0010\x0014\x0015\x002\x006\x007\x005\x007\x003\x006\x004\x004\x007\x007\x004\x006\x006\x001\x004\x003\x004\x003\x002\x001\x000\x004\x003\x002\x000\x000\x00\x00\x00\x02team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  # TODO: Crashes with following (empty lists)
   # var messages = @["\x00hostname\x00Reclamation US\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x002142af_ladder_1\x00gametype\x00gpm_cq\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0064\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00US\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  var lists: Table[string, seq[string]]
+  # var messages = @["\x00hostname\x00AC21 (close)\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Shuhia_Taiba\x00gametype\x00gpm_ti\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0016\x00gamemode\x00openplaying\x00password\x001\x00timelimit\x001500\x00roundtime\x001\x00hostport\x0017600\x00bf2142_ranked\x000\x00bf2142_anticheat\x000\x00bf2142_autorec\x001\x00bf2142_d_idx\x00http://185.189.255.6/demos_root/a21/\x00bf2142_d_dl\x00http://185.189.255.6/demos_root/a21/demos/\x00bf2142_voip\x001\x00bf2142_autobalanced\x000\x00bf2142_friendlyfire\x000\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0020\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00Powered By NovGames.ru\x00bf2142_sponsorlogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_communitylogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00300\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x001\x00bf2142_mapsize\x0048\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x006\x00bf2142_maxrank\x000\x00bf2142_provider\x0010011\x00bf2142_region\x00AT\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x001\x00bf2142_custom_map_url\x000http://2142.novgames.ru/\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
+  var messages = waitFor recvProto00B(url, port, newProtocol00B(), timeout)
+  var gspy: GSpy
   for idx, message in messages:
-    var pos = 1 # Skip the first byte of the message (the first byte is the typeid 0x00,0x01, 0x02/ Server, Player, Team)
-    if idx == 0:
-      result.server = parseGSpyServer(message, pos)
-    if pos >= message.len:
-      continue
-    # echo messages
-    while pos < message.len:
-      try:
-        pos += message.skipWhile({0x00.char, 0x01.char, 0x02.char}, pos)
-        var nextWord: string = message.parseCstr(pos)
+    var pos: int = 0
 
-        case nextWord:
-        of "deaths_": # Player
-          result.player.deaths.add(parseListUInt16(message, pos))
-        of "pid_": # Player
-          result.player.pid.add(parseListUInt32(message, pos))
-        of "score_": # Player
-          result.player.score.add(parseListInt16(message, pos))
-        of "skill_": # Player
-          result.player.skill.add(parseListUInt16(message, pos))
-        of "team_": # Player
-          result.player.team.add(parseListUInt8(message, pos))
-        of "ping_": # Player
-          result.player.ping.add(parseListUInt16(message, pos))
-        of "player_": # Player
-          result.player.player.add(parseListStr(message, pos))
-        of "team_t": # Team
-          result.team.team_t.add(parseListStr(message, pos))
-        of "score_t": # Team
-          result.team.score_t.add(parseListUInt16(message, pos))
-      except:
-        continue
+    parseProto00B(message, gspy, pos)
 
-      # discard lists.hasKeyOrPut(nextWord, @[])
-      # lists[nextWord].add(parseList(message, pos))
-
-  # echo lists
+  return gspy
 
 when isMainModule:
   echo queryAll("185.189.255.6", Port(29987))
-
-# proc parseServerSettings(raw: string) =
-  # discard
-
-### TODO: Parser crashes while parsing ping list. It returns `@["", "team_"]` instead of pings:
-# 0x7fc74d6584a0"\0hostname\0Reclamation US\0gamename\0stella\0gamever\01.10.112.0\0mapname\02142af_ladder_1\0gametype\0gpm_cq\0gamevariant\0bf2142\0numplayers\00\0maxplayers\064\0gamemode\0openplaying\0password\00\0timelimit\00\0roundtime\01\0hostport\017567\0bf2142_ranked\01\0bf2142_anticheat\00\0bf2142_autorec\00\0bf2142_d_idx\0http://\0bf2142_d_dl\0http://\0bf2142_voip\01\0bf2142_autobalanced\01\0bf2142_friendlyfire\01\0bf2142_tkmode\0Punish\0bf2142_startdelay\015\0bf2142_spawntime\015.000000\0bf2142_sponsortext\0\0bf2142_sponsorlogo_url\0http://lightav.com/bf2142/mixedmode.jpg\0bf2142_communitylogo_url\0http://lightav.com/bf2142/mixedmode.jpg\0bf2142_scorelimit\00\0bf2142_ticketratio\0100\0bf2142_teamratio\0100.000000\0bf2142_team1\0Pac\0bf2142_team2\0EU\0bf2142_pure\00\0bf2142_mapsize\064\0bf2142_globalunlocks\01\0bf2142_reservedslots\00\0bf2142_maxrank\00\0bf2142_provider\0OS\0bf2142_region\0US\0bf2142_type\00\0bf2142_averageping\00\0bf2142_ranked_tournament\00\0bf2142_allow_spectators\00\0bf2142_custom_map_url\00http://battlefield2142.co\0\0\1player_\0\0\0score_\0\0\0ping_\0\0\0team_\0\0\0deaths_\0\0\0pid_\0\0\0skill_\0\0\0\0\2team_t\0\0Pac\0EU\0\0score_t\0\00\00\0\0\0"
