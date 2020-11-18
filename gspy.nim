@@ -130,12 +130,25 @@ proc serialize(protocol00B: Protocol00B): string =
   copyMem(addr result[0], unsafeAddr protocol00B, sizeof(Protocol00B))
   result.add(char(0x01))
 
-proc recvProto00*(address: string, port: Port, protocol00B: Protocol00B): Future[seq[string]] {.async.} =
+proc recvProto00*(address: string, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
   var messages: Table[int, string]
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
   await socket.sendTo(address, port, protocol00B.serialize())
+
   while true: ## todo read up to a max limit to not stall the client when server fucks up
-    var resp: tuple[data: string, address: string, port: Port] = waitFor socket.recvFrom(1400)
+    # var resp: tuple[data: string, address: string, port: Port] = waitFor socket.recvFrom(1400)
+    var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
+    var resp: tuple[data: string, address: string, port: Port]
+    if timeout > 0:
+      if await withTimeout(respFuture, timeout):
+        resp = await respFuture
+      else:
+        echo "TIMEOUTED QUERYING GAMESPY ... GOING TO BREAK"
+        break
+    else:
+      resp = await respFuture
+
+    # echo repr resp
     # echo "PACKAGE: ", repr resp.data
     var response: Response00
     response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
@@ -316,8 +329,8 @@ proc parseListStr(msg: string, pos: var int): seq[string] =
       return
 ########################
 
-proc queryAll*(url: string, port: Port): tuple[server: GSpyServer, player: GSpyPlayer, team: GSpyTeam] =
-  var messages = waitFor recvProto00(url, port, newProtocol00B())
+proc queryAll*(url: string, port: Port, timeout: int = 0): tuple[server: GSpyServer, player: GSpyPlayer, team: GSpyTeam] =
+  var messages = waitFor recvProto00(url, port, newProtocol00B(), timeout)
   # var messages = @["\x00hostname\x00Reclamation Remaster\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Leipzig\x00gametype\x00gpm_coop\x00gamevariant\x00project_remaster_mp\x00numplayers\x002\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0032\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00EU\x00bf2142_type\x000\x00bf2142_averageping\x001\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\x01player_\x00\x00 ddre\x00NineEleven Hijackers\x00Sir Smokealot\x00DSquarius Green\x00Guy Nutter\x00Jack Ghoff\x00DGlester Hardunkichud\x00Bang-Ding Ow\x00LORD Voldemort\x00Rick Titball\x00Michael Myers\x00Harry Palmer\x00Justin Sider\x00Hans Gruber\x00Professor Chaos\x00Nyquillus Dillwad\x00Dylan Weed\x00Ben Dover\x00Vin Diesel\x00Harry Beaver\x00Jack Mehoff\x00Jawana Die\x00Mr Slave\x00 Boomer-UK\x00X-Wing AtAliciousness\x00Bloody Glove\x00MaryJane Potman\x00Tits McGee\x00Phat Ho\x00Dee Capitated\x00T 1\x00", "\x01player_\x00\x1ET 1000\x00Quackadilly Blip\x00No Collusion\x00\x00score_\x00\x0037\x0021\x0018\x0018\x0016\x0015\x0013\x0012\x0010\x0010\x009\x009\x008\x008\x008\x007\x007\x007\x006\x006\x006\x005\x005\x004\x003\x003\x003\x003\x002\x001\x001\x001\x000\x00\x00ping_\x00\x0041\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0023\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00team_\x00\x002\x002\x002\x002\x001\x001\x002\x002\x002\x002\x002\x002\x001\x002\x002\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x00\x00deaths_\x00\x006\x004\x005\x005\x006\x0011\x004\x004\x0010\x005\x008\x006\x008\x005\x007\x006\x009\x004\x005\x007\x006\x007\x0010\x000\x007\x007\x008\x007\x007\x007\x004\x006\x006\x00\x00pid_\x00\x0030748\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0032963\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00skill_\x00\x0031\x006\x0011\x0010\x0014\x0015\x002\x006\x007\x005\x007\x003\x006\x004\x004\x007\x007\x004\x006\x006\x001\x004\x003\x004\x003\x002\x001\x000\x004\x003\x002\x000\x000\x00\x00\x00\x02team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   # TODO: Crashes with following (empty lists)
   # var messages = @["\x00hostname\x00Reclamation US\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x002142af_ladder_1\x00gametype\x00gpm_cq\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0064\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00US\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
@@ -328,36 +341,41 @@ proc queryAll*(url: string, port: Port): tuple[server: GSpyServer, player: GSpyP
       result.server = parseGSpyServer(message, pos)
     if pos >= message.len:
       continue
+    # echo messages
     while pos < message.len:
-      pos += message.skipWhile({0x00.char, 0x01.char, 0x02.char}, pos)
-      var nextWord: string = message.parseCstr(pos)
+      try:
+        pos += message.skipWhile({0x00.char, 0x01.char, 0x02.char}, pos)
+        var nextWord: string = message.parseCstr(pos)
 
-      case nextWord:
-      of "deaths_": # Player
-        result.player.deaths.add(parseListUInt16(message, pos))
-      of "pid_": # Player
-        result.player.pid.add(parseListUInt32(message, pos))
-      of "score_": # Player
-        result.player.score.add(parseListInt16(message, pos))
-      of "skill_": # Player
-        result.player.skill.add(parseListUInt16(message, pos))
-      of "team_": # Player
-        result.player.team.add(parseListUInt8(message, pos))
-      of "ping_": # Player
-        result.player.ping.add(parseListUInt16(message, pos))
-      of "player_": # Player
-        result.player.player.add(parseListStr(message, pos))
-      of "team_t": # Team
-        result.team.team_t.add(parseListStr(message, pos))
-      of "score_t": # Team
-        result.team.score_t.add(parseListUInt16(message, pos))
+        case nextWord:
+        of "deaths_": # Player
+          result.player.deaths.add(parseListUInt16(message, pos))
+        of "pid_": # Player
+          result.player.pid.add(parseListUInt32(message, pos))
+        of "score_": # Player
+          result.player.score.add(parseListInt16(message, pos))
+        of "skill_": # Player
+          result.player.skill.add(parseListUInt16(message, pos))
+        of "team_": # Player
+          result.player.team.add(parseListUInt8(message, pos))
+        of "ping_": # Player
+          result.player.ping.add(parseListUInt16(message, pos))
+        of "player_": # Player
+          result.player.player.add(parseListStr(message, pos))
+        of "team_t": # Team
+          result.team.team_t.add(parseListStr(message, pos))
+        of "score_t": # Team
+          result.team.score_t.add(parseListUInt16(message, pos))
+      except:
+        continue
 
       # discard lists.hasKeyOrPut(nextWord, @[])
       # lists[nextWord].add(parseList(message, pos))
 
   # echo lists
 
-# echo queryAll("45.32.202.165", Port(29900))
+when isMainModule:
+  echo queryAll("185.189.255.6", Port(29987))
 
 # proc parseServerSettings(raw: string) =
   # discard

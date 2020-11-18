@@ -94,10 +94,10 @@ proc gsseckey(dst: var string, src: var string, key: string, enctype: int): stri
     pIdx.inc()
   # }
   size = (cast[int](p) + pIdx) - cast[int](src.addr)
-  block: # TODO: Remove, just for testing
-    echo "(cast[int](p) + pIdx): ", (cast[int](p) + pIdx)
-    echo "cast[int](src.addr): ", cast[int](src.addr)
-    echo "size: ", size
+  # block: # TODO: Remove, just for testing
+  #   echo "(cast[int](p) + pIdx): ", (cast[int](p) + pIdx)
+  #   echo "cast[int](src.addr): ", cast[int](src.addr)
+  #   echo "size: ", size
 
 #   # /* 4) enctype management */
 #   if(enctype == 1) {
@@ -156,9 +156,7 @@ proc gsseckey(dst: var string, src: var string, key: string, enctype: int): stri
 
   return dst
 
-################################################################
-
-proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, port: Port]] =
+proc queryGameServerListEnc1*(url: string, port: Port): seq[tuple[ip: IpAddress, port: Port]] =
   var client: Socket = newSocket()
   client.connect(url, port)
   var resp: string
@@ -166,7 +164,7 @@ proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, por
     discard client.recv(resp, 512, 5000)
   except TimeoutError:
     discard
-  echo repr resp
+  # echo repr resp
 
   var secureCode: string = resp[15 .. 20]
   var validate: string
@@ -186,7 +184,7 @@ proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, por
     discard client.recv(resp, 512, 1000)
   except TimeoutError:
     discard
-  echo repr resp
+  # echo repr resp
 
   var respLen: cint = resp.len.cint
   # var decoded: string = $enctype1_decoder(secureCodeUnmodified.cstring, resp.cstring, respLen.unsafeAddr)
@@ -206,7 +204,132 @@ proc queryGameServerList*(url: string, port: Port): seq[tuple[ip: IpAddress, por
     )
     idx += 6
 
+
+################################################################
+
+
+import net
+import strutils
+
+const BUFFER_SIZE: cint = 8192
+
+when defined(linux):
+  import posix
+elif defined(windows):
+  import winlean
+
+template `+`*[T](p: ptr T, off: int): ptr T =
+  cast[ptr type(p[])](cast[ByteAddress](p) +% off * sizeof(p[]))
+# template `+=`*[T](p: ptr T, off: int) =
+#   p = p + off
+template `-`*[T](p: ptr T, off: int): ptr T =
+  cast[ptr type(p[])](cast[ByteAddress](p) -% off * sizeof(p[]))
+# template `-=`*[T](p: ptr T, off: int) =
+#   p = p - off
+template `[]`*[T](p: ptr T, off: int): T =
+  (p + off)[]
+# template `[]=`*[T](p: ptr T, off: int, val: T) =
+#   (p + off)[] = val
+
+
+type enctypex_data_t = object # {.importc, header: "masterserver.h".} = object
+  encxkey: array[261, cuchar]
+  offset: cint
+  start: cint
+
+type ipport_t {.packed.} = object
+  ip: uint32
+  port: uint16
+
+# unsigned char *enctypex_decoder(unsigned char *key, unsigned char *validate, unsigned char *data, int *datalen, enctypex_data_t *enctypex_data)
+proc enctypex_decoder(key: ptr cuchar, validate: ptr cuchar, data: ptr cuchar, datalen: ptr cint, enctypex_data: ptr enctypex_data_t): ptr cuchar {.importc, cdecl, header: "masterserver.h".}
+
+# int enctypex_decoder_convert_to_ipport(unsigned char *data, int datalen, unsigned char *out, unsigned char *infobuff, int infobuff_size, int infobuff_offset)
+proc enctypex_decoder_convert_to_ipport(data: ptr cuchar, datalen: cint, `out`: ptr cuchar, infobuff: ptr cuchar, infobuff_size: cint, infobuff_offset: cint): cint {.importc, cdecl, header: "masterserver.h".}
+
+
+# int tcpxspr(int sd, u8 *gamestr, u8 *msgamestr, u8 *validate, u8 *filter, u8 *info, int type)
+proc tcpxspr(sd: cint, gamestr: ptr uint8, msgamestr: ptr uint8, validate: ptr uint8, filter: ptr uint8, info: ptr uint8, `type`: cint): cint {.importc, cdecl, header: "masterserver.h".}
+
+# int enctypex_decoder_rand_validate(unsigned char *validate)
+proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl, header: "masterserver.h".}
+
+
+proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string): seq[tuple[ip: IpAddress, port: Port]] =
+  var client: Socket = newSocket()
+  client.connect(url, port)
+
+  var msgamename: ptr uint8 = cast[ptr uint8](gameName.cstring)
+  var msgamekey: ptr uint8 = cast[ptr uint8](gameKey.cstring)
+  var gamestr: ptr uint8 = cast[ptr uint8](gameStr.cstring)
+
+  var validate: ptr cuchar # Random id on russian server because there's no encryption
+  validate = validate.resize(8)
+  discard enctypex_decoder_rand_validate(validate)
+  var filter: ptr uint8 = cast[ptr uint8]("")
+  var enctypex_query: ptr uint8 = cast[ptr uint8]("")
+  var enctypex_type: cint = 1
+
+  # echo "Gamename: ", cast[ptr cuchar](msgamename)
+  # echo "Enctype: ", enctypex_type
+  # echo "Gamestr: ", cast[ptr cuchar](gamestr)
+  # echo "MSgamekey: ", cast[ptr cuchar](msgamekey)
+  # echo "Random id: ", validate.cstring
+
+  # TODO: Implement functionality to communicate to port 28900 with encryption set.
+  #       In gslist the encryption method is stored in myenctype and not in enctypex_type [if(myenctype < 0) {]
+
+  discard tcpxspr(client.getFd().cint,
+    gamestr,
+    msgamename,
+    cast[ptr uint8](validate),
+    filter,
+    enctypex_query,
+    enctypex_type)
+
+
+  var buffer: ptr cuchar
+  var bufferLen: cint = BUFFER_SIZE
+  buffer = buffer.resize(bufferLen)
+
+  var len: cint
+  try:
+    len = client.getFd().recv(buffer, BUFFER_SIZE, 0).cint
+    # len = client.getFd().recv(buffer, 1024, 0).cint
+    # discard client.recv(buffer, 1024, 5000)
+  except TimeoutError:
+    discard
+
+
+  var ipport: ptr ipport_t
+  var enctypex_data: enctypex_data_t
+  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr cuchar](msgamekey), validate, buffer, len.addr, enctypex_data.addr))
+
+  var enctypextmp: ptr uint8
+  enctypextmp = enctypextmp.resize(((len / 5) * 6).int);
+  len = enctypex_decoder_convert_to_ipport(buffer + enctypex_data.start, len - enctypex_data.start, cast[ptr cuchar](enctypextmp), nil, 0, 0)
+
+  ipport = cast[ptr ipport_t](enctypextmp)
+
+  echo "Server amount: ", (len/6).int
+  var inAddr: InAddr
+  for idx in 0..(len/6).int - 1:
+    inAddr.s_addr = ipport[idx].ip
+    # echo inetNtoa(inAddr), ":", ntohs(ipport[idx].port)
+    result.add(
+      (
+        ip: parseIpAddress($inetNtoa(inAddr)),
+        port: Port(ntohs(ipport[idx].port))
+      )
+    )
+
 when isMainModule:
-  var gameServerList: seq[tuple[ip: IpAddress, port: Port]] = queryGameServerList("stella.ms5.openspy.net", Port(28900))
-  # var gameServerList: seq[tuple[ip: IpAddress, port: Port]] = queryGameServerList("2142.novgames.ru", Port(28910))
-  echo "gameServerList: ", gameServerList
+  var gameServerList: seq[tuple[ip: IpAddress, port: Port]]
+  gameServerList = queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella")
+  echo "gameServerList (NOVGAMES): ", gameServerList
+
+  gameServerList = queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella")
+  echo "gameServerList (OPENSPY): ", gameServerList
+
+  gameServerList = queryGameServerListEnc1("stella.ms5.openspy.net", Port(28900))
+  echo "gameServerList ENC1 (OPENSPY): ", gameServerList

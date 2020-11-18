@@ -1945,7 +1945,9 @@ proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
 
 import masterserver, gspy
 proc updateServer() =
-  var gslist: seq[tuple[ip: IpAddress, port: Port]] = queryGameServerList("stella.ms5.openspy.net", Port(28900))
+  var gslist: seq[tuple[ip: IpAddress, port: Port]]
+  gslist.add(queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella"))
+  gslist.add(queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella"))
   var gspyServer: GSpyServer
   var
     valName, valCurrentPlayer, valMaxPlayer, valMap: Value
@@ -1973,36 +1975,40 @@ proc updateServer() =
   discard valMapSize.init(guint)
   for gs in gslist:
     # try:
-    gspyServer = queryAll($gs.ip, gs.port).server
-    store.append(iter)
-    valName.setString(gspyServer.hostname)
-    store.setValue(iter, 0, valName)
-    valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 1, valCurrentPlayer)
-    valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 2, valMaxPlayer)
-    valMap.setString(gspyServer.mapname)
-    store.setValue(iter, 3, valMap)
-    valMode.setString(gspyServer.gametype)
-    store.setValue(iter, 4, valMode)
-    valMod.setString(gspyServer.gamevariant)
-    store.setValue(iter, 5, valMod)
-    valIp.setString($gs.ip)
-    store.setValue(iter, 6, valIp)
-    valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 7, valPort)
-    valMasterServerIP.setString("stella.ms5.openspy.net")
-    store.setValue(iter, 8, valMasterServerIP)
-    valMasterServerPort.setUInt(28900)
-    store.setValue(iter, 9, valMasterServerPort)
-    valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 10, valPing)
-    valRanked.setBoolean(gspyServer.bf2142_ranked)
-    store.setValue(iter, 11, valRanked)
-    valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 12, valMapSize)
-    valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
-    store.setValue(iter, 13, valGSpyPort)
+      if $gs.ip == "0.0.0.0" or startsWith($gs.ip, "255.255.255") or gs.port.int < 1024:
+        continue
+      gspyServer = queryAll($gs.ip, gs.port, 500).server
+      if gspyServer.hostport == 0:
+        continue
+      store.append(iter)
+      valName.setString(gspyServer.hostname)
+      store.setValue(iter, 0, valName)
+      valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 1, valCurrentPlayer)
+      valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 2, valMaxPlayer)
+      valMap.setString(gspyServer.mapname)
+      store.setValue(iter, 3, valMap)
+      valMode.setString(gspyServer.gametype)
+      store.setValue(iter, 4, valMode)
+      valMod.setString(gspyServer.gamevariant)
+      store.setValue(iter, 5, valMod)
+      valIp.setString($gs.ip)
+      store.setValue(iter, 6, valIp)
+      valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 7, valPort)
+      valMasterServerIP.setString("stella.ms5.openspy.net")
+      store.setValue(iter, 8, valMasterServerIP)
+      valMasterServerPort.setUInt(28900)
+      store.setValue(iter, 9, valMasterServerPort)
+      valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 10, valPing)
+      valRanked.setBoolean(gspyServer.bf2142_ranked)
+      store.setValue(iter, 11, valRanked)
+      valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 12, valMapSize)
+      valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 13, valGSpyPort)
     # except:
     #   echo getCurrentExceptionMsg()
 
