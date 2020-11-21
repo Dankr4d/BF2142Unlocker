@@ -325,11 +325,14 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
 
 when isMainModule:
   var gameServerList: seq[tuple[ip: IpAddress, port: Port]]
-  gameServerList = queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella")
-  echo "gameServerList (NOVGAMES): ", gameServerList
+  # gameServerList = queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella")
+  # echo "gameServerList (NOVGAMES): ", gameServerList
 
-  gameServerList = queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella")
-  echo "gameServerList (OPENSPY): ", gameServerList
+  # gameServerList = queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella")
+  # echo "gameServerList (OPENSPY): ", gameServerList
 
-  gameServerList = queryGameServerListEnc1("stella.ms5.openspy.net", Port(28900))
-  echo "gameServerList ENC1 (OPENSPY): ", gameServerList
+  gameServerList = queryGameServerList("92.51.181.102", Port(28911), "battlefield2", "hW6m9a", "battlefield2")
+  echo "gameServerList (BF2HUB): ", gameServerList
+
+  # gameServerList = queryGameServerListEnc1("stella.ms5.openspy.net", Port(28900))
+  # echo "gameServerList ENC1 (OPENSPY): ", gameServerList

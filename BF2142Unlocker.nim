@@ -26,6 +26,10 @@ import math # Required for runtime configuration
 import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
 import options # Required for error/exception handling
 
+type
+  GdkEventButton = object
+    `type`: ptr gdk.EventType
+
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
 elif defined(windows):
@@ -163,6 +167,20 @@ const
   CONFIG_KEY_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
   CONFIG_KEY_RESOLUTION: string = "resolution"
 
+const
+  CONFIG_SERVER_FILE_NAME: string = "server.ini"
+  CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
+  CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
+  CONFIG_SERVER_KEY_MOTD: string = "motd"
+  CONFIG_SERVER_KEY_MASTER: string = "master"
+  CONFIG_SERVER_KEY_MS: string = "ms"
+  CONFIG_SERVER_KEY_GAMESTATS: string = "gamestats"
+  CONFIG_SERVER_KEY_GPCM: string = "gpcm"
+  CONFIG_SERVER_KEY_GPSP: string = "gpsp"
+  CONFIG_SERVER_KEY_GAME_NAME: string = "game_name"
+  CONFIG_SERVER_KEY_GAME_KEY: string = "game_key"
+  CONFIG_SERVER_KEY_GAME_STR: string = "game_str"
+
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
 const LANGUAGE_FILE: string = "lang.txt"
@@ -215,6 +233,13 @@ var listPlayerInfo1: TreeView
 var listPlayerInfo2: TreeView
 var lblTeam1: Label
 var lblTeam2: Label
+var dlgLogin: Dialog
+var lblLoginStellaServer: Label
+var txtLoginUsername: Entry
+var txtLoginPassword: Entry
+var txtLoginSoldier: Entry
+var btnLoginLogin: Button
+var btnLoginCancel: Button
 ##
 ### Host controls
 var vboxHost: Box
@@ -1398,6 +1423,61 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
 
 ### Events
 ## Join
+type
+  BF2142Options* = object
+    modPath*: Option[string]
+    menu*: Option[bool]
+    fullscreen*: Option[bool]
+    szx*: Option[uint16]
+    szy*: Option[uint16]
+    widescreen*: Option[bool]
+    eaAccountName*: Option[string]
+    eaAccountPassword*: Option[string]
+    soldierName*: Option[string]
+    joinServer*: Option[IpAddress]
+    port*: Option[Port]
+
+# proc startBF2142(joinGSIpOpt: Option[IpAddress] = none(IpAddress), joinGSPortOpt: Option[Port] = some(Port(17567))): bool = # TODO: Other params and also an joinGSPort
+proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also an joinGSPort
+  var command: string
+  when defined(linux):
+    when defined(debug):
+      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
+    if txtWinePrefix.text != "":
+      command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
+  # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
+  when defined(linux):
+    if txtStartupQuery.text != "":
+      command.add(txtStartupQuery.text & ' ')
+  command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
+  if isSome(options.modPath):
+    command.add("+modPath " & get(options.modPath) & ' ')
+  if isSome(options.menu):
+    command.add("+menu " & $get(options.menu).int & ' ') # TODO: Check if this is necessary
+  if isSome(options.fullscreen):
+    command.add("+fullscreen " & $get(options.fullscreen).int & ' ')
+    if get(options.fullscreen) == false:
+      if isSome(options.szx) and isSome(options.szy):
+        command.add("+szx " & $get(options.szx) & ' ')
+        command.add("+szy " & $get(options.szy) & ' ')
+  if isSome(options.widescreen):
+    command.add("+widescreen " & $get(options.widescreen).int & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
+  command.add("+eaAccountName " & get(options.eaAccountName) & ' ')
+  command.add("+eaAccountPassword " & get(options.eaAccountPassword) & ' ')
+  command.add("+soldierName " & get(options.soldierName) & ' ')
+  if isSome(options.joinServer):
+    command.add("+joinServer " & $get(options.joinServer) & ' ')
+    if isSome(options.port):
+      command.add("+port " & $get(options.port) & ' ')
+  when defined(linux): # TODO: Check if bf2142Path is neccessary
+    let processCommand: string = command
+  elif defined(windows):
+    let processCommand: string = bf2142Path & '\\' & command
+  var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
+    options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
+  )
+  return true
+
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
   txtPlayerName.text = txtPlayerName.text.strip()
@@ -1481,7 +1561,9 @@ proc patchAndStartLogic(): bool =
       dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142Path / BF2142_UNLOCKER_EXE_NAME]
     )
     return
-  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress.parseIpAddress(), Port(8085))
+
+  # TODO
+  # patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress, Port(8085), ipAddress.parseIpAddress(), Port(8085))
 
   backupOpenSpyIfExists()
 
@@ -1493,38 +1575,11 @@ proc patchAndStartLogic(): bool =
   if not enableDisableIntroMovies(bf2142Path / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
     return
 
-  var command: string
-  when defined(linux):
-    when defined(debug):
-      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
-    if txtWinePrefix.text != "":
-      command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
-  # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
-  when defined(linux):
-    if txtStartupQuery.text != "":
-      command.add(txtStartupQuery.text & ' ')
-  command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
-  command.add("+modPath mods/" & cbxJoinMods.activeId & ' ')
-  command.add("+menu 1" & ' ') # TODO: Check if this is necessary
-  if chbtnWindowMode.active:
-    command.add("+fullscreen 0" & ' ')
-    var resolution: tuple[width, height: uint] = getSelectedResolution()
-    command.add("+szx " & $resolution.width & ' ')
-    command.add("+szy " & $resolution.height & ' ')
-  command.add("+widescreen 1" & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
-  command.add("+eaAccountName " & txtPlayerName.text & ' ')
-  command.add("+eaAccountPassword A" & ' ')
-  command.add("+soldierName " & txtPlayerName.text & ' ')
+  var ipAddressOpt: Option[IpAddress]
   if chbtnAutoJoin.active:
-    command.add("+joinServer " & ipAddress)
-  when defined(linux): # TODO: Check if bf2142Path is neccessary
-    let processCommand: string = command
-  elif defined(windows):
-    let processCommand: string = bf2142Path & '\\' & command
-  var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
-    options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
-  )
-  return true
+    ipAddressOpt = some(ipAddress.parseIpAddress())
+
+  # return startBF2142(ipAddressOpt) # TODO
 
 proc onBtnJoinClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
@@ -1892,10 +1947,6 @@ proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
   if termBF2142ServerPid > 0:
     execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
 
-type
-  GdkEventButton = object
-    `type`: ptr gdk.EventType
-
 proc onSelectableMapsButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.signal.} =
   case e.`type`[]
   of gdk.EventType.buttonPress:
@@ -1939,78 +1990,144 @@ proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
 
 
 
+type
+  ServerConfig* = object of PatchConfig
+    server_name*: string
+    game_name*: string
+    game_key*: string
+    game_str*: string
 
+var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe remove server_name attribute from ServerConfig
 
+import streams
+proc loadServerConfig() =
+  var serverConfig: ServerConfig
+  var isFirstSection: bool = true
+  var f = newFileStream(CONFIG_SERVER_FILE_NAME, fmRead)
+
+  if f == nil:
+    return
+
+  var p: CfgParser
+  open(p, f, CONFIG_SERVER_FILE_NAME)
+  while true:
+    var e = next(p)
+    case e.kind
+    of cfgEof:
+      serverConfigs.add(serverConfig)
+      break
+    of cfgSectionStart:   ## a ``[section]`` has been parsed
+      echo("new section: " & e.section)
+      if isFirstSection:
+        isFirstSection = false
+      else:
+        serverConfigs.add(serverConfig)
+        serverConfig = ServerConfig()
+      serverConfig.server_name = e.section
+    of cfgKeyValuePair:
+      case e.key:
+      of CONFIG_SERVER_KEY_STELLA_PROD:
+        serverConfig.stella_prod = e.value
+      of CONFIG_SERVER_KEY_STELLA_MS:
+        serverConfig.stella_ms = e.value
+      of CONFIG_SERVER_KEY_MOTD:
+        serverConfig.motd = e.value
+      of CONFIG_SERVER_KEY_MASTER:
+        serverConfig.master = e.value
+      of CONFIG_SERVER_KEY_MS:
+        serverConfig.ms = e.value
+      of CONFIG_SERVER_KEY_GAMESTATS:
+        serverConfig.gamestats = e.value
+      of CONFIG_SERVER_KEY_GPCM:
+        serverConfig.gpcm = e.value
+      of CONFIG_SERVER_KEY_GPSP:
+        serverConfig.gpsp = e.value
+      of CONFIG_SERVER_KEY_GAME_NAME:
+        serverConfig.game_name = e.value
+      of CONFIG_SERVER_KEY_GAME_KEY:
+        serverConfig.game_key = e.value
+      of CONFIG_SERVER_KEY_GAME_STR:
+        serverConfig.game_str = e.value
+      # echo("key-value-pair: " & e.key & ": " & e.value)
+    of cfgOption:
+      echo("command: " & e.key & ": " & e.value)
+    of cfgError:
+      echo(e.msg)
+  close(p)
+  echo serverConfigs
 
 
 import masterserver, gspy
 proc updateServer() =
   var gslist: seq[tuple[ip: IpAddress, port: Port]]
-  gslist.add(queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella"))
-  gslist.add(queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella"))
-  var gspyServer: GSpyServer
-  var
-    valName, valCurrentPlayer, valMaxPlayer, valMap: Value
-    valMode, valMod, valIp, valPort: Value
-    valMasterServerIP, valMasterServerPort: Value
-    valPing, valRanked, valMapSize, valGSpyPort: Value
-    iter: TreeIter
-  let store = listStore(listServer.getModel())
-  let gchararray = typeFromName("gchararray")
-  let guint = typeFromName("guint")
-  let gboolean = typeFromName("gboolean")
-  discard valName.init(gchararray)
-  discard valCurrentPlayer.init(guint)
-  discard valMaxPlayer.init(guint)
-  discard valMap.init(gchararray)
-  discard valMode.init(gchararray)
-  discard valMod.init(gchararray)
-  discard valIp.init(gchararray)
-  discard valPort.init(guint)
-  discard valGSpyPort.init(guint)
-  discard valMasterServerIP.init(gchararray)
-  discard valMasterServerPort.init(guint)
-  discard valPing.init(guint)
-  discard valRanked.init(gboolean)
-  discard valMapSize.init(guint)
-  for gs in gslist:
-    # try:
-      if $gs.ip == "0.0.0.0" or startsWith($gs.ip, "255.255.255") or gs.port.int < 1024:
-        continue
-      gspyServer = queryAll($gs.ip, gs.port, 500).server
-      if gspyServer.hostport == 0:
-        continue
-      store.append(iter)
-      valName.setString(gspyServer.hostname)
-      store.setValue(iter, 0, valName)
-      valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 1, valCurrentPlayer)
-      valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 2, valMaxPlayer)
-      valMap.setString(gspyServer.mapname)
-      store.setValue(iter, 3, valMap)
-      valMode.setString(gspyServer.gametype)
-      store.setValue(iter, 4, valMode)
-      valMod.setString(gspyServer.gamevariant)
-      store.setValue(iter, 5, valMod)
-      valIp.setString($gs.ip)
-      store.setValue(iter, 6, valIp)
-      valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 7, valPort)
-      valMasterServerIP.setString("stella.ms5.openspy.net")
-      store.setValue(iter, 8, valMasterServerIP)
-      valMasterServerPort.setUInt(28900)
-      store.setValue(iter, 9, valMasterServerPort)
-      valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 10, valPing)
-      valRanked.setBoolean(gspyServer.bf2142_ranked)
-      store.setValue(iter, 11, valRanked)
-      valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 12, valMapSize)
-      valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 13, valGSpyPort)
-    # except:
-    #   echo getCurrentExceptionMsg()
+  for serverConfig in serverConfigs:
+    gslist = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str)
+    # gslist.add(queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella"))
+    # gslist.add(queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella"))
+    # gslist.add(queryGameServerList("92.51.181.102", Port(28911), "battlefield2", "hW6m9a", "battlefield2"))
+    var gspyServer: GSpyServer
+    var
+      valName, valCurrentPlayer, valMaxPlayer, valMap: Value
+      valMode, valMod, valIp, valPort: Value
+      valMasterServerIP, valMasterServerPort: Value
+      valPing, valRanked, valMapSize, valGSpyPort: Value
+      iter: TreeIter
+    let store = listStore(listServer.getModel())
+    let gchararray = typeFromName("gchararray")
+    let guint = typeFromName("guint")
+    let gboolean = typeFromName("gboolean")
+    discard valName.init(gchararray)
+    discard valCurrentPlayer.init(guint)
+    discard valMaxPlayer.init(guint)
+    discard valMap.init(gchararray)
+    discard valMode.init(gchararray)
+    discard valMod.init(gchararray)
+    discard valIp.init(gchararray)
+    discard valPort.init(guint)
+    discard valGSpyPort.init(guint)
+    discard valMasterServerIP.init(gchararray)
+    discard valMasterServerPort.init(guint)
+    discard valPing.init(guint)
+    discard valRanked.init(gboolean)
+    discard valMapSize.init(guint)
+    for gs in gslist:
+      # try:
+        if $gs.ip == "0.0.0.0" or startsWith($gs.ip, "255.255.255") or gs.port.int < 1024:
+          continue
+        gspyServer = queryAll($gs.ip, gs.port, 500).server
+        if gspyServer.hostport == 0:
+          continue
+        store.append(iter)
+        valName.setString(gspyServer.hostname)
+        store.setValue(iter, 0, valName)
+        valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 1, valCurrentPlayer)
+        valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 2, valMaxPlayer)
+        valMap.setString(gspyServer.mapname)
+        store.setValue(iter, 3, valMap)
+        valMode.setString(gspyServer.gametype)
+        store.setValue(iter, 4, valMode)
+        valMod.setString(gspyServer.gamevariant)
+        store.setValue(iter, 5, valMod)
+        valIp.setString($gs.ip)
+        store.setValue(iter, 6, valIp)
+        valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 7, valPort)
+        valMasterServerIP.setString(serverConfig.stella_ms)
+        store.setValue(iter, 8, valMasterServerIP)
+        valMasterServerPort.setUInt(28910)
+        store.setValue(iter, 9, valMasterServerPort)
+        valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 10, valPing)
+        valRanked.setBoolean(gspyServer.bf2142_ranked)
+        store.setValue(iter, 11, valRanked)
+        valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 12, valMapSize)
+        valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
+        store.setValue(iter, 13, valGSpyPort)
+      # except:
+      #   echo getCurrentExceptionMsg()
 
 
 proc onListServerCursorChanged(self: TreeView00) {.signal.} =
@@ -2027,9 +2144,6 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
     gspyIP = valIP.getString()
     storeServer.getValue(iterServer, 13, valGSpyPort)
     gspyPort = Port(valGSpyPort.getUint())  # TODO: getUInt returns an int, but should return an uint
-
-
-
 
   var
     valPID, valName, valScore, valKills, valDeaths, valPing: Value
@@ -2072,6 +2186,71 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
 
     lblTeam1.text = gspy.team.team_t[0].toUpper()
     lblTeam2.text = gspy.team.team_t[1].toUpper()
+
+proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.signal.} =
+  case e.`type`[]
+  of gdk.EventType.buttonPress:
+    discard
+  of gdk.EventType.doubleButtonPress:
+    var msIp: string
+    var msPort: Port
+    var gsIp: IpAddress
+    var gsPort: Port
+    var gsMod: string
+    var
+      valMsIP: Value
+      valMsPort: Value
+      valGsIP: Value
+      valGsPort: Value
+      valGsMod: Value
+      lsServer: ListStore
+      iterServer: TreeIter
+    let store = listStore(listServer.getModel())
+    if getSelected(listServer.selection, lsServer, iterServer):
+      store.getValue(iterServer, 6, valGsIp)
+      gsIp = valGsIp.getString().parseIpAddress()
+      store.getValue(iterServer, 7, valGsPort)
+      gsPort = Port(valGsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
+      store.getValue(iterServer, 8, valMsIp)
+      msIp = valMsIp.getString()
+      store.getValue(iterServer, 5, valGsMod)
+      gsMod = valGsMod.getString()
+      store.getValue(iterServer, 9, valMsPort)
+      msPort = Port(valMsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
+
+      var serverConfig: ServerConfig
+      for sc in serverConfigs:
+        if sc.stella_ms == msIp:
+          serverConfig = sc
+      if serverConfig.stella_ms == "":
+        echo "COULDNT FIND SERVER IN CONFIG LIST"
+        return
+
+
+      var dlgLoginCode: int = dlgLogin.run()
+      dlgLogin.hide()
+      echo "dlgLoginCode: ", dlgLoginCode
+      if dlgLoginCode == 1:
+        patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
+        var options: BF2142Options
+        options.modPath = some("mods/" & gsMod)
+        options.menu = some(true)
+        options.fullscreen = some(false) # TODO
+        options.szx = some(800.uint16) # TODO
+        options.szy = some(600.uint16) # TODO
+        options.widescreen = some(false) # TODO
+        options.eaAccountName = some(txtLoginUsername.text)
+        options.eaAccountPassword = some(txtLoginPassword.text)
+        options.soldierName = some(txtLoginSoldier.text)
+        options.joinServer = some(gsIp)
+        options.port = some(gsPort)
+        txtLoginUsername.text = ""
+        txtLoginPassword.text = ""
+        txtLoginSoldier.text = ""
+        discard startBF2142(options)
+  else:
+    discard
+  return EVENT_PROPAGATE
 
 
 proc onApplicationActivate(application: Application) =
@@ -2160,6 +2339,13 @@ proc onApplicationActivate(application: Application) =
   listPlayerInfo2 = builder.getTreeView("listPlayerInfo2")
   lblTeam1 = builder.getLabel("lblTeam1")
   lblTeam2 = builder.getLabel("lblTeam2")
+  dlgLogin = builder.getDialog("dlgLogin")
+  lblLoginStellaServer = builder.getLabel("lblLoginStellaServer")
+  txtLoginUsername = builder.getEntry("txtLoginUsername")
+  txtLoginPassword = builder.getEntry("txtLoginPassword")
+  txtLoginSoldier = builder.getEntry("txtLoginSoldier")
+  btnLoginLogin = builder.getButton("btnLoginLogin")
+  btnLoginCancel = builder.getButton("btnLoginCancel")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
@@ -2243,6 +2429,7 @@ proc onApplicationActivate(application: Application) =
   if bf2142ServerPath == "":
     btnHost.sensitive = false
 
+  loadServerConfig()
   updateServer()
 
 when defined(windows): # TODO: Cleanup

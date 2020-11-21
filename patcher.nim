@@ -2,6 +2,18 @@ import streams
 import net
 import strutils # Required for parseHexInt proc
 import options
+import nativesockets # Required for getHostByName
+
+type
+  PatchConfig* = object of RootObj
+    stella_prod*: string
+    stella_ms*: string
+    motd*: string
+    master*: string
+    ms*: string
+    gamestats*: string
+    gpcm*: string
+    gpsp*: string
 
 proc writeIpReversed(fs: FileStream, pos: int, ip: IpAddress) =
   var len: int = ip.address_v4.len - 1
@@ -9,7 +21,7 @@ proc writeIpReversed(fs: FileStream, pos: int, ip: IpAddress) =
   for i in 0..len:
     fs.write(ip.address_v4[len - i])
 
-proc writeIpStr(fs: FileStream, pos: int, ip: IpAddress, port: Option[Port], writeLen: int, addSlash: bool = false) =
+proc writeIpStr(fs: FileStream, pos: int, ip: string, port: Option[Port], writeLen: int, addSlash: bool = false) =
   var data: string = $ip
   if port.isSome() and port.get().int != 80:
     data.add(":" & $port.get())
@@ -23,18 +35,18 @@ proc writeIpStr(fs: FileStream, pos: int, ip: IpAddress, port: Option[Port], wri
 proc patchServer*(fs: FileStream, ip: IpAddress, port: Port) =
   when defined(linux):
     when defined(cpu32):
-      fs.writeIpStr(parseHexInt("869727"), ip, some(port), 24, true)
+      fs.writeIpStr(parseHexInt("869727"), $ip, some(port), 24, true)
     else:
-      fs.writeIpStr(parseHexInt("768FA7"), ip, some(port), 24, true)
+      fs.writeIpStr(parseHexInt("768FA7"), $ip, some(port), 24, true)
   elif defined(windows): # TODO: Only 32 bit implemented
-    fs.writeIpStr(parseHexInt("3CE617"), ip, some(port), 24, true)
+    fs.writeIpStr(parseHexInt("3CE617"), $ip, some(port), 24, true)
 
 proc patchServer*(path: string, ip: IpAddress, port: Port) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
   fs.patchServer(ip, port)
   fs.close()
 
-proc patchClient*(fs: FileStream, ip: IpAddress, port: Port) =
+proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   ## Previously preClientPatch
   fs.setPosition(parseHexInt("3293B0"))
   fs.write(byte(0x90))
@@ -78,38 +90,39 @@ proc patchClient*(fs: FileStream, ip: IpAddress, port: Port) =
   # TODO: Info: The following patch length is the minimum length to patch the whole original string.
   #             Some can be longer but not more then 23 (third patch .. should also check if this patch
   #             is necessary for e.g. tcp/udp or if it's not requiered)
-  fs.writeIpReversed(parseHexInt("45C984"), ip)
-  fs.writeIpStr(parseHexInt("5639AB"), ip, some(port), 24, true)
-  fs.writeIpStr(parseHexInt("5639C4"), ip, none(Port), 23)
-  fs.writeIpStr(parseHexInt("59E93F"), ip, some(port), 30, true) # TODO: Patch length 30 (cuts of motd/motd.asp original: motd.gamespy.com/motd/motd.asp), check if it's requierd
-  fs.writeIpStr(parseHexInt("59E97C"), ip, none(Port), 21) # TODO: Check if it's requierd
-  fs.writeIpStr(parseHexInt("59F608"), ip, none(Port), 19) # TODO: Check if it's requierd
-  fs.writeIpStr(parseHexInt("6067A0"), ip, none(Port), 21) # TODO: Check if it's requierd
-  fs.writeIpStr(parseHexInt("607180"), ip, none(Port), 16) # TODO: Check if it's requierd
-  fs.writeIpStr(parseHexInt("6071C0"), ip, none(Port), 16) # TODO: Check if it's requierd
-  # Patching "Large Address Aware" from 2GB to 4GB
-  fs.setPosition(parseHexInt("00000146"))
+  var hostend: Hostent = getHostByName(patchConfig.stella_prod)
+  fs.writeIpReversed(parseHexInt("45C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
+  fs.writeIpStr(parseHexInt("5639AB"), patchConfig.stella_prod, none(Port), 24, true) # http://stella.prod.gamespy.com # patching after http://
+  fs.writeIpStr(parseHexInt("5639C4"), patchConfig.stella_ms, none(Port), 23) # stella.prod.gamespy.com # Masterserver
+  fs.writeIpStr(parseHexInt("59E93F"), patchConfig.motd, none(Port), 30, true) # http://motd.gamespy.com/motd/motd.asp # patching after http://
+  fs.writeIpStr(parseHexInt("59E97C"), patchConfig.master, none(Port), 21) # %s.master.gamespy.com
+  fs.writeIpStr(parseHexInt("59F608"), patchConfig.ms, none(Port), 19) # %s.ms%d.gamespy.com
+  fs.writeIpStr(parseHexInt("6067A0"), patchConfig.gamestats, none(Port), 21) # gamestats.gamespy.com
+  fs.writeIpStr(parseHexInt("607180"), patchConfig.gpcm, none(Port), 16) # gpcm.gamespy.com
+  fs.writeIpStr(parseHexInt("6071C0"), patchConfig.gpsp, none(Port), 16) # gpsp.gamespy.com
+  fs.setPosition(parseHexInt("00000146")) # "Large Address Aware" byte (patching from 2GB to 4GB ram)
   fs.write(byte(0x2E))
 
-proc patchClient*(path: string, ip: IpAddress, port: Port) =
+proc patchClient*(path: string, patchConfig: PatchConfig) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.patchClient(ip, port)
+  fs.patchClient(patchConfig)
   fs.close()
 
-when isMainModule:
-  import os
-  # copyFile("BF2142.exe.org", "BF2142.exe")
-  let ipStr: string = "192.168.1.197"
-  var ip: IpAddress
-  try:
-    ip = parseIpAddress(ipStr)
-  except ValueError:
-    echo "ERROR: '", ipStr, "' is not a valid IP-Address!"
-    quit(1)
-  if ip.family == IPv6:
-    echo "Error: IPv6 not allowed!"
-    quit(1)
-  var path: string = "/home/dankrad/.wine_bf2142/drive_c/Program Files (x86)/Electronic Arts/Battlefield 2142/BF2142.exe"
-  var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.patchClient(ip, Port(8085))
-  fs.close()
+
+# when isMainModule:
+#   import os
+#   # copyFile("BF2142.exe.org", "BF2142.exe")
+#   let ipStr: string = "stella.ms5.openspy.net" # "157.245.212.59"
+#   # var ip: IpAddress
+#   # try:
+#   #   ip = parseIpAddress(ipStr)
+#   # except ValueError:
+#   #   echo "ERROR: '", ipStr, "' is not a valid IP-Address!"
+#   #   quit(1)
+#   # if ip.family == IPv6:
+#   #   echo "Error: IPv6 not allowed!"
+#   #   quit(1)
+#   var path: string = "/home/dankrad/.wine_bf2142/drive_c/Program Files (x86)/Electronic Arts/Battlefield 2142/BF2142.exe"
+#   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
+#   fs.patchClient(ipStr, Port(8085), "157.245.212.59".parseIpAddress(), Port(8085))
+#   fs.close()

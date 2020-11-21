@@ -300,6 +300,10 @@ proc parseGSpyPlayer(message: string, player: var GSpyPlayer, pos: var int) =
       player.ping.add(parseList[uint16](message, pos))
     of "player_":
       player.player.add(parseList[string](message, pos))
+    # of "AIBot_": # Battlefield 2
+    else:
+      discard parseList[string](message, pos) # Parse list if the key is not known
+
     if message.len == pos: # TODO: This check is done twice. Before parseList and here
       return
     if message[pos - 2 .. pos] == "\0\0\0":
@@ -318,6 +322,8 @@ proc parseGSpyTeam(message: string, team: var GSpyTeam, pos: var int) =
       team.team_t.add(parseList[string](message, pos))
     of "score_t":
       team.score_t.add(parseList[uint16](message, pos))
+    else:
+      discard parseList[string](message, pos) # Parse list if the key is not known
     if message.len == pos: # TODO: This check is done twice. Before parseList and here
       return
     if message[pos - 2 .. pos] == "\0\0\0":
@@ -334,17 +340,14 @@ proc parseProto00B(message: string, gspy: var GSpy, pos: var int) =
     echo "SERVER"
     pos.inc() # Skip server identifier byte (0x0)
     parseGSpyServer(message, gspy.server, pos)
-    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
   of char(0x1): # Player
     echo "PLAYER"
     pos.inc() # Skip player identifier byte (0x1)
     parseGSpyPlayer(message, gspy.player, pos)
-    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
   of char(0x2): # Team
     echo "TEAM"
-    pos.inc() # Skip player identifier byte (0x1)
+    pos.inc() # Skip team identifier byte (0x2)
     parseGSpyTeam(message, gspy.team, pos)
-    # parseProto00B(message, gspy, pos) # TODO: Remove and comment in the function call below the switch case
   else:
     discard
 
@@ -355,14 +358,34 @@ proc queryAll*(url: string, port: Port, timeout: int = 0): GSpy =
   # var messages = @["\x00hostname\x00Reclamation Remaster\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Leipzig\x00gametype\x00gpm_coop\x00gamevariant\x00project_remaster_mp\x00numplayers\x002\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0032\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00EU\x00bf2142_type\x000\x00bf2142_averageping\x001\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\x01player_\x00\x00 ddre\x00NineEleven Hijackers\x00Sir Smokealot\x00DSquarius Green\x00Guy Nutter\x00Jack Ghoff\x00DGlester Hardunkichud\x00Bang-Ding Ow\x00LORD Voldemort\x00Rick Titball\x00Michael Myers\x00Harry Palmer\x00Justin Sider\x00Hans Gruber\x00Professor Chaos\x00Nyquillus Dillwad\x00Dylan Weed\x00Ben Dover\x00Vin Diesel\x00Harry Beaver\x00Jack Mehoff\x00Jawana Die\x00Mr Slave\x00 Boomer-UK\x00X-Wing AtAliciousness\x00Bloody Glove\x00MaryJane Potman\x00Tits McGee\x00Phat Ho\x00Dee Capitated\x00T 1\x00", "\x01player_\x00\x1ET 1000\x00Quackadilly Blip\x00No Collusion\x00\x00score_\x00\x0037\x0021\x0018\x0018\x0016\x0015\x0013\x0012\x0010\x0010\x009\x009\x008\x008\x008\x007\x007\x007\x006\x006\x006\x005\x005\x004\x003\x003\x003\x003\x002\x001\x001\x001\x000\x00\x00ping_\x00\x0041\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0023\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00team_\x00\x002\x002\x002\x002\x001\x001\x002\x002\x002\x002\x002\x002\x001\x002\x002\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x00\x00deaths_\x00\x006\x004\x005\x005\x006\x0011\x004\x004\x0010\x005\x008\x006\x008\x005\x007\x006\x009\x004\x005\x007\x006\x007\x0010\x000\x007\x007\x008\x007\x007\x007\x004\x006\x006\x00\x00pid_\x00\x0030748\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0032963\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00skill_\x00\x0031\x006\x0011\x0010\x0014\x0015\x002\x006\x007\x005\x007\x003\x006\x004\x004\x007\x007\x004\x006\x006\x001\x004\x003\x004\x003\x002\x001\x000\x004\x003\x002\x000\x000\x00\x00\x00\x02team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   # var messages = @["\x00hostname\x00Reclamation US\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x002142af_ladder_1\x00gametype\x00gpm_cq\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0064\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00US\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   # var messages = @["\x00hostname\x00AC21 (close)\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Shuhia_Taiba\x00gametype\x00gpm_ti\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0016\x00gamemode\x00openplaying\x00password\x001\x00timelimit\x001500\x00roundtime\x001\x00hostport\x0017600\x00bf2142_ranked\x000\x00bf2142_anticheat\x000\x00bf2142_autorec\x001\x00bf2142_d_idx\x00http://185.189.255.6/demos_root/a21/\x00bf2142_d_dl\x00http://185.189.255.6/demos_root/a21/demos/\x00bf2142_voip\x001\x00bf2142_autobalanced\x000\x00bf2142_friendlyfire\x000\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0020\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00Powered By NovGames.ru\x00bf2142_sponsorlogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_communitylogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00300\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x001\x00bf2142_mapsize\x0048\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x006\x00bf2142_maxrank\x000\x00bf2142_provider\x0010011\x00bf2142_region\x00AT\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x001\x00bf2142_custom_map_url\x000http://2142.novgames.ru/\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  var messages = waitFor recvProto00B(url, port, newProtocol00B(), timeout)
+  var messages: seq[string]
+  try:
+    messages = waitFor recvProto00B(url, port, newProtocol00B(), timeout)
+  except:
+    discard # TODO
   var gspy: GSpy
   for idx, message in messages:
     var pos: int = 0
 
-    parseProto00B(message, gspy, pos)
+    echo repr message
 
+    try:
+      parseProto00B(message, gspy, pos)
+    except:
+      continue # TODO
   return gspy
 
 when isMainModule:
-  echo queryAll("185.189.255.6", Port(29987))
+  # echo queryAll("185.189.255.6", Port(29987))
+  # echo queryAll("95.172.92.116", Port(29900))
+  # echo queryAll("162.248.88.201", Port(29900))
+  # echo queryAll("185.107.96.106", Port(29900))
+  echo queryAll("138.197.130.124", Port(29900))
+
+
+
+
+# TODO: Following Battlefield 2 server added a t char in the end sequence.
+#       Instead of \0\0\0 it is \0\0t\0. In the next message it starts with \1team_ (maybe it depends to team, but then it ignores the player byte)
+# 0x7f060c19f060"\0hostname\0=F&F= Best Maps !!!\0gamename\0battlefield2\0gamever\01.5.3153-802.0\0mapname\0Strike At Karkand\0gametype\0gpm_cq\0gamevariant\0bf2\0numplayers\020\0maxplayers\064\0gamemode\0openplaying\0password\00\0timelimit\00\0roundtime\09999\0hostport\016567\0bf2_dedicated\01\0bf2_ranked\01\0bf2_anticheat\01\0bf2_os\0linux-64\0bf2_autorec\00\0bf2_d_idx\0http://\0bf2_d_dl\0http://\0bf2_voip\01\0bf2_autobalanced\01\0bf2_friendlyfire\00\0bf2_tkmode\0No Punish\0bf2_startdelay\015\0bf2_spawntime\015.000000\0bf2_sponsortext\0\0bf2_sponsorlogo_url\0https://shutterstock.7eer.net/c/2204609/560528/1305?u=https%3A%2F%2Fwww.shutterstock.com%2Fimage-photo%2F1056664877\0bf2_communitylogo_url\0https://shutterstock.7eer.net/c/2204609/560528/1305?u=https%3A%2F%2Fwww.shutterstock.com%2Fimage-photo%2F1056664877\0bf2_scorelimit\00\0bf2_ticketratio\0100\0bf2_teamratio\0100.000000\0bf2_team1\0MEC\0bf2_team2\0US\0bf2_bots\00\0bf2_pure\01\0bf2_mapsize\064\0bf2_globalunlocks\01\0bf2_fps\036.000000\0bf2_plasma\00\0bf2_reservedslots\00\0bf2_coopbotratio\0\0bf2_coopbotcount\0\0bf2_coopbotdiff\0\0bf2_novehicles\00\0\0\1player_\0\0 Happy Hero\0 Pistol Perfection\0 King Killer\0 Collateral Damage\0 The Rifleman\0 Ace Aim\0 KnifeYou1ce\0 Miami Master\0 Digital Warrior\0 Steel Soldier\0 Defrib Devil\0 Sick Skillz\0 Master Medic\0 WatchYour6\0 Head-Hunter\0 TopDog\0 The Camper\0 Pathfinder\0 Peaceful Terrorist\0\0score_\0\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0\0ping_\0\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0\0t\0"
+# 0x7f060c19e1c0"\1team_\0\01\02\01\02\01\02\01\01\02\02\02\01\02\01\02\02\01\02\01\0\0deaths_\0\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0\0pid_\0\0114\0115\0111\0136\0117\0139\0112\0134\0109\0137\0110\0135\0116\0141\0150\0118\0140\0154\0113\0\0skill_\0\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0\0AIBot_\0\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0\0\0\2team_t\0\0MEC\0US\0\0score_t\0\00\00\0\0\0"
