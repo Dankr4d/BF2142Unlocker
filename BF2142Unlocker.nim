@@ -171,9 +171,10 @@ const
   CONFIG_SERVER_FILE_NAME: string = "server.ini"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
+  CONFIG_SERVER_KEY_MS: string = "ms"
+  CONFIG_SERVER_KEY_AVAILABLE: string = "available"
   CONFIG_SERVER_KEY_MOTD: string = "motd"
   CONFIG_SERVER_KEY_MASTER: string = "master"
-  CONFIG_SERVER_KEY_MS: string = "ms"
   CONFIG_SERVER_KEY_GAMESTATS: string = "gamestats"
   CONFIG_SERVER_KEY_GPCM: string = "gpcm"
   CONFIG_SERVER_KEY_GPSP: string = "gpsp"
@@ -1052,7 +1053,7 @@ proc loadJoinResolutions() =
     idx.inc()
   cbxJoinResolutions.setActive(0)
 
-proc getSelectedResolution(): tuple[width, height: uint] =
+proc getSelectedResolution(): tuple[width, height: uint16] =
   var iter: TreeIter
   let store = listStore(cbxJoinResolutions.getModel())
   discard cbxJoinResolutions.getActiveIter(iter)
@@ -1062,7 +1063,7 @@ proc getSelectedResolution(): tuple[width, height: uint] =
   discard valHeight.init(typeFromName("guint"))
   store.getValue(iter, 2, valWidth)
   store.getValue(iter, 3, valHeight)
-  return (cast[uint](valWidth.getUint()), cast[uint](valHeight.getUint()))
+  return (cast[uint16](valWidth.getUint()), cast[uint16](valHeight.getUint()))
 
 proc loadHostMods() =
   var iter: TreeIter
@@ -1562,8 +1563,17 @@ proc patchAndStartLogic(): bool =
     )
     return
 
-  # TODO
-  # patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, ipAddress, Port(8085), ipAddress.parseIpAddress(), Port(8085))
+  var patchConfig: PatchConfig
+  patchConfig.stella_prod = "http://" & ipAddress & ":8085/"
+  patchConfig.stella_ms = ipAddress
+  patchConfig.ms = ipAddress
+  patchConfig.available = ipAddress
+  patchConfig.motd = "http://" & ipAddress & "/"
+  patchConfig.master = ipAddress
+  patchConfig.gamestats = ipAddress
+  patchConfig.gpcm = ipAddress
+  patchConfig.gpsp = ipAddress
+  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, patchConfig)
 
   backupOpenSpyIfExists()
 
@@ -1575,11 +1585,22 @@ proc patchAndStartLogic(): bool =
   if not enableDisableIntroMovies(bf2142Path / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
     return
 
-  var ipAddressOpt: Option[IpAddress]
+  var options: BF2142Options
+  options.modPath = some("mods/" & cbxJoinMods.activeId)
+  options.menu = some(true)
+  options.fullscreen = some(not chbtnWindowMode.active)
+  if chbtnWindowMode.active:
+    var resolution: tuple[width, height: uint16] = getSelectedResolution()
+    options.szx = some(resolution.width)
+    options.szy = some(resolution.height)
+  options.widescreen = some(true) # TODO
+  options.eaAccountName = some(txtPlayerName.text)
+  options.eaAccountPassword = some("A")
+  options.soldierName = some(txtPlayerName.text)
   if chbtnAutoJoin.active:
-    ipAddressOpt = some(ipAddress.parseIpAddress())
-
-  # return startBF2142(ipAddressOpt) # TODO
+    options.joinServer = some(ipAddress.parseIpAddress())
+    options.port = some(Port(17567))
+  return startBF2142(options)
 
 proc onBtnJoinClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
@@ -2030,12 +2051,14 @@ proc loadServerConfig() =
         serverConfig.stella_prod = e.value
       of CONFIG_SERVER_KEY_STELLA_MS:
         serverConfig.stella_ms = e.value
+      of CONFIG_SERVER_KEY_MS:
+        serverConfig.ms = e.value
+      of CONFIG_SERVER_KEY_AVAILABLE:
+        serverConfig.available = e.value
       of CONFIG_SERVER_KEY_MOTD:
         serverConfig.motd = e.value
       of CONFIG_SERVER_KEY_MASTER:
         serverConfig.master = e.value
-      of CONFIG_SERVER_KEY_MS:
-        serverConfig.ms = e.value
       of CONFIG_SERVER_KEY_GAMESTATS:
         serverConfig.gamestats = e.value
       of CONFIG_SERVER_KEY_GPCM:
@@ -2231,6 +2254,7 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
       dlgLogin.hide()
       echo "dlgLoginCode: ", dlgLoginCode
       if dlgLoginCode == 1:
+        backupOpenSpyIfExists()
         patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
         var options: BF2142Options
         options.modPath = some("mods/" & gsMod)
@@ -2238,7 +2262,7 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
         options.fullscreen = some(false) # TODO
         options.szx = some(800.uint16) # TODO
         options.szy = some(600.uint16) # TODO
-        options.widescreen = some(false) # TODO
+        options.widescreen = some(true) # TODO
         options.eaAccountName = some(txtLoginUsername.text)
         options.eaAccountPassword = some(txtLoginPassword.text)
         options.soldierName = some(txtLoginSoldier.text)

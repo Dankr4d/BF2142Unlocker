@@ -3,14 +3,16 @@ import net
 import strutils # Required for parseHexInt proc
 import options
 import nativesockets # Required for getHostByName
+import uri # Required for parseUri
 
 type
   PatchConfig* = object of RootObj
     stella_prod*: string
     stella_ms*: string
+    ms*: string
+    available*: string
     motd*: string
     master*: string
-    ms*: string
     gamestats*: string
     gpcm*: string
     gpsp*: string
@@ -21,25 +23,21 @@ proc writeIpReversed(fs: FileStream, pos: int, ip: IpAddress) =
   for i in 0..len:
     fs.write(ip.address_v4[len - i])
 
-proc writeIpStr(fs: FileStream, pos: int, ip: string, port: Option[Port], writeLen: int, addSlash: bool = false) =
-  var data: string = $ip
-  if port.isSome() and port.get().int != 80:
-    data.add(":" & $port.get())
-  if addSlash:
-    data.add('/')
+proc writeStr(fs: FileStream, pos: int, str: string, maxLen: int) =
   fs.setPosition(pos)
-  fs.write(data)
-  for i in 1..writeLen - data.len:
+  fs.write(str)
+  for i in 1..maxLen - str.len:
     fs.write(byte(0x0))
 
 proc patchServer*(fs: FileStream, ip: IpAddress, port: Port) =
+  let stellaProd: string = "http://" & $ip & ":" & $port & "/"
   when defined(linux):
     when defined(cpu32):
-      fs.writeIpStr(parseHexInt("869727"), $ip, some(port), 24, true)
+      fs.writeStr(parseHexInt("00869727"), stellaProd, 31)
     else:
-      fs.writeIpStr(parseHexInt("768FA7"), $ip, some(port), 24, true)
-  elif defined(windows): # TODO: Only 32 bit implemented
-    fs.writeIpStr(parseHexInt("3CE617"), $ip, some(port), 24, true)
+      fs.writeStr(parseHexInt("00768FA0"), stellaProd, 31) # http://stella.prod.gamespy.com/
+  elif defined(windows):
+    fs.writeStr(parseHexInt("003CE617"), stellaProd, 31)
 
 proc patchServer*(path: string, ip: IpAddress, port: Port) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
@@ -48,27 +46,27 @@ proc patchServer*(path: string, ip: IpAddress, port: Port) =
 
 proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   ## Previously preClientPatch
-  fs.setPosition(parseHexInt("3293B0"))
+  fs.setPosition(parseHexInt("003293B0"))
   fs.write(byte(0x90))
   fs.write(byte(0x90))
-  fs.setPosition(parseHexInt("3293B3"))
+  fs.setPosition(parseHexInt("003293B3"))
   fs.write(byte(0x35))
-  fs.setPosition(parseHexInt("3293C1"))
+  fs.setPosition(parseHexInt("003293C1"))
   fs.write(byte(0x30))
   fs.write(byte(0xF2))
-  fs.setPosition(parseHexInt("3293CF"))
+  fs.setPosition(parseHexInt("003293CF"))
   fs.write(byte(0x92))
-  fs.setPosition(parseHexInt("3293D0"))
+  fs.setPosition(parseHexInt("003293D0"))
   fs.write(byte(0x94))
-  fs.setPosition(parseHexInt("45C97A"))
+  fs.setPosition(parseHexInt("0045C97A"))
   fs.write(byte(0x88))
   fs.write(byte(0x1F))
   fs.write(byte(0xB5))
-  fs.setPosition(parseHexInt("45C981"))
+  fs.setPosition(parseHexInt("0045C981"))
   fs.write(byte(0xC7))
   fs.write(byte(0x46))
   fs.write(byte(0x04))
-  fs.setPosition(parseHexInt("45C988"))
+  fs.setPosition(parseHexInt("0045C988"))
   fs.write(byte(0xC7))
   fs.write(byte(0x06))
   fs.write(byte(0x01))
@@ -77,31 +75,31 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   fs.write(byte(0x00))
   fs.write(byte(0xEB))
   fs.write(byte(0x2A))
-  fs.setPosition(parseHexInt("45C9D8"))
+  fs.setPosition(parseHexInt("0045C9D8"))
   fs.write(byte(0x94))
   fs.write(byte(0x97))
-  fs.setPosition(parseHexInt("45FE8D"))
+  # SSL (certificates are not verified)
+  fs.setPosition(parseHexInt("0045FE8D"))
   fs.write(byte(0xB8))
   fs.write(byte(0x15))
   fs.write(byte(0x00))
   fs.write(byte(0x00))
   fs.write(byte(0x00))
-  #
-  # TODO: Info: The following patch length is the minimum length to patch the whole original string.
-  #             Some can be longer but not more then 23 (third patch .. should also check if this patch
-  #             is necessary for e.g. tcp/udp or if it's not requiered)
-  var hostend: Hostent = getHostByName(patchConfig.stella_prod)
-  fs.writeIpReversed(parseHexInt("45C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
-  fs.writeIpStr(parseHexInt("5639AB"), patchConfig.stella_prod, none(Port), 24, true) # http://stella.prod.gamespy.com # patching after http://
-  fs.writeIpStr(parseHexInt("5639C4"), patchConfig.stella_ms, none(Port), 23) # stella.prod.gamespy.com # Masterserver
-  fs.writeIpStr(parseHexInt("59E93F"), patchConfig.motd, none(Port), 30, true) # http://motd.gamespy.com/motd/motd.asp # patching after http://
-  fs.writeIpStr(parseHexInt("59E97C"), patchConfig.master, none(Port), 21) # %s.master.gamespy.com
-  fs.writeIpStr(parseHexInt("59F608"), patchConfig.ms, none(Port), 19) # %s.ms%d.gamespy.com
-  fs.writeIpStr(parseHexInt("6067A0"), patchConfig.gamestats, none(Port), 21) # gamestats.gamespy.com
-  fs.writeIpStr(parseHexInt("607180"), patchConfig.gpcm, none(Port), 16) # gpcm.gamespy.com
-  fs.writeIpStr(parseHexInt("6071C0"), patchConfig.gpsp, none(Port), 16) # gpsp.gamespy.com
-  fs.setPosition(parseHexInt("00000146")) # "Large Address Aware" byte (patching from 2GB to 4GB ram)
+  # Large Address Aware (patching from 2GB to 4GB ram)
+  fs.setPosition(parseHexInt("00000146"))
   fs.write(byte(0x2E))
+
+  var hostend: Hostent = getHostByName(parseUri(patchConfig.stella_prod).hostname)
+  fs.writeIpReversed(parseHexInt("0045C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
+  fs.writeStr(parseHexInt("005639A4"), patchConfig.stella_prod, 31) # http://stella.prod.gamespy.com
+  fs.writeStr(parseHexInt("005639C4"), patchConfig.stella_ms, 23) # stella.prod.gamespy.com
+  fs.writeStr(parseHexInt("0059F608"), patchConfig.ms, 19) # %s.ms%d.gamespy.com
+  fs.writeStr(parseHexInt("0059E6E8"), patchConfig.available, 27) # %s.available.gamespy.com
+  fs.writeStr(parseHexInt("0059E938"), patchConfig.motd, 39) # http://motd.gamespy.com/motd/motd.asp
+  fs.writeStr(parseHexInt("0059E97C"), patchConfig.master, 23) # %s.master.gamespy.com
+  fs.writeStr(parseHexInt("006067A0"), patchConfig.gamestats, 63) # gamestats.gamespy.com
+  fs.writeStr(parseHexInt("00607180"), patchConfig.gpcm, 63) # gpcm.gamespy.com
+  fs.writeStr(parseHexInt("006071C0"), patchConfig.gpsp, 63) # gpsp.gamespy.com
 
 proc patchClient*(path: string, patchConfig: PatchConfig) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
