@@ -25,6 +25,7 @@ import checkpermission # Required to check write permission before patching clie
 import math # Required for runtime configuration
 import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
 import options # Required for error/exception handling
+import sets # Required for queryServer for the optional bytes parameter from gspy module
 
 type
   GdkEventButton = object
@@ -2092,8 +2093,7 @@ proc updateServer() =
     var
       valName, valCurrentPlayer, valMaxPlayer, valMap: Value
       valMode, valMod, valIp, valPort: Value
-      valMasterServerIP, valMasterServerPort: Value
-      valPing, valRanked, valMapSize, valGSpyPort: Value
+      valMasterServerIP, valMasterServerPort, valGSpyPort: Value
       iter: TreeIter
     let store = listStore(listServer.getModel())
     let gchararray = typeFromName("gchararray")
@@ -2110,47 +2110,35 @@ proc updateServer() =
     discard valGSpyPort.init(guint)
     discard valMasterServerIP.init(gchararray)
     discard valMasterServerPort.init(guint)
-    discard valPing.init(guint)
-    discard valRanked.init(gboolean)
-    discard valMapSize.init(guint)
     for gs in gslist:
-      # try:
-        if $gs.ip == "0.0.0.0" or startsWith($gs.ip, "255.255.255") or gs.port.int < 1024:
-          continue
-        gspyServer = queryAll($gs.ip, gs.port, 500).server
-        if gspyServer.hostport == 0:
-          continue
-        store.append(iter)
-        valName.setString(gspyServer.hostname)
-        store.setValue(iter, 0, valName)
-        valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 1, valCurrentPlayer)
-        valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 2, valMaxPlayer)
-        valMap.setString(gspyServer.mapname)
-        store.setValue(iter, 3, valMap)
-        valMode.setString(gspyServer.gametype)
-        store.setValue(iter, 4, valMode)
-        valMod.setString(gspyServer.gamevariant)
-        store.setValue(iter, 5, valMod)
-        valIp.setString($gs.ip)
-        store.setValue(iter, 6, valIp)
-        valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 7, valPort)
-        valMasterServerIP.setString(serverConfig.stella_ms)
-        store.setValue(iter, 8, valMasterServerIP)
-        valMasterServerPort.setUInt(28910)
-        store.setValue(iter, 9, valMasterServerPort)
-        valPing.setUInt(gspyServer.bf2142_averageping.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 10, valPing)
-        valRanked.setBoolean(gspyServer.bf2142_ranked)
-        store.setValue(iter, 11, valRanked)
-        valMapSize.setUInt(gspyServer.bf2142_mapsize.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 12, valMapSize)
-        valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
-        store.setValue(iter, 13, valGSpyPort)
-      # except:
-      #   echo getCurrentExceptionMsg()
+      if $gs.ip == "0.0.0.0" or startsWith($gs.ip, "255.255.255") or gs.port.int < 1024:
+        continue
+      gspyServer = queryServer($gs.ip, gs.port, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
+      if gspyServer.hostport == 0:
+        continue
+      store.append(iter)
+      valName.setString(gspyServer.hostname)
+      store.setValue(iter, 0, valName)
+      valCurrentPlayer.setUInt(gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 1, valCurrentPlayer)
+      valMaxPlayer.setUInt(gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 2, valMaxPlayer)
+      valMap.setString(gspyServer.mapname)
+      store.setValue(iter, 3, valMap)
+      valMode.setString(gspyServer.gametype)
+      store.setValue(iter, 4, valMode)
+      valMod.setString(gspyServer.gamevariant)
+      store.setValue(iter, 5, valMod)
+      valIp.setString($gs.ip)
+      store.setValue(iter, 6, valIp)
+      valPort.setUInt(gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 7, valPort)
+      valMasterServerIP.setString(serverConfig.stella_ms)
+      store.setValue(iter, 8, valMasterServerIP)
+      valMasterServerPort.setUInt(28910)
+      store.setValue(iter, 9, valMasterServerPort)
+      valGSpyPort.setUInt(gs.port.int) # TODO: setUInt should take an uint param, not int
+      store.setValue(iter, 10, valGSpyPort)
 
 
 proc onListServerCursorChanged(self: TreeView00) {.signal.} =
@@ -2165,7 +2153,7 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
   if getSelected(listServer.selection, lsServer, iterServer):
     storeServer.getValue(iterServer, 6, valIP)
     gspyIP = valIP.getString()
-    storeServer.getValue(iterServer, 13, valGSpyPort)
+    storeServer.getValue(iterServer, 10, valGSpyPort)
     gspyPort = Port(valGSpyPort.getUint())  # TODO: getUInt returns an int, but should return an uint
 
   var
