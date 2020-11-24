@@ -4,7 +4,7 @@ import parseutils
 import strutils
 import tables # TODO: Remove
 import sets
-
+import options
 
 type
   # Flag {.packed.} = enum
@@ -46,6 +46,8 @@ type
     UnknownByte12 = byte(0x12)
     UnknownByte13 = byte(0x13)
   Protocol00CBytes = OrderedSet[Protocol00CByte]
+
+const Protocol00CBytesAll: Protocol00CBytes = toOrderedSet([Hostname, Gamename, Gamever, Hostport, Mapname, Gametype, Gamevariant, Numplayers, Maxplayers, Gamemode, Timelimit, Roundtime])
 
 type # Protcol 00
   Header00 {.packed.} = object
@@ -149,8 +151,9 @@ proc newProtocol00B(): Protocol00B =
   result.header = newHeader00()
 
 
-proc newProtocol00C(): Protocol00C =
+proc newProtocol00C(bytes: Protocol00CBytes): Protocol00C =
   result.header = newHeader00()
+  result.bytes = bytes
 
 
 proc serialize(header00: Header00): string =
@@ -172,10 +175,10 @@ proc serialize(protocol00C: Protocol00C): string =
   result.add("\x00\x00")
 
 
-proc recvProtocol00B(address: string, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
+proc recvProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
   var messages: Table[int, string]
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-  await socket.sendTo(address, port, protocol00B.serialize())
+  await socket.sendTo($address, port, protocol00B.serialize())
 
   while true: ## todo read up to a max limit to not stall the client when server fucks up
     var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
@@ -203,9 +206,12 @@ proc recvProtocol00B(address: string, port: Port, protocol00B: Protocol00B, time
   for idx in 0 .. messages.len - 1:
     result.add messages[idx]
 
-proc recvProtocol00C(address: string, port: Port, protocol00C: Protocol00C, timeout: int = 0): Future[string] {.async.} =
+proc recvProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = 0): Future[Option[Response00C]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-  await socket.sendTo(address, port, protocol00C.serialize())
+  try:
+    await socket.sendTo($address, port, protocol00C.serialize())
+  except OSError:
+    return none(Response00C) # TODO: Server not reachable
 
   var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
   var resp: tuple[data: string, address: string, port: Port]
@@ -222,7 +228,7 @@ proc recvProtocol00C(address: string, port: Port, protocol00C: Protocol00C, time
   response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
   # response.timeStamp = cast[TimeStamp](resp[1..5])
   response.data = resp.data[5..^1]
-  return response.data
+  return some(response)
 
 
 proc parseCStr(message: string, pos: var int): string =
@@ -428,10 +434,10 @@ proc parseProtocol00B(message: string, gspy: var GSpy, pos: var int) =
   parseProtocol00B(message, gspy, pos)
 
 
-proc parseProtocol00C(message: string, gspyServer: var GSpyServer, bytes: Protocol00CBytes) =
+proc parseProtocol00C(response00C: Response00C, gspyServer: var GSpyServer, bytes: Protocol00CBytes) =
   var pos: int = 0
   for b in bytes:
-    let val: string = message.parseCstr(pos)
+    let val: string = response00C.data.parseCstr(pos)
 
     case b:
     of Hostname:
@@ -462,13 +468,13 @@ proc parseProtocol00C(message: string, gspyServer: var GSpyServer, bytes: Protoc
       discard # Other bytes are unknown
 
 
-proc queryAll*(url: string, port: Port, timeout: int = 0): GSpy =
+proc queryAll*(address: IpAddress, port: Port, timeout: int = 0): GSpy =
   # var messages = @["\x00hostname\x00Reclamation Remaster\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Leipzig\x00gametype\x00gpm_coop\x00gamevariant\x00project_remaster_mp\x00numplayers\x002\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0032\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00EU\x00bf2142_type\x000\x00bf2142_averageping\x001\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\x01player_\x00\x00 ddre\x00NineEleven Hijackers\x00Sir Smokealot\x00DSquarius Green\x00Guy Nutter\x00Jack Ghoff\x00DGlester Hardunkichud\x00Bang-Ding Ow\x00LORD Voldemort\x00Rick Titball\x00Michael Myers\x00Harry Palmer\x00Justin Sider\x00Hans Gruber\x00Professor Chaos\x00Nyquillus Dillwad\x00Dylan Weed\x00Ben Dover\x00Vin Diesel\x00Harry Beaver\x00Jack Mehoff\x00Jawana Die\x00Mr Slave\x00 Boomer-UK\x00X-Wing AtAliciousness\x00Bloody Glove\x00MaryJane Potman\x00Tits McGee\x00Phat Ho\x00Dee Capitated\x00T 1\x00", "\x01player_\x00\x1ET 1000\x00Quackadilly Blip\x00No Collusion\x00\x00score_\x00\x0037\x0021\x0018\x0018\x0016\x0015\x0013\x0012\x0010\x0010\x009\x009\x008\x008\x008\x007\x007\x007\x006\x006\x006\x005\x005\x004\x003\x003\x003\x003\x002\x001\x001\x001\x000\x00\x00ping_\x00\x0041\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0023\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00team_\x00\x002\x002\x002\x002\x001\x001\x002\x002\x002\x002\x002\x002\x001\x002\x002\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x00\x00deaths_\x00\x006\x004\x005\x005\x006\x0011\x004\x004\x0010\x005\x008\x006\x008\x005\x007\x006\x009\x004\x005\x007\x006\x007\x0010\x000\x007\x007\x008\x007\x007\x007\x004\x006\x006\x00\x00pid_\x00\x0030748\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0032963\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00skill_\x00\x0031\x006\x0011\x0010\x0014\x0015\x002\x006\x007\x005\x007\x003\x006\x004\x004\x007\x007\x004\x006\x006\x001\x004\x003\x004\x003\x002\x001\x000\x004\x003\x002\x000\x000\x00\x00\x00\x02team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   # var messages = @["\x00hostname\x00Reclamation US\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x002142af_ladder_1\x00gametype\x00gpm_cq\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0064\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00US\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   # var messages = @["\x00hostname\x00AC21 (close)\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Shuhia_Taiba\x00gametype\x00gpm_ti\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0016\x00gamemode\x00openplaying\x00password\x001\x00timelimit\x001500\x00roundtime\x001\x00hostport\x0017600\x00bf2142_ranked\x000\x00bf2142_anticheat\x000\x00bf2142_autorec\x001\x00bf2142_d_idx\x00http://185.189.255.6/demos_root/a21/\x00bf2142_d_dl\x00http://185.189.255.6/demos_root/a21/demos/\x00bf2142_voip\x001\x00bf2142_autobalanced\x000\x00bf2142_friendlyfire\x000\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0020\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00Powered By NovGames.ru\x00bf2142_sponsorlogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_communitylogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00300\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x001\x00bf2142_mapsize\x0048\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x006\x00bf2142_maxrank\x000\x00bf2142_provider\x0010011\x00bf2142_region\x00AT\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x001\x00bf2142_custom_map_url\x000http://2142.novgames.ru/\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
   var messages: seq[string]
   try:
-    messages = waitFor recvProtocol00B(url, port, newProtocol00B(), timeout)
+    messages = waitFor recvProtocol00B(address, port, newProtocol00B(), timeout)
   except:
     return # TODO
 
@@ -482,22 +488,52 @@ proc queryAll*(url: string, port: Port, timeout: int = 0): GSpy =
       continue # TODO
 
 
-proc queryServer*(url: string, port: Port, timeout: int = 0, bytes: Protocol00CBytes = toOrderedSet([Hostname, Gamename, Gamever, Hostport, Mapname, Gametype, Gamevariant, Numplayers, Maxplayers, Gamemode, Timelimit, Roundtime])): GSpyServer =
+proc queryServer*(address: IpAddress, port: Port, timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): GSpyServer = # TODO: Option result (not only this proc)
   # WARNING: `queryServer` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
-  var message: string
-  var protocol00C: Protocol00C = newProtocol00C()
-  protocol00C.bytes = bytes
+  var response00COpt: Option[Response00C]
+  var protocol00C: Protocol00C = newProtocol00C(bytes)
   try:
-    message = waitFor recvProtocol00C(url, port, protocol00C, timeout)
-    parseProtocol00C(message, result, bytes)
+    response00COpt = waitFor recvProtocol00C(address, port, protocol00C, timeout)
+    if isNone(response00COpt):
+      return
+    parseProtocol00C(get(response00COpt), result, bytes)
   except:
     return # TODO
+
+proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer]] =
+  # WARNING: `queryServers` queries server information via Protocol00C which is missing some
+  #          some informations/data. Therefore the GSpyServer object is holey.
+  var messagesOpt: seq[Option[Response00C]]
+  var messagesFuture: seq[Future[Option[Response00C]]]
+
+  var protocol00C: Protocol00C
+  for server in servers:
+    protocol00C = newProtocol00C(bytes)
+    messagesFuture.add(recvProtocol00C(server.address, server.port, protocol00C, timeout))
+
+  messagesOpt = waitFor all(messagesFuture)
+
+  var gspyServer: GSpyServer
+  var response00C: Response00C
+  var idx: int = 0
+  for response00COpt in messagesOpt:
+    if isNone(response00COpt):
+      idx.inc()
+      continue # Server was not reachable
+    response00C = get(response00COpt)
+    parseProtocol00C(response00C, gspyServer, bytes)
+    result.add((
+      address: servers[idx].address,
+      port: servers[idx].port,
+      gspyServer: gspyServer
+    ))
+    idx.inc()
 
 
 
 when isMainModule:
-  echo queryAll("185.189.255.6", Port(29987))
+  # echo queryAll("185.189.255.6", Port(29987))
   # echo queryAll("95.172.92.116", Port(29900))
   # echo queryAll("162.248.88.201", Port(29900))
   # echo queryAll("185.107.96.106", Port(29900))
@@ -506,6 +542,14 @@ when isMainModule:
   # echo queryServer("185.189.255.6", Port(29987))
   # echo queryServer("185.189.255.6", Port(29987), 0, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
 
+  var addresses = @[
+    (parseIpAddress("185.189.255.6"), Port(29987)),
+    (parseIpAddress("95.172.92.116"), Port(29900)),
+    (parseIpAddress("162.248.88.201"), Port(29900)),
+    (parseIpAddress("185.107.96.106"), Port(29900)),
+    (parseIpAddress("138.197.130.124"), Port(29900)),
+  ]
+  echo queryServers(addresses, 500)
 
 # TODO: Following Battlefield 2 server added a t char in the end sequence.
 #       Instead of \0\0\0 it is \0\0t\0. In the next message it starts with \1team_ (maybe it depends to team, but then it ignores the player byte)

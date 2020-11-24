@@ -255,7 +255,7 @@ proc tcpxspr(sd: cint, gamestr: ptr uint8, msgamestr: ptr uint8, validate: ptr u
 proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl, header: "masterserver.h".}
 
 
-proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string): seq[tuple[ip: IpAddress, port: Port]] =
+proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string): seq[tuple[address: IpAddress, port: Port]] =
   var client: Socket = newSocket()
   client.connect(url, port)
 
@@ -318,13 +318,13 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
     # echo inetNtoa(inAddr), ":", ntohs(ipport[idx].port)
     result.add(
       (
-        ip: parseIpAddress($inetNtoa(inAddr)),
+        address: parseIpAddress($inetNtoa(inAddr)),
         port: Port(ntohs(ipport[idx].port))
       )
     )
 
 when isMainModule:
-  var gameServerList: seq[tuple[ip: IpAddress, port: Port]]
+  var gameServerList: seq[tuple[address: IpAddress, port: Port]]
   # gameServerList = queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella")
   # echo "gameServerList (NOVGAMES): ", gameServerList
 
