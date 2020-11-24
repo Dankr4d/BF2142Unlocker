@@ -2,22 +2,13 @@ import asyncnet, asyncdispatch, net
 # import times
 import parseutils
 import strutils
-import tables # TODO: Remove
 import sets
 import options
 
 type
-  # Flag {.packed.} = enum
-  #   Disabled = (byte) 0x00
-  #   Enabled = (byte) 0xFF
-  Flag = byte
   Magic = array[2, byte]
   ProtocolId = enum
     Protocol00 = 0x00.byte
-  # TypeId = enum
-  #   Server = 0x00.byte
-  #   Player = 0x01.byte
-  #   Team = 0x02.byte
   TimeStamp = uint32  # array[4, byte]
 
 const MAGIC_VALUE: Magic = [0xFE.byte, 0xFD.byte]
@@ -56,9 +47,6 @@ type # Protcol 00
     timeStamp: TimeStamp
   Protocol00B {.packed.} = object
     header: Header00
-    giveHeaders: Flag # Ignored in Subprotocol B
-    givePlayers: Flag # Ignored in Subprotocol B
-    giveTeams: Flag # Ignored in Subprotocol B
     # INFO: I've implemented Protocol00A, which allows to query header, player and or team information
     #       by setting a flag. The response is limmited to 1400 bytes and is not multipart.
     #       As I finished with Protocol00A I realizeed, that server only respond to me when player flag
@@ -164,6 +152,9 @@ proc serialize(header00: Header00): string =
 proc serialize(protocol00B: Protocol00B): string =
   result = newString(sizeof(Protocol00B))
   copyMem(addr result[0], unsafeAddr protocol00B, sizeof(Protocol00B))
+  # Server, Player and Team query bytes (are ignored in Protocol00B). In Protocol00A 0x00 disables and 0xFF enables querying
+  # those informations. E.g. 0x00 0xFF 0x00 will query player information.
+  result.add("\x00\x00\x00")
   result.add("\x01")
 
 
@@ -175,11 +166,15 @@ proc serialize(protocol00C: Protocol00C): string =
   result.add("\x00\x00")
 
 
-proc recvProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[string]] {.async.} =
-  var messages: Table[int, string]
+proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[Response00B]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-  await socket.sendTo($address, port, protocol00B.serialize())
 
+  try:
+    await socket.sendTo($address, port, protocol00B.serialize())
+  except OSError:
+    return
+
+  var response00B: Response00B
   while true: ## todo read up to a max limit to not stall the client when server fucks up
     var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
     var resp: tuple[data: string, address: string, port: Port]
@@ -192,26 +187,24 @@ proc recvProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, t
     else:
       resp = await respFuture
 
-    var response: Response00B
-    response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
-    # response.timeStamp = cast[TimeStamp](resp[1..5])
-    response.splitNum = resp.data[13].byte
-    var lastAndMessageNum: byte = resp.data[14].byte
-    var isLastMessage: bool = lastAndMessageNum.shr(7).bool
-    response.messageNumber = lastAndMessageNum.shl(1).shr(1)
-    response.data = resp.data[15..^1]
-    messages[response.messageNumber.int] = response.data
+    response00B = Response00B()
+    response00B.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
+    # response00B.timeStamp = cast[TimeStamp](resp[1..5])
+    response00B.splitNum = resp.data[13].byte
+    let lastAndMessageNum: byte = resp.data[14].byte
+    let isLastMessage: bool = lastAndMessageNum.shr(7).bool
+    response00B.messageNumber = lastAndMessageNum.shl(1).shr(1)
+    response00B.data = resp.data[15..^1]
+    result.add(response00B)
     if isLastMessage:
       break
-  for idx in 0 .. messages.len - 1:
-    result.add messages[idx]
 
-proc recvProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = 0): Future[Option[Response00C]] {.async.} =
+proc sendProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = 0): Future[Option[Response00C]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
   try:
     await socket.sendTo($address, port, protocol00C.serialize())
   except OSError:
-    return none(Response00C) # TODO: Server not reachable
+    return none(Response00C) # Server not reachable
 
   var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
   var resp: tuple[data: string, address: string, port: Port]
@@ -231,15 +224,15 @@ proc recvProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, t
   return some(response)
 
 
-proc parseCStr(message: string, pos: var int): string =
-  pos += message.parseUntil(result, char(0x0), pos)
+proc parseCStr(str: string, pos: var int): string =
+  pos += str.parseUntil(result, char(0x0), pos)
   pos.inc()
 
 
-proc parseGSpyServer(message: string, server: var GSpyServer, pos: var int) =
+proc parseGSpyServer(data: string, server: var GSpyServer, pos: var int) =
   while true:
-    var key: string = message.parseCStr(pos)
-    var val: string = message.parseCStr(pos)
+    var key: string = data.parseCStr(pos)
+    var val: string = data.parseCStr(pos)
 
     case key:
     of "hostport":
@@ -331,21 +324,21 @@ proc parseGSpyServer(message: string, server: var GSpyServer, pos: var int) =
     of "bf2142_startdelay":
       server.bf2142_startdelay = parseUInt(val).uint8
 
-    if message[pos - 1 .. pos] == "\0\0": # pos - 1 because parseCStr skips the first 0x0 byte
+    if data[pos - 1 .. pos] == "\0\0": # pos - 1 because parseCStr skips the first 0x0 byte
       pos.inc(1)
       return
 
 
-proc parseList[T](message: string, pos: var int): seq[T] =
-  if message[pos .. pos + 2] == "\0\0\0": # Empty list
+proc parseList[T](data: string, pos: var int): seq[T] =
+  if data[pos .. pos + 2] == "\0\0\0": # Empty list
     echo "EMPTY LIST!!!"
     pos.inc(3)
     return
   pos.inc(2) # Skip 00 byte and offset # TODO: offset (currently ignored because the last entry isn't added)
   while true:
-    let val: string = message.parseCstr(pos)
-    if pos == message.len:
-      return # End of message
+    let val: string = data.parseCstr(pos)
+    if pos == data.len:
+      return
 
     when T is string:
       result.add(val)
@@ -354,90 +347,90 @@ proc parseList[T](message: string, pos: var int): seq[T] =
     elif T is uint8 or T is uint16 or T is uint32:
       result.add(T(parseUInt(val)))
 
-    if message[pos - 1 .. pos] == "\0\0":
+    if data[pos - 1 .. pos] == "\0\0":
       pos.inc()
       return
 
 
-proc parseGSpyPlayer(message: string, player: var GSpyPlayer, pos: var int) =
+proc parseGSpyPlayer(data: string, player: var GSpyPlayer, pos: var int) =
   while true:
-    var key: string = message.parseCStr(pos)
+    var key: string = data.parseCStr(pos)
     pos.dec() # Because parseCStr skips the 0x0 byte
-    if message.len == pos:
+    if data.len == pos:
       return
     case key:
     of "deaths_":
-      player.deaths.add(parseList[uint16](message, pos))
+      player.deaths.add(parseList[uint16](data, pos))
     of "pid_":
-      player.pid.add(parseList[uint32](message, pos))
+      player.pid.add(parseList[uint32](data, pos))
     of "score_":
-      player.score.add(parseList[int16](message, pos))
+      player.score.add(parseList[int16](data, pos))
     of "skill_":
-      player.skill.add(parseList[uint16](message, pos))
+      player.skill.add(parseList[uint16](data, pos))
     of "team_":
-      player.team.add(parseList[uint8](message, pos))
+      player.team.add(parseList[uint8](data, pos))
     of "ping_":
-      player.ping.add(parseList[uint16](message, pos))
+      player.ping.add(parseList[uint16](data, pos))
     of "player_":
-      player.player.add(parseList[string](message, pos))
+      player.player.add(parseList[string](data, pos))
     # of "AIBot_": # Battlefield 2
     else:
-      discard parseList[string](message, pos) # Parse list if the key is not known
+      discard parseList[string](data, pos) # Parse list if the key is not known
 
-    if message.len == pos: # TODO: This check is done twice. Before parseList and here
+    if data.len == pos: # TODO: This check is done twice. Before parseList and here
       return
-    if message[pos - 2 .. pos] == "\0\0\0":
+    if data[pos - 2 .. pos] == "\0\0\0":
       pos.inc()
       return
 
 
-proc parseGSpyTeam(message: string, team: var GSpyTeam, pos: var int) =
+proc parseGSpyTeam(data: string, team: var GSpyTeam, pos: var int) =
   while true:
-    var key: string = message.parseCStr(pos)
+    var key: string = data.parseCStr(pos)
     pos.dec() # Because parseCStr skips the 0x0 byte
-    if message.len == pos:
+    if data.len == pos:
       return
     case key:
     of "team_t":
-      team.team_t.add(parseList[string](message, pos))
+      team.team_t.add(parseList[string](data, pos))
     of "score_t":
-      team.score_t.add(parseList[uint16](message, pos))
+      team.score_t.add(parseList[uint16](data, pos))
     else:
-      discard parseList[string](message, pos) # Parse list if the key is not known
-    if message.len == pos: # TODO: This check is done twice. Before parseList and here
+      discard parseList[string](data, pos) # Parse list if the key is not known
+    if data.len == pos: # TODO: This check is done twice. Before parseList and here
       return
-    if message[pos - 2 .. pos] == "\0\0\0":
+    if data[pos - 2 .. pos] == "\0\0\0":
       pos.inc()
       return
 
 
-proc parseProtocol00B(message: string, gspy: var GSpy, pos: var int) =
-  if pos >= message.len:
+proc parseProtocol00B(data: string, gspy: var GSpy, pos: var int) =
+  if pos >= data.len:
     return
 
-  case message[pos]:
+  case data[pos]:
   of char(0x0): # Server
     echo "SERVER"
     pos.inc() # Skip server identifier byte (0x0)
-    parseGSpyServer(message, gspy.server, pos)
+    parseGSpyServer(data, gspy.server, pos)
   of char(0x1): # Player
     echo "PLAYER"
     pos.inc() # Skip player identifier byte (0x1)
-    parseGSpyPlayer(message, gspy.player, pos)
+    parseGSpyPlayer(data, gspy.player, pos)
   of char(0x2): # Team
     echo "TEAM"
     pos.inc() # Skip team identifier byte (0x2)
-    parseGSpyTeam(message, gspy.team, pos)
+    parseGSpyTeam(data, gspy.team, pos)
   else:
     discard
 
-  parseProtocol00B(message, gspy, pos)
+  parseProtocol00B(data, gspy, pos)
 
 
-proc parseProtocol00C(response00C: Response00C, gspyServer: var GSpyServer, bytes: Protocol00CBytes) =
+proc parseProtocol00C(data: string, gspyServer: var GSpyServer, bytes: Protocol00CBytes) =
   var pos: int = 0
   for b in bytes:
-    let val: string = response00C.data.parseCstr(pos)
+    let val: string = data.parseCstr(pos)
 
     case b:
     of Hostname:
@@ -469,60 +462,60 @@ proc parseProtocol00C(response00C: Response00C, gspyServer: var GSpyServer, byte
 
 
 proc queryAll*(address: IpAddress, port: Port, timeout: int = 0): GSpy =
-  # var messages = @["\x00hostname\x00Reclamation Remaster\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Leipzig\x00gametype\x00gpm_coop\x00gamevariant\x00project_remaster_mp\x00numplayers\x002\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0032\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00EU\x00bf2142_type\x000\x00bf2142_averageping\x001\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\x01player_\x00\x00 ddre\x00NineEleven Hijackers\x00Sir Smokealot\x00DSquarius Green\x00Guy Nutter\x00Jack Ghoff\x00DGlester Hardunkichud\x00Bang-Ding Ow\x00LORD Voldemort\x00Rick Titball\x00Michael Myers\x00Harry Palmer\x00Justin Sider\x00Hans Gruber\x00Professor Chaos\x00Nyquillus Dillwad\x00Dylan Weed\x00Ben Dover\x00Vin Diesel\x00Harry Beaver\x00Jack Mehoff\x00Jawana Die\x00Mr Slave\x00 Boomer-UK\x00X-Wing AtAliciousness\x00Bloody Glove\x00MaryJane Potman\x00Tits McGee\x00Phat Ho\x00Dee Capitated\x00T 1\x00", "\x01player_\x00\x1ET 1000\x00Quackadilly Blip\x00No Collusion\x00\x00score_\x00\x0037\x0021\x0018\x0018\x0016\x0015\x0013\x0012\x0010\x0010\x009\x009\x008\x008\x008\x007\x007\x007\x006\x006\x006\x005\x005\x004\x003\x003\x003\x003\x002\x001\x001\x001\x000\x00\x00ping_\x00\x0041\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0023\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00team_\x00\x002\x002\x002\x002\x001\x001\x002\x002\x002\x002\x002\x002\x001\x002\x002\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x001\x002\x001\x001\x002\x001\x001\x00\x00deaths_\x00\x006\x004\x005\x005\x006\x0011\x004\x004\x0010\x005\x008\x006\x008\x005\x007\x006\x009\x004\x005\x007\x006\x007\x0010\x000\x007\x007\x008\x007\x007\x007\x004\x006\x006\x00\x00pid_\x00\x0030748\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x000\x0032963\x000\x000\x000\x000\x000\x000\x000\x000\x000\x00\x00skill_\x00\x0031\x006\x0011\x0010\x0014\x0015\x002\x006\x007\x005\x007\x003\x006\x004\x004\x007\x007\x004\x006\x006\x001\x004\x003\x004\x003\x002\x001\x000\x004\x003\x002\x000\x000\x00\x00\x00\x02team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  # var messages = @["\x00hostname\x00Reclamation US\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x002142af_ladder_1\x00gametype\x00gpm_cq\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0064\x00gamemode\x00openplaying\x00password\x000\x00timelimit\x000\x00roundtime\x001\x00hostport\x0017567\x00bf2142_ranked\x001\x00bf2142_anticheat\x000\x00bf2142_autorec\x000\x00bf2142_d_idx\x00http://\x00bf2142_d_dl\x00http://\x00bf2142_voip\x001\x00bf2142_autobalanced\x001\x00bf2142_friendlyfire\x001\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0015\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00\x00bf2142_sponsorlogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_communitylogo_url\x00http://lightav.com/bf2142/mixedmode.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00100\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x000\x00bf2142_mapsize\x0064\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x000\x00bf2142_maxrank\x000\x00bf2142_provider\x00OS\x00bf2142_region\x00US\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x000\x00bf2142_custom_map_url\x000http://battlefield2142.co\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  # var messages = @["\x00hostname\x00AC21 (close)\x00gamename\x00stella\x00gamever\x001.10.112.0\x00mapname\x00Shuhia_Taiba\x00gametype\x00gpm_ti\x00gamevariant\x00bf2142\x00numplayers\x000\x00maxplayers\x0016\x00gamemode\x00openplaying\x00password\x001\x00timelimit\x001500\x00roundtime\x001\x00hostport\x0017600\x00bf2142_ranked\x000\x00bf2142_anticheat\x000\x00bf2142_autorec\x001\x00bf2142_d_idx\x00http://185.189.255.6/demos_root/a21/\x00bf2142_d_dl\x00http://185.189.255.6/demos_root/a21/demos/\x00bf2142_voip\x001\x00bf2142_autobalanced\x000\x00bf2142_friendlyfire\x000\x00bf2142_tkmode\x00Punish\x00bf2142_startdelay\x0020\x00bf2142_spawntime\x0015.000000\x00bf2142_sponsortext\x00Powered By NovGames.ru\x00bf2142_sponsorlogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_communitylogo_url\x00https://pp.userapi.com/c639723/v639723333/724d1/MLmZUTZ-GCE.jpg\x00bf2142_scorelimit\x000\x00bf2142_ticketratio\x00300\x00bf2142_teamratio\x00100.000000\x00bf2142_team1\x00Pac\x00bf2142_team2\x00EU\x00bf2142_pure\x001\x00bf2142_mapsize\x0048\x00bf2142_globalunlocks\x001\x00bf2142_reservedslots\x006\x00bf2142_maxrank\x000\x00bf2142_provider\x0010011\x00bf2142_region\x00AT\x00bf2142_type\x000\x00bf2142_averageping\x000\x00bf2142_ranked_tournament\x000\x00bf2142_allow_spectators\x001\x00bf2142_custom_map_url\x000http://2142.novgames.ru/\x00\x00\1player_\x00\x00\x00score_\x00\x00\x00ping_\x00\x00\x00team_\x00\x00\x00deaths_\x00\x00\x00pid_\x00\x00\x00skill_\x00\x00\x00\x00\2team_t\x00\x00Pac\x00EU\x00\x00score_t\x00\x000\x000\x00\x00\x00"]
-  var messages: seq[string]
-  try:
-    messages = waitFor recvProtocol00B(address, port, newProtocol00B(), timeout)
-  except:
-    return # TODO
+  var responses: seq[Response00B]
+  responses = waitFor sendProtocol00B(address, port, newProtocol00B(), timeout)
+  if responses.len == 0:
+    return
 
   var pos: int
-  for idx, message in messages:
+  for idx, response00B in responses:
     pos = 0
-    # echo repr message
     try:
-      parseProtocol00B(message, result, pos)
+      parseProtocol00B(response00B.data, result, pos)
     except:
-      continue # TODO
+      continue # TODO: Parser shouldn't fail
 
 
-proc queryServer*(address: IpAddress, port: Port, timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): GSpyServer = # TODO: Option result (not only this proc)
+proc queryServer*(address: IpAddress, port: Port, timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): Option[GSpyServer] =
   # WARNING: `queryServer` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
   var response00COpt: Option[Response00C]
   var protocol00C: Protocol00C = newProtocol00C(bytes)
+  response00COpt = waitFor sendProtocol00C(address, port, protocol00C, timeout)
+  if isNone(response00COpt):
+    return none(GSpyServer)
+  var gspyServer: GSpyServer
   try:
-    response00COpt = waitFor recvProtocol00C(address, port, protocol00C, timeout)
-    if isNone(response00COpt):
-      return
-    parseProtocol00C(get(response00COpt), result, bytes)
+    parseProtocol00C(get(response00COpt).data, gspyServer, bytes)
   except:
-    return # TODO
+    return none(GSpyServer) # TODO: Parser shouldn't fail
+  return some(gspyServer)
 
 proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer]] =
   # WARNING: `queryServers` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
-  var messagesOpt: seq[Option[Response00C]]
-  var messagesFuture: seq[Future[Option[Response00C]]]
+  var responsesOpt: seq[Option[Response00C]]
+  var responsesFuture: seq[Future[Option[Response00C]]]
 
   var protocol00C: Protocol00C
   for server in servers:
     protocol00C = newProtocol00C(bytes)
-    messagesFuture.add(recvProtocol00C(server.address, server.port, protocol00C, timeout))
+    responsesFuture.add(sendProtocol00C(server.address, server.port, protocol00C, timeout))
 
-  messagesOpt = waitFor all(messagesFuture)
+  responsesOpt = waitFor all(responsesFuture)
 
   var gspyServer: GSpyServer
   var response00C: Response00C
   var idx: int = 0
-  for response00COpt in messagesOpt:
+  for response00COpt in responsesOpt:
     if isNone(response00COpt):
       idx.inc()
       continue # Server was not reachable
     response00C = get(response00COpt)
-    parseProtocol00C(response00C, gspyServer, bytes)
+    try:
+      parseProtocol00C(response00C.data, gspyServer, bytes)
+    except:
+      continue # TODO: Parser shouldn't fail
     result.add((
       address: servers[idx].address,
       port: servers[idx].port,
@@ -533,14 +526,14 @@ proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout:
 
 
 when isMainModule:
-  # echo queryAll("185.189.255.6", Port(29987))
-  # echo queryAll("95.172.92.116", Port(29900))
-  # echo queryAll("162.248.88.201", Port(29900))
-  # echo queryAll("185.107.96.106", Port(29900))
-  # echo queryAll("138.197.130.124", Port(29900))
+  # echo queryAll(parseIpAddress("185.189.255.6"), Port(29987))
+  # echo queryAll(parseIpAddress("95.172.92.116"), Port(29900))
+  # echo queryAll(parseIpAddress("162.248.88.201"), Port(29900))
+  # echo queryAll(parseIpAddress("185.107.96.106"), Port(29900))
+  # echo queryAll(parseIpAddress("138.197.130.124"), Port(29900))
 
-  # echo queryServer("185.189.255.6", Port(29987))
-  # echo queryServer("185.189.255.6", Port(29987), 0, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
+  # echo queryServer(parseIpAddress("185.189.255.6"), Port(29987))
+  # echo queryServer(parseIpAddress("185.189.255.6"), Port(29987), 0, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
 
   var addresses = @[
     (parseIpAddress("185.189.255.6"), Port(29987)),

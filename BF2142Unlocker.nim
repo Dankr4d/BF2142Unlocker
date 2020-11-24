@@ -2117,7 +2117,7 @@ proc updateServer() =
       return true
     )
 
-    for server in queryServers(gslist, 500):
+    for server in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])):
       store.append(iter)
       valName.setString(server.gspyServer.hostname)
       store.setValue(iter, 0, valName)
