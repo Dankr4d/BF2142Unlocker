@@ -27,6 +27,8 @@ import gsapi # Required to parse data out of bf2142 game server # TODO: Make thi
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
+import fesl_server # Required for getSoldiers proc (login and returning soldiers or error code)
+import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 
 type
   GdkEventButton = object
@@ -2205,13 +2207,13 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
   of gdk.EventType.buttonPress:
     discard
   of gdk.EventType.doubleButtonPress:
-    var msIp: string
+    var msName: string
     var msPort: Port
     var gsIp: IpAddress
     var gsPort: Port
     var gsMod: string
     var
-      valMsIP: Value
+      valMsName: Value
       valMsPort: Value
       valGsIP: Value
       valGsPort: Value
@@ -2224,8 +2226,8 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
       gsIp = valGsIp.getString().parseIpAddress()
       store.getValue(iterServer, 7, valGsPort)
       gsPort = Port(valGsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
-      store.getValue(iterServer, 8, valMsIp)
-      msIp = valMsIp.getString()
+      store.getValue(iterServer, 8, valMsName)
+      msName = valMsName.getString()
       store.getValue(iterServer, 5, valGsMod)
       gsMod = valGsMod.getString()
       store.getValue(iterServer, 9, valMsPort)
@@ -2233,17 +2235,32 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
 
       var serverConfig: ServerConfig
       for sc in serverConfigs:
-        if sc.stella_ms == msIp:
+        if sc.server_name == msName:
           serverConfig = sc
       if serverConfig.stella_ms == "":
         echo "COULDNT FIND SERVER IN CONFIG LIST"
         return
 
 
-      var dlgLoginCode: int = dlgLogin.run()
-      dlgLogin.hide()
-      echo "dlgLoginCode: ", dlgLoginCode
-      if dlgLoginCode == 1:
+      var dlgLoginCode: int
+      while true:
+        dlgLoginCode = dlgLogin.run()
+        echo "dlgLoginCode: ", dlgLoginCode
+
+        if dlgLoginCode != 1:
+          dlgLogin.hide()
+          return EVENT_PROPAGATE
+
+        echo "serverConfig.stella_prod: ", serverConfig.stella_prod
+        var soldiers: tuple[error: int, soldiers: seq[string]] = getSoldiers(parseUri(serverConfig.stella_prod).hostname, Port(18300), txtLoginUsername.text, txtLoginPassword.text)
+        if soldiers.error > 0:
+          echo "soldiers.error: ", soldiers.error
+          continue
+
+        echo "SOLDIERS: ", soldiers.soldiers
+
+        dlgLogin.hide()
+
         backupOpenSpyIfExists()
         patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
         var options: BF2142Options
@@ -2262,6 +2279,7 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
         txtLoginPassword.text = ""
         txtLoginSoldier.text = ""
         discard startBF2142(options)
+        return EVENT_PROPAGATE
   else:
     discard
   return EVENT_PROPAGATE

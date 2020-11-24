@@ -166,7 +166,7 @@ proc serialize(protocol00C: Protocol00C): string =
   result.add("\x00\x00")
 
 
-proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = 0): Future[seq[Response00B]] {.async.} =
+proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = -1): Future[seq[Response00B]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
 
   try:
@@ -178,7 +178,7 @@ proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, t
   while true: ## todo read up to a max limit to not stall the client when server fucks up
     var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
     var resp: tuple[data: string, address: string, port: Port]
-    if timeout > 0:
+    if timeout > -1:
       if await withTimeout(respFuture, timeout):
         resp = await respFuture
       else:
@@ -199,7 +199,7 @@ proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, t
     if isLastMessage:
       break
 
-proc sendProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = 0): Future[Option[Response00C]] {.async.} =
+proc sendProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = -1): Future[Option[Response00C]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
   try:
     await socket.sendTo($address, port, protocol00C.serialize())
@@ -208,7 +208,7 @@ proc sendProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, t
 
   var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
   var resp: tuple[data: string, address: string, port: Port]
-  if timeout > 0:
+  if timeout > -1:
     if await withTimeout(respFuture, timeout):
       resp = await respFuture
     else:
@@ -461,7 +461,7 @@ proc parseProtocol00C(data: string, gspyServer: var GSpyServer, bytes: Protocol0
       discard # Other bytes are unknown
 
 
-proc queryAll*(address: IpAddress, port: Port, timeout: int = 0): GSpy =
+proc queryAll*(address: IpAddress, port: Port, timeout: int = -1): GSpy =
   var responses: seq[Response00B]
   responses = waitFor sendProtocol00B(address, port, newProtocol00B(), timeout)
   if responses.len == 0:
@@ -476,7 +476,7 @@ proc queryAll*(address: IpAddress, port: Port, timeout: int = 0): GSpy =
       continue # TODO: Parser shouldn't fail
 
 
-proc queryServer*(address: IpAddress, port: Port, timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): Option[GSpyServer] =
+proc queryServer*(address: IpAddress, port: Port, timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): Option[GSpyServer] =
   # WARNING: `queryServer` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
   var response00COpt: Option[Response00C]
@@ -491,7 +491,7 @@ proc queryServer*(address: IpAddress, port: Port, timeout: int = 0, bytes: Proto
     return none(GSpyServer) # TODO: Parser shouldn't fail
   return some(gspyServer)
 
-proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = 0, bytes: Protocol00CBytes = Protocol00CBytesAll): seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer]] =
+proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer]] =
   # WARNING: `queryServers` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
   var responsesOpt: seq[Option[Response00C]]
