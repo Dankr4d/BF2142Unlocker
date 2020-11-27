@@ -27,7 +27,7 @@ import gsapi # Required to parse data out of bf2142 game server # TODO: Make thi
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
-import fesl_server # Required for getSoldiers proc (login and returning soldiers or error code)
+import fesl_client # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 
 type
@@ -242,9 +242,18 @@ var dlgLogin: Dialog
 var lblLoginStellaServer: Label
 var txtLoginUsername: Entry
 var txtLoginPassword: Entry
-var txtLoginSoldier: Entry
-var btnLoginLogin: Button
-var btnLoginCancel: Button
+var listLoginSoldiers: TreeView
+var btnLoginCheck: Button
+var btnLoginSoldierAdd: Button
+var btnLoginSoldierDelete: Button
+var chbtnLoginSave: CheckButton
+var btnLoginCreate: Button
+var btnLoginPlay: Button  # TODO: Delete? (uses response id)
+var btnLoginCancel: Button # TODO: Delete? (uses response id)
+var dlgLoginAddSoldier: Dialog
+var txtLoginAddSoldierName: Entry
+var btnLoginAddSoldierOk: Button # TODO: Delete? (uses response id)
+var btnLoginAddSoldierCancel: Button # TODO: Delete? (uses response id)
 ##
 ### Host controls
 var vboxHost: Box
@@ -624,6 +633,14 @@ proc listStore(o: gobject.Object): gtk.ListStore =
   assert(typeTest(o, "GtkListStore"))
   cast[gtk.ListStore](o)
 
+proc clear(list: TreeView) =
+  var
+    iter: TreeIter
+  let store = listStore(list.getModel())
+  if not store.iterFirst(iter):
+    return
+  clear(store)
+
 proc appendMap(list: TreeView, mapName, mapMode: string, mapSize: int) =
   var
     valMapName: Value
@@ -679,6 +696,39 @@ proc selectedMap(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] 
     result.mapMode = valMapMode.getString()
     store.getValue(iter, 2, valMapSize)
     result.mapSize = valMapSize.getInt()
+
+proc selectedSoldier(list: TreeView): Option[string] =
+  var
+    valSoldier: Value
+    ls: ListStore
+    iter: TreeIter
+  let store = listStore(list.getModel())
+  if getSelected(list.selection, ls, iter):
+    store.getValue(iter, 0, valSoldier)
+    return some(valSoldier.getString())
+  none(string)
+
+proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
+  list.clear()
+  var
+    valSoldier: Value
+    iter: TreeIter
+  let store = listStore(list.getModel())
+  let gchararray = typeFromName("gchararray")
+  discard valSoldier.init(gchararray)
+  for soldier in soldiers:
+    store.append(iter)
+    valSoldier.setString(soldier)
+    store.setValue(iter, 0, valSoldier)
+
+proc `addSoldier`(list: TreeView, soldier: string) =
+  list.soldiers = @[soldier]
+
+proc hasEntries(treeView: TreeView): bool =
+  var
+    iter: TreeIter
+  let store: ListStore = listStore(treeView.getModel())
+  return store.iterFirst(iter)
 
 proc update(treeView: TreeView, gsdata: GsData) =
   var
@@ -753,7 +803,6 @@ proc removeSelected(treeView: TreeView) =
       return
   if getSelected(treeView.selection, ls, iter):
     discard store.remove(iter)
-    treeView.updateLevelPreview()
 
 iterator maps(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
   var
@@ -774,14 +823,6 @@ iterator maps(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
     result.mapSize = valMapSize.getInt()
     yield result
     whileCond = model.iterNext(iter)
-
-proc clear(list: TreeView) =
-  var
-    iter: TreeIter
-  let store = listStore(list.getModel())
-  if not store.iterFirst(iter):
-    return
-  clear(store)
 
 proc loadSelectableMapList() =
   listSelectableMaps.clear()
@@ -1657,6 +1698,7 @@ proc onBtnRemoveMapClicked(self: Button00) {.signal.} =
   (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
   if mapName == "" or mapMode == "" or mapSize == 0: return
   listSelectedMaps.removeSelected()
+  listSelectedMaps.updateLevelPreview()
 
 proc onBtnMapMoveUpClicked(self: Button00) {.signal.} =
   listSelectedMaps.moveSelectedUp()
@@ -2095,7 +2137,7 @@ proc updateServer() =
     var
       valName, valCurrentPlayer, valMaxPlayer, valMap: Value
       valMode, valMod, valIp, valPort: Value
-      valMasterServerIP, valMasterServerPort, valGSpyPort: Value
+      valStellaName, valGSpyPort: Value
       iter: TreeIter
     let store = listStore(listServer.getModel())
     let gchararray = typeFromName("gchararray")
@@ -2110,8 +2152,7 @@ proc updateServer() =
     discard valIp.init(gchararray)
     discard valPort.init(guint)
     discard valGSpyPort.init(guint)
-    discard valMasterServerIP.init(gchararray)
-    discard valMasterServerPort.init(guint)
+    discard valStellaName.init(gchararray)
 
     gslist = filter(gslist, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
@@ -2137,12 +2178,10 @@ proc updateServer() =
       store.setValue(iter, 6, valIp)
       valPort.setUInt(server.gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
       store.setValue(iter, 7, valPort)
-      valMasterServerIP.setString(serverConfig.server_name)
-      store.setValue(iter, 8, valMasterServerIP)
-      valMasterServerPort.setUInt(28910)
-      store.setValue(iter, 9, valMasterServerPort)
       valGSpyPort.setUInt(server.port.int) # TODO: setUInt should take an uint param, not int
-      store.setValue(iter, 10, valGSpyPort)
+      store.setValue(iter, 9, valGSpyPort)
+      valStellaName.setString(serverConfig.server_name)
+      store.setValue(iter, 8, valStellaName)
 
 
 proc onListServerCursorChanged(self: TreeView00) {.signal.} =
@@ -2157,7 +2196,7 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
   if getSelected(listServer.selection, lsServer, iterServer):
     storeServer.getValue(iterServer, 6, valIP)
     gspyIP = valIP.getString()
-    storeServer.getValue(iterServer, 10, valGSpyPort)
+    storeServer.getValue(iterServer, 9, valGSpyPort)
     gspyPort = Port(valGSpyPort.getUint())  # TODO: getUInt returns an int, but should return an uint
 
   var
@@ -2202,6 +2241,70 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
     lblTeam1.text = gspy.team.team_t[0].toUpper()
     lblTeam2.text = gspy.team.team_t[1].toUpper()
 
+var currentStellaProd: string
+var clientFesl: net.Socket = net.newSocket()
+var clientFeslConnected: bool = false
+
+proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
+  echo "currentStellaProd: ", currentStellaProd
+  listLoginSoldiers.clear()
+  var succeed: bool = false
+  if not clientFeslConnected:
+    succeed = fesl_client.connect(clientFesl, currentStellaProd, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
+    clientFeslConnected = true
+  if succeed:
+    succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
+  listLoginSoldiers.soldiers = clientFesl.soldiers() # TODO: fesl_client should raise an exception
+  btnLoginSoldierAdd.sensitive = succeed
+  btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
+  chbtnLoginSave.sensitive = succeed
+
+proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
+  var succeed: bool = false
+  if not clientFeslConnected:
+    succeed = fesl_client.connect(clientFesl, currentStellaProd, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
+    clientFeslConnected = true
+  if succeed:
+    succeed = clientFesl.createAccount(txtLoginUsername.text, txtLoginPassword.text)
+  if succeed:
+    succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
+  btnLoginSoldierAdd.sensitive = succeed
+  btnLoginSoldierDelete.sensitive = false
+  chbtnLoginSave.sensitive = succeed
+
+proc onDlgLoginAddSoldierShow(self: Dialog00) {.signal.} =
+  txtLoginAddSoldierName.grabFocus()
+
+proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
+  let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
+  dlgLoginAddSoldier.hide()
+  if dlgLoginAddSoldierCode != 1:
+    return # User closed dialog
+  if not clientFesl.addSoldier(txtLoginAddSoldierName.text):
+    return  # TODO: Show error message
+  listLoginSoldiers.soldiers = clientFesl.soldiers # Some server accept more then 4 soldiers, some does too but don't send them
+  btnLoginSoldierDelete.sensitive = true
+  txtLoginAddSoldierName.text = ""
+
+proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
+  if not clientFesl.delSoldier(get(listLoginSoldiers.selectedSoldier)):
+    return # TODO: Show error message
+  listLoginSoldiers.removeSelected()
+  btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
+
+proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
+  var iter: TreeIter
+  var store: ListStore = listStore(listLoginSoldiers.model)
+  btnLoginPlay.sensitive = listLoginSoldiers.selection.selected(store, iter)
+  return EVENT_PROPAGATE
+
+proc onDlgLoginShow(self: Dialog): bool {.signal.} =
+  listLoginSoldiers.clear()
+  btnLoginSoldierAdd.sensitive = false
+  btnLoginSoldierDelete.sensitive = false
+  chbtnLoginSave.sensitive = false
+  btnLoginPlay.sensitive = false
+
 proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.signal.} =
   case e.`type`[]
   of gdk.EventType.buttonPress:
@@ -2234,32 +2337,28 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
       msPort = Port(valMsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
 
       var serverConfig: ServerConfig
+      var serverFound: bool = false
       for sc in serverConfigs:
         if sc.server_name == msName:
           serverConfig = sc
-      if serverConfig.stella_ms == "":
+          serverFound = true
+          break
+
+      if not serverFound:
         echo "COULDNT FIND SERVER IN CONFIG LIST"
         return
 
-
+      currentStellaProd = parseUri(serverConfig.stella_prod).hostname
+        # echo "SOLDIERS: ", soldiers.soldiers
+      # btnLoginCheck.connect("clicked", onBtnLoginCheckClicked, serverConfig.stella_ms)
       var dlgLoginCode: int
       while true:
         dlgLoginCode = dlgLogin.run()
         echo "dlgLoginCode: ", dlgLoginCode
+        dlgLogin.hide()
 
         if dlgLoginCode != 1:
-          dlgLogin.hide()
           return EVENT_PROPAGATE
-
-        echo "serverConfig.stella_prod: ", serverConfig.stella_prod
-        var soldiers: tuple[error: int, soldiers: seq[string]] = getSoldiers(parseUri(serverConfig.stella_prod).hostname, Port(18300), txtLoginUsername.text, txtLoginPassword.text)
-        if soldiers.error > 0:
-          echo "soldiers.error: ", soldiers.error
-          continue
-
-        echo "SOLDIERS: ", soldiers.soldiers
-
-        dlgLogin.hide()
 
         backupOpenSpyIfExists()
         patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
@@ -2272,12 +2371,11 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
         options.widescreen = some(true) # TODO
         options.eaAccountName = some(txtLoginUsername.text)
         options.eaAccountPassword = some(txtLoginPassword.text)
-        options.soldierName = some(txtLoginSoldier.text)
+        options.soldierName = listLoginSoldiers.selectedSoldier
         options.joinServer = some(gsIp)
         options.port = some(gsPort)
         txtLoginUsername.text = ""
         txtLoginPassword.text = ""
-        txtLoginSoldier.text = ""
         discard startBF2142(options)
         return EVENT_PROPAGATE
   else:
@@ -2375,9 +2473,18 @@ proc onApplicationActivate(application: Application) =
   lblLoginStellaServer = builder.getLabel("lblLoginStellaServer")
   txtLoginUsername = builder.getEntry("txtLoginUsername")
   txtLoginPassword = builder.getEntry("txtLoginPassword")
-  txtLoginSoldier = builder.getEntry("txtLoginSoldier")
-  btnLoginLogin = builder.getButton("btnLoginLogin")
+  listLoginSoldiers = builder.getTreeView("listLoginSoldiers")
+  btnLoginCheck = builder.getButton("btnLoginCheck")
+  btnLoginSoldierAdd = builder.getButton("btnLoginSoldierAdd")
+  btnLoginSoldierDelete = builder.getButton("btnLoginSoldierDelete")
+  chbtnLoginSave = builder.getCheckButton("chbtnLoginSave")
+  btnLoginCreate = builder.getButton("btnLoginCreate")
+  btnLoginPlay = builder.getButton("btnLoginPlay")
   btnLoginCancel = builder.getButton("btnLoginCancel")
+  dlgLoginAddSoldier = builder.getDialog("dlgLoginAddSoldier")
+  txtLoginAddSoldierName = builder.getEntry("txtLoginAddSoldierName")
+  btnLoginAddSoldierOk = builder.getButton("btnLoginAddSoldierOk")
+  btnLoginAddSoldierCancel = builder.getButton("btnLoginAddSoldierCancel")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
