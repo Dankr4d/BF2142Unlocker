@@ -377,14 +377,6 @@ msgstr "Select level folder to copy to client"
 msgid "SELECT_MAPS_FOLDER_SERVER"
 msgstr "Select level folder to copy to server"
 
-msgid "NO_LOCAL_IP_ADDRESS_TITLE"
-msgstr "No local ip address read out"
-
-msgid "NO_LOCAL_IP_ADDRESS_MSG"
-msgstr ""
-"No local ip address could be read out.\n"
-"Please connect to router (with DHCP enabled) or configure one manually."
-
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
 msgstr "No private local ip address read out"
 

@@ -36,8 +36,11 @@ gspy
 gspy.exe
 masterserver
 masterserver.exe
+strhider
+strhider.exe
 locale/*/
 config.ini
+logins.ini
 lang.txt
 BF2142Unlocker.res
 libeay32.dll

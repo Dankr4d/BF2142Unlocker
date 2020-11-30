@@ -29,6 +29,10 @@ import sets # Required for queryServer for the optional bytes parameter from gsp
 import sequtils # Required for filter proc (filtering gamespy address port list)
 import fesl_client # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
+import strhider # Simple string hide functionality with xor and base64 to hide username/password saved in logins.ini
+import masterserver, gspy # Required to query gamespy server and query each gamespy server (server listing)
+import streams # Required to load server.ini (which has unknown sections)
+import regex # Required to validate soldier name
 
 type
   GdkEventButton = object
@@ -186,6 +190,12 @@ const
   CONFIG_SERVER_KEY_GAME_KEY: string = "game_key"
   CONFIG_SERVER_KEY_GAME_STR: string = "game_str"
 
+const
+  CONFIG_LOGINS_FILE_NAME: string = "logins.ini"
+  CONFIG_LOGINS_KEY_USERNAME: string = "username"
+  CONFIG_LOGINS_KEY_PASSWORD: string = "password"
+  CONFIG_LOGINS_KEY_SOLDIER: string = "soldier"
+
 # Required, because config loads values into widgets after gui is created,
 # but the language must be set before gui init is called.
 const LANGUAGE_FILE: string = "lang.txt"
@@ -238,7 +248,7 @@ var listPlayerInfo1: TreeView
 var listPlayerInfo2: TreeView
 var lblTeam1: Label
 var lblTeam2: Label
-var dlgLogin: Dialog
+var wndLogin: gtk.Window
 var lblLoginStellaServer: Label
 var txtLoginUsername: Entry
 var txtLoginPassword: Entry
@@ -501,12 +511,11 @@ proc fixMapDesc(path: string): bool =
 ##
 
 ### Helper procs
-proc loadHostIpAddress() =
-  var addrs: seq[string] = getLocalAddrs()
-  if addrs.len > 0:
-    txtHostIpAddress.text = addrs[0] # TODO: Validate interface and choose lan interfaces first
-  else:
-    txtHostIpAddress.text = ""
+proc isAlphaNumeric(str: string): bool =
+  for ch in str:
+    if not isAlphaNumeric(ch):
+      return false
+  return true
 
 proc updateProfilePathes() =
   bf2142ProfilesPath = documentsPath / "Battlefield 2142" / "Profiles"
@@ -649,15 +658,13 @@ proc appendMap(list: TreeView, mapName, mapMode: string, mapSize: int) =
     iter: TreeIter
   let store = listStore(list.getModel())
   store.append(iter)
-  let gchararray = typeFromName("gchararray")
-  let gint = typeFromName("gint")
-  discard valMapName.init(gchararray)
+  discard valMapName.init(g_string_get_type())
   valMapName.setString(mapName)
   store.setValue(iter, 0, valMapName)
-  discard valMapMode.init(gchararray)
+  discard valMapMode.init(g_string_get_type())
   valMapMode.setString(mapMode)
   store.setValue(iter, 1, valMapMode)
-  discard valMapSize.init(gint)
+  discard valMapSize.init(g_int_get_type())
   valMapSize.setInt(mapSize)
   store.setValue(iter, 2, valMapSize)
 
@@ -708,16 +715,29 @@ proc selectedSoldier(list: TreeView): Option[string] =
     return some(valSoldier.getString())
   none(string)
 
+proc `selectedSoldier=`(list: TreeView, soldier: string) =
+  var
+    valSoldier: Value
+    iter: TreeIter
+  let store = listStore(list.getModel())
+  var whileCond: bool = store.iterFirst(iter)
+  while whileCond:
+    store.getValue(iter, 0, valSoldier)
+    if valSoldier.getString() == soldier:
+      list.selection.selectIter(iter)
+      list.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
+    whileCond = store.iterNext(iter)
+  # TODO: Raise exception if soldier doesn't exists
+
 proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
   list.clear()
   var
     valSoldier: Value
     iter: TreeIter
   let store = listStore(list.getModel())
-  let gchararray = typeFromName("gchararray")
-  discard valSoldier.init(gchararray)
+  discard valSoldier.init(g_string_get_type())
   for soldier in soldiers:
-    store.append(iter)
+    store.append(iter) # TODO: This throws value already initialized warnings. Fix this and check all other appends
     valSoldier.setString(soldier)
     store.setValue(iter, 0, valSoldier)
 
@@ -1061,14 +1081,14 @@ proc saveProfileAccountName() =
   discard writeFile(profileConPath, profileContent)
 
 proc loadJoinMods() =
+  var valMod: Value
+  discard valMod.init(g_string_get_type())
   var iter: TreeIter
   let store = listStore(cbxJoinMods.getModel())
   store.clear()
   if bf2142Path != "":
     for folder in walkDir(bf2142Path / "mods", true):
       if folder.kind == pcDir:
-        var valMod: Value
-        discard valMod.init(typeFromName("gchararray"))
         valMod.setString(folder.path)
         store.append(iter)
         store.setValue(iter, 0, valMod)
@@ -1076,17 +1096,17 @@ proc loadJoinMods() =
   discard cbxJoinMods.setActiveId("bf2142")
 
 proc loadJoinResolutions() =
+  var valResolution: Value
+  var valWidth: Value
+  var valHeight: Value
+  discard valResolution.init(g_string_get_type())
+  discard valWidth.init(g_uint_get_type())
+  discard valHeight.init(g_uint_get_type())
   var iter: TreeIter
   let store = listStore(cbxJoinResolutions.getModel())
   store.clear()
   var idx: int = 0
   for resolution in getAvailableResolutions():
-    var valResolution: Value
-    var valWidth: Value
-    var valHeight: Value
-    discard valResolution.init(typeFromName("gchararray"))
-    discard valWidth.init(typeFromName("guint"))
-    discard valHeight.init(typeFromName("guint"))
     valResolution.setString($resolution.width & "x" & $resolution.height)
     valWidth.setUint(cast[int](resolution.width))
     valHeight.setUint(cast[int](resolution.height))
@@ -1104,21 +1124,19 @@ proc getSelectedResolution(): tuple[width, height: uint16] =
   discard cbxJoinResolutions.getActiveIter(iter)
   var valWidth: Value
   var valHeight: Value
-  discard valWidth.init(typeFromName("guint"))
-  discard valHeight.init(typeFromName("guint"))
   store.getValue(iter, 2, valWidth)
   store.getValue(iter, 3, valHeight)
   return (cast[uint16](valWidth.getUint()), cast[uint16](valHeight.getUint()))
 
 proc loadHostMods() =
+  var valMod: Value
+  discard valMod.init(g_string_get_type())
   var iter: TreeIter
   let store = listStore(cbxHostMods.getModel())
   store.clear()
   if bf2142ServerPath != "":
     for folder in walkDir(bf2142ServerPath / "mods", true):
       if folder.kind == pcDir:
-        var valMod: Value
-        discard valMod.init(typeFromName("gchararray"))
         valMod.setString(folder.path)
         store.append(iter)
         store.setValue(iter, 0, valMod)
@@ -1528,8 +1546,8 @@ proc patchAndStartLogic(): bool =
   let ipAddress: string = txtIpAddress.text.strip()
   txtPlayerName.text = txtPlayerName.text.strip()
   var invalidStr: string
-  if ipAddress.startsWith("127") or ipAddress == "localhost": # TODO: Check if ip is also an valid ipv4 address
-    invalidStr.add("\t* Localhost addresses are currently not supported. Battlefield 2142 starts with a black screen if you're trying to connect to a localhost address.\n")
+  if chbtnAutoJoin.active and (ipAddress == "127.0.0.1" or ipAddress == "localhost"):
+    invalidStr.add("\t* Auto join feature won't work if you're trying to connect to a gameserver with 127.0.0.1 or localhost.\n")
   if not ipAddress.isIpAddress():
     invalidStr.add("\t* Your IP-address is not valid.\n")
   elif ipAddress.parseIpAddress().family == IPv6:
@@ -1655,11 +1673,7 @@ proc onChbtnWindowModeToggled(self: CheckButton00) {.signal.} =
   cbxJoinResolutions.visible = chbtnWindowMode.active
 
 proc onBtnJustPlayClicked(self: Button00) {.signal.} =
-  var localIpAddrs: seq[string] = getLocalAddrs()
-  if localIpAddrs.len == 0:
-    newInfoDialog(dgettext("gui", "NO_LOCAL_IP_ADDRESS_TITLE"), dgettext("gui", "NO_LOCAL_IP_ADDRESS_MSG"))
-    return
-  var ipAddress: IpAddress = localIpAddrs[0].parseIpAddress()
+  var ipAddress: IpAddress = parseIpAddress("127.0.0.1")
   txtIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
@@ -1708,10 +1722,6 @@ proc onBtnMapMoveDownClicked(self: Button00) {.signal.} =
 #
 ## Host
 proc onBtnHostClicked(self: Button00) {.signal.} =
-  var privateIpAddrs: seq[string] = getPrivateAddrs()
-  if privateIpAddrs.len == 0:
-    newInfoDialog(dgettext("gui", "NO_PRIVATE_IP_ADDRESS_TITLE"), dgettext("gui", "NO_PRIVATE_IP_ADDRESS_MSG"))
-    return
   if not txtHostIpAddress.text.strip().isIpAddress() or
   txtHostIpAddress.text.strip().parseIpAddress().family != IPv4:
     newInfoDialog(dgettext("gui", "NO_VALID_IP_ADDRESS_TITLE"), dgettext("gui", "NO_VALID_IP_ADDRESS_MSG"))
@@ -1738,10 +1748,15 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
     return
   serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
   echo "Patching Battlefield 2142 server!"
-  patchServer(serverExePath, privateIpAddrs[0].parseIpAddress(), Port(8085))
+  patchServer(serverExePath, parseIpAddress("127.0.0.1"), Port(8085))
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
-  txtIpAddress.text = $ipAddress
+  if $ipAddress == "0.0.0.0":
+     # When setting to 127.0.0.1 game doesn't connect to game server (doesn't load map)
+    txtIpAddress.text = getPrivateAddrs()[0]
+  else:
+    txtIpAddress.text = $ipAddress
+  chbtnAutoJoin.active = true
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
@@ -1757,7 +1772,11 @@ proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = txtHostIpAddress.text.strip().parseIpAddress()
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
-  txtIpAddress.text = $ipAddress
+  if $ipAddress == "0.0.0.0":
+    txtIpAddress.text = "127.0.0.1"
+  else:
+    txtIpAddress.text = $ipAddress
+  chbtnAutoJoin.active = false
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
@@ -2026,11 +2045,6 @@ proc onSelectableMapsButtonPressEvent(self: TreeView00, e: GdkEventButton): bool
 #
 ##
 
-proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: int) {.signal.} =
-  if pageNum == 1:
-    if txtHostIpAddress.text == "":
-      loadHostIpAddress()
-
 proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
   if not windowShown:
     windowShown = true
@@ -2064,9 +2078,9 @@ type
     game_key*: string
     game_str*: string
 
+var serverConfig: ServerConfig
 var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe remove server_name attribute from ServerConfig
 
-import streams
 proc loadServerConfig() =
   var serverConfig: ServerConfig
   var isFirstSection: bool = true
@@ -2125,34 +2139,54 @@ proc loadServerConfig() =
   close(p)
   echo serverConfigs
 
+proc getLogin(stellaName: string): Option[tuple[username, password, soldier: string]] =
+  var config: Config
+  if not fileExists(CONFIG_LOGINS_FILE_NAME):
+    config = newConfig()
+  else:
+    config = loadConfig(CONFIG_LOGINS_FILE_NAME)
+  let username = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_USERNAME))
+  let password = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_PASSWORD))
+  let soldier = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_SOLDIER))
+  if username != "" and password != "":
+    return some((username, password, soldier))
+  return none(tuple[username, password, soldier: string])
 
-import masterserver, gspy
+proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly: bool = false) =
+  var config: Config
+  if not fileExists(CONFIG_LOGINS_FILE_NAME):
+    config = newConfig()
+  else:
+    config = loadConfig(CONFIG_LOGINS_FILE_NAME)
+  if not saveSoldierOnly:
+    config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_USERNAME, hideStr(username))
+    config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_PASSWORD, hideStr(password))
+  config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_SOLDIER, hideStr(soldier))
+  config.writeConfig(CONFIG_LOGINS_FILE_NAME)
+
 proc updateServer() =
+  var
+    valName, valCurrentPlayer, valMaxPlayer, valMap: Value
+    valMode, valMod, valIp, valPort: Value
+    valStellaName, valGSpyPort: Value
+    iter: TreeIter
+  let store = listStore(listServer.getModel())
+  discard valName.init(g_string_get_type())
+  discard valCurrentPlayer.init(g_uint_get_type())
+  discard valMaxPlayer.init(g_uint_get_type())
+  discard valMap.init(g_string_get_type())
+  discard valMode.init(g_string_get_type())
+  discard valMod.init(g_string_get_type())
+  discard valIp.init(g_string_get_type())
+  discard valPort.init(g_uint_get_type())
+  discard valGSpyPort.init(g_uint_get_type())
+  discard valStellaName.init(g_string_get_type())
   var gslist: seq[tuple[address: IpAddress, port: Port]]
   for serverConfig in serverConfigs:
     gslist = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str)
     # gslist.add(queryGameServerList("stella.ms5.openspy.net", Port(28910), "gslive", "Xn221z", "stella"))
     # gslist.add(queryGameServerList("2142.novgames.ru", Port(28910), "stella", "M8o1Qw", "stella"))
     # gslist.add(queryGameServerList("92.51.181.102", Port(28911), "battlefield2", "hW6m9a", "battlefield2"))
-    var
-      valName, valCurrentPlayer, valMaxPlayer, valMap: Value
-      valMode, valMod, valIp, valPort: Value
-      valStellaName, valGSpyPort: Value
-      iter: TreeIter
-    let store = listStore(listServer.getModel())
-    let gchararray = typeFromName("gchararray")
-    let guint = typeFromName("guint")
-    let gboolean = typeFromName("gboolean")
-    discard valName.init(gchararray)
-    discard valCurrentPlayer.init(guint)
-    discard valMaxPlayer.init(guint)
-    discard valMap.init(gchararray)
-    discard valMode.init(gchararray)
-    discard valMod.init(gchararray)
-    discard valIp.init(gchararray)
-    discard valPort.init(guint)
-    discard valGSpyPort.init(guint)
-    discard valStellaName.init(gchararray)
 
     gslist = filter(gslist, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
@@ -2204,16 +2238,12 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
     iter: TreeIter
   let storePlayerInfo1 = listStore(listPlayerInfo1.getModel())
   let storePlayerInfo2 = listStore(listPlayerInfo2.getModel())
-  let gchararray = typeFromName("gchararray")
-  let gint = typeFromName("gint")
-  let guint = typeFromName("guint")
-  # let gboolean = typeFromName("gboolean") # Maybe for an "Is bot" column
-  discard valPID.init(guint)
-  discard valName.init(gchararray)
-  discard valScore.init(gint)
-  discard valKills.init(guint)
-  discard valDeaths.init(guint)
-  discard valPing.init(guint)
+  discard valPID.init(g_uint_get_type())
+  discard valName.init(g_string_get_type())
+  discard valScore.init(g_int_get_type())
+  discard valKills.init(g_uint_get_type())
+  discard valDeaths.init(g_uint_get_type())
+  discard valPing.init(g_uint_get_type())
   let gspy: GSpy = queryAll(parseIpAddress(gspyIP), gspyPort)
   listPlayerInfo1.clear()
   listPlayerInfo2.clear()
@@ -2242,28 +2272,51 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
     lblTeam2.text = gspy.team.team_t[1].toUpper()
 
 var currentStellaProd: string
-var clientFesl: net.Socket = net.newSocket()
+var clientFesl: net.Socket
 var clientFeslConnected: bool = false
 
-proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
+proc loginLogic(doNotSaveLogin: bool = false) =
   echo "currentStellaProd: ", currentStellaProd
   listLoginSoldiers.clear()
-  var succeed: bool = false
+  var succeed: bool = true
   if not clientFeslConnected:
+    clientFesl = net.newSocket()
     succeed = fesl_client.connect(clientFesl, currentStellaProd, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
-    clientFeslConnected = true
+    clientFeslConnected = succeed
   if succeed:
     succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
   listLoginSoldiers.soldiers = clientFesl.soldiers() # TODO: fesl_client should raise an exception
   btnLoginSoldierAdd.sensitive = succeed
   btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
   chbtnLoginSave.sensitive = succeed
+  if succeed and not doNotSaveLogin:
+    if chbtnLoginSave.active:
+      saveLogin(serverConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, get(listLoginSoldiers.selectedSoldier, ""))
+
+proc onTxtLoginUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+  if not isAlphaNumeric($cstr):
+    txtLoginUsername.signalStopEmissionByName("insert-text")
+
+proc onTxtLoginPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+  if not isAlphaNumeric($cstr):
+    txtLoginPassword.signalStopEmissionByName("insert-text")
+
+proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+  let soldierRegex: regex.Regex = re"""^([[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{3}[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@\#\-+]{0,11}|[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{0,14})$"""
+  if not match(txtLoginAddSoldierName.text & $cstr, soldierRegex):
+    txtLoginAddSoldierName.signalStopEmissionByName("insert-text")
+
+proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
+  ignoreEvents = true
+  loginLogic()
+  ignoreEvents = false
 
 proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
-  var succeed: bool = false
+  var succeed: bool = true
   if not clientFeslConnected:
+    clientFesl = net.newSocket()
     succeed = fesl_client.connect(clientFesl, currentStellaProd, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
-    clientFeslConnected = true
+    clientFeslConnected = succeed
   if succeed:
     succeed = clientFesl.createAccount(txtLoginUsername.text, txtLoginPassword.text)
   if succeed:
@@ -2271,117 +2324,153 @@ proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
   btnLoginSoldierAdd.sensitive = succeed
   btnLoginSoldierDelete.sensitive = false
   chbtnLoginSave.sensitive = succeed
+  if succeed:
+    if chbtnLoginSave.active:
+      saveLogin(serverConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
 
-proc onDlgLoginAddSoldierShow(self: Dialog00) {.signal.} =
-  txtLoginAddSoldierName.grabFocus()
+
+var gsIp: IpAddress
+var gsPort: Port
+var gsMod: string
+proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
+  backupOpenSpyIfExists()
+  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
+  var options: BF2142Options
+  options.modPath = some("mods/" & gsMod)
+  options.menu = some(true)
+  options.fullscreen = some(false) # TODO
+  options.szx = some(800.uint16) # TODO
+  options.szy = some(600.uint16) # TODO
+  options.widescreen = some(true) # TODO
+  options.eaAccountName = some(txtLoginUsername.text)
+  options.eaAccountPassword = some(txtLoginPassword.text)
+  options.soldierName = listLoginSoldiers.selectedSoldier
+  options.joinServer = some(gsIp)
+  options.port = some(gsPort)
+  discard startBF2142(options)
+
+proc onBtnLoginCancelClicked(self: Button) {.signal.} =
+  wndLogin.hide()
 
 proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
   let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
   dlgLoginAddSoldier.hide()
   if dlgLoginAddSoldierCode != 1:
     return # User closed dialog
+  ignoreEvents = true
   if not clientFesl.addSoldier(txtLoginAddSoldierName.text):
+    ignoreEvents = false
     return  # TODO: Show error message
   listLoginSoldiers.soldiers = clientFesl.soldiers # Some server accept more then 4 soldiers, some does too but don't send them
   btnLoginSoldierDelete.sensitive = true
   txtLoginAddSoldierName.text = ""
+  ignoreEvents = false
 
 proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
+  ignoreEvents = true
   if not clientFesl.delSoldier(get(listLoginSoldiers.selectedSoldier)):
+    ignoreEvents = false
     return # TODO: Show error message
   listLoginSoldiers.removeSelected()
+  if chbtnLoginSave.active:
+    saveLogin(serverConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
   btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
+  if isNone(listLoginSoldiers.selectedSoldier):
+    btnLoginPlay.sensitive = false
+  ignoreEvents = false
+
+proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
+  var username, password, soldier: string
+  if chbtnLoginSave.active:
+    username = txtLoginUsername.text
+    password = txtLoginPassword.text
+    soldier = get(listLoginSoldiers.selectedSoldier, "")
+  saveLogin(serverConfig.server_name, username, password, soldier)
 
 proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
-  var iter: TreeIter
-  var store: ListStore = listStore(listLoginSoldiers.model)
-  btnLoginPlay.sensitive = listLoginSoldiers.selection.selected(store, iter)
+  # var iter: TreeIter
+  # var store: ListStore = listStore(listLoginSoldiers.model)
+  # let soldierOpt: Option[string] = listLoginSoldiers.selectedSoldier
+  btnLoginPlay.sensitive = true # isSome(soldierOpt)
+  # if isSome(soldierOpt) and chbtnLoginSave.active:
+    # saveLogin(serverConfig.server_name, "", "", get(soldierOpt), true)
+  saveLogin(serverConfig.server_name, "", "", get(listLoginSoldiers.selectedSoldier), true)
   return EVENT_PROPAGATE
 
-proc onDlgLoginShow(self: Dialog): bool {.signal.} =
+proc onWndLoginShow(self: gtk.Window) {.signal.} =
+  ignoreEvents = true
+  let loginTplOpt: Option[tuple[username, password, soldier: string]] = getLogin(serverConfig.server_name)
+  if loginTplOpt.isSome:
+    let loginTpl: tuple[username, password, soldier: string] = get(loginTplOpt)
+    txtLoginUsername.text = loginTpl.username
+    txtLoginPassword.text = loginTpl.password
+    chbtnLoginSave.active = true
+    loginLogic(doNotSaveLogin = true)
+    listLoginSoldiers.selectedSoldier = loginTpl.soldier
+    btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier=` should raise an exception
+    ignoreEvents = false
+    return
+
   listLoginSoldiers.clear()
+  chbtnLoginSave.active = false
+
   btnLoginSoldierAdd.sensitive = false
   btnLoginSoldierDelete.sensitive = false
   chbtnLoginSave.sensitive = false
   btnLoginPlay.sensitive = false
+  ignoreEvents = false
+
+proc onWndLoginHide(self: gtk.Window) {.signal.} =
+  txtLoginUsername.text = ""
+  txtLoginPassword.text = ""
+  clientFesl.close()
+  clientFeslConnected = false
 
 proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.signal.} =
-  case e.`type`[]
-  of gdk.EventType.buttonPress:
-    discard
-  of gdk.EventType.doubleButtonPress:
-    var msName: string
-    var msPort: Port
-    var gsIp: IpAddress
-    var gsPort: Port
-    var gsMod: string
-    var
-      valMsName: Value
-      valMsPort: Value
-      valGsIP: Value
-      valGsPort: Value
-      valGsMod: Value
-      lsServer: ListStore
-      iterServer: TreeIter
-    let store = listStore(listServer.getModel())
-    if getSelected(listServer.selection, lsServer, iterServer):
-      store.getValue(iterServer, 6, valGsIp)
-      gsIp = valGsIp.getString().parseIpAddress()
-      store.getValue(iterServer, 7, valGsPort)
-      gsPort = Port(valGsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
-      store.getValue(iterServer, 8, valMsName)
-      msName = valMsName.getString()
-      store.getValue(iterServer, 5, valGsMod)
-      gsMod = valGsMod.getString()
-      store.getValue(iterServer, 9, valMsPort)
-      msPort = Port(valMsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
+  if e.`type`[] != gdk.EventType.doubleButtonPress:
+    return
 
-      var serverConfig: ServerConfig
-      var serverFound: bool = false
-      for sc in serverConfigs:
-        if sc.server_name == msName:
-          serverConfig = sc
-          serverFound = true
-          break
+  var msName: string
+  var msPort: Port
+  var
+    valMsName: Value
+    valMsPort: Value
+    valGsIP: Value
+    valGsPort: Value
+    valGsMod: Value
+    lsServer: ListStore
+    iterServer: TreeIter
+  let store = listStore(listServer.getModel())
 
-      if not serverFound:
-        echo "COULDNT FIND SERVER IN CONFIG LIST"
-        return
+  if not getSelected(listServer.selection, lsServer, iterServer):
+    return EVENT_PROPAGATE
 
-      currentStellaProd = parseUri(serverConfig.stella_prod).hostname
-        # echo "SOLDIERS: ", soldiers.soldiers
-      # btnLoginCheck.connect("clicked", onBtnLoginCheckClicked, serverConfig.stella_ms)
-      var dlgLoginCode: int
-      while true:
-        dlgLoginCode = dlgLogin.run()
-        echo "dlgLoginCode: ", dlgLoginCode
-        dlgLogin.hide()
+  store.getValue(iterServer, 6, valGsIp)
+  gsIp = valGsIp.getString().parseIpAddress()
+  store.getValue(iterServer, 7, valGsPort)
+  gsPort = Port(valGsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
+  store.getValue(iterServer, 8, valMsName)
+  msName = valMsName.getString()
+  store.getValue(iterServer, 5, valGsMod)
+  gsMod = valGsMod.getString()
+  store.getValue(iterServer, 9, valMsPort)
+  msPort = Port(valMsPort.getUint())  # TODO: getUInt returns an int, but should return an uint
 
-        if dlgLoginCode != 1:
-          return EVENT_PROPAGATE
+  var serverFound: bool = false
+  for sc in serverConfigs:
+    if sc.server_name == msName:
+      serverConfig = sc
+      serverFound = true
+      break
 
-        backupOpenSpyIfExists()
-        patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(serverConfig))
-        var options: BF2142Options
-        options.modPath = some("mods/" & gsMod)
-        options.menu = some(true)
-        options.fullscreen = some(false) # TODO
-        options.szx = some(800.uint16) # TODO
-        options.szy = some(600.uint16) # TODO
-        options.widescreen = some(true) # TODO
-        options.eaAccountName = some(txtLoginUsername.text)
-        options.eaAccountPassword = some(txtLoginPassword.text)
-        options.soldierName = listLoginSoldiers.selectedSoldier
-        options.joinServer = some(gsIp)
-        options.port = some(gsPort)
-        txtLoginUsername.text = ""
-        txtLoginPassword.text = ""
-        discard startBF2142(options)
-        return EVENT_PROPAGATE
-  else:
-    discard
+  if not serverFound:
+    echo "COULDNT FIND SERVER IN CONFIG LIST"
+    return EVENT_PROPAGATE
+
+  currentStellaProd = parseUri(serverConfig.stella_prod).hostname
+  wndLogin.show()
+
   return EVENT_PROPAGATE
-
 
 proc onApplicationActivate(application: Application) =
   let builder = newBuilder()
@@ -2469,7 +2558,7 @@ proc onApplicationActivate(application: Application) =
   listPlayerInfo2 = builder.getTreeView("listPlayerInfo2")
   lblTeam1 = builder.getLabel("lblTeam1")
   lblTeam2 = builder.getLabel("lblTeam2")
-  dlgLogin = builder.getDialog("dlgLogin")
+  wndLogin = builder.getWindow("wndLogin")
   lblLoginStellaServer = builder.getLabel("lblLoginStellaServer")
   txtLoginUsername = builder.getEntry("txtLoginUsername")
   txtLoginPassword = builder.getEntry("txtLoginPassword")
