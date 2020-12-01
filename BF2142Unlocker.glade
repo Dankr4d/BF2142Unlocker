@@ -1,7 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.1 -->
+<!-- Generated with glade 3.38.1 
+
+The MIT License (MIT)
+
+Copyright (c) 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Author: Dankr4d
+
+-->
 <interface>
-  <requires lib="gtk+" version="3.20"/>
+  <requires lib="gtk+" version="3.24"/>
+  <!-- interface-license-type mit -->
+  <!-- interface-name BF2142Unlocker -->
+  <!-- interface-authors Dankr4d -->
   <object class="GtkAdjustment" id="adjBotAmount">
     <property name="upper">255</property>
     <property name="value">63</property>
@@ -870,8 +899,8 @@
                   <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">3</property>
-                    <property name="margin-right">3</property>
+                    <property name="margin-start">3</property>
+                    <property name="margin-end">3</property>
                     <property name="margin-top">3</property>
                     <property name="spacing">3</property>
                     <child>
@@ -882,95 +911,92 @@
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
-                          <object class="GtkAlignment">
+                          <!-- n-columns=3 n-rows=3 -->
+                          <object class="GtkGrid">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="bottom-padding">5</property>
-                            <property name="left-padding">5</property>
-                            <property name="right-padding">5</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">6</property>
+                            <property name="margin-top">3</property>
+                            <property name="margin-bottom">3</property>
+                            <property name="row-spacing">3</property>
+                            <property name="column-spacing">3</property>
                             <child>
-                              <!-- n-columns=3 n-rows=3 -->
-                              <object class="GtkGrid">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="row-spacing">3</property>
-                                <property name="column-spacing">3</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_IP_ADDRESS</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_AUTO_JOIN_SERVER</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkEntry" id="txtIpAddress">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkCheckButton" id="chbtnAutoJoin">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
-                                    <property name="use-stock">True</property>
-                                    <property name="draw-indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkButton" id="btnJoin">
-                                    <property name="label" translatable="yes">JOIN_CONNECT</property>
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_CONNECT_TOOLTIP</property>
-                                    <signal name="clicked" handler="onBtnJoinClicked" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">2</property>
-                                    <property name="width">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
+                                <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_IP_ADDRESS</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_AUTO_JOIN_SERVER</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="txtIpAddress">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="chbtnAutoJoin">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
+                                <property name="draw-indicator">True</property>
                                 <child>
                                   <placeholder/>
                                 </child>
                               </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btnJoin">
+                                <property name="label" translatable="yes">JOIN_CONNECT</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_CONNECT_TOOLTIP</property>
+                                <signal name="clicked" handler="onBtnJoinClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">2</property>
+                                <property name="width">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>
@@ -996,177 +1022,176 @@
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
-                          <object class="GtkAlignment">
+                          <!-- n-columns=3 n-rows=5 -->
+                          <object class="GtkGrid">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="bottom-padding">5</property>
-                            <property name="left-padding">5</property>
-                            <property name="right-padding">5</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">6</property>
+                            <property name="margin-top">3</property>
+                            <property name="margin-bottom">3</property>
+                            <property name="row-spacing">3</property>
+                            <property name="column-spacing">3</property>
                             <child>
-                              <!-- n-columns=3 n-rows=5 -->
-                              <object class="GtkGrid">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="row-spacing">3</property>
-                                <property name="column-spacing">3</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_MODS_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_MODS</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_PLAYER_NAME</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_WINDOW_MODE</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkEntry" id="txtPlayerName">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkCheckButton" id="chbtnWindowMode">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
-                                    <property name="use-stock">True</property>
-                                    <property name="draw-indicator">True</property>
-                                    <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkComboBox" id="cbxJoinMods">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="model">listStoreJoinMods</property>
-                                    <property name="has-entry">True</property>
-                                    <property name="entry-text-column">1</property>
-                                    <property name="id-column">0</property>
-                                    <child internal-child="entry">
-                                      <object class="GtkEntry">
-                                        <property name="can-focus">False</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="lblJoinResolutions">
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_RESOLUTION</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">4</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkComboBox" id="cbxJoinResolutions">
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
-                                    <property name="model">listStoreResolutions</property>
-                                    <property name="has-entry">True</property>
-                                    <property name="entry-text-column">1</property>
-                                    <property name="id-column">0</property>
-                                    <child internal-child="entry">
-                                      <object class="GtkEntry">
-                                        <property name="can-focus">False</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">4</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
-                                    <property name="label" translatable="yes">JOIN_SKIP_MOVIES</property>
-                                    <property name="xalign">0</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkCheckButton" id="chbtnSkipMovies">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
-                                    <property name="use-stock">True</property>
-                                    <property name="draw-indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
+                                <property name="tooltip-text" translatable="yes">JOIN_MODS_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_MODS</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_PLAYER_NAME</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_WINDOW_MODE</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="txtPlayerName">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="chbtnWindowMode">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
+                                <property name="draw-indicator">True</property>
+                                <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
                                 <child>
                                   <placeholder/>
                                 </child>
                               </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="cbxJoinMods">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="model">listStoreJoinMods</property>
+                                <property name="has-entry">True</property>
+                                <property name="entry-text-column">1</property>
+                                <property name="id-column">0</property>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry">
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="lblJoinResolutions">
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_RESOLUTION</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="cbxJoinResolutions">
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
+                                <property name="model">listStoreResolutions</property>
+                                <property name="has-entry">True</property>
+                                <property name="entry-text-column">1</property>
+                                <property name="id-column">0</property>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry">
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
+                                <property name="label" translatable="yes">JOIN_SKIP_MOVIES</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="chbtnSkipMovies">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
+                                <property name="draw-indicator">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>
@@ -1195,9 +1220,9 @@
                   <object class="GtkBox" id="vboxJustPlay">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">3</property>
-                    <property name="margin-right">3</property>
-                    <property name="margin-top">5</property>
+                    <property name="margin-start">3</property>
+                    <property name="margin-end">3</property>
+                    <property name="margin-top">3</property>
                     <property name="margin-bottom">3</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">2</property>
@@ -1266,261 +1291,152 @@
                     <property name="position">300</property>
                     <property name="wide-handle">True</property>
                     <child>
-                      <object class="GtkScrolledWindow">
+                      <object class="GtkBox">
                         <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="shadow-type">in</property>
+                        <property name="can-focus">False</property>
                         <child>
-                          <object class="GtkTreeView" id="listServer">
+                          <object class="GtkScrolledWindow">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="model">listStoreServer</property>
-                            <signal name="button-press-event" handler="onListServerButtonPressEvent" swapped="no"/>
-                            <signal name="cursor-changed" handler="onListServerCursorChanged" swapped="no"/>
-                            <child internal-child="selection">
-                              <object class="GtkTreeSelection"/>
-                            </child>
+                            <property name="hexpand">True</property>
+                            <property name="shadow-type">in</property>
                             <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">Name</property>
-                                <property name="sort-column-id">0</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">0</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">C</property>
-                                <property name="sort-column-id">1</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">M</property>
-                                <property name="sort-column-id">2</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">2</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">Map</property>
-                                <property name="sort-column-id">3</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">3</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">Mode</property>
-                                <property name="sort-column-id">4</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">4</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">Mod</property>
-                                <property name="sort-column-id">5</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">5</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">IP</property>
-                                <property name="sort-column-id">6</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">6</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">Port</property>
-                                <property name="sort-column-id">7</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">7</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">GPort</property>
-                                <property name="sort-column-id">10</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">9</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn">
-                                <property name="title" translatable="yes">StellaName</property>
-                                <property name="sort-column-id">8</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">8</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="resize">False</property>
-                        <property name="shrink">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkPaned">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="wide-handle">True</property>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkLabel" id="lblTeam1">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="justify">center</property>
-                                <attributes>
-                                  <attribute name="weight" value="bold"/>
-                                  <attribute name="scale" value="1.1499999999999999"/>
-                                </attributes>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScrolledWindow">
+                              <object class="GtkTreeView" id="listServer">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="shadow-type">in</property>
+                                <property name="model">listStoreServer</property>
+                                <signal name="button-press-event" handler="onListServerButtonPressEvent" swapped="no"/>
+                                <signal name="cursor-changed" handler="onListServerCursorChanged" swapped="no"/>
+                                <child internal-child="selection">
+                                  <object class="GtkTreeSelection"/>
+                                </child>
                                 <child>
-                                  <object class="GtkTreeView" id="listPlayerInfo1">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="model">listStorePlayerInfo1</property>
-                                    <property name="search-column">1</property>
-                                    <child internal-child="selection">
-                                      <object class="GtkTreeSelection"/>
-                                    </child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">Name</property>
+                                    <property name="sort-column-id">0</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Name</property>
-                                        <property name="sort-column-id">1</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">1</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">0</attribute>
+                                      </attributes>
                                     </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">C</property>
+                                    <property name="sort-column-id">1</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Score</property>
-                                        <property name="sort-column-id">2</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">2</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">1</attribute>
+                                      </attributes>
                                     </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">M</property>
+                                    <property name="sort-column-id">2</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Kills</property>
-                                        <property name="sort-column-id">3</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">3</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">2</attribute>
+                                      </attributes>
                                     </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">Map</property>
+                                    <property name="sort-column-id">3</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Deaths</property>
-                                        <property name="sort-column-id">4</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">4</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">3</attribute>
+                                      </attributes>
                                     </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">Mode</property>
+                                    <property name="sort-column-id">4</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Ping</property>
-                                        <property name="sort-column-id">5</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">5</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">4</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">Mod</property>
+                                    <property name="sort-column-id">5</property>
+                                    <child>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">5</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">IP</property>
+                                    <property name="sort-column-id">6</property>
+                                    <child>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">6</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">Port</property>
+                                    <property name="sort-column-id">7</property>
+                                    <child>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">7</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">GPort</property>
+                                    <property name="sort-column-id">10</property>
+                                    <child>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">9</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn">
+                                    <property name="title" translatable="yes">StellaName</property>
+                                    <property name="sort-column-id">8</property>
+                                    <child>
+                                      <object class="GtkCellRendererText"/>
+                                      <attributes>
+                                        <attribute name="text">8</attribute>
+                                      </attributes>
                                     </child>
                                   </object>
                                 </child>
                               </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
                             </child>
                           </object>
                           <packing>
-                            <property name="resize">False</property>
-                            <property name="shrink">True</property>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -1529,14 +1445,11 @@
                             <property name="can-focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="lblTeam2">
+                              <object class="GtkButton">
+                                <property name="label">button</property>
                                 <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="justify">center</property>
-                                <attributes>
-                                  <attribute name="weight" value="bold"/>
-                                  <attribute name="scale" value="1.1499999999999999"/>
-                                </attributes>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -1545,97 +1458,295 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkScrolledWindow">
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="resize">False</property>
+                        <property name="shrink">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkPaned">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="hexpand">True</property>
+                            <property name="wide-handle">True</property>
+                            <child>
+                              <object class="GtkBox">
                                 <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="shadow-type">in</property>
+                                <property name="can-focus">False</property>
+                                <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkTreeView" id="listPlayerInfo2">
+                                  <object class="GtkLabel" id="lblTeam1">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="justify">center</property>
+                                    <attributes>
+                                      <attribute name="weight" value="bold"/>
+                                      <attribute name="scale" value="1.1499999999999999"/>
+                                    </attributes>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <property name="model">listStorePlayerInfo2</property>
-                                    <property name="search-column">1</property>
-                                    <child internal-child="selection">
-                                      <object class="GtkTreeSelection"/>
-                                    </child>
+                                    <property name="shadow-type">in</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Name</property>
-                                        <property name="clickable">True</property>
-                                        <property name="sort-column-id">1</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">1</attribute>
-                                          </attributes>
+                                      <object class="GtkTreeView" id="listPlayerInfo1">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="model">listStorePlayerInfo1</property>
+                                        <property name="search-column">1</property>
+                                        <child internal-child="selection">
+                                          <object class="GtkTreeSelection"/>
                                         </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Score</property>
-                                        <property name="clickable">True</property>
-                                        <property name="sort-column-id">2</property>
                                         <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">2</attribute>
-                                          </attributes>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Name</property>
+                                            <property name="sort-column-id">1</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">1</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
                                         </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Kills</property>
-                                        <property name="clickable">True</property>
-                                        <property name="sort-column-id">3</property>
                                         <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">3</attribute>
-                                          </attributes>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Score</property>
+                                            <property name="sort-column-id">2</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">2</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
                                         </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Deaths</property>
-                                        <property name="clickable">True</property>
-                                        <property name="sort-column-id">4</property>
                                         <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">4</attribute>
-                                          </attributes>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Kills</property>
+                                            <property name="sort-column-id">3</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">3</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
                                         </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Ping</property>
-                                        <property name="clickable">True</property>
-                                        <property name="sort-column-id">5</property>
                                         <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">5</attribute>
-                                          </attributes>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Deaths</property>
+                                            <property name="sort-column-id">4</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">4</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Ping</property>
+                                            <property name="sort-column-id">5</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">5</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
                                         </child>
                                       </object>
                                     </child>
                                   </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
+                                <property name="resize">False</property>
+                                <property name="shrink">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkLabel" id="lblTeam2">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="justify">center</property>
+                                    <attributes>
+                                      <attribute name="weight" value="bold"/>
+                                      <attribute name="scale" value="1.1499999999999999"/>
+                                    </attributes>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="shadow-type">in</property>
+                                    <child>
+                                      <object class="GtkTreeView" id="listPlayerInfo2">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="model">listStorePlayerInfo2</property>
+                                        <property name="search-column">1</property>
+                                        <child internal-child="selection">
+                                          <object class="GtkTreeSelection"/>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Name</property>
+                                            <property name="clickable">True</property>
+                                            <property name="sort-column-id">1</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">1</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Score</property>
+                                            <property name="clickable">True</property>
+                                            <property name="sort-column-id">2</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">2</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Kills</property>
+                                            <property name="clickable">True</property>
+                                            <property name="sort-column-id">3</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">3</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Deaths</property>
+                                            <property name="clickable">True</property>
+                                            <property name="sort-column-id">4</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">4</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkTreeViewColumn">
+                                            <property name="title" translatable="yes">Ping</property>
+                                            <property name="clickable">True</property>
+                                            <property name="sort-column-id">5</property>
+                                            <child>
+                                              <object class="GtkCellRendererText"/>
+                                              <attributes>
+                                                <attribute name="text">5</attribute>
+                                              </attributes>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="resize">False</property>
+                                <property name="shrink">True</property>
                               </packing>
                             </child>
                           </object>
                           <packing>
-                            <property name="resize">False</property>
-                            <property name="shrink">True</property>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="label" translatable="yes">button</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
@@ -2482,8 +2593,8 @@
                             <property name="name">hboxTerms</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-left">3</property>
-                            <property name="margin-right">3</property>
+                            <property name="margin-start">3</property>
+                            <property name="margin-end">3</property>
                             <property name="vexpand">True</property>
                             <property name="spacing">3</property>
                             <property name="homogeneous">True</property>
@@ -2616,10 +2727,11 @@
                 <property name="orientation">vertical</property>
                 <property name="spacing">40</property>
                 <child>
-                  <!-- n-columns=3 n-rows=3 -->
+                  <!-- n-columns=3 n-rows=4 -->
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="vexpand">True</property>
                     <property name="row-spacing">3</property>
                     <property name="column-spacing">3</property>
                     <child>
@@ -2627,6 +2739,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="label" translatable="yes">UNLOCKS_SQUAD_GADGETS</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -2638,9 +2751,11 @@
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
-                        <property name="use-stock">True</property>
                         <property name="draw-indicator">True</property>
                         <signal name="toggled" handler="onChbtnUnlockSquadGadgetsToggled" swapped="no"/>
+                        <child>
+                          <placeholder/>
+                        </child>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -2648,7 +2763,42 @@
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-top">45</property>
+                        <property name="label" translatable="yes">INFO:</property>
+                        <property name="xalign">0</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                          <attribute name="underline" value="True"/>
+                          <attribute name="size" value="13000"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin-start">20</property>
+                        <property name="margin-top">5</property>
+                        <property name="label" translatable="yes">UNLOCKS_SQUAD_GADGETS_INFO</property>
+                        <property name="wrap">True</property>
+                        <property name="xalign">0</property>
+                        <attributes>
+                          <attribute name="style" value="italic"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">3</property>
+                        <property name="width">3</property>
+                      </packing>
                     </child>
                     <child>
                       <placeholder/>
@@ -2676,49 +2826,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkFrame">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label-xalign">0</property>
-                    <property name="shadow-type">none</property>
-                    <child>
-                      <object class="GtkAlignment">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="left-padding">12</property>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="margin-top">5</property>
-                            <property name="label" translatable="yes">UNLOCKS_SQUAD_GADGETS_INFO</property>
-                            <property name="wrap">True</property>
-                            <attributes>
-                              <attribute name="style" value="italic"/>
-                            </attributes>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child type="label">
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">INFO:</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="underline" value="True"/>
-                          <attribute name="size" value="13000"/>
-                        </attributes>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>

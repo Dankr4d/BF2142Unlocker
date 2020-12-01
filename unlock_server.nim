@@ -82,7 +82,7 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
 proc run*(data: tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]) =
   var server = newAsyncHttpServer()
   let port = Port(8085)
-  echo fmt"Unlock server running on {$data.ipAddress}:{$port} and waiting for clients!"
+  echo fmt"Unlock (HTTP) server listening on {$data.ipAddress}:{$port} and waiting for clients!"
   unlockAllSquadGadgets = data.unlockAllSquadGadgets
   waitFor server.serve(port, handleClient, $data.ipAddress)
 

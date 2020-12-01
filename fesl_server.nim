@@ -71,7 +71,7 @@ proc run*(ipAddress: IpAddress) {.thread.} =
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo fmt"Login server running on {$ipAddress}:{$port} and waiting for clients!"
+  echo fmt"Login (TCP) server listening on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
