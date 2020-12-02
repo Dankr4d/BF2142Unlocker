@@ -1333,6 +1333,7 @@ proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly:
   config.writeConfig(CONFIG_LOGINS_FILE_NAME)
 
 proc updateServer() =
+  listServer.clear()
   var
     valName, valCurrentPlayer, valMaxPlayer, valMap: Value
     valMode, valMod, valIp, valPort: Value
@@ -1972,8 +1973,8 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
     valPing.setUInt(gspy.player.ping[idx].int) # TODO: setUInt should take an uint param, not int
     store.setValue(iter, 5, valPing)
 
-    lblTeam1.text = gspy.team.team_t[0].toUpper()
-    lblTeam2.text = gspy.team.team_t[1].toUpper()
+  lblTeam1.text = gspy.team.team_t[0].toUpper()
+  lblTeam2.text = gspy.team.team_t[1].toUpper()
 
 
 proc onTxtLoginUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
@@ -2171,6 +2172,14 @@ proc onListServerButtonPressEvent(self: TreeView00, e: GdkEventButton): bool {.s
   wndLogin.show()
 
   return EVENT_PROPAGATE
+
+proc onBtnServerListRefreshClicked(self: Button00) {.signal.} =
+  ignoreEvents = true
+  updateServer()
+  ignoreEvents = false
+
+proc onBtnServerPlayerRefreshClicked(self: Button00) {.signal.} =
+  discard
 #
 ## Host
 proc onBtnHostClicked(self: Button00) {.signal.} =
