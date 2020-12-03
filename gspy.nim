@@ -182,7 +182,7 @@ proc sendProtocol00B(address: IpAddress, port: Port, protocol00B: Protocol00B, t
       if await withTimeout(respFuture, timeout):
         resp = await respFuture
       else:
-        echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
+        # echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
         break
     else:
       resp = await respFuture
@@ -212,7 +212,7 @@ proc sendProtocol00C(address: IpAddress, port: Port, protocol00C: Protocol00C, t
     if await withTimeout(respFuture, timeout):
       resp = await respFuture
     else:
-      echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
+      # echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
       break
   else:
     resp = await respFuture
@@ -331,7 +331,7 @@ proc parseGSpyServer(data: string, server: var GSpyServer, pos: var int) =
 
 proc parseList[T](data: string, pos: var int): seq[T] =
   if data[pos .. pos + 2] == "\0\0\0": # Empty list
-    echo "EMPTY LIST!!!"
+    # echo "EMPTY LIST!!!"
     pos.inc(3)
     return
   pos.inc(2) # Skip 00 byte and offset # TODO: offset (currently ignored because the last entry isn't added)
@@ -410,15 +410,15 @@ proc parseProtocol00B(data: string, gspy: var GSpy, pos: var int) =
 
   case data[pos]:
   of char(0x0): # Server
-    echo "SERVER"
+    # echo "SERVER"
     pos.inc() # Skip server identifier byte (0x0)
     parseGSpyServer(data, gspy.server, pos)
   of char(0x1): # Player
-    echo "PLAYER"
+    # echo "PLAYER"
     pos.inc() # Skip player identifier byte (0x1)
     parseGSpyPlayer(data, gspy.player, pos)
   of char(0x2): # Team
-    echo "TEAM"
+    # echo "TEAM"
     pos.inc() # Skip team identifier byte (0x2)
     parseGSpyTeam(data, gspy.team, pos)
   else:

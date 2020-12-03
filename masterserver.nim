@@ -289,14 +289,19 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
 
 
   var buffer: ptr cuchar
-  var bufferLen: cint = BUFFER_SIZE
-  buffer = buffer.resize(bufferLen)
+  buffer = buffer.resize(BUFFER_SIZE)
+
+  # when defined(linux): # TODO: Add timeout
+  #   var tv: Timespec
+  #   tv.tv_sec = 5000.Time
+  #   tv.tv_nsec = 0
+  #   echo "setsockopt: ", setsockopt(client.getFd(), SOL_SOCKET, SO_RCVTIMEO, cast[pointer](addr(tv)), BUFFER_SIZE.SOCK_LEN)
+
 
   var len: cint
   try:
+    # Info: lowlevel recv nim function returns 0 bytes read (len) if it runs into timeout
     len = client.getFd().recv(buffer, BUFFER_SIZE, 0).cint
-    # len = client.getFd().recv(buffer, 1024, 0).cint
-    # discard client.recv(buffer, 1024, 5000)
   except TimeoutError:
     discard
 
@@ -311,7 +316,7 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
 
   ipport = cast[ptr ipport_t](enctypextmp)
 
-  echo "Server amount: ", (len/6).int
+  # echo "Server amount: ", (len/6).int
   var inAddr: InAddr
   for idx in 0..(len/6).int - 1:
     inAddr.s_addr = ipport[idx].ip
