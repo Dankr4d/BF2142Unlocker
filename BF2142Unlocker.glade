@@ -893,8 +893,6 @@ Author: Dankr4d
       <column type="gchararray"/>
       <!-- column-name GSpyPort -->
       <column type="guint"/>
-      <!-- column-name Stella -->
-      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkApplicationWindow" id="window">
@@ -1529,6 +1527,7 @@ Author: Dankr4d
                                 <child>
                                   <object class="GtkButton" id="btnServerListPlay">
                                     <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerListConnect</property>
@@ -1742,6 +1741,9 @@ Author: Dankr4d
                                             <property name="can-focus">True</property>
                                             <property name="model">listStorePlayerInfo2</property>
                                             <property name="search-column">1</property>
+                                            <child internal-child="selection">
+                                              <object class="GtkTreeSelection"/>
+                                            </child>
                                             <child>
                                               <object class="GtkTreeViewColumn">
                                                 <property name="title" translatable="yes">Name</property>
@@ -1865,6 +1867,7 @@ Author: Dankr4d
                                 <child>
                                   <object class="GtkButton" id="btnServerPlayerListRefresh">
                                     <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerPlayerRefesh</property>

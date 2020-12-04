@@ -158,7 +158,6 @@ type
     port: Port
     gspyPort: Port
     stellaName: string
-    stella: string
 
 var threadUpdateServer: system.Thread[seq[ServerConfig]]
 var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
@@ -750,7 +749,7 @@ proc selectedServer(list: TreeView): Option[Server] =
   var
     valName, valCurrentPlayer, valMaxPlayer, valMap: Value
     valMode, valMod, valIp, valPort, valGSpyPort: Value
-    valStellaName, valStella: Value
+    valStellaName: Value
   let store = listStore(list.getModel())
   var iter: TreeIter
   var ls: ListStore
@@ -768,7 +767,6 @@ proc selectedServer(list: TreeView): Option[Server] =
   store.getValue(iter, 7, valPort)
   store.getValue(iter, 9, valGSpyPort)
   store.getValue(iter, 8, valStellaName)
-  store.getValue(iter, 10, valStella)
 
   var server: Server
   server.name = valName.getString()
@@ -781,7 +779,6 @@ proc selectedServer(list: TreeView): Option[Server] =
   server.port = Port(valPort.getUint())
   server.gspyPort = Port(valGSpyPort.getUint())
   server.stellaName = valStellaName.getString()
-  server.stella = valStella.getString()
 
   return some(server)
 
@@ -1475,6 +1472,7 @@ proc updatePlayerListAsync() =
   listPlayerInfo2.clear()
   spinnerServerPlayerList1.start()
   spinnerServerPlayerList2.start()
+  btnServerListPlay.sensitive = true
   btnServerPlayerListRefresh.sensitive = false
 
   let TODO: int = 0
@@ -1491,7 +1489,7 @@ proc timerUpdateServer(TODO: int): bool =
   var
     valName, valCurrentPlayer, valMaxPlayer, valMap: Value
     valMode, valMod, valIp, valPort, valGSpyPort: Value
-    valStellaName, valStella: Value
+    valStellaName: Value
     iter: TreeIter
   let store = listStore(listServer.getModel())
   discard valName.init(g_string_get_type())
@@ -1504,7 +1502,6 @@ proc timerUpdateServer(TODO: int): bool =
   discard valPort.init(g_uint_get_type())
   discard valGSpyPort.init(g_uint_get_type())
   discard valStellaName.init(g_string_get_type())
-  discard valStella.init(g_string_get_type())
 
   for server in dat.msg:
     valName.setString(server.gspyServer.hostname)
@@ -1517,7 +1514,6 @@ proc timerUpdateServer(TODO: int): bool =
     valPort.setUInt(server.gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
     valGSpyPort.setUInt(server.port.int) # TODO: setUInt should take an uint param, not int
     valStellaName.setString(server.serverConfig.server_name)
-    valStella.setString(parseUri(server.serverConfig.stella_prod).hostname)
     store.append(iter)
     store.setValue(iter, 0, valName)
     store.setValue(iter, 1, valCurrentPlayer)
@@ -1529,42 +1525,49 @@ proc timerUpdateServer(TODO: int): bool =
     store.setValue(iter, 7, valPort)
     store.setValue(iter, 9, valGSpyPort)
     store.setValue(iter, 8, valStellaName)
-    store.setValue(iter, 10, valStella)
 
   spinnerServer.stop()
   spinnerServerPlayerList1.stop()
   spinnerServerPlayerList2.stop()
   # channelUpdateServer.close() # TODO: Crashes on second reload (in association with channelUpdateServer.open() in updateServerAsync proc)
   btnServerListRefresh.sensitive = true
-  btnServerListPlay.sensitive = true
-  btnServerPlayerListRefresh.sensitive = true
   if isServerSelected:
     # TODO: Maybe we can select the first server then this global var is obsolet.
     #       Options would be also a possibility but then we need to call get every currentServer access
     listServer.selectServer = currentServer
+    btnServerListPlay.sensitive = true
+    btnServerPlayerListRefresh.sensitive = true
     updatePlayerListAsync()
   return SOURCE_REMOVE
 
+import tables
 proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   var gslist: seq[tuple[address: IpAddress, port: Port]]
+  var gslistTmp: seq[tuple[address: IpAddress, port: Port]]
+  var serverConfigsTbl: tables.Table[string, ServerConfig] = initTable[string, ServerConfig]()
   var servers: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]
-  for serverConfig in serverConfigs:
-    gslist = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str)
-    gslist = filter(gslist, proc(gs: tuple[address: IpAddress, port: Port]): bool =
+  for idx, serverConfig in serverConfigs:
+    # TODO: Querying openspy and novgames master server takes ~500ms
+    #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
+    # TODO2: Query master servers async like in `queryServers` proc
+    gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str)
+    gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
         return false
+      serverConfigsTbl[$gs.address & $gs.port] = serverConfigs[idx]
       return true
     )
-    let serversTmp = queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
-    for server in serversTmp:
-      servers.add((
-        address: server.address,
-        port: server.port,
-        gspyServer: server.gspyServer,
-        serverConfig: serverConfig
-      ))
-
+    gslist.add(gslistTmp)
+  let serversTmp = queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
+  for server in serversTmp:
+    servers.add((
+      address: server.address,
+      port: server.port,
+      gspyServer: server.gspyServer,
+      serverConfig: serverConfigsTbl[$server.address & $server.port]
+    ))
   channelUpdateServer.send(servers)
+
 
 proc updateServerAsync() =
   # channelUpdateServer.open() # TODO: Crashes on second reload (in association with channelUpdateServer.close() in timerUpdateServer proc)
@@ -1588,7 +1591,7 @@ proc loginLogic(doNotSaveLogin: bool = false) =
   var succeed: bool = true
   if not isClientFeslConnected:
     clientFesl = net.newSocket()
-    succeed = fesl_client.connect(clientFesl, currentServer.stella, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
+    succeed = fesl_client.connect(clientFesl, parseUri(currentServerConfig.stella_prod).hostname, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
     isClientFeslConnected = succeed
   if succeed:
     succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
@@ -1598,7 +1601,7 @@ proc loginLogic(doNotSaveLogin: bool = false) =
   chbtnLoginSave.sensitive = succeed
   if succeed and not doNotSaveLogin:
     if chbtnLoginSave.active:
-      saveLogin(currentServer.stellaName, txtLoginUsername.text, txtLoginPassword.text, get(listLoginSoldiers.selectedSoldier, ""))
+      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, get(listLoginSoldiers.selectedSoldier, ""))
 ##
 
 ### Terminal
@@ -2124,9 +2127,12 @@ proc onListServerCursorChanged(self: TreeView00) {.signal.} =
   currentServer = get(listServer.selectedServer)
   isServerSelected = true
 
-  for sc in serverConfigs:
-    if sc.server_name == currentServer.stellaName:
-      currentServerConfig = sc
+  for serverConfig in serverConfigs:
+    if serverConfig.server_name == currentServer.stellaName:
+      currentServerConfig = serverConfig
+
+  btnServerListPlay.sensitive = true
+  btnServerPlayerListRefresh.sensitive = true
 
   updatePlayerListAsync()
 
@@ -2134,8 +2140,12 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   var event: EventKey = new EventKey
   event.impl = event00
   event.ignoreFinalizer = true
-  if notebook.currentPage == 1 and event.getKeyval() == KEY_F5:
-      updateServerAsync()
+  if not notebook.currentPage == 1:
+    return
+  if event.getKeyval() == KEY_F5:
+    updateServerAsync()
+  if event.getKeyval() == KEY_F6 and isServerSelected:
+    updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
   if pageNum == 1:
@@ -2163,7 +2173,7 @@ proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
   var succeed: bool = true
   if not isClientFeslConnected:
     clientFesl = net.newSocket()
-    succeed = fesl_client.connect(clientFesl, currentServer.stella, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
+    succeed = fesl_client.connect(clientFesl, parseUri(currentServerConfig.stella_prod).hostname, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
     isClientFeslConnected = succeed
   if succeed:
     succeed = clientFesl.createAccount(txtLoginUsername.text, txtLoginPassword.text)
@@ -2174,7 +2184,7 @@ proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
   chbtnLoginSave.sensitive = succeed
   if succeed:
     if chbtnLoginSave.active:
-      saveLogin(currentServer.stellaName, txtLoginUsername.text, txtLoginPassword.text, "")
+      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
 
 
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
@@ -2223,7 +2233,7 @@ proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
     return # TODO: Show error message
   listLoginSoldiers.removeSelected()
   if chbtnLoginSave.active:
-    saveLogin(currentServer.stellaName, txtLoginUsername.text, txtLoginPassword.text, "")
+    saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
   btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
   if isNone(listLoginSoldiers.selectedSoldier):
     btnLoginPlay.sensitive = false
@@ -2235,7 +2245,7 @@ proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
     username = txtLoginUsername.text
     password = txtLoginPassword.text
     soldier = get(listLoginSoldiers.selectedSoldier, "")
-  saveLogin(currentServer.stellaName, username, password, soldier)
+  saveLogin(currentServerConfig.server_name, username, password, soldier)
 
 proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   # var iter: TreeIter
@@ -2244,7 +2254,7 @@ proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   btnLoginPlay.sensitive = true # isSome(soldierOpt)
   # if isSome(soldierOpt) and chbtnLoginSave.active:
     # saveLogin(serverConfig.server_name, "", "", get(soldierOpt), true)
-  saveLogin(currentServer.stellaName, "", "", get(listLoginSoldiers.selectedSoldier), true)
+  saveLogin(currentServerConfig.server_name, "", "", get(listLoginSoldiers.selectedSoldier), true)
   return EVENT_PROPAGATE
 
 proc onWndLoginShow(self: gtk.Window00) {.signal.} =
@@ -2296,12 +2306,10 @@ proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00):
   return EVENT_PROPAGATE
 
 proc onBtnServerListRefreshClicked(self: Button00) {.signal.} =
-  # ignoreEvents = true
   updateServerAsync()
-  # ignoreEvents = false
 
 proc onBtnServerPlayerRefreshClicked(self: Button00) {.signal.} =
-  discard
+  updatePlayerListAsync()
 #
 ## Host
 proc onBtnHostClicked(self: Button00) {.signal.} =
