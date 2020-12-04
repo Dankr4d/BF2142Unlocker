@@ -33,6 +33,7 @@ import strhider # Simple string hide functionality with xor and base64 to hide u
 import masterserver, gspy # Required to query gamespy server and query each gamespy server (server listing)
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
+import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -161,16 +162,29 @@ type
 
 var threadUpdateServer: system.Thread[seq[ServerConfig]]
 var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
-channelUpdateServer.open() # TODO: updateServerAsync and timerUpdateServer proc
+# TODO add a boolean that indicates if the server is refreshing to prevent reloading multiple times by pressing F5 or switching tabs
+channelUpdateServer.open() # TODO: Open channel only if it's required and close afterwards
+
+type
+  ThreadLoginCreateData = object
+    socket: ptr net.Socket
+    stella: string
+    username: string
+    password: string
+    create: bool
+var threadLoginCreate: system.Thread[ThreadLoginCreateData] # Socket = ref SocketImpl
+var channelLogin: Channel[tuple[succeed: bool, soldiers: seq[string]]]
+channelLogin.open() # TODO: Open channel only if it's required and close afterwards
 
 var threadUpdatePlayerList: system.Thread[tuple[gspyIp: IpAddress, gspyPort: Port]]
 var channelUpdatePlayerList: Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]
 var timerUpdatePlayerListId: int = 0
-channelUpdatePlayerList.open() # TODO: updateServerAsync and timerUpdateServer proc
+channelUpdatePlayerList.open() # TODO: Open channel only if it's required and close afterwards
 
 var isServerSelected: bool = false
 var currentServer: Server
 var clientFesl: net.Socket
+var isClientFeslDefined: bool = false
 var isClientFeslConnected: bool = false
 var currentServerConfig: ServerConfig
 var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe remove server_name attribute from ServerConfig
@@ -289,6 +303,7 @@ var lblTeam1: Label
 var lblTeam2: Label
 var btnServerPlayerListRefresh: Button
 var wndLogin: gtk.Window
+var spinnerLogin: Spinner
 var lblLoginStellaName: Label
 var lblLoginGameServerName: Label
 var txtLoginUsername: Entry
@@ -1482,8 +1497,8 @@ proc updatePlayerListAsync() =
   threadUpdatePlayerList.createThread(threadUpdatePlayerListProc, (currentServer.ip, currentServer.gspyPort))
 
 proc timerUpdateServer(TODO: int): bool =
-  var dat: tuple[dataAvailable: bool, msg: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]] = channelUpdateServer.tryRecv()
-  if not dat.dataAvailable:
+  var data: tuple[dataAvailable: bool, msg: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]] = channelUpdateServer.tryRecv()
+  if not data.dataAvailable:
     return SOURCE_CONTINUE
 
   var
@@ -1503,7 +1518,7 @@ proc timerUpdateServer(TODO: int): bool =
   discard valGSpyPort.init(g_uint_get_type())
   discard valStellaName.init(g_string_get_type())
 
-  for server in dat.msg:
+  for server in data.msg:
     valName.setString(server.gspyServer.hostname)
     valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
     valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
@@ -1540,7 +1555,6 @@ proc timerUpdateServer(TODO: int): bool =
     updatePlayerListAsync()
   return SOURCE_REMOVE
 
-import tables
 proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   var gslist: seq[tuple[address: IpAddress, port: Port]]
   var gslistTmp: seq[tuple[address: IpAddress, port: Port]]
@@ -1568,7 +1582,6 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
     ))
   channelUpdateServer.send(servers)
 
-
 proc updateServerAsync() =
   # channelUpdateServer.open() # TODO: Crashes on second reload (in association with channelUpdateServer.close() in timerUpdateServer proc)
   ignoreEvents = true
@@ -1577,8 +1590,6 @@ proc updateServerAsync() =
   listPlayerInfo2.clear()
   ignoreEvents = false
   spinnerServer.start()
-  # spinnerServerPlayerList1.start()
-  # spinnerServerPlayerList2.start()
   btnServerListRefresh.sensitive = false
   btnServerListPlay.sensitive = false
   btnServerPlayerListRefresh.sensitive = false
@@ -1586,22 +1597,56 @@ proc updateServerAsync() =
   discard timeoutAdd(250, timerUpdateServer, TODO)
   threadUpdateServer.createThread(threadUpdateServerProc, serverConfigs)
 
-proc loginLogic(doNotSaveLogin: bool = false) =
-  listLoginSoldiers.clear()
-  var succeed: bool = true
+proc timerLogin(save: bool): bool =
+  var data: tuple[dataAvailable: bool, msg: tuple[succeed: bool, soldiers: seq[string]]] = channelLogin.tryRecv()
+  if not data.dataAvailable:
+    return SOURCE_CONTINUE
+
+  if data.msg.succeed and save: # TODO: Move this to btnLoginCheckClick
+    saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "") # , get(listLoginSoldiers.selectedSoldier, ""))
+
+  btnLoginSoldierAdd.sensitive = data.msg.succeed
+  chbtnLoginSave.sensitive = data.msg.succeed
+  listLoginSoldiers.soldiers = data.msg.soldiers
+  btnLoginSoldierDelete.sensitive = data.msg.soldiers.len > 0
+  wndLogin.sensitive = true
+  spinnerLogin.stop()
+
+  return SOURCE_REMOVE
+
+proc threadLoginCreateProc(data: ThreadLoginCreateData) {.thread.} = # TODO: isClientFeslConnected and socket
   if not isClientFeslConnected:
+    if not fesl_client.connect(data.socket[], data.stella, Port(18300)): # TODO: Show error message # TODO: fesl_client should raise an exception
+      channelLogin.send((false, @[]))
+      return
+    isClientFeslConnected = true
+  if data.create:
+    if not data.socket[].createAccount(data.username, data.password):
+      channelLogin.send((false, @[]))
+      return
+  if not data.socket[].login(data.username, data.password): # TODO: Show error message # TODO: fesl_client should raise an exception
+    channelLogin.send((false, @[]))
+    return
+  let soldiers: seq[string] = data.socket[].soldiers() # TODO: fesl_client should raise an exception
+  channelLogin.send((true, soldiers))
+
+proc loginCreateAsync(create, save: bool) =
+  ignoreEvents = true
+  listLoginSoldiers.clear()
+  ignoreEvents = false
+  spinnerLogin.start()
+  wndLogin.sensitive = false
+  if not isClientFeslDefined:
     clientFesl = net.newSocket()
-    succeed = fesl_client.connect(clientFesl, parseUri(currentServerConfig.stella_prod).hostname, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
-    isClientFeslConnected = succeed
-  if succeed:
-    succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
-  listLoginSoldiers.soldiers = clientFesl.soldiers() # TODO: fesl_client should raise an exception
-  btnLoginSoldierAdd.sensitive = succeed
-  btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
-  chbtnLoginSave.sensitive = succeed
-  if succeed and not doNotSaveLogin:
-    if chbtnLoginSave.active:
-      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, get(listLoginSoldiers.selectedSoldier, ""))
+    isClientFeslDefined = true
+  discard timeoutAdd(250, timerLogin, save)
+  var data: ThreadLoginCreateData
+  data.socket = addr(clientFesl)
+  data.stella = parseUri(currentServerConfig.stella_prod).hostname
+  data.username = txtLoginUsername.text
+  data.password = txtLoginPassword.text
+  data.create = create
+  threadLoginCreate.createThread(threadLoginCreateProc, data)
 ##
 
 ### Terminal
@@ -2142,9 +2187,9 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   event.ignoreFinalizer = true
   if not notebook.currentPage == 1:
     return
-  if event.getKeyval() == KEY_F5:
+  if event.getKeyval() == KEY_F5: # TODO: Add tooltip info
     updateServerAsync()
-  if event.getKeyval() == KEY_F6 and isServerSelected:
+  if event.getKeyval() == KEY_F6 and isServerSelected: # TODO: Add tooltip info
     updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
@@ -2166,26 +2211,15 @@ proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen
 
 proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
   ignoreEvents = true
-  loginLogic()
+  loginCreateAsync(false, chbtnLoginSave.active)
   ignoreEvents = false
 
 proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
-  var succeed: bool = true
-  if not isClientFeslConnected:
+  if not isClientFeslDefined:
     clientFesl = net.newSocket()
-    succeed = fesl_client.connect(clientFesl, parseUri(currentServerConfig.stella_prod).hostname, Port(18300)) # TODO: Show error message # TODO: fesl_client should raise an exception
-    isClientFeslConnected = succeed
-  if succeed:
-    succeed = clientFesl.createAccount(txtLoginUsername.text, txtLoginPassword.text)
-  if succeed:
-    succeed = clientFesl.login(txtLoginUsername.text, txtLoginPassword.text) # TODO: Show error message # TODO: fesl_client should raise an exception
-  btnLoginSoldierAdd.sensitive = succeed
-  btnLoginSoldierDelete.sensitive = false
-  chbtnLoginSave.sensitive = succeed
-  if succeed:
-    if chbtnLoginSave.active:
-      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
-
+    isClientFeslDefined = true
+  loginCreateAsync(true, chbtnLoginSave.active)
+  btnLoginPlay.sensitive = false
 
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   let username: string = txtLoginUsername.text
@@ -2269,9 +2303,9 @@ proc onWndLoginShow(self: gtk.Window00) {.signal.} =
     txtLoginUsername.text = loginTpl.username
     txtLoginPassword.text = loginTpl.password
     chbtnLoginSave.active = true
-    loginLogic(doNotSaveLogin = true)
-    listLoginSoldiers.selectedSoldier = loginTpl.soldier
-    btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier=` should raise an exception
+    loginCreateAsync(false, false)
+    listLoginSoldiers.selectedSoldier = loginTpl.soldier # TODO: `selectedSoldier=` should raise an exception
+    btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception
     ignoreEvents = false
     return
 
@@ -2292,6 +2326,7 @@ proc onWndLoginHide(self: gtk.Window00) {.signal.} =
   txtLoginUsername.text = ""
   txtLoginPassword.text = ""
   clientFesl.close()
+  isClientFeslDefined = false
   isClientFeslConnected = false
 
 proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =
@@ -2745,6 +2780,7 @@ proc onApplicationActivate(application: Application) =
   lblTeam2 = builder.getLabel("lblTeam2")
   btnServerPlayerListRefresh = builder.getButton("btnServerPlayerListRefresh")
   wndLogin = builder.getWindow("wndLogin")
+  spinnerLogin = builder.getSpinner("spinnerLogin")
   lblLoginStellaName = builder.getLabel("lblLoginStellaName")
   lblLoginGameServerName = builder.getLabel("lblLoginGameServerName")
   txtLoginUsername = builder.getEntry("txtLoginUsername")
