@@ -704,12 +704,15 @@ proc listStore(o: gobject.Object): gtk.ListStore =
   cast[gtk.ListStore](o)
 
 proc clear(list: TreeView) =
+  ignoreEvents = true
   var
     iter: TreeIter
   let store = listStore(list.getModel())
   if not store.getIterFirst(iter):
+    ignoreEvents = false
     return
   clear(store)
+  ignoreEvents = false
 
 proc appendMap(list: TreeView, mapName, mapMode: string, mapSize: int) =
   var
@@ -832,6 +835,7 @@ proc selectedSoldier(list: TreeView): Option[string] =
   none(string)
 
 proc `selectedSoldier=`(list: TreeView, soldier: string) =
+  ignoreEvents = true
   var iter: TreeIter
   let store = listStore(list.getModel())
   var whileCond: bool = store.getIterFirst(iter)
@@ -841,11 +845,14 @@ proc `selectedSoldier=`(list: TreeView, soldier: string) =
     if valSoldier.getString() == soldier:
       list.selection.selectIter(iter)
       list.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
+      ignoreEvents = false
       return
     whileCond = store.iterNext(iter)
+  ignoreEvents = false
   # TODO: Raise exception if soldier doesn't exists
 
 proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
+  ignoreEvents = true
   list.clear()
   var
     valSoldier: Value
@@ -856,6 +863,7 @@ proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
     valSoldier.setString(soldier)
     store.append(iter)
     store.setValue(iter, 0, valSoldier)
+  ignoreEvents = false
 
 proc `addSoldier`(list: TreeView, soldier: string) =
   list.soldiers = @[soldier]
@@ -931,14 +939,17 @@ proc selectNext(treeView: TreeView) =
     treeView.updateLevelPreview()
 
 proc removeSelected(treeView: TreeView) =
+  ignoreEvents = true
   var
     ls: ListStore
     iter: TreeIter
   let store = listStore(treeView.getModel())
   if not store.getIterFirst(iter):
+      ignoreEvents = false
       return
   if getSelected(treeView.selection, ls, iter):
     discard store.remove(iter)
+  ignoreEvents = false
 
 iterator maps(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
   var
@@ -1589,11 +1600,9 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
 
 proc updateServerAsync() =
   # channelUpdateServer.open() # TODO: Crashes on second reload (in association with channelUpdateServer.close() in timerUpdateServer proc)
-  ignoreEvents = true
   listServer.clear()
   listPlayerInfo1.clear()
   listPlayerInfo2.clear()
-  ignoreEvents = false
   spinnerServer.start()
   btnServerListRefresh.sensitive = false
   btnServerListPlay.sensitive = false
@@ -1612,12 +1621,10 @@ proc timerLogin(TODO: int): bool =
 
   btnLoginSoldierAdd.sensitive = isNone(data.msg.ex)
   chbtnLoginSave.sensitive = isNone(data.msg.ex)
-  ignoreEvents = true
   if isNone(data.msg.ex):
     listLoginSoldiers.soldiers = data.msg.soldiers
     if isSome(data.msg.soldier):
       listLoginSoldiers.selectedSoldier = get(data.msg.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
-    ignoreEvents = false
     let isSoldierSelected: bool = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
     btnLoginPlay.sensitive = isSoldierSelected
     btnLoginSoldierDelete.sensitive = isSoldierSelected
@@ -1649,9 +1656,7 @@ proc threadLoginCreateProc(data: ThreadLoginCreateData) {.thread.} = # TODO: isC
     channelLogin.send((some(ex), false, @[], none(string)))
 
 proc loginCreateAsync(create, save: bool, soldier: Option[string] = none(string)) =
-  ignoreEvents = true
   listLoginSoldiers.clear()
-  ignoreEvents = false
   spinnerLogin.start()
   wndLogin.sensitive = false
   if not isClientFeslDefined:
@@ -2231,9 +2236,7 @@ proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen
     txtLoginAddSoldierName.signalStopEmissionByName("insert-text")
 
 proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
-  ignoreEvents = true
   loginCreateAsync(false, chbtnLoginSave.active)
-  ignoreEvents = false
 
 proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
   if not isClientFeslDefined:
@@ -2272,30 +2275,24 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
   dlgLoginAddSoldier.hide()
   if dlgLoginAddSoldierCode != 1:
     return # User closed dialog
-  ignoreEvents = true
   try:
     clientFesl.addSoldier(txtLoginAddSoldierName.text)
   except FeslException as ex:
-    ignoreEvents = false
     return # TODO: Show error message
   listLoginSoldiers.soldiers = clientFesl.soldiers # Some server accept more then 4 soldiers, some does too but don't send them
   btnLoginSoldierDelete.sensitive = true
   txtLoginAddSoldierName.text = ""
-  ignoreEvents = false
 
 proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
-  ignoreEvents = true
   try:
     clientFesl.delSoldier(get(listLoginSoldiers.selectedSoldier))
   except FeslException as ex:
-    ignoreEvents = false
     return # TODO: Show error message
   listLoginSoldiers.removeSelected()
   if chbtnLoginSave.active:
     saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
   btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
   btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier)
-  ignoreEvents = false
 
 proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
   var username, password, soldier: string
@@ -2316,30 +2313,29 @@ proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   return EVENT_PROPAGATE
 
 proc onWndLoginShow(self: gtk.Window00) {.signal.} =
-  ignoreEvents = true
-
   lblLoginStellaName.text = currentServer.stellaName
   lblLoginGameServerName.text = currentServer.name
 
   let loginTplOpt: Option[tuple[username, password, soldier: string]] = getLogin(currentServerConfig.server_name)
   if loginTplOpt.isSome:
     let loginTpl: tuple[username, password, soldier: string] = get(loginTplOpt)
+    ignoreEvents = true
     txtLoginUsername.text = loginTpl.username
     txtLoginPassword.text = loginTpl.password
     chbtnLoginSave.active = true
-    echo "loginTpl.soldier: ", loginTpl.soldier
-    loginCreateAsync(false, false, some(loginTpl.soldier))
     ignoreEvents = false
+    loginCreateAsync(false, false, some(loginTpl.soldier))
     return
 
   listLoginSoldiers.clear()
+  ignoreEvents = true
   chbtnLoginSave.active = false
+  ignoreEvents = false
 
   btnLoginSoldierAdd.sensitive = false
   btnLoginSoldierDelete.sensitive = false
   chbtnLoginSave.sensitive = false
   btnLoginPlay.sensitive = false
-  ignoreEvents = false
 
 proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
   wndLogin.hide()
@@ -2529,10 +2525,13 @@ proc setBF2142ServerPath(path: string) =
   updatePathes()
   loadSelectableMapList()
   if not loadMapList():
+    ignoreEvents = false
     return
   if not loadServerSettings():
+    ignoreEvents = false
     return
   if not loadAiSettings():
+    ignoreEvents = false
     return
   ignoreEvents = false
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
