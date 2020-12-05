@@ -385,7 +385,7 @@ proc parseData*(data: string): Table[string, string] =
     result = parseData(base64.decode(result["data"]))
 
 proc send*(client: Socket, data: EaMessageType, id: uint8) =
-  echo "SEND: ", repr data.serialize(id)
+  # echo "SEND: ", repr data.serialize(id)
   net.send(client, data.serialize(id))
 
 import os # TODO: Outsource this function (it's required for server and client)
@@ -399,9 +399,9 @@ proc pingInterval*(data: tuple[client: Socket, channelKillThread: ptr Channel[vo
 proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): bool =
   var prefix: string
   var length: uint32
-  if socket.recv(prefix, MESSAGE_PREFIX_LEN, timeout) == 0:
+  if socket.recv(prefix, MESSAGE_PREFIX_LEN, timeout) == 0: # TODO: Can throw OSError
     return false
-  echo "RECV.PREFIX: ", repr prefix
+  # echo "RECV.PREFIX: ", repr prefix
   if prefix.len == 0:
     return false
   id = uint8(prefix[7])
@@ -409,7 +409,7 @@ proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): 
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 2]) shl 8) or
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 3]) shl 16) or
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 4]) shl 24)
-  if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0:
+  if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0: # TODO: Can throw OSError
     return false
-  echo "RECV.DATA: ", repr data
+  # echo "RECV.DATA: ", repr data
   return true

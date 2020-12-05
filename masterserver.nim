@@ -266,8 +266,19 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   var validate: ptr cuchar # Random id on russian server because there's no encryption
   validate = validate.resize(8)
   discard enctypex_decoder_rand_validate(validate)
-  var filter: ptr uint8 = cast[ptr uint8]("")
-  var enctypex_query: ptr uint8 = cast[ptr uint8]("")
+
+  var filterEmpty: uint8 = 0
+  var filter: ptr uint8 = cast[ptr uint8](addr(filterEmpty))
+  # var filterCstr: cstring = "" # TODO: Doesn't work, why?
+  # var filter: ptr uint8 = cast[ptr uint8](addr(filterCstr)) # TODO: Doesn't work, why?
+  # echo repr cast[ptr cuchar](filter)
+
+  var enctypex_queryEmpty: uint8 = 0
+  var enctypex_query: ptr uint8 = cast[ptr uint8](addr(enctypex_queryEmpty))
+  # var enctypex_queryCstr: cstring = "" # TODO: Doesn't work, why?
+  # var enctypex_query: ptr uint8 = cast[ptr uint8](addr(enctypex_queryCstr)) # TODO: Doesn't work, why?
+  # echo repr cast[ptr cuchar](enctypex_query)
+
   var enctypex_type: cint = 1
 
   # echo "Gamename: ", cast[ptr cuchar](msgamename)

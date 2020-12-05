@@ -9,7 +9,7 @@ bin           = @[""]
 
 ### Dependencies
 requires "nim >= 1.2.6"
-requires "gintro >= 0.8.1"
+requires "gintro >= 0.8.3"
 requires "winim >= 3.4.0"
 when defined(windows):
   requires "winregistry >= 0.2.1"
