@@ -2541,9 +2541,7 @@ proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00):
   event.ignoreFinalizer = true
   if event.eventType != EventType.doubleButtonPress:
     return
-
   wndLogin.show()
-
   return EVENT_PROPAGATE
 
 proc onBtnServerListRefreshClicked(self: Button00) {.signal.} =
