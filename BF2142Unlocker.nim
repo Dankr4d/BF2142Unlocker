@@ -213,10 +213,10 @@ proc copyInto(timerData: var TimerFeslData, threadData: ThreadFeslData) =
   of FeslCommand.Create:
     timerData.command = FeslCommand.Create
     # timerData.create = TimerFeslCreateData()
-    timerData.create.stella = threadData.login.stella
-    timerData.create.username = threadData.login.username
-    timerData.create.password = threadData.login.password
-    timerData.create.save = threadData.login.save
+    timerData.create.stella = threadData.create.stella
+    timerData.create.username = threadData.create.username
+    timerData.create.password = threadData.create.password
+    timerData.create.save = threadData.create.save
   of FeslCommand.Login:
     timerData.command = FeslCommand.Login
     # timerData.login = TimerFeslLoginData()
@@ -636,6 +636,10 @@ proc isAlphaNumeric(str: string): bool =
     if not isAlphaNumeric(ch):
       return false
   return true
+
+proc validateSoldier(soldier: string): bool =
+  let soldierRegex: regex.Regex = re"""^([[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{3}[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@\#\-+]{0,11}|[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{0,14})$"""
+  return match(soldier, soldierRegex)
 
 proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
@@ -1680,13 +1684,14 @@ proc timerFesl(TODO: int): bool =
 
   let data: TimerFeslData = channelFeslTimer.recv()
 
+
   case data.command:
   of FeslCommand.Create:
-    if data.login.save and isNone(data.ex):
+    if data.create.save and isNone(data.ex):
       saveLogin(currentServerConfig.server_name, data.create.username, data.create.password, "")
     btnLoginSoldierAdd.sensitive = isNone(data.ex)
-    btnLoginPlay.sensitive = false
     btnLoginSoldierDelete.sensitive = false
+    btnLoginPlay.sensitive = false
     wndLogin.sensitive = true
     spinnerLogin.stop()
   of FeslCommand.Login:
@@ -1809,7 +1814,7 @@ proc createAsync(save: bool) =
   spinnerLogin.start()
   wndLogin.sensitive = false
   var data: ThreadFeslData
-  data.command = FeslCommand.Login
+  data.command = FeslCommand.Create
   var createData: ThreadFeslCreateData
   createData.stella = parseUri(currentServerConfig.stella_prod).hostname
   createData.username = txtLoginUsername.text
@@ -2385,15 +2390,36 @@ proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool
 proc onTxtLoginUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not isAlphaNumeric($cstr):
     txtLoginUsername.signalStopEmissionByName("insert-text")
+    return
+  btnLoginCheck.sensitive = (txtLoginUsername.text & $cstr).len > 0 and txtLoginPassword.text.len > 0
+
+proc onTxtLoginUsernameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  btnLoginCheck.sensitive = (txtLoginUsername.text.len - (endPos - startPos)) > 0 and txtLoginPassword.text.len > 0
 
 proc onTxtLoginPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not isAlphaNumeric($cstr):
     txtLoginPassword.signalStopEmissionByName("insert-text")
+    return
+  btnLoginCheck.sensitive = txtLoginUsername.text.len > 0 and (txtLoginPassword.text & $cstr).len > 0
+
+proc onTxtLoginPasswordDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  btnLoginCheck.sensitive = txtLoginUsername.text.len > 0 and (txtLoginPassword.text.len - (endPos - startPos)) > 0
 
 proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
-  let soldierRegex: regex.Regex = re"""^([[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{3}[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@\#\-+]{0,11}|[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{0,14})$"""
-  if not match(txtLoginAddSoldierName.text & $cstr, soldierRegex):
+  var soldier: string
+  soldier = txtLoginAddSoldierName.text
+  soldier.insert($cstr, int(pos[]))
+  if not validateSoldier(soldier):
     txtLoginAddSoldierName.signalStopEmissionByName("insert-text")
+
+proc onTxtLoginAddSoldierNameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  var soldier: string = txtLoginAddSoldierName.text
+  soldier.delete(int(startPos), int(endPos) - 1)
+  if not validateSoldier(soldier):
+    txtLoginAddSoldierName.signalStopEmissionByName("delete-text")
+
+proc onTxtLoginAddSoldierNameChanged(self: Editable00) {.signal.} =
+  btnLoginAddSoldierOk.sensitive = txtLoginAddSoldierName.text.len >= 3
 
 proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
   loginAsync(chbtnLoginSave.active)
@@ -2494,9 +2520,9 @@ proc onWndLoginShow(self: gtk.Window00) {.signal.} =
   chbtnLoginSave.active = false
   ignoreEvents = false
 
+  btnLoginCheck.sensitive = false
   btnLoginSoldierAdd.sensitive = false
   btnLoginSoldierDelete.sensitive = false
-  chbtnLoginSave.sensitive = false
   btnLoginPlay.sensitive = false
 
 proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
