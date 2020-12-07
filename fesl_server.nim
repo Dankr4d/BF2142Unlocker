@@ -4,11 +4,19 @@ import ospaths
 import tables
 import terminal
 import strformat # Required for fmt macro
+import os
 
 proc send*(client: Socket, data: EaMessageType, id: uint8) =
   fesl.send(client, data, id)
   stdout.styledWriteLine(fgGreen, "<== ", fgCyan, "LOGIN: ", resetStyle, $data) # data.substr(txnPos, data.find({' ', '\n'}, txnPos)))
   stdout.flushFile()
+
+proc pingInterval*(data: tuple[client: Socket, channelKillThread: ptr Channel[void]]) {.thread.} =
+  while true:
+    sleep(30_000)
+    if cast[var Channel[void]](data.channelKillThread).peek() == -1:
+      return
+    data.client.send(newPing(), 0)
 
 proc handleFeslClient(client: Socket) {.thread.} =
   var prefix: string

@@ -166,17 +166,78 @@ var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyS
 channelUpdateServer.open() # TODO: Open channel only if it's required and close afterwards
 
 type
-  ThreadLoginCreateData = object
-    socket: ptr net.Socket
+  FeslCommand = enum
+    Create
+    Login
+    AddSoldier
+    DelSoldier
+  ThreadFeslCreateData = object of RootObj
     stella: string
     username: string
     password: string
-    create: bool
     save: bool
-    soldier: Option[string] # TODO: Workaround because I cannot pass an object to the timeout proc (timeoutAdd)
-var threadLoginCreate: system.Thread[ThreadLoginCreateData] # Socket = ref SocketImpl
-var channelLogin: Channel[tuple[ex: Option[FeslException], save: bool, soldiers: seq[string], soldier: Option[string]]]
-channelLogin.open() # TODO: Open channel only if it's required and close afterwards
+  ThreadFeslLoginData = object of RootObj
+    stella: string
+    username: string
+    password: string
+    save: bool
+    soldier: Option[string]
+  ThreadFeslSoldierData = object of RootObj
+    soldier: string
+  ThreadFeslData = object
+    case command: FeslCommand:
+    of Create:
+      create: ThreadFeslCreateData
+    of Login:
+      login: ThreadFeslLoginData
+    of AddSoldier, DelSoldier:
+      soldier: ThreadFeslSoldierData
+type
+  TimerFeslCreateData = object of ThreadFeslCreateData
+  TimerFeslLoginData = object of ThreadFeslLoginData
+    soldiers: seq[string]
+  TimerFeslSoldierData = object of ThreadFeslSoldierData
+    soldiers: seq[string]
+  TimerFeslData = object
+    case command: FeslCommand:
+    of Create:
+      create: TimerFeslCreateData
+    of Login:
+      login: TimerFeslLoginData
+    of AddSoldier, DelSoldier:
+      soldier: TimerFeslSoldierData
+    ex: Option[FeslException]
+
+proc copyInto(timerData: var TimerFeslData, threadData: ThreadFeslData) =
+  case threadData.command:
+  of FeslCommand.Create:
+    timerData.command = FeslCommand.Create
+    # timerData.create = TimerFeslCreateData()
+    timerData.create.stella = threadData.login.stella
+    timerData.create.username = threadData.login.username
+    timerData.create.password = threadData.login.password
+    timerData.create.save = threadData.login.save
+  of FeslCommand.Login:
+    timerData.command = FeslCommand.Login
+    # timerData.login = TimerFeslLoginData()
+    timerData.login.stella = threadData.login.stella
+    timerData.login.username = threadData.login.username
+    timerData.login.password = threadData.login.password
+    timerData.login.save = threadData.login.save
+    timerData.login.soldier = threadData.login.soldier
+  of FeslCommand.AddSoldier:
+    timerData.command = FeslCommand.AddSoldier
+    # timerData.soldier = TimerFeslSoldierData()
+    timerData.soldier.soldier = threadData.soldier.soldier
+  of FeslCommand.DelSoldier:
+    timerData.command = FeslCommand.DelSoldier
+    # timerData.soldier = TimerFeslSoldierData()
+    timerData.soldier.soldier = threadData.soldier.soldier
+
+var threadFesl: system.Thread[void]
+var channelFeslThread: Channel[ThreadFeslData]
+var channelFeslTimer: Channel[TimerFeslData]
+
 
 var threadUpdatePlayerList: system.Thread[tuple[gspyIp: IpAddress, gspyPort: Port]]
 var channelUpdatePlayerList: Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]
@@ -185,9 +246,6 @@ channelUpdatePlayerList.open() # TODO: Open channel only if it's required and cl
 
 var isServerSelected: bool = false
 var currentServer: Server
-var clientFesl: net.Socket
-var isClientFeslDefined: bool = false
-var isClientFeslConnected: bool = false
 var currentServerConfig: ServerConfig
 var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe remove server_name attribute from ServerConfig
 
@@ -311,6 +369,7 @@ var lblLoginGameServerName: Label
 var txtLoginUsername: Entry
 var txtLoginPassword: Entry
 var listLoginSoldiers: TreeView
+var spinnerLoginSoldiers: Spinner
 var btnLoginCheck: Button
 var btnLoginSoldierAdd: Button
 var btnLoginSoldierDelete: Button
@@ -865,9 +924,6 @@ proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
     store.setValue(iter, 0, valSoldier)
   ignoreEvents = false
 
-proc `addSoldier`(list: TreeView, soldier: string) =
-  list.soldiers = @[soldier]
-
 proc hasEntries(treeView: TreeView): bool =
   var
     iter: TreeIter
@@ -929,14 +985,16 @@ proc updateLevelPreview(treeView: TreeView) =
   updateLevelPreview(mapName, mapMode, mapSize)
 
 proc selectNext(treeView: TreeView) =
+  ignoreEvents = true
   var iter: TreeIter
   var store: ListStore = listStore(treeView.getModel())
   if not treeView.selection.getSelected(store, iter):
+    ignoreEvents = false
     return
   if store.iterNext(iter):
     treeView.selection.selectIter(iter)
     treeView.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
-    treeView.updateLevelPreview()
+  ignoreEvents = false
 
 proc removeSelected(treeView: TreeView) =
   ignoreEvents = true
@@ -1410,7 +1468,7 @@ proc loadServerConfig() =
   close(p)
   echo serverConfigs
 
-proc getLogin(stellaName: string): Option[tuple[username, password, soldier: string]] =
+proc getLogin(stellaName: string): Option[tuple[username, password: string, soldier: Option[string]]] =
   var config: Config
   if not fileExists(CONFIG_LOGINS_FILE_NAME):
     config = newConfig()
@@ -1420,8 +1478,8 @@ proc getLogin(stellaName: string): Option[tuple[username, password, soldier: str
   let password = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_PASSWORD))
   let soldier = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_SOLDIER))
   if username != "" and password != "":
-    return some((username, password, soldier))
-  return none(tuple[username, password, soldier: string])
+    return some((username, password, if soldier.len > 0: some(soldier) else: none(string)))
+  return none(tuple[username, password: string, soldier: Option[string]])
 
 proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly: bool = false) =
   var config: Config
@@ -1611,68 +1669,169 @@ proc updateServerAsync() =
   discard timeoutAdd(250, timerUpdateServer, TODO)
   threadUpdateServer.createThread(threadUpdateServerProc, serverConfigs)
 
-proc timerLogin(TODO: int): bool =
-  var data: tuple[dataAvailable: bool, msg: tuple[ex: Option[FeslException], save: bool, soldiers: seq[string], soldier: Option[string]]] = channelLogin.tryRecv()
-  if not data.dataAvailable:
-    return SOURCE_CONTINUE
 
-  if data.msg.save and isNone(data.msg.ex): # TODO: Move this to btnLoginCheckClick
-    saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, get(data.msg.soldier, ""))
+proc timerFesl(TODO: int): bool =
+  let msgAmount: int = channelFeslTimer.peek()
 
-  btnLoginSoldierAdd.sensitive = isNone(data.msg.ex)
-  chbtnLoginSave.sensitive = isNone(data.msg.ex)
-  if isNone(data.msg.ex):
-    listLoginSoldiers.soldiers = data.msg.soldiers
-    if isSome(data.msg.soldier):
-      listLoginSoldiers.selectedSoldier = get(data.msg.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
-    let isSoldierSelected: bool = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
-    btnLoginPlay.sensitive = isSoldierSelected
-    btnLoginSoldierDelete.sensitive = isSoldierSelected
-  else:
+  if msgAmount == -1:
+    return SOURCE_REMOVE # Channel closed, stop timer
+  elif msgAmount == 0:
+    return SOURCE_CONTINUE # No data to process
+
+  let data: TimerFeslData = channelFeslTimer.recv()
+
+  case data.command:
+  of FeslCommand.Create:
+    if data.login.save and isNone(data.ex):
+      saveLogin(currentServerConfig.server_name, data.create.username, data.create.password, "")
+    btnLoginSoldierAdd.sensitive = isNone(data.ex)
     btnLoginPlay.sensitive = false
     btnLoginSoldierDelete.sensitive = false
+    wndLogin.sensitive = true
+    spinnerLogin.stop()
+  of FeslCommand.Login:
+    if data.login.save and isNone(data.ex):
+      saveLogin(currentServerConfig.server_name, data.login.username, data.login.password, get(data.login.soldier, ""))
+    btnLoginSoldierAdd.sensitive = isNone(data.ex)
+    if isNone(data.ex):
+      listLoginSoldiers.soldiers = data.login.soldiers
+      if isSome(data.login.soldier):
+        listLoginSoldiers.selectedSoldier = get(data.login.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
+      let isSoldierSelected: bool = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
+      btnLoginPlay.sensitive = isSoldierSelected
+      btnLoginSoldierDelete.sensitive = isSoldierSelected
+    else:
+      btnLoginPlay.sensitive = false
+      btnLoginSoldierDelete.sensitive = false
+    wndLogin.sensitive = true
+    spinnerLogin.stop()
+  of FeslCommand.AddSoldier:
+    if isNone(data.ex):
+      listLoginSoldiers.soldiers = data.soldier.soldiers
+      listLoginSoldiers.selectedSoldier = data.soldier.soldier
+      txtLoginAddSoldierName.text = ""
+      btnLoginPlay.sensitive = true
+    btnLoginSoldierDelete.sensitive = true
+    spinnerLoginSoldiers.stop()
+    listLoginSoldiers.sensitive = true
+  of FeslCommand.DelSoldier:
+    if isNone(data.ex):
+      # listLoginSoldiers.selectNext()
+      listLoginSoldiers.removeSelected()
+    if chbtnLoginSave.active and isNone(data.ex): # TODO
+      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "") # TODO
+    btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
+    btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier)
+    spinnerLoginSoldiers.stop()
+    listLoginSoldiers.sensitive = true
 
-  wndLogin.sensitive = true
-  spinnerLogin.stop()
+  if isSome(data.ex):
+    lblLoginErrorTxn.text = $get(data.ex).exType
+    lblLoginErrorCode.text = $get(data.ex).code
+    lblLoginErrorMsg.text = $get(data.ex).msg
+  return SOURCE_CONTINUE
 
-  if isSome(data.msg.ex):
-    lblLoginErrorTxn.text = $get(data.msg.ex).exType
-    lblLoginErrorCode.text = $get(data.msg.ex).code
-    lblLoginErrorMsg.text = $get(data.msg.ex).msg
 
-  return SOURCE_REMOVE
+proc threadFeslProc() {.thread.} =
+  var socket: net.Socket = net.newSocket()
+  var isSocketConnected: bool = false
+  var threadData: ThreadFeslData
+  var timerData: TimerFeslData
+  var msgAmount: int
 
-proc threadLoginCreateProc(data: ThreadLoginCreateData) {.thread.} = # TODO: isClientFeslConnected and socket
-  try:
-    if not isClientFeslConnected:
-      fesl_client.connect(data.socket[], data.stella)
-      isClientFeslConnected = true
-    if data.create:
-      data.socket[].createAccount(data.username, data.password)
-    data.socket[].login(data.username, data.password)
-    let soldiers: seq[string] = data.socket[].soldiers()
-    channelLogin.send((none(FeslException), data.save, soldiers, data.soldier))
-  except FeslException as ex:
-    channelLogin.send((some(ex), false, @[], none(string)))
+  while true:
+    msgAmount = channelFeslThread.peek()
+    if msgAmount == -1:
+      if isSocketConnected:
+        socket.close()
+      return # Channel closed, stop thread
 
-proc loginCreateAsync(create, save: bool, soldier: Option[string] = none(string)) =
+    if msgAmount == 0:
+      if not isSocketConnected:
+        # No data and not connected, waiting for the first message send through channel
+        continue
+      # No commands in channel (channelFeslThread) and connected to server,
+      # so we're waiting for Ping packages and respond to them,
+      # to not get disconnected.
+      var dataTbl: tables.Table[string, string]
+      var data: string
+      var id: uint8
+      if not socket.recv(data, id, 500):
+        continue # No package received, continue loop
+      dataTbl = parseData(data)
+      if dataTbl["TXN"] == "Ping":
+        socket.send(newPing(), id)
+        continue # Send Ping, continue loop
+
+    threadData = channelFeslThread.recv()
+
+    copyInto(timerData, threadData)
+
+    # Copying ThreadFeslData object into TimerFeslData
+    # copyMem(addr(timerData), addr(threadData), sizeof(threadData))
+
+    try:
+      if not isSocketConnected:
+        var stella: string
+        if threadData.command == FeslCommand.Create:
+          stella = threadData.create.stella
+        elif threadData.command == FeslCommand.Login:
+          stella = threadData.login.stella
+        else:
+          raise # Create or Login command need to be send before sending other commands
+        fesl_client.connect(socket, stella)
+        isSocketConnected = true
+
+      case threadData.command:
+      of FeslCommand.Create:
+        socket.createAccount(threadData.create.username, threadData.create.password)
+        socket.login(threadData.create.username, threadData.create.password)
+        channelFeslTimer.send(timerData)
+      of FeslCommand.Login:
+        socket.login(threadData.login.username, threadData.login.password)
+        timerData.login.soldiers = socket.soldiers()
+        channelFeslTimer.send(timerData)
+      of FeslCommand.AddSoldier:
+        socket.addSoldier(threadData.soldier.soldier)
+        timerData.soldier.soldiers = socket.soldiers()
+        channelFeslTimer.send(timerData)
+      of FeslCommand.DelSoldier:
+        socket.delSoldier(threadData.soldier.soldier)
+        timerData.soldier.soldiers = socket.soldiers()
+        channelFeslTimer.send(timerData)
+
+    except FeslException as ex:
+      timerData.ex = some(ex)
+      channelFeslTimer.send(timerData)
+
+proc createAsync(save: bool) =
   listLoginSoldiers.clear()
   spinnerLogin.start()
   wndLogin.sensitive = false
-  if not isClientFeslDefined:
-    clientFesl = net.newSocket()
-    isClientFeslDefined = true
-  let TODO: int = 0
-  discard timeoutAdd(250, timerLogin, TODO)
-  var data: ThreadLoginCreateData
-  data.socket = addr(clientFesl)
-  data.stella = parseUri(currentServerConfig.stella_prod).hostname
-  data.username = txtLoginUsername.text
-  data.password = txtLoginPassword.text
-  data.create = create
-  data.save = save
-  data.soldier = soldier
-  threadLoginCreate.createThread(threadLoginCreateProc, data)
+  var data: ThreadFeslData
+  data.command = FeslCommand.Login
+  var createData: ThreadFeslCreateData
+  createData.stella = parseUri(currentServerConfig.stella_prod).hostname
+  createData.username = txtLoginUsername.text
+  createData.password = txtLoginPassword.text
+  createData.save = save
+  data.create = createData
+  channelFeslThread.send(data)
+
+proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
+  listLoginSoldiers.clear()
+  spinnerLogin.start()
+  wndLogin.sensitive = false
+  var data: ThreadFeslData
+  data.command = FeslCommand.Login
+  var loginData: ThreadFeslLoginData
+  loginData.stella = parseUri(currentServerConfig.stella_prod).hostname
+  loginData.username = txtLoginUsername.text
+  loginData.password = txtLoginPassword.text
+  loginData.save = save
+  loginData.soldier = soldier
+  data.login = loginData
+  channelFeslThread.send(data)
 ##
 
 ### Terminal
@@ -2177,6 +2336,7 @@ proc onBtnAddMapClicked(self: Button00) {.signal.} =
     return
   listSelectedMaps.appendMap(mapName, mapMode, mapSize)
   listSelectableMaps.selectNext()
+  listSelectableMaps.updateLevelPreview()
 
 proc onBtnRemoveMapClicked(self: Button00) {.signal.} =
   var mapName, mapMode: string
@@ -2236,14 +2396,10 @@ proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen
     txtLoginAddSoldierName.signalStopEmissionByName("insert-text")
 
 proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
-  loginCreateAsync(false, chbtnLoginSave.active)
+  loginAsync(chbtnLoginSave.active)
 
 proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
-  if not isClientFeslDefined:
-    clientFesl = net.newSocket()
-    isClientFeslDefined = true
-  loginCreateAsync(true, chbtnLoginSave.active)
-  btnLoginPlay.sensitive = false
+  createAsync(chbtnLoginSave.active)
 
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   let username: string = txtLoginUsername.text
@@ -2271,28 +2427,31 @@ proc onBtnLoginCancelClicked(self: Button) {.signal.} =
   wndLogin.hide()
 
 proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
+  txtLoginAddSoldierName.grabFocus()
   let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
-  dlgLoginAddSoldier.hide()
   if dlgLoginAddSoldierCode != 1:
+    dlgLoginAddSoldier.hide()
     return # User closed dialog
-  try:
-    clientFesl.addSoldier(txtLoginAddSoldierName.text)
-  except FeslException as ex:
-    return # TODO: Show error message
-  listLoginSoldiers.soldiers = clientFesl.soldiers # Some server accept more then 4 soldiers, some does too but don't send them
-  btnLoginSoldierDelete.sensitive = true
-  txtLoginAddSoldierName.text = ""
+  dlgLoginAddSoldier.hide()
+  spinnerLoginSoldiers.start()
+  listLoginSoldiers.sensitive = false
+  var data: ThreadFeslData
+  data.command = FeslCommand.AddSoldier
+  var dataSoldier: ThreadFeslSoldierData
+  dataSoldier.soldier = txtLoginAddSoldierName.text
+  data.soldier = dataSoldier
+  channelFeslThread.send(data)
+
 
 proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
-  try:
-    clientFesl.delSoldier(get(listLoginSoldiers.selectedSoldier))
-  except FeslException as ex:
-    return # TODO: Show error message
-  listLoginSoldiers.removeSelected()
-  if chbtnLoginSave.active:
-    saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "")
-  btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
-  btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier)
+  spinnerLoginSoldiers.start()
+  listLoginSoldiers.sensitive = false
+  var data: ThreadFeslData
+  data.command = FeslCommand.DelSoldier
+  var dataSoldier: ThreadFeslSoldierData
+  dataSoldier.soldier = get(listLoginSoldiers.selectedSoldier)
+  data.soldier = dataSoldier
+  channelFeslThread.send(data)
 
 proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
   var username, password, soldier: string
@@ -2303,28 +2462,31 @@ proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
   saveLogin(currentServerConfig.server_name, username, password, soldier)
 
 proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
-  # var iter: TreeIter
-  # var store: ListStore = listStore(listLoginSoldiers.model)
-  # let soldierOpt: Option[string] = listLoginSoldiers.selectedSoldier
-  btnLoginPlay.sensitive = true # isSome(soldierOpt)
   if chbtnLoginSave.active:
     saveLogin(currentServerConfig.server_name, "", "", get(listLoginSoldiers.selectedSoldier), true)
-    # saveLogin(serverConfig.server_name, "", "", get(soldierOpt), true)
+  btnLoginPlay.sensitive = true
+  btnLoginSoldierDelete.sensitive = true
   return EVENT_PROPAGATE
 
 proc onWndLoginShow(self: gtk.Window00) {.signal.} =
+  channelFeslThread.open()
+  channelFeslTimer.open()
+  let TODO: int = 0
+  discard timeoutAdd(250, timerFesl, TODO)
+  threadFesl.createThread(threadFeslProc)
+
   lblLoginStellaName.text = currentServer.stellaName
   lblLoginGameServerName.text = currentServer.name
 
-  let loginTplOpt: Option[tuple[username, password, soldier: string]] = getLogin(currentServerConfig.server_name)
+  let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.server_name)
   if loginTplOpt.isSome:
-    let loginTpl: tuple[username, password, soldier: string] = get(loginTplOpt)
+    let loginTpl: tuple[username, password: string, soldier: Option[string]] = get(loginTplOpt)
     ignoreEvents = true
     txtLoginUsername.text = loginTpl.username
     txtLoginPassword.text = loginTpl.password
     chbtnLoginSave.active = true
     ignoreEvents = false
-    loginCreateAsync(false, false, some(loginTpl.soldier))
+    loginAsync(false, loginTpl.soldier)
     return
 
   listLoginSoldiers.clear()
@@ -2344,9 +2506,8 @@ proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
 proc onWndLoginHide(self: gtk.Window00) {.signal.} =
   txtLoginUsername.text = ""
   txtLoginPassword.text = ""
-  clientFesl.close()
-  isClientFeslDefined = false
-  isClientFeslConnected = false
+  channelFeslThread.close() # Closes thread (see threadFeslProc)
+  channelFeslTimer.close() # Closes timer (see timerFesl)
 
 proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =
   var event: EventButton = new EventButton
@@ -2808,6 +2969,7 @@ proc onApplicationActivate(application: Application) =
   txtLoginUsername = builder.getEntry("txtLoginUsername")
   txtLoginPassword = builder.getEntry("txtLoginPassword")
   listLoginSoldiers = builder.getTreeView("listLoginSoldiers")
+  spinnerLoginSoldiers = builder.getSpinner("spinnerLoginSoldiers")
   btnLoginCheck = builder.getButton("btnLoginCheck")
   btnLoginSoldierAdd = builder.getButton("btnLoginSoldierAdd")
   btnLoginSoldierDelete = builder.getButton("btnLoginSoldierDelete")

@@ -5,6 +5,7 @@ import strutils
 import random # Required for randomEmail
 import sequtils # Required for randomEmail
 import base64 # Some servers are decoding there data
+export fesl
 
 randomize() # Required for randomEmail
 const CHARS_SEQ: seq[char] = toSeq({'a' .. 'z', '0' .. '9'})

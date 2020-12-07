@@ -388,18 +388,13 @@ proc send*(client: Socket, data: EaMessageType, id: uint8) =
   # echo "SEND: ", repr data.serialize(id)
   net.send(client, data.serialize(id))
 
-import os # TODO: Outsource this function (it's required for server and client)
-proc pingInterval*(data: tuple[client: Socket, channelKillThread: ptr Channel[void]]) {.thread.} =
-  while true:
-    sleep(30_000)
-    if cast[var Channel[void]](data.channelKillThread).peek() == -1: # TODO: Need to cast every loop, because cast creates a new object
-      return
-    data.client.send(newPing(), 0)
-
 proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): bool =
   var prefix: string
   var length: uint32
-  if socket.recv(prefix, MESSAGE_PREFIX_LEN, timeout) == 0: # TODO: Can throw OSError
+  try:
+    if socket.recv(prefix, MESSAGE_PREFIX_LEN, timeout) == 0: # TODO: Can throw OSError
+      return false
+  except TimeoutError:
     return false
   # echo "RECV.PREFIX: ", repr prefix
   if prefix.len == 0:
@@ -409,7 +404,10 @@ proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): 
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 2]) shl 8) or
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 3]) shl 16) or
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 4]) shl 24)
-  if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0: # TODO: Can throw OSError
+  try:
+    if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0: # TODO: Can throw OSError
+      return false
+  except TimeoutError:
     return false
   # echo "RECV.DATA: ", repr data
   return true
