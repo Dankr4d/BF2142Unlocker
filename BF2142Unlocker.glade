@@ -809,19 +809,6 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_WINDOW_MODE</property>
-                                <property name="xalign">0</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">3</property>
-                              </packing>
-                            </child>
-                            <child>
                               <object class="GtkEntry" id="txtPlayerName">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
@@ -830,23 +817,6 @@ Author: Dankr4d
                               <packing>
                                 <property name="left-attach">1</property>
                                 <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="chbtnWindowMode">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_WINDOW_MODE_TOOLTIP</property>
-                                <property name="draw-indicator">True</property>
-                                <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">3</property>
                               </packing>
                             </child>
                             <child>
@@ -869,64 +839,22 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel" id="lblJoinResolutions">
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_RESOLUTION</property>
-                                <property name="xalign">0</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">4</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
-                              <object class="GtkComboBox" id="cbxJoinResolutions">
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_RESOLUTION_TOOLTIP</property>
-                                <property name="model">listStoreResolutions</property>
-                                <property name="has-entry">True</property>
-                                <property name="entry-text-column">1</property>
-                                <property name="id-column">0</property>
-                                <child internal-child="entry">
-                                  <object class="GtkEntry">
-                                    <property name="can-focus">False</property>
-                                  </object>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">4</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_SKIP_MOVIES</property>
-                                <property name="xalign">0</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">2</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="chbtnSkipMovies">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_SKIP_MOVIES_TOOLTIP</property>
-                                <property name="draw-indicator">True</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">2</property>
-                              </packing>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                             <child>
                               <placeholder/>
@@ -1021,8 +949,8 @@ Author: Dankr4d
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">TAB_JOIN_TOOLTIP</property>
-                <property name="label" translatable="yes">TAB_JOIN</property>
+                <property name="tooltip-text" translatable="yes">TAB_QUICK_TOOLTIP</property>
+                <property name="label" translatable="yes">TAB_QUICK</property>
               </object>
               <packing>
                 <property name="tab-fill">False</property>
@@ -2716,7 +2644,7 @@ Author: Dankr4d
                 <property name="margin-bottom">3</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <!-- n-columns=3 n-rows=6 -->
+                  <!-- n-columns=3 n-rows=9 -->
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
@@ -2824,34 +2752,6 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnPatchClientMaps">
-                        <property name="label" translatable="yes">SETTINGS_COPY_MAPS_CLIENT</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="hexpand">True</property>
-                        <signal name="clicked" handler="onBtnPatchClientMapsClicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnPatchServerMaps">
-                        <property name="label" translatable="yes">SETTINGS_COPY_MAPS_SERVER</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="hexpand">True</property>
-                        <signal name="clicked" handler="onBtnPatchServerMapsClicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">5</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkButton" id="btnBF2142Path">
                         <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
@@ -2895,6 +2795,106 @@ Author: Dankr4d
                         <property name="left-attach">2</property>
                         <property name="top-attach">2</property>
                       </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                        <property name="label" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                        <property name="xalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">5</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="chbtnSkipMovies">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                        <property name="draw-indicator">True</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">5</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
+                        <property name="label" translatable="yes">SETTINGS_WINDOW_MODE</property>
+                        <property name="xalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="chbtnWindowMode">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
+                        <property name="draw-indicator">True</property>
+                        <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="lblJoinResolutions">
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
+                        <property name="label" translatable="yes">SETTINGS_RESOLUTION</property>
+                        <property name="xalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="cbxJoinResolutions">
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
+                        <property name="model">listStoreResolutions</property>
+                        <property name="has-entry">True</property>
+                        <property name="entry-text-column">1</property>
+                        <property name="id-column">0</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

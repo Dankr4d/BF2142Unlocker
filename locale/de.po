@@ -42,22 +42,22 @@ msgstr "Spielername:"
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr "Dein Spielername den du ingame siehst (Soldiername)."
 
-msgid "JOIN_SKIP_MOVIES"
+msgid "SETTINGS_SKIP_MOVIES"
 msgstr "Intro Movies überspringen:"
 
-msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Überspringt die intro Movies beim Spielstart."
 
-msgid "JOIN_WINDOW_MODE"
+msgid "SETTINGS_WINDOW_MODE"
 msgstr "Fenstermodus:"
 
-msgid "JOIN_WINDOW_MODE_TOOLTIP"
+msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Startet das Spiel im Fenstermodus."
 
-msgid "JOIN_RESOLUTION"
+msgid "SETTINGS_RESOLUTION"
 msgstr "Auflösung:"
 
-msgid "JOIN_RESOLUTION_TOOLTIP"
+msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "Die Auflösung in der das Spiel im Fenstermodus gestartet wird."
 
 msgid "JOIN_JUST_PLAY_CANCEL"
@@ -270,11 +270,11 @@ msgstr "Auswählen"
 
 # ##
 # ##### Tabs
-msgid "TAB_JOIN"
-msgstr "Verbinden"
+msgid "TAB_QUICK"
+msgstr "Quick"
 
-msgid "TAB_JOIN_TOOLTIP"
-msgstr "Einstellungen zum verbinden."
+msgid "TAB_QUICK_TOOLTIP"
+msgstr "TODO"
 
 msgid "TAB_HOST"
 msgstr "Bereitstellen"
@@ -358,15 +358,6 @@ msgstr "$# konnte nicht gefunden werden"
 
 msgid "COULD_NOT_FIND_MSG"
 msgstr "$# konnte nicht gefunden werde. Der Pfad ist falsch!"
-
-msgid "COPIED_MAPS"
-msgstr "Karten wurden kopiert"
-
-msgid "COPIED_MAPS_CLIENT"
-msgstr "Die Karten wurden erfolgreich zum client kopiert!"
-
-msgid "COPIED_MAPS_SERVER"
-msgstr "Die Karten wurden erfolgreich zum server kopiert!"
 
 msgid "SELECT_MAPS_FOLDER_CLIENT"
 msgstr "Wähle den Karten Ordner aus der zu Client kopiert werden soll"

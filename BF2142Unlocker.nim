@@ -78,8 +78,31 @@ when defined(windows):
   static:
     discard staticExec("windres.exe BF2142Unlocker.rc -O coff -o BF2142Unlocker.res")
 
-var bf2142Path: string
-var bf2142ServerPath: string
+type
+  BF2142UnlockerConfigQuick = object
+    `mod`: string
+    playername: string
+    autojoin: bool
+  BF2142UnlockerConfigHost = object
+    `mod`: string
+  BF2142UnlockerConfigUnlocks = object
+    unlockSquadGadgets: bool
+  BF2142UnlockerConfigSettings = object
+    bf2142ClientPath: string
+    when defined(linux):
+      wineprefix: string
+      startupQuery: string
+    bf2142ServerPath: string
+    windowMode: bool
+    resolution: string
+    skipMovies: bool
+  BF2142UnlockerConfig = object
+    quick: BF2142UnlockerConfigQuick
+    host: BF2142UnlockerConfigHost
+    unlocks: BF2142UnlockerConfigUnlocks
+    settings: BF2142UnlockerConfigSettings
+
+var bf2142UnlockerConfig: BF2142UnlockerConfig # TODO: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
 var documentsPath: string
 var bf2142ProfilePath: string
 var bf2142Profile0001Path: string
@@ -271,19 +294,26 @@ when defined(release):
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
 const
   CONFIG_FILE_NAME: string = "config.ini"
-  CONFIG_SECTION_GENERAL: string = "General"
-  CONFIG_SECTION_SETTINGS: string = "Settings"
+  CONFIG_SECTION_QUICK: string = "Quick"
+  CONFIG_SECTION_HOST: string = "Host"
   CONFIG_SECTION_UNLOCKS: string = "Unlocks"
-  CONFIG_KEY_BF2142_PATH: string = "bf2142_path"
-  CONFIG_KEY_BF2142_SERVER_PATH: string = "bf2142_server_path"
-  CONFIG_KEY_WINEPREFIX: string = "wineprefix"
-  CONFIG_KEY_STARTUP_QUERY: string = "startup_query"
-  CONFIG_KEY_PLAYER_NAME: string = "playername"
-  CONFIG_KEY_AUTO_JOIN: string = "autojoin"
-  CONFIG_KEY_WINDOW_MODE: string = "window_mode"
-  CONFIG_KEY_SKIP_MOVIES: string = "skip_movies"
-  CONFIG_KEY_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
-  CONFIG_KEY_RESOLUTION: string = "resolution"
+  CONFIG_SECTION_SETTINGS: string = "Settings"
+  # Quick
+  CONFIG_KEY_QUICK_AUTO_JOIN: string = "autojoin"
+  CONFIG_KEY_QUICK_MOD: string = "mod"
+  CONFIG_KEY_QUICK_PLAYER_NAME: string = "playername"
+  # Host
+  CONFIG_KEY_HOST_MOD: string = "mod"
+  # Unlocks
+  CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS: string = "unlock_squad_gadgets"
+  # Settings
+  CONFIG_KEY_SETTINGS_BF2142_PATH: string = "bf2142_path"
+  CONFIG_KEY_SETTINGS_BF2142_SERVER_PATH: string = "bf2142_server_path"
+  CONFIG_KEY_SETTINGS_WINEPREFIX: string = "wineprefix"
+  CONFIG_KEY_SETTINGS_STARTUP_QUERY: string = "startup_query"
+  CONFIG_KEY_SETTINGS_SKIP_MOVIES: string = "skip_movies"
+  CONFIG_KEY_SETTINGS_WINDOW_MODE: string = "window_mode"
+  CONFIG_KEY_SETTINGS_RESOLUTION: string = "resolution"
 
 const
   CONFIG_SERVER_FILE_NAME: string = "server.ini"
@@ -448,8 +478,6 @@ var btnWinePrefix: Button
 var txtWinePrefix: Entry
 var lblStartupQuery: Label
 var txtStartupQuery: Entry
-var btnPatchClientMaps: Button
-var btnPatchServerMaps: Button
 ##
 
 ### Exception procs # TODO: Replace tuple results with Option
@@ -583,6 +611,7 @@ proc existsOrCreateDir(dir: string): tuple[succeed: bool, exists: bool] =
 ##
 
 ### Fix procs TODO: delete later
+# TODO: Check if this counts as modified content when trying to join a server. If yes, fix invalid xml on the fly.
 const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
 const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
 const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
@@ -651,58 +680,72 @@ proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
 
-proc loadConfig() =
+
+proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
+  # TODO: Try'n catch because we parse booleans
   if not fileExists(CONFIG_FILE_NAME):
     config = newConfig()
   else:
     config = loadConfig(CONFIG_FILE_NAME)
-  bf2142Path = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH)
-  if bf2142Path != "":
-    txtBF2142Path.text = bf2142Path
-  bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH)
-  if bf2142ServerPath != "":
-    txtBF2142ServerPath.text = bf2142ServerPath
-  txtWinePrefix.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX)
+
+  # Quick
+  result.quick.autoJoin = parseBool(config.getSectionValue(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, "false"))
+  result.quick.`mod` = config.getSectionValue(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, "bf2142")
+  result.quick.playername = config.getSectionValue(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, "Player")
+
+  # Host
+  result.host.`mod` = config.getSectionValue(CONFIG_SECTION_HOST, CONFIG_KEY_HOST_MOD, "bf2142")
+
+  # Unlocks
+  result.unlocks.unlockSquadGadgets = parseBool(config.getSectionValue(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, "false"))
+
+  # Settings
+  result.settings.bf2142ClientPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH)
+  result.settings.bf2142ServerPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_SERVER_PATH)
   when defined(linux):
-    if txtWinePrefix.text != "":
+    result.settings.winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX)
+    result.settings.startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, "/usr/bin/wine")
+  result.settings.skipMovies = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, "false"))
+  result.settings.windowMode = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, "false"))
+  result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION) # TODO: Rename to windowResolution
+
+
+proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
+  # Quick
+  if not cbxJoinMods.setActiveId(config.quick.`mod`):
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxJoinMods.setActiveId("bf2142")
+  txtPlayerName.text = config.quick.playername
+  chbtnAutoJoin.active = config.quick.autoJoin
+
+  # Host
+  if not cbxHostMods.setActiveId(config.host.`mod`):
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxHostMods.setActiveId("bf2142")
+
+  # Unlocks
+  chbtnUnlockSquadGadgets.active = config.unlocks.unlockSquadGadgets
+
+  # Settings
+  txtBF2142Path.text = config.settings.bf2142ClientPath
+  txtBF2142ServerPath.text = config.settings.bf2142ServerPath
+  when defined(linux): # TODO: Do this in applyBF2142UnlockerConfig?
+    txtWinePrefix.text = config.settings.winePrefix
+    if config.settings.winePrefix != "":
       documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
   when defined(linux):
-    txtStartupQuery.text = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY)
-    if txtStartupQuery.text == "":
-      txtStartupQuery.text = "/usr/bin/wine"
-  txtPlayerName.text = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME)
-  if txtPlayerName.text == "":
-    txtPlayerName.text = "Player"
-  let autoJoinStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN)
-  if autoJoinStr != "":
-    chbtnAutoJoin.active = autoJoinStr.parseBool()
-  else:
-    chbtnAutoJoin.active = false
-  let skipMoviesStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_SKIP_MOVIES)
-  if skipMoviesStr != "":
-    chbtnSkipMovies.active = skipMoviesStr.parseBool()
-  else:
-    chbtnSkipMovies.active = false
-  let windowModeStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE)
-  if windowModeStr != "":
-    chbtnWindowMode.active = windowModeStr.parseBool()
-  else:
-    chbtnWindowMode.active = false
-  let unlockSquadGadgetsStr = config.getSectionValue(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS)
-  if unlockSquadGadgetsStr != "":
-    chbtnUnlockSquadGadgets.active = unlockSquadGadgetsStr.parseBool()
-  else:
-    chbtnUnlockSquadGadgets.active = false
-  let resolutionStr = config.getSectionValue(CONFIG_SECTION_GENERAL, CONFIG_KEY_RESOLUTION)
-  if resolutionStr != "":
-    discard cbxJoinResolutions.setActiveId(resolutionStr)
+    txtStartupQuery.text = config.settings.startupQuery
+  chbtnSkipMovies.active = config.settings.skipMovies
+  chbtnWindowMode.active = config.settings.windowMode
+  discard cbxJoinResolutions.setActiveId(config.settings.resolution)
+
 
 proc backupOpenSpyIfExists() =
-  let openspyDllPath: string = bf2142Path / OPENSPY_DLL_NAME
-  let originalRendDX9Path: string = bf2142Path / ORIGINAL_RENDDX9_DLL_NAME
+  let openspyDllPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
+  let originalRendDX9Path: string = bf2142UnlockerConfig.settings.bf2142ClientPath / ORIGINAL_RENDDX9_DLL_NAME
   if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
     return
   let openspyDllRawOpt: Option[TaintedString] = readFile(openspyDllPath)
@@ -737,8 +780,8 @@ proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedi
   dialog.destroy()
 
 proc restoreOpenSpyIfExists() =
-  let openspyDllBackupPath: string = bf2142Path / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
-  let openspyDllRestorePath: string = bf2142Path / OPENSPY_DLL_NAME
+  let openspyDllBackupPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
+  let openspyDllRestorePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
   if not fileExists(openspyDllBackupPath):
     return
   let openspyMd5RawOpt: Option[TaintedString] = readFile(openspyDllBackupPath)
@@ -1069,7 +1112,8 @@ proc loadSelectableMapList() =
       newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
 
 proc updatePathes() =
-  var currentModPath: string = bf2142ServerPath / "mods" / cbxHostMods.activeId
+  echo "cbxHostMods.activeId: ", cbxHostMods.activeId
+  var currentModPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "mods" / cbxHostMods.activeId
   currentModSettingsPath = currentModPath / "settings"
   currentServerSettingsPath = currentModSettingsPath / "serversettings.con"
   currentMapListPath = currentModSettingsPath / "maplist.con"
@@ -1309,14 +1353,13 @@ proc loadJoinMods() =
   var iter: TreeIter
   let store = listStore(cbxJoinMods.getModel())
   store.clear()
-  if bf2142Path != "":
-    for folder in walkDir(bf2142Path / "mods", true):
+  if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
+    for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
       if folder.kind == pcDir:
         valMod.setString(folder.path.toLower())
         store.append(iter)
         store.setValue(iter, 0, valMod)
         store.setValue(iter, 1, valMod)
-  discard cbxJoinMods.setActiveId("bf2142")
 
 proc loadJoinResolutions() =
   var valResolution: Value
@@ -1357,14 +1400,13 @@ proc loadHostMods() =
   var iter: TreeIter
   let store = listStore(cbxHostMods.getModel())
   store.clear()
-  if bf2142ServerPath != "":
-    for folder in walkDir(bf2142ServerPath / "mods", true):
+  if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
+    for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods", true):
       if folder.kind == pcDir:
         valMod.setString(folder.path)
         store.append(iter)
         store.setValue(iter, 0, valMod)
         store.setValue(iter, 1, valMod)
-  discard cbxHostMods.setActiveId("bf2142")
 
 proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
   # tblHostSettings.sensitive = not running
@@ -2124,24 +2166,24 @@ proc startProcess(terminal: Terminal, command: string, params: string = "",
 
 proc startBF2142Server() =
   termBF2142Server.setSizeRequest(0, 300)
-  var stupidPbSymlink: string = bf2142ServerPath / "pb"
+  var stupidPbSymlink: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "pb"
   if symlinkExists(stupidPbSymlink):
     if not removeFile(stupidPbSymlink):
       return
   when defined(linux):
-    var ldLibraryPath: string = bf2142ServerPath / "bin" / "amd-64"
+    var ldLibraryPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
     termBF2142ServerPid = termBF2142Server.startProcess(
       command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
-      workingDir = bf2142ServerPath,
+      workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
   elif defined(windows):
     termBF2142ServerPid = termBF2142Server.startProcess(
       command = BF2142_SRV_UNLOCKER_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
-      workingDir = bf2142ServerPath,
+      workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
       searchForkedProcess = true
     )
 
@@ -2211,8 +2253,8 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   when defined(linux): # TODO: Check if bf2142Path is neccessary
     let processCommand: string = command
   elif defined(windows):
-    let processCommand: string = bf2142Path & '\\' & command
-  var process: Process = startProcess(command = processCommand, workingDir = bf2142Path,
+    let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
+  var process: Process = startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )
   return true
@@ -2229,7 +2271,7 @@ proc patchAndStartLogic(): bool =
     invalidStr.add("\t* IPv6 not testes!\n") # TODO: Add ignore?
   if txtPlayerName.text == "":
     invalidStr.add("\t* You need to specify a playername with at least one character.\n")
-  if bf2142Path == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
     if txtWinePrefix.text == "":
@@ -2283,21 +2325,22 @@ proc patchAndStartLogic(): bool =
   #   return
   #
 
-  # config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_IP_ADDRESS, ipAddress)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_PLAYER_NAME, txtPlayerName.text)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_AUTO_JOIN, $chbtnAutoJoin.active)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_SKIP_MOVIES, $chbtnSkipMovies.active)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_WINDOW_MODE, $chbtnWindowMode.active)
-  config.setSectionKey(CONFIG_SECTION_GENERAL, CONFIG_KEY_RESOLUTION, cbxJoinResolutions.activeId)
+  # config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_IP_ADDRESS, ipAddress)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, cbxJoinMods.activeId)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, txtPlayerName.text)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $chbtnAutoJoin.active)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSkipMovies.active)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnWindowMode.active)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_RESOLUTION, cbxJoinResolutions.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if not fileExists(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
-    if not copyFile(bf2142Path / BF2142_EXE_NAME, bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+  if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
+    if not copyFile(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_EXE_NAME, bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
       return
-  if not hasWritePermission(bf2142Path / BF2142_UNLOCKER_EXE_NAME):
+  if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
     newInfoDialog(
       dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
-      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142Path / BF2142_UNLOCKER_EXE_NAME]
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME]
     )
     return
 
@@ -2311,7 +2354,7 @@ proc patchAndStartLogic(): bool =
   patchConfig.gamestats = ipAddress
   patchConfig.gpcm = ipAddress
   patchConfig.gpsp = ipAddress
-  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, patchConfig)
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME, patchConfig)
 
   backupOpenSpyIfExists()
 
@@ -2320,7 +2363,7 @@ proc patchAndStartLogic(): bool =
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
-  if not enableDisableIntroMovies(bf2142Path / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
+  if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
     return
 
   var options: BF2142Options
@@ -2471,7 +2514,7 @@ proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   frameLoginError.visible = false
 
-  let modPath: string = bf2142Path / "mods" / currentServer.`mod` / "TODO" # TODO: Remove TODO, just for testing
+  let modPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "TODO" # TODO: Remove TODO, just for testing
   if not dirExists(modPath):
     var uri: string
 
@@ -2497,7 +2540,7 @@ proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   let soldier: string = get(listLoginSoldiers.selectedSoldier)
 
   backupOpenSpyIfExists()
-  patchClient(bf2142Path / BF2142_UNLOCKER_EXE_NAME, PatchConfig(currentServerConfig))
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME, PatchConfig(currentServerConfig))
   saveBF2142Profile(username, soldier)
 
   var options: BF2142Options
@@ -2637,7 +2680,9 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
     return
   if not saveAiSettings():
     return
-  var serverExePath = bf2142ServerPath
+  config.setSectionKey(CONFIG_SECTION_HOST, CONFIG_KEY_HOST_MOD, cbxHostMods.activeId)
+  config.writeConfig(CONFIG_FILE_NAME)
+  var serverExePath = bf2142UnlockerConfig.settings.bf2142ServerPath
   when defined(linux):
     serverExePath = serverExePath / "bin" / "amd-64"
   if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
@@ -2725,31 +2770,31 @@ proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: 
   return (cast[ResponseType](responseId), path)
 
 proc setBF2142Path(path: string) =
-  if bf2142Path == path:
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == path:
     return
   if not fileExists(path / BF2142_EXE_NAME):
     newInfoDialog(
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_EXE_NAME],
     )
-    txtBF2142Path.text = bf2142Path
+    txtBF2142Path.text = bf2142UnlockerConfig.settings.bf2142ClientPath
     return
   vboxJoin.visible = true
   vboxHost.visible = true
   vboxUnlocks.visible = true
-  bf2142Path = path
+  bf2142UnlockerConfig.settings.bf2142ClientPath = path
   if txtBF2142Path.text != path:
     txtBF2142Path.text = path
   loadJoinMods()
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_PATH, bf2142Path)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
   when defined(linux):
-    let wineStartPos: int = bf2142Path.find(".wine")
+    let wineStartPos: int = bf2142UnlockerConfig.settings.bf2142ClientPath.find(".wine")
     var wineEndPos: int
     if wineStartPos > -1:
-      wineEndPos = bf2142Path.find(DirSep, wineStartPos) - 1
+      wineEndPos = bf2142UnlockerConfig.settings.bf2142ClientPath.find(DirSep, wineStartPos) - 1
       if txtWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
-        txtWinePrefix.text = bf2142Path.substr(0, wineEndPos)
-        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
+        txtWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
+        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
@@ -2762,7 +2807,7 @@ proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
   setBF2142Path(txtBF2142Path.text.strip())
 
 proc setBF2142ServerPath(path: string) =
-  if bf2142ServerPath == path:
+  if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
     return
   when defined(windows):
     let serverExePath: string = path / BF2142_SRV_EXE_NAME
@@ -2773,12 +2818,12 @@ proc setBF2142ServerPath(path: string) =
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_SRV_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_SRV_EXE_NAME],
     )
-    txtBF2142ServerPath.text = bf2142ServerPath
+    txtBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
     return
-  bf2142ServerPath = path
+  bf2142UnlockerConfig.settings.bf2142ServerPath = path
   if txtBF2142ServerPath.text != path:
     txtBF2142ServerPath.text = path
-  btnHost.sensitive = bf2142ServerPath != ""
+  btnHost.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
   ignoreEvents = true
   loadHostMods()
   updatePathes()
@@ -2793,7 +2838,7 @@ proc setBF2142ServerPath(path: string) =
     ignoreEvents = false
     return
   ignoreEvents = false
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_BF2142_SERVER_PATH, bf2142ServerPath)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_SERVER_PATH, bf2142UnlockerConfig.settings.bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
@@ -2809,17 +2854,17 @@ proc onBtnWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
   if responseType != ResponseType.ok:
     return
-  if bf2142ServerPath == path:
+  if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
     return
   txtWinePrefix.text = path
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_WINEPREFIX, txtWinePrefix.text)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtWinePrefix.text)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
     documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
 proc onTxtStartupQueryFocusOut(self: Entry00, event: EventFocus00): bool {.signal.} =
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_STARTUP_QUERY, txtStartupQuery.text)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, txtStartupQuery.text)
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): bool =
@@ -2859,48 +2904,6 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): boo
             if srcDescPath != dstDescPath:
               if not moveFile(srcDescPath, dstDescPath):
                 return
-
-
-proc onBtnPatchClientMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
-  let
-    response = ResponseType(responseId)
-    srcLevelPath: string = dialog.getFilename()
-    dstLevelPath: string = bf2142Path / "mods" / "bf2142" / "Levels"
-  if response == ResponseType.ok:
-    var writeSucceed: bool = copyLevels(srcLevelPath, dstLevelPath)
-    dialog.destroy()
-    if writeSucceed:
-      newInfoDialog(dgettext("gui", "COPIED_MAPS"), dgettext("gui", "COPIED_MAPS_CLIENT"))
-  else:
-    dialog.destroy()
-
-proc onBtnPatchClientMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog(dgettext("gui", "SELECT_MAPS_FOLDER_CLIENT"), nil, FileChooserAction.selectFolder)
-  discard chooser.addButton("Ok", ResponseType.ok.ord)
-  discard chooser.addButton("Cancel", ResponseType.cancel.ord)
-  chooser.connect("response", onBtnPatchClientMapsClickedResponse)
-  chooser.show()
-
-proc onBtnPatchServerMapsClickedResponse(dialog: FileChooserDialog; responseId: int) =
-  let
-    response = ResponseType(responseId)
-    srcLevelPath: string = dialog.getFilename()
-    dstLevelPath: string = bf2142ServerPath / "mods" / "bf2142" / "levels" # TODO: Set mod when selecting src folder
-  if response == ResponseType.ok:
-    var writeSucceed: bool = copyLevels(srcLevelPath = srcLevelPath, dstLevelPath = dstLevelPath, isServer = true)
-    dialog.destroy()
-    if writeSucceed:
-      loadSelectableMapList()
-      newInfoDialog(dgettext("gui", "COPIED_MAPS"), dgettext("gui", "COPIED_MAPS_SERVER"))
-  else:
-    dialog.destroy()
-
-proc onBtnPatchServerMapsClicked(self: Button00) {.signal.} =
-  let chooser = newFileChooserDialog(dgettext("gui", "SELECT_MAPS_FOLDER_SERVER"), nil, FileChooserAction.selectFolder)
-  discard chooser.addButton("Ok", ResponseType.ok.ord)
-  discard chooser.addButton("Cancel", ResponseType.cancel.ord)
-  chooser.connect("response", onBtnPatchServerMapsClickedResponse)
-  chooser.show()
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
@@ -2942,7 +2945,7 @@ proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
 #
 ## Unlocks
 proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
-  config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
+  config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
   config.writeConfig(CONFIG_FILE_NAME)
 #
 ##
@@ -3045,8 +3048,6 @@ proc onApplicationActivate(application: Application) =
   txtWinePrefix = builder.getEntry("txtWinePrefix")
   lblStartupQuery = builder.getLabel("lblStartupQuery")
   txtStartupQuery = builder.getEntry("txtStartupQuery")
-  btnPatchClientMaps = builder.getButton("btnPatchClientMaps")
-  btnPatchServerMaps = builder.getButton("btnPatchServerMaps")
 
   overlayServer = builder.getOverlay("overlayServer")
   spinnerServer = builder.getSpinner("spinnerServer")
@@ -3142,12 +3143,14 @@ proc onApplicationActivate(application: Application) =
   builder.connectSignals(cast[pointer](nil))
   window.show()
   loadJoinResolutions()
-  loadConfig()
+  bf2142UnlockerConfig = getBF2142UnlockerConfig()
+  echo "bf2142UnlockerConfig.host.`mod`: ", bf2142UnlockerConfig.host.`mod`
   loadJoinMods()
-  lblJoinResolutions.visible = chbtnWindowMode.active
-  cbxJoinResolutions.visible = chbtnWindowMode.active
   loadHostMods()
-  if bf2142ServerPath != "":
+  applyBF2142UnlockerConfig(bf2142UnlockerConfig)
+  lblJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode
+  cbxJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode
+  if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     updatePathes()
     loadSelectableMapList()
     if loadMapList() and loadServerSettings() and loadAiSettings():
@@ -3160,12 +3163,12 @@ proc onApplicationActivate(application: Application) =
     btnWinePrefix.visible = false
     lblStartupQuery.visible = false
     txtStartupQuery.visible = false
-  if bf2142Path == "":
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false
     vboxHost.visible = false
     vboxUnlocks.visible = false
-  if bf2142ServerPath == "":
+  if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
     btnHost.sensitive = false
 
   loadServerConfig()

@@ -42,22 +42,22 @@ msgstr "Player name:"
 msgid "JOIN_PLAYER_NAME_TOOLTIP"
 msgstr "Name of your Soldier that appears ingame."
 
-msgid "JOIN_SKIP_MOVIES"
+msgid "SETTINGS_SKIP_MOVIES"
 msgstr "Skip intro movies:"
 
-msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Skips the intro movies on startup."
 
-msgid "JOIN_WINDOW_MODE"
+msgid "SETTINGS_WINDOW_MODE"
 msgstr "Window mode:"
 
-msgid "JOIN_WINDOW_MODE_TOOLTIP"
+msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Starts the game in windowed mode."
 
-msgid "JOIN_RESOLUTION"
+msgid "SETTINGS_RESOLUTION"
 msgstr "Resolution:"
 
-msgid "JOIN_RESOLUTION_TOOLTIP"
+msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "The resolution the game get started in windowed mode."
 
 msgid "JOIN_JUST_PLAY_CANCEL"
@@ -274,11 +274,11 @@ msgstr "Select"
 
 # ##
 # ##### Tabs
-msgid "TAB_JOIN"
-msgstr "Join"
+msgid "TAB_QUICK"
+msgstr "Quick"
 
-msgid "TAB_JOIN_TOOLTIP"
-msgstr "Settings to join a login-server"
+msgid "TAB_QUICK_TOOLTIP"
+msgstr "TODO"
 
 msgid "TAB_HOST"
 msgstr "Host"
@@ -361,15 +361,6 @@ msgstr "Could not find $#"
 
 msgid "COULD_NOT_FIND_MSG"
 msgstr "Could not find $#. Path is invalid!"
-
-msgid "COPIED_MAPS"
-msgstr "Maps copied"
-
-msgid "COPIED_MAPS_CLIENT"
-msgstr "Copied maps to client successfully!"
-
-msgid "COPIED_MAPS_SERVER"
-msgstr "Copied maps to server successfully!"
 
 msgid "SELECT_MAPS_FOLDER_CLIENT"
 msgstr "Select level folder to copy to client"
