@@ -122,6 +122,15 @@ const
   SETTING_SERVER_IP: string = "sv.serverIP"
   SETTING_INTERNET: string = "sv.internet"
   SETTING_ALLOW_NOSE_CAM: string = "sv.allowNoseCam"
+const
+  SETTING_NUMERICS: seq[string] = @[
+    SETTING_BOT_SKILL, SETTING_TICKET_RATIO, SETTING_SPAWN_TIME,
+    SETTING_ROUNDS_PER_MAP, SETTING_SOLDIER_FRIENDLY_FIRE,
+    SETTING_VEHICLE_FRIENDLY_FIRE, SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE,
+    SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE, SETTING_TEAM_RATIO,
+    SETTING_MAX_PLAYERS, SETTING_PLAYERS_NEEDED_TO_START,
+    SETTING_INTERNET, SETTING_ALLOW_NOSE_CAM
+  ]
 
 const
   AISETTING_BOTS: string = "aiSettings.setMaxNBots"
@@ -1080,6 +1089,10 @@ proc loadSaveServerSettings(save: bool): bool =
   # Server config
   while fileTpl.file.readLine(line):
     (setting, value) = line.splitWhitespace(maxsplit = 1)
+
+    if setting in SETTING_NUMERICS:
+      value = value.replace("\"", "")
+
     case setting:
       of SETTING_ROUNDS_PER_MAP:
         if save:
@@ -1299,7 +1312,7 @@ proc loadJoinMods() =
   if bf2142Path != "":
     for folder in walkDir(bf2142Path / "mods", true):
       if folder.kind == pcDir:
-        valMod.setString(folder.path)
+        valMod.setString(folder.path.toLower())
         store.append(iter)
         store.setValue(iter, 0, valMod)
         store.setValue(iter, 1, valMod)
