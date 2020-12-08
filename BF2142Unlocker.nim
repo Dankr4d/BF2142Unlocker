@@ -163,7 +163,6 @@ type
 var threadUpdateServer: system.Thread[seq[ServerConfig]]
 var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
 # TODO add a boolean that indicates if the server is refreshing to prevent reloading multiple times by pressing F5 or switching tabs
-channelUpdateServer.open() # TODO: Open channel only if it's required and close afterwards
 
 type
   FeslCommand = enum
@@ -208,31 +207,27 @@ type
       soldier: TimerFeslSoldierData
     ex: Option[FeslException]
 
-proc copyInto(timerData: var TimerFeslData, threadData: ThreadFeslData) =
+proc getTimerFeslData(threadData: ThreadFeslData): TimerFeslData =
   case threadData.command:
   of FeslCommand.Create:
-    timerData.command = FeslCommand.Create
-    # timerData.create = TimerFeslCreateData()
-    timerData.create.stella = threadData.create.stella
-    timerData.create.username = threadData.create.username
-    timerData.create.password = threadData.create.password
-    timerData.create.save = threadData.create.save
+    result = TimerFeslData(command: FeslCommand.Create)
+    result.create.stella = threadData.create.stella
+    result.create.username = threadData.create.username
+    result.create.password = threadData.create.password
+    result.create.save = threadData.create.save
   of FeslCommand.Login:
-    timerData.command = FeslCommand.Login
-    # timerData.login = TimerFeslLoginData()
-    timerData.login.stella = threadData.login.stella
-    timerData.login.username = threadData.login.username
-    timerData.login.password = threadData.login.password
-    timerData.login.save = threadData.login.save
-    timerData.login.soldier = threadData.login.soldier
+    result = TimerFeslData(command: FeslCommand.Login)
+    result.login.stella = threadData.login.stella
+    result.login.username = threadData.login.username
+    result.login.password = threadData.login.password
+    result.login.save = threadData.login.save
+    result.login.soldier = threadData.login.soldier
   of FeslCommand.AddSoldier:
-    timerData.command = FeslCommand.AddSoldier
-    # timerData.soldier = TimerFeslSoldierData()
-    timerData.soldier.soldier = threadData.soldier.soldier
+    result = TimerFeslData(command: FeslCommand.AddSoldier)
+    result.soldier.soldier = threadData.soldier.soldier
   of FeslCommand.DelSoldier:
-    timerData.command = FeslCommand.DelSoldier
-    # timerData.soldier = TimerFeslSoldierData()
-    timerData.soldier.soldier = threadData.soldier.soldier
+    result = TimerFeslData(command: FeslCommand.DelSoldier)
+    result.soldier.soldier = threadData.soldier.soldier
 
 var threadFesl: system.Thread[void]
 var channelFeslThread: Channel[ThreadFeslData]
@@ -242,7 +237,6 @@ var channelFeslTimer: Channel[TimerFeslData]
 var threadUpdatePlayerList: system.Thread[tuple[gspyIp: IpAddress, gspyPort: Port]]
 var channelUpdatePlayerList: Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]
 var timerUpdatePlayerListId: int = 0
-channelUpdatePlayerList.open() # TODO: Open channel only if it's required and close afterwards
 
 var isServerSelected: bool = false
 var currentServer: Server
@@ -1553,6 +1547,8 @@ proc timerUpdatePlayerList(TODO: int): bool =
   spinnerServerPlayerList1.stop()
   spinnerServerPlayerList2.stop()
   timerUpdatePlayerListId = 0
+
+  channelUpdatePlayerList.close()
   return SOURCE_REMOVE
 
 proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: Port]) =
@@ -1567,6 +1563,9 @@ proc updatePlayerListAsync() =
   spinnerServerPlayerList2.start()
   btnServerListPlay.sensitive = true
   btnServerPlayerListRefresh.sensitive = false
+
+  channelUpdatePlayerList = Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]()
+  channelUpdatePlayerList.open()
 
   let TODO: int = 0
   if timerUpdatePlayerListId == 0:
@@ -1622,7 +1621,6 @@ proc timerUpdateServer(TODO: int): bool =
   spinnerServer.stop()
   spinnerServerPlayerList1.stop()
   spinnerServerPlayerList2.stop()
-  # channelUpdateServer.close() # TODO: Crashes on second reload (in association with channelUpdateServer.open() in updateServerAsync proc)
   btnServerListRefresh.sensitive = true
   if isServerSelected:
     # TODO: Maybe we can select the first server then this global var is obsolet.
@@ -1631,6 +1629,8 @@ proc timerUpdateServer(TODO: int): bool =
     btnServerListPlay.sensitive = true
     btnServerPlayerListRefresh.sensitive = true
     updatePlayerListAsync()
+
+  channelUpdateServer.close()
   return SOURCE_REMOVE
 
 proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
@@ -1661,7 +1661,6 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   channelUpdateServer.send(servers)
 
 proc updateServerAsync() =
-  # channelUpdateServer.open() # TODO: Crashes on second reload (in association with channelUpdateServer.close() in timerUpdateServer proc)
   listServer.clear()
   listPlayerInfo1.clear()
   listPlayerInfo2.clear()
@@ -1669,6 +1668,10 @@ proc updateServerAsync() =
   btnServerListRefresh.sensitive = false
   btnServerListPlay.sensitive = false
   btnServerPlayerListRefresh.sensitive = false
+
+  channelUpdateServer = Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]()
+  channelUpdateServer.open()
+
   let TODO: int = 0
   discard timeoutAdd(250, timerUpdateServer, TODO)
   threadUpdateServer.createThread(threadUpdateServerProc, serverConfigs)
@@ -1683,7 +1686,6 @@ proc timerFesl(TODO: int): bool =
     return SOURCE_CONTINUE # No data to process
 
   let data: TimerFeslData = channelFeslTimer.recv()
-
 
   case data.command:
   of FeslCommand.Create:
@@ -1708,6 +1710,7 @@ proc timerFesl(TODO: int): bool =
     else:
       btnLoginPlay.sensitive = false
       btnLoginSoldierDelete.sensitive = false
+    btnLoginCheck.sensitive = true
     wndLogin.sensitive = true
     spinnerLogin.stop()
   of FeslCommand.AddSoldier:
@@ -1747,8 +1750,8 @@ proc threadFeslProc() {.thread.} =
   while true:
     msgAmount = channelFeslThread.peek()
     if msgAmount == -1:
-      if isSocketConnected:
-        socket.close()
+      # if isSocketConnected:
+      #   socket.close() # TODO: Investigate crashes when closing socket
       return # Channel closed, stop thread
 
     if msgAmount == 0:
@@ -1769,8 +1772,7 @@ proc threadFeslProc() {.thread.} =
         continue # Send Ping, continue loop
 
     threadData = channelFeslThread.recv()
-
-    copyInto(timerData, threadData)
+    timerData = getTimerFeslData(threadData)
 
     # Copying ThreadFeslData object into TimerFeslData
     # copyMem(addr(timerData), addr(threadData), sizeof(threadData))
@@ -1813,8 +1815,7 @@ proc createAsync(save: bool) =
   listLoginSoldiers.clear()
   spinnerLogin.start()
   wndLogin.sensitive = false
-  var data: ThreadFeslData
-  data.command = FeslCommand.Create
+  var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Create)
   var createData: ThreadFeslCreateData
   createData.stella = parseUri(currentServerConfig.stella_prod).hostname
   createData.username = txtLoginUsername.text
@@ -1827,8 +1828,7 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   listLoginSoldiers.clear()
   spinnerLogin.start()
   wndLogin.sensitive = false
-  var data: ThreadFeslData
-  data.command = FeslCommand.Login
+  var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Login)
   var loginData: ThreadFeslLoginData
   loginData.stella = parseUri(currentServerConfig.stella_prod).hostname
   loginData.username = txtLoginUsername.text
@@ -1922,8 +1922,8 @@ when defined(windows):
   var threadGameServer: system.Thread[int]
   var channelGameServer: Channel[ChannelData]
   var channelLoginUnlockServer: Channel[ChannelData]
-  channelGameServer.open()
-  channelLoginUnlockServer.open()
+  channelGameServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
+  channelLoginUnlockServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
 
   proc timerGameServer(timerData: TimerDataGameServer): bool =
     # TODO: Always receive the last entry from channel, because
@@ -2461,8 +2461,7 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
   dlgLoginAddSoldier.hide()
   spinnerLoginSoldiers.start()
   listLoginSoldiers.sensitive = false
-  var data: ThreadFeslData
-  data.command = FeslCommand.AddSoldier
+  var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.AddSoldier)
   var dataSoldier: ThreadFeslSoldierData
   dataSoldier.soldier = txtLoginAddSoldierName.text
   data.soldier = dataSoldier
@@ -2472,8 +2471,7 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
 proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
   spinnerLoginSoldiers.start()
   listLoginSoldiers.sensitive = false
-  var data: ThreadFeslData
-  data.command = FeslCommand.DelSoldier
+  var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.DelSoldier)
   var dataSoldier: ThreadFeslSoldierData
   dataSoldier.soldier = get(listLoginSoldiers.selectedSoldier)
   data.soldier = dataSoldier
@@ -2495,7 +2493,9 @@ proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   return EVENT_PROPAGATE
 
 proc onWndLoginShow(self: gtk.Window00) {.signal.} =
+  channelFeslThread = Channel[ThreadFeslData]()
   channelFeslThread.open()
+  channelFeslTimer = Channel[TimerFeslData]()
   channelFeslTimer.open()
   let TODO: int = 0
   discard timeoutAdd(250, timerFesl, TODO)
@@ -2546,6 +2546,9 @@ proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00):
 
 proc onBtnServerListRefreshClicked(self: Button00) {.signal.} =
   updateServerAsync()
+
+proc onBtnServerListPlayClicked(self: Button00) {.signal.} =
+  wndLogin.show()
 
 proc onBtnServerPlayerRefreshClicked(self: Button00) {.signal.} =
   updatePlayerListAsync()

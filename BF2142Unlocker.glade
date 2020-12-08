@@ -1167,6 +1167,7 @@ Author: Dankr4d
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerListConnect</property>
                                     <property name="always-show-image">True</property>
+                                    <signal name="clicked" handler="onBtnServerListPlayClicked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -3048,6 +3049,7 @@ Author: Dankr4d
     <property name="can-focus">False</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
+    <property name="window-position">center-on-parent</property>
     <property name="transient-for">window</property>
     <signal name="delete-event" handler="onWndLoginDeleteEvent" swapped="no"/>
     <signal name="hide" handler="onWndLoginHide" swapped="no"/>

@@ -89,7 +89,6 @@ proc login*(client: Socket, username, password: string, timeout: int = -1) =
   parseCheckAndRaise()
 
 
-
 proc soldiers*(client: Socket, timeout: int = -1): seq[string] =
   var dataTbl: Table[string, string]
   var data: string
@@ -111,6 +110,7 @@ proc soldiers*(client: Socket, timeout: int = -1): seq[string] =
       break
     # INFO: Some other server set double quotes, some not -.-
     result.add(dataTbl["subAccounts." & $(idx - 1)].replace("\"", ""))
+
 
 proc addSoldier*(client: Socket, soldier: string, timeout: int = -1) =
   var dataTbl: Table[string, string]
