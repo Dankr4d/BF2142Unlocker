@@ -19,3 +19,11 @@ actionbar button.link {
 .terminal {
   font-family: Consolas;
 }
+
+.error > border {
+  border-color: #CC0000;
+}
+
+.error > label {
+  color: #CC0000;
+}

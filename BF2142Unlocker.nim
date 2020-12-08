@@ -368,6 +368,7 @@ var btnLoginCheck: Button
 var btnLoginSoldierAdd: Button
 var btnLoginSoldierDelete: Button
 var chbtnLoginSave: CheckButton
+var frameLoginError: Frame
 var lblLoginErrorTxn: Label
 var lblLoginErrorCode: Label
 var lblLoginErrorMsg: Label
@@ -1694,7 +1695,6 @@ proc timerFesl(TODO: int): bool =
     btnLoginSoldierAdd.sensitive = isNone(data.ex)
     btnLoginSoldierDelete.sensitive = false
     btnLoginPlay.sensitive = false
-    wndLogin.sensitive = true
     spinnerLogin.stop()
   of FeslCommand.Login:
     if data.login.save and isNone(data.ex):
@@ -1711,7 +1711,6 @@ proc timerFesl(TODO: int): bool =
       btnLoginPlay.sensitive = false
       btnLoginSoldierDelete.sensitive = false
     btnLoginCheck.sensitive = true
-    wndLogin.sensitive = true
     spinnerLogin.stop()
   of FeslCommand.AddSoldier:
     if isNone(data.ex):
@@ -1721,7 +1720,6 @@ proc timerFesl(TODO: int): bool =
       btnLoginPlay.sensitive = true
     btnLoginSoldierDelete.sensitive = true
     spinnerLoginSoldiers.stop()
-    listLoginSoldiers.sensitive = true
   of FeslCommand.DelSoldier:
     if isNone(data.ex):
       # listLoginSoldiers.selectNext()
@@ -1731,12 +1729,38 @@ proc timerFesl(TODO: int): bool =
     btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
     btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier)
     spinnerLoginSoldiers.stop()
-    listLoginSoldiers.sensitive = true
+
+  wndLogin.sensitive = true
 
   if isSome(data.ex):
-    lblLoginErrorTxn.text = $get(data.ex).exType
-    lblLoginErrorCode.text = $get(data.ex).code
-    lblLoginErrorMsg.text = $get(data.ex).msg
+    let ex: FeslException = get(data.ex)
+    var errorMsg: string = ex.msg
+
+    if errorMsg == "" and currentServerConfig.server_name == "OpenSpy":
+      case ex.exType:
+      of FeslExceptionType.AddAccount:
+        if ex.code == 160:
+          errorMsg = "User already taken or an other unknown error."
+      of FeslExceptionType.AddSubAccount:
+        if ex.code == 160:
+          errorMsg = "Soldier already taken or an other unknown error."
+      of FeslExceptionType.Login:
+        if ex.code == 101:
+          errorMsg = "Username doesn't exists."
+        elif ex.code == 122:
+          errorMsg = "Password is incorrect."
+      else:
+        discard
+    if errorMsg == "":
+      errorMsg = "Unknown error."
+
+    frameLoginError.visible = true
+    lblLoginErrorTxn.text = $ex.exType
+    lblLoginErrorCode.text = $ex.code
+    lblLoginErrorMsg.text = errorMsg
+
+  else:
+    frameLoginError.visible = false
   return SOURCE_CONTINUE
 
 
@@ -2422,12 +2446,16 @@ proc onTxtLoginAddSoldierNameChanged(self: Editable00) {.signal.} =
   btnLoginAddSoldierOk.sensitive = txtLoginAddSoldierName.text.len >= 3
 
 proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
+  frameLoginError.visible = false
   loginAsync(chbtnLoginSave.active)
 
 proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
+  frameLoginError.visible = false
   createAsync(chbtnLoginSave.active)
 
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
+  frameLoginError.visible = false
+
   let username: string = txtLoginUsername.text
   let soldier: string = get(listLoginSoldiers.selectedSoldier)
 
@@ -2453,6 +2481,7 @@ proc onBtnLoginCancelClicked(self: Button) {.signal.} =
   wndLogin.hide()
 
 proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
+  frameLoginError.visible = false
   txtLoginAddSoldierName.grabFocus()
   let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
   if dlgLoginAddSoldierCode != 1:
@@ -2460,7 +2489,7 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
     return # User closed dialog
   dlgLoginAddSoldier.hide()
   spinnerLoginSoldiers.start()
-  listLoginSoldiers.sensitive = false
+  wndLogin.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.AddSoldier)
   var dataSoldier: ThreadFeslSoldierData
   dataSoldier.soldier = txtLoginAddSoldierName.text
@@ -2470,7 +2499,7 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
 
 proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
   spinnerLoginSoldiers.start()
-  listLoginSoldiers.sensitive = false
+  wndLogin.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.DelSoldier)
   var dataSoldier: ThreadFeslSoldierData
   dataSoldier.soldier = get(listLoginSoldiers.selectedSoldier)
@@ -2533,6 +2562,7 @@ proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
 
 proc onWndLoginHide(self: gtk.Window00) {.signal.} =
   notebook.sensitive = true
+  frameLoginError.visible = false
 
   txtLoginUsername.text = ""
   txtLoginPassword.text = ""
@@ -3006,6 +3036,7 @@ proc onApplicationActivate(application: Application) =
   btnLoginSoldierAdd = builder.getButton("btnLoginSoldierAdd")
   btnLoginSoldierDelete = builder.getButton("btnLoginSoldierDelete")
   chbtnLoginSave = builder.getCheckButton("chbtnLoginSave")
+  frameLoginError = builder.getFrame("frameLoginError")
   lblLoginErrorTxn = builder.getLabel("lblLoginErrorTxn")
   lblLoginErrorCode = builder.getLabel("lblLoginErrorCode")
   lblLoginErrorMsg = builder.getLabel("lblLoginErrorMsg")
