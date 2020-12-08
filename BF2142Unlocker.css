@@ -2,6 +2,9 @@ actionbar button.link {
   padding: 0 0.5em 0 0.5em;
 }
 
+button.link {
+ padding: 0;
+}
 
 /* Windows only
    Info: Terminal class is only added on windows build,

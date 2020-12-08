@@ -373,12 +373,14 @@ var lblLoginErrorTxn: Label
 var lblLoginErrorCode: Label
 var lblLoginErrorMsg: Label
 var btnLoginCreate: Button
-var btnLoginPlay: Button  # TODO: Delete? (uses response id)
-var btnLoginCancel: Button # TODO: Delete? (uses response id)
+var btnLoginPlay: Button
+var btnLoginCancel: Button
 var dlgLoginAddSoldier: Dialog
 var txtLoginAddSoldierName: Entry
-var btnLoginAddSoldierOk: Button # TODO: Delete? (uses response id)
-var btnLoginAddSoldierCancel: Button # TODO: Delete? (uses response id)
+var btnLoginAddSoldierOk: Button
+var dlgLoginModMissing: Dialog
+var lblModMissingLink: Label
+var lbtnLoginModMissing: LinkButton
 ##
 ### Host controls
 var vboxHost: Box
@@ -2456,6 +2458,28 @@ proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
 proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   frameLoginError.visible = false
 
+  let modPath: string = bf2142Path / "mods" / currentServer.`mod` / "TODO" # TODO: Remove TODO, just for testing
+  if not dirExists(modPath):
+    var uri: string
+
+    if currentServer.`mod`.toLower() == "project_remaster_mp": # INFO: toLower shouldn't be required, just for safety
+      uri = "https://www.moddb.com/mods/project-remaster"
+    elif currentServer.`mod`.toLower() == "firststrike": # INFO: toLower shouldn't be required, just for safety
+      uri = "https://www.moddb.com/mods/first-strike"
+
+    if uri != "":
+      lblModMissingLink.visible = true
+      lbtnLoginModMissing.visible = true
+      lbtnLoginModMissing.label = uri
+      lbtnLoginModMissing.uri = uri
+    else:
+      lblModMissingLink.visible = false
+      lbtnLoginModMissing.visible = false
+
+    discard dlgLoginModMissing.run()
+    dlgLoginModMissing.hide()
+    return
+
   let username: string = txtLoginUsername.text
   let soldier: string = get(listLoginSoldiers.selectedSoldier)
 
@@ -2484,10 +2508,9 @@ proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
   frameLoginError.visible = false
   txtLoginAddSoldierName.grabFocus()
   let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
-  if dlgLoginAddSoldierCode != 1:
-    dlgLoginAddSoldier.hide()
-    return # User closed dialog
   dlgLoginAddSoldier.hide()
+  if dlgLoginAddSoldierCode != 1:
+    return # User closed dialog
   spinnerLoginSoldiers.start()
   wndLogin.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.AddSoldier)
@@ -3046,7 +3069,9 @@ proc onApplicationActivate(application: Application) =
   dlgLoginAddSoldier = builder.getDialog("dlgLoginAddSoldier")
   txtLoginAddSoldierName = builder.getEntry("txtLoginAddSoldierName")
   btnLoginAddSoldierOk = builder.getButton("btnLoginAddSoldierOk")
-  btnLoginAddSoldierCancel = builder.getButton("btnLoginAddSoldierCancel")
+  dlgLoginModMissing = builder.getDialog("dlgLoginModMissing")
+  lblModMissingLink = builder.getLabel("lblModMissingLink")
+  lbtnLoginModMissing = builder.getLinkButton("lbtnLoginModMissing")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
