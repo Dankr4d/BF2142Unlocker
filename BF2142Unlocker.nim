@@ -2493,6 +2493,8 @@ proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   return EVENT_PROPAGATE
 
 proc onWndLoginShow(self: gtk.Window00) {.signal.} =
+  notebook.sensitive = false
+
   channelFeslThread = Channel[ThreadFeslData]()
   channelFeslThread.open()
   channelFeslTimer = Channel[TimerFeslData]()
@@ -2530,6 +2532,8 @@ proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
   return EVENT_STOP
 
 proc onWndLoginHide(self: gtk.Window00) {.signal.} =
+  notebook.sensitive = true
+
   txtLoginUsername.text = ""
   txtLoginPassword.text = ""
   channelFeslThread.close() # Closes thread (see threadFeslProc)
@@ -2541,6 +2545,7 @@ proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00):
   event.ignoreFinalizer = true
   if event.eventType != EventType.doubleButtonPress:
     return
+
   wndLogin.show()
   return EVENT_PROPAGATE
 
