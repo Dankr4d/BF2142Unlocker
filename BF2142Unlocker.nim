@@ -2786,6 +2786,9 @@ proc setBF2142Path(path: string) =
   if txtBF2142Path.text != path:
     txtBF2142Path.text = path
   loadJoinMods()
+  if not cbxJoinMods.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxJoinMods.setActiveId("bf2142")
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
   when defined(linux):
     let wineStartPos: int = bf2142UnlockerConfig.settings.bf2142ClientPath.find(".wine")
@@ -2826,6 +2829,9 @@ proc setBF2142ServerPath(path: string) =
   btnHost.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
   ignoreEvents = true
   loadHostMods()
+  if not cbxHostMods.setActiveId(bf2142UnlockerConfig.host.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxHostMods.setActiveId("bf2142")
   updatePathes()
   loadSelectableMapList()
   if not loadMapList():
