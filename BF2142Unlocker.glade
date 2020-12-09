@@ -796,7 +796,6 @@ Author: Dankr4d
                                     <property name="can-focus">True</property>
                                     <property name="model">listStoreServer</property>
                                     <property name="search-column">0</property>
-                                    <property name="enable-grid-lines">horizontal</property>
                                     <signal name="button-press-event" handler="onListServerButtonPressEvent" swapped="no"/>
                                     <signal name="cursor-changed" handler="onListServerCursorChanged" swapped="no"/>
                                     <child internal-child="selection">
@@ -1071,7 +1070,6 @@ Author: Dankr4d
                                             <property name="can-focus">True</property>
                                             <property name="model">listStorePlayerInfo1</property>
                                             <property name="search-column">1</property>
-                                            <property name="enable-grid-lines">horizontal</property>
                                             <child internal-child="selection">
                                               <object class="GtkTreeSelection"/>
                                             </child>
@@ -1207,7 +1205,6 @@ Author: Dankr4d
                                             <property name="can-focus">True</property>
                                             <property name="model">listStorePlayerInfo2</property>
                                             <property name="search-column">1</property>
-                                            <property name="enable-grid-lines">horizontal</property>
                                             <child internal-child="selection">
                                               <object class="GtkTreeSelection"/>
                                             </child>
@@ -2462,7 +2459,7 @@ Author: Dankr4d
                     <property name="row-spacing">3</property>
                     <property name="column-spacing">3</property>
                     <child>
-                      <object class="GtkLabel" id="lblBF2142Path">
+                      <object class="GtkLabel" id="lblSettingsBF2142ClientPath">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
@@ -2475,7 +2472,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblBF2142ServerPath">
+                      <object class="GtkLabel" id="lblSettingsBF2142ServerPath">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
@@ -2488,7 +2485,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblWinePrefix">
+                      <object class="GtkLabel" id="lblSettingsWinePrefix">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
@@ -2501,7 +2498,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblStartupQuery">
+                      <object class="GtkLabel" id="lblSettingsStartupQuery">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="label" translatable="yes">SETTINGS_STARTUP_QUERY</property>
@@ -2513,12 +2510,12 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtBF2142Path">
+                      <object class="GtkEntry" id="txtSettingsBF2142ClientPath">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
                         <property name="hexpand">True</property>
-                        <signal name="focus-out-event" handler="onTxtBF2142PathFocusOut" swapped="no"/>
+                        <signal name="focus-out-event" handler="onTxtSettingsBF2142ClientPathFocusOutEvent" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -2526,12 +2523,12 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtBF2142ServerPath">
+                      <object class="GtkEntry" id="txtSettingsBF2142ServerPath">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
                         <property name="hexpand">True</property>
-                        <signal name="focus-out-event" handler="onTxtBF2142ServerPathFocusOut" swapped="no"/>
+                        <signal name="focus-out-event" handler="onTxtSettingsBF2142ServerPathFocusOutEvent" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -2539,7 +2536,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtWinePrefix">
+                      <object class="GtkEntry" id="txtSettingsWinePrefix">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
@@ -2551,11 +2548,11 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtStartupQuery">
+                      <object class="GtkEntry" id="txtSettingsStartupQuery">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
-                        <signal name="focus-out-event" handler="onTxtStartupQueryFocusOut" swapped="no"/>
+                        <signal name="focus-out-event" handler="onTxtSettingsStartupQueryFocusOutEvent" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -2563,14 +2560,14 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnBF2142Path">
+                      <object class="GtkButton" id="btnSettingsBF2142ClientPath">
                         <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
                         <property name="halign">end</property>
-                        <signal name="clicked" handler="onBtnBF2142PathClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnSettingsBF2142ClientPathClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -2578,14 +2575,14 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnBF2142ServerPath">
+                      <object class="GtkButton" id="btnSettingsBF2142ServerPath">
                         <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
                         <property name="halign">end</property>
-                        <signal name="clicked" handler="onBtnBF2142ServerPathClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnSettingsBF2142ServerPathClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -2593,14 +2590,14 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnWinePrefix">
+                      <object class="GtkButton" id="btnSettingsWinePrefix">
                         <property name="label" translatable="yes">SETTINGS_SELECT</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
                         <property name="halign">end</property>
-                        <signal name="clicked" handler="onBtnWinePrefixClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnSettingsWinePrefixClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -2621,12 +2618,13 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="chbtnSkipMovies">
+                      <object class="GtkCheckButton" id="chbtnSettingsSkipMovies">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
                         <property name="draw-indicator">True</property>
+                        <signal name="toggled" handler="onChbtnSettingsSkipMoviesToggled" swapped="no"/>
                         <child>
                           <placeholder/>
                         </child>
@@ -2650,13 +2648,13 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="chbtnWindowMode">
+                      <object class="GtkCheckButton" id="chbtnSettingsWindowMode">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
                         <property name="draw-indicator">True</property>
-                        <signal name="toggled" handler="onChbtnWindowModeToggled" swapped="no"/>
+                        <signal name="toggled" handler="onChbtnSettingsWindowModeToggled" swapped="no"/>
                         <child>
                           <placeholder/>
                         </child>
@@ -2667,7 +2665,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblJoinResolutions">
+                      <object class="GtkLabel" id="lblSettingsResolution">
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
                         <property name="label" translatable="yes">SETTINGS_RESOLUTION</property>
@@ -2679,13 +2677,14 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBox" id="cbxJoinResolutions">
+                      <object class="GtkComboBox" id="cbxSettingsResolution">
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
                         <property name="model">listStoreResolutions</property>
                         <property name="has-entry">True</property>
                         <property name="entry-text-column">1</property>
                         <property name="id-column">0</property>
+                        <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
                         <child internal-child="entry">
                           <object class="GtkEntry">
                             <property name="can-focus">False</property>

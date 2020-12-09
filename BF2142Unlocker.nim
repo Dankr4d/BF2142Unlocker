@@ -361,13 +361,9 @@ var cbxLanguages: ComboBox
 var vboxJoin: Box
 var vboxJustPlay: Box
 var cbxJoinMods: ComboBox
-var lblJoinResolutions: Label
-var cbxJoinResolutions: ComboBox
 var txtPlayerName: Entry
 var txtIpAddress: Entry
 var chbtnAutoJoin: CheckButton
-var chbtnSkipMovies: CheckButton
-var chbtnWindowMode: CheckButton
 var btnJoin: Button # TODO: Rename to btnConnect
 var btnJustPlay: Button
 var btnJustPlayCancel: Button
@@ -467,17 +463,21 @@ var vboxUnlocks: Box
 var chbtnUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
-var lblBF2142Path: Label
-var txtBF2142Path: Entry
-var btnBF2142Path: Button
-var lblBF2142ServerPath: Label
-var txtBF2142ServerPath: Entry
-var btnBF2142ServerPath: Button
-var lblWinePrefix: Label
-var btnWinePrefix: Button
-var txtWinePrefix: Entry
-var lblStartupQuery: Label
-var txtStartupQuery: Entry
+var lblSettingsBF2142ClientPath: Label
+var txtSettingsBF2142ClientPath: Entry
+var btnSettingsBF2142ClientPath: Button
+var lblSettingsBF2142ServerPath: Label
+var txtSettingsBF2142ServerPath: Entry
+var btnSettingsBF2142ServerPath: Button
+var lblSettingsWinePrefix: Label
+var txtSettingsWinePrefix: Entry
+var btnSettingsWinePrefix: Button
+var lblSettingsStartupQuery: Label
+var txtSettingsStartupQuery: Entry
+var chbtnSettingsSkipMovies: CheckButton
+var chbtnSettingsWindowMode: CheckButton
+var lblSettingsResolution: Label
+var cbxSettingsResolution: ComboBox
 ##
 
 ### Exception procs # TODO: Replace tuple results with Option
@@ -727,21 +727,21 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   chbtnUnlockSquadGadgets.active = config.unlocks.unlockSquadGadgets
 
   # Settings
-  txtBF2142Path.text = config.settings.bf2142ClientPath
-  txtBF2142ServerPath.text = config.settings.bf2142ServerPath
+  txtSettingsBF2142ClientPath.text = config.settings.bf2142ClientPath
+  txtSettingsBF2142ServerPath.text = config.settings.bf2142ServerPath
   when defined(linux): # TODO: Should we really do this in applyBF2142UnlockerConfig?
-    txtWinePrefix.text = config.settings.winePrefix
+    txtSettingsWinePrefix.text = config.settings.winePrefix
     if config.settings.winePrefix != "":
-      documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
+      documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   elif defined(windows):
     documentsPath = getDocumentsPath()
   updateProfilePathes()
   when defined(linux):
-    txtStartupQuery.text = config.settings.startupQuery
-  chbtnSkipMovies.active = config.settings.skipMovies
-  chbtnWindowMode.active = config.settings.windowMode
-  if not cbxJoinResolutions.setActiveId(config.settings.resolution):
-    cbxJoinResolutions.setActive(0)
+    txtSettingsStartupQuery.text = config.settings.startupQuery
+  chbtnSettingsSkipMovies.active = config.settings.skipMovies
+  chbtnSettingsWindowMode.active = config.settings.windowMode
+  if not cbxSettingsResolution.setActiveId(config.settings.resolution):
+    cbxSettingsResolution.setActive(0)
 
 
 proc backupOpenSpyIfExists() =
@@ -1370,7 +1370,7 @@ proc loadJoinResolutions() =
   discard valWidth.init(g_uint_get_type())
   discard valHeight.init(g_uint_get_type())
   var iter: TreeIter
-  let store = listStore(cbxJoinResolutions.getModel())
+  let store = listStore(cbxSettingsResolution.getModel())
   store.clear()
   for resolution in getAvailableResolutions():
     valResolution.setString($resolution.width & "x" & $resolution.height)
@@ -1384,8 +1384,8 @@ proc loadJoinResolutions() =
 
 proc getSelectedResolution(): tuple[width, height: uint16] =
   var iter: TreeIter
-  let store = listStore(cbxJoinResolutions.getModel())
-  discard cbxJoinResolutions.getActiveIter(iter)
+  let store = listStore(cbxSettingsResolution.getModel())
+  discard cbxSettingsResolution.getActiveIter(iter)
   var valWidth: Value
   var valHeight: Value
   store.getValue(iter, 2, valWidth)
@@ -2222,12 +2222,12 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   when defined(linux):
     when defined(debug):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
-    if txtWinePrefix.text != "":
-      command.add("WINEPREFIX=" & txtWinePrefix.text & ' ')
+    if txtSettingsWinePrefix.text != "":
+      command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
   when defined(linux):
-    if txtStartupQuery.text != "":
-      command.add(txtStartupQuery.text & ' ')
+    if txtSettingsStartupQuery.text != "":
+      command.add(txtSettingsStartupQuery.text & ' ')
   command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
   if isSome(options.modPath):
     command.add("+modPath " & get(options.modPath) & ' ')
@@ -2272,7 +2272,7 @@ proc patchAndStartLogic(): bool =
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
-    if txtWinePrefix.text == "":
+    if txtSettingsWinePrefix.text == "":
       invalidStr.add("\t* You need to specify your wine prefix (in \"Settings\"-Tab).\n")
   if invalidStr.len > 0:
     newInfoDialog("Error", invalidStr)
@@ -2327,9 +2327,6 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, cbxJoinMods.activeId)
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, txtPlayerName.text)
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $chbtnAutoJoin.active)
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSkipMovies.active)
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnWindowMode.active)
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxJoinResolutions.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
@@ -2361,14 +2358,14 @@ proc patchAndStartLogic(): bool =
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
-  if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxJoinMods.activeId / "Movies", chbtnSkipMovies.active):
+  if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxJoinMods.activeId / "Movies", chbtnSettingsSkipMovies.active):
     return
 
   var options: BF2142Options
   options.modPath = some("mods/" & cbxJoinMods.activeId)
   options.menu = some(true)
-  options.fullscreen = some(not chbtnWindowMode.active)
-  if chbtnWindowMode.active:
+  options.fullscreen = some(not chbtnSettingsWindowMode.active)
+  if chbtnSettingsWindowMode.active:
     var resolution: tuple[width, height: uint16] = getSelectedResolution()
     options.szx = some(resolution.width)
     options.szy = some(resolution.height)
@@ -2384,9 +2381,6 @@ proc patchAndStartLogic(): bool =
 proc onBtnJoinClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
 
-proc onChbtnWindowModeToggled(self: CheckButton00) {.signal.} =
-  lblJoinResolutions.visible = chbtnWindowMode.active
-  cbxJoinResolutions.visible = chbtnWindowMode.active
 
 proc onBtnJustPlayClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = parseIpAddress("127.0.0.1")
@@ -2775,14 +2769,14 @@ proc setBF2142Path(path: string) =
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_EXE_NAME],
     )
-    txtBF2142Path.text = bf2142UnlockerConfig.settings.bf2142ClientPath
+    txtSettingsBF2142ClientPath.text = bf2142UnlockerConfig.settings.bf2142ClientPath
     return
   vboxJoin.visible = true
   vboxHost.visible = true
   vboxUnlocks.visible = true
   bf2142UnlockerConfig.settings.bf2142ClientPath = path
-  if txtBF2142Path.text != path:
-    txtBF2142Path.text = path
+  if txtSettingsBF2142ClientPath.text != path:
+    txtSettingsBF2142ClientPath.text = path
   loadJoinMods()
   if not cbxJoinMods.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
@@ -2793,19 +2787,19 @@ proc setBF2142Path(path: string) =
     var wineEndPos: int
     if wineStartPos > -1:
       wineEndPos = bf2142UnlockerConfig.settings.bf2142ClientPath.find(DirSep, wineStartPos) - 1
-      if txtWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtWinePrefix's text
-        txtWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
-        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtWinePrefix.text) # TODO: Create a saveWinePrefix proc
+      if txtSettingsWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
+        txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
+        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnBF2142PathClicked(self: Button00) {.signal.} = # TODO: Add checks
-  var (responseType, path) = selectFolderDialog(lblBF2142Path.text[0..^2])
+proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
   setBF2142Path(path)
 
-proc onTxtBF2142PathFocusOut(self: Entry00) {.signal.} =
-  setBF2142Path(txtBF2142Path.text.strip())
+proc onTxtSettingsBF2142ClientPathFocusOutEvent(self: Entry00) {.signal.} =
+  setBF2142Path(txtSettingsBF2142ClientPath.text.strip())
 
 proc setBF2142ServerPath(path: string) =
   if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
@@ -2819,11 +2813,11 @@ proc setBF2142ServerPath(path: string) =
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_SRV_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_SRV_EXE_NAME],
     )
-    txtBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
+    txtSettingsBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
     return
   bf2142UnlockerConfig.settings.bf2142ServerPath = path
-  if txtBF2142ServerPath.text != path:
-    txtBF2142ServerPath.text = path
+  if txtSettingsBF2142ServerPath.text != path:
+    txtSettingsBF2142ServerPath.text = path
   btnHost.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
   ignoreEvents = true
   loadHostMods()
@@ -2845,30 +2839,45 @@ proc setBF2142ServerPath(path: string) =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_SERVER_PATH, bf2142UnlockerConfig.settings.bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
 
-proc onBtnBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
-  var (responseType, path) = selectFolderDialog(lblBF2142ServerPath.text[0..^2])
+proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
+  var (responseType, path) = selectFolderDialog(lblSettingsBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.ok:
     return
   setBF2142ServerPath(path)
 
-proc onTxtBF2142ServerPathFocusOut(self: Entry00) {.signal.} =
-  setBF2142ServerPath(txtBF2142ServerPath.text.strip())
+proc onTxtSettingsBF2142ServerPathFocusOutEvent(self: Entry00) {.signal.} =
+  setBF2142ServerPath(txtSettingsBF2142ServerPath.text.strip())
 
-proc onBtnWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
-  var (responseType, path) = selectFolderDialog(lblWinePrefix.text[0..^2])
+proc onBtnSettingsWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
+  var (responseType, path) = selectFolderDialog(lblSettingsWinePrefix.text[0..^2])
   if responseType != ResponseType.ok:
     return
   if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
     return
-  txtWinePrefix.text = path
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtWinePrefix.text)
+  txtSettingsWinePrefix.text = path
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
-    documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
+    documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
 
-proc onTxtStartupQueryFocusOut(self: Entry00, event: EventFocus00): bool {.signal.} =
-  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, txtStartupQuery.text)
+proc onTxtSettingsStartupQueryFocusOutEvent(self: Entry00, event: EventFocus00): bool {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, txtSettingsStartupQuery.text)
+  config.writeConfig(CONFIG_FILE_NAME)
+
+proc onChbtnSettingsSkipMoviesToggled(self: CheckButton00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSettingsSkipMovies.active)
+  config.writeConfig(CONFIG_FILE_NAME)
+
+proc onChbtnSettingsWindowModeToggled(self: CheckButton00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnSettingsWindowMode.active)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
+  config.writeConfig(CONFIG_FILE_NAME)
+  lblSettingsResolution.visible = chbtnSettingsWindowMode.active
+  cbxSettingsResolution.visible = chbtnSettingsWindowMode.active
+
+proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
 proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): bool =
@@ -2988,13 +2997,13 @@ proc onApplicationActivate(application: Application) =
   vboxJoin = builder.getBox("vboxJoin")
   vboxJustPlay = builder.getBox("vboxJustPlay")
   cbxJoinMods = builder.getComboBox("cbxJoinMods")
-  lblJoinResolutions = builder.getLabel("lblJoinResolutions")
-  cbxJoinResolutions = builder.getComboBox("cbxJoinResolutions")
+  lblSettingsResolution = builder.getLabel("lblSettingsResolution")
+  cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
   txtPlayerName = builder.getEntry("txtPlayerName")
   txtIpAddress = builder.getEntry("txtIpAddress")
   chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
-  chbtnSkipMovies = builder.getCheckButton("chbtnSkipMovies")
-  chbtnWindowMode = builder.getCheckButton("chbtnWindowMode")
+  chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
+  chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
   btnJoin = builder.getButton("btnJoin")
   btnJustPlay = builder.getButton("btnJustPlay")
   btnJustPlayCancel = builder.getButton("btnJustPlayCancel")
@@ -3041,17 +3050,17 @@ proc onApplicationActivate(application: Application) =
   hboxTerms = builder.getBox("hboxTerms")
   vboxUnlocks = builder.getBox("vboxUnlocks")
   chbtnUnlockSquadGadgets = builder.getCheckButton("chbtnUnlockSquadGadgets")
-  lblBF2142Path = builder.getLabel("lblBF2142Path")
-  txtBF2142Path = builder.getEntry("txtBF2142Path")
-  btnBF2142Path = builder.getButton("btnBF2142Path")
-  lblBF2142ServerPath = builder.getLabel("lblBF2142ServerPath")
-  txtBF2142ServerPath = builder.getEntry("txtBF2142ServerPath")
-  btnBF2142ServerPath = builder.getButton("btnBF2142ServerPath")
-  lblWinePrefix = builder.getLabel("lblWinePrefix")
-  btnWinePrefix = builder.getButton("btnWinePrefix")
-  txtWinePrefix = builder.getEntry("txtWinePrefix")
-  lblStartupQuery = builder.getLabel("lblStartupQuery")
-  txtStartupQuery = builder.getEntry("txtStartupQuery")
+  lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
+  txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
+  btnSettingsBF2142ClientPath = builder.getButton("btnSettingsBF2142ClientPath")
+  lblSettingsBF2142ServerPath = builder.getLabel("lblSettingsBF2142ServerPath")
+  txtSettingsBF2142ServerPath = builder.getEntry("txtSettingsBF2142ServerPath")
+  btnSettingsBF2142ServerPath = builder.getButton("btnSettingsBF2142ServerPath")
+  lblSettingsWinePrefix = builder.getLabel("lblSettingsWinePrefix")
+  btnSettingsWinePrefix = builder.getButton("btnSettingsWinePrefix")
+  txtSettingsWinePrefix = builder.getEntry("txtSettingsWinePrefix")
+  lblSettingsStartupQuery = builder.getLabel("lblSettingsStartupQuery")
+  txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
 
   overlayServer = builder.getOverlay("overlayServer")
   spinnerServer = builder.getSpinner("spinnerServer")
@@ -3151,8 +3160,8 @@ proc onApplicationActivate(application: Application) =
   loadHostMods()
   loadJoinResolutions()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
-  lblJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode
-  cbxJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode
+  lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
+  cbxSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     updatePathes()
     loadSelectableMapList()
@@ -3161,11 +3170,11 @@ proc onApplicationActivate(application: Application) =
        # TODO: Maybe create a loadAll proc because those procs are always called together
       discard # Do not return, otherwise the following visibility logic will not be executed
   when defined(windows):
-    lblWinePrefix.visible = false
-    txtWinePrefix.visible = false
-    btnWinePrefix.visible = false
-    lblStartupQuery.visible = false
-    txtStartupQuery.visible = false
+    lblSettingsWinePrefix.visible = false
+    txtSettingsWinePrefix.visible = false
+    btnSettingsWinePrefix.visible = false
+    lblSettingsStartupQuery.visible = false
+    txtSettingsStartupQuery.visible = false
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxJoin.visible = false

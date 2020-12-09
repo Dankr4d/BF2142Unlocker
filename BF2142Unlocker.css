@@ -3,7 +3,15 @@ actionbar button.link {
 }
 
 button.link {
- padding: 0;
+  padding: 0;
+}
+
+.error > border {
+  border-color: #CC0000;
+}
+
+.error > label {
+  color: #CC0000;
 }
 
 /* Windows only
@@ -21,12 +29,4 @@ button.link {
 
 .terminal {
   font-family: Consolas;
-}
-
-.error > border {
-  border-color: #CC0000;
-}
-
-.error > label {
-  color: #CC0000;
 }
