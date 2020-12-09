@@ -729,7 +729,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   # Settings
   txtBF2142Path.text = config.settings.bf2142ClientPath
   txtBF2142ServerPath.text = config.settings.bf2142ServerPath
-  when defined(linux): # TODO: Do this in applyBF2142UnlockerConfig?
+  when defined(linux): # TODO: Should we really do this in applyBF2142UnlockerConfig?
     txtWinePrefix.text = config.settings.winePrefix
     if config.settings.winePrefix != "":
       documentsPath = txtWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
@@ -2216,7 +2216,7 @@ type
     eaAccountName*: Option[string]
     eaAccountPassword*: Option[string]
     soldierName*: Option[string]
-    joinServer*: Option[IpAddress]
+    joinServer*: Option[net.IpAddress]
     port*: Option[Port]
 
 proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also an joinGSPort
@@ -2652,7 +2652,7 @@ proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00):
   var event: EventButton = new EventButton
   event.impl = event00
   event.ignoreFinalizer = true
-  if event.eventType != EventType.doubleButtonPress:
+  if event.eventType != gdk.EventType.doubleButtonPress:
     return
 
   wndLogin.show()

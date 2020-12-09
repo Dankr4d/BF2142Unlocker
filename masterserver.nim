@@ -217,6 +217,7 @@ when defined(linux):
   import posix
 elif defined(windows):
   import winlean
+  from nativesockets import ntohs
 
 template `+`*[T](p: ptr T, off: int): ptr T =
   cast[ptr type(p[])](cast[ByteAddress](p) +% off * sizeof(p[]))

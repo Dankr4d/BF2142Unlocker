@@ -4,7 +4,12 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
-#include <sys/socket.h>
+
+#ifdef WIN32
+    #include <winsock2.h>
+#else
+    #include <sys/socket.h>
+#endif
 
 typedef int8_t      i8;
 typedef uint8_t     u8;
