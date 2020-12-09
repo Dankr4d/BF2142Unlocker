@@ -170,8 +170,8 @@ var currentAiSettingsPath: string
 var currentLocale: string
 
 var lastGsStatus: GsStatus = None
-var termLoginServerPid: int = 0
-var termBF2142ServerPid: int = 0
+var termHostLoginServerPid: int = 0
+var termHostGameServerPid: int = 0
 
 
 type
@@ -377,7 +377,7 @@ var imgQuickCheckServerGpcmServer: Image
 var imgQuickCheckServerUnlockServer: Image
 var btnQuickCheckServerCancel: Button
 ##
-### Server list
+### Multiplayer controls
 var vboxMultiplayer: Box
 var spinnerMultiplayerServers: Spinner
 var trvMultiplayerServers: TreeView
@@ -418,48 +418,46 @@ var lbtnMultiplayerModMissing: LinkButton
 ##
 ### Host controls
 var vboxHost: Box
-var tblHostSettings: Grid
-var imgLevelPreview: Image
+var imgHostLevelPreview: Image
 var cbxHostMods: ComboBox
-var cbxGameMode: ComboBox
-var sbtnBotSkill: SpinButton
-var scaleBotSkill: Scale
-var sbtnTicketRatio: SpinButton
-var scaleTicketRatio: Scale
-var sbtnSpawnTime: SpinButton
-var scaleSpawnTime: Scale
-var sbtnRoundsPerMap: SpinButton
-var scaleRoundsPerMap: Scale
-var sbtnBots: SpinButton
-var scaleBots: Scale
-var sbtnMaxPlayers: SpinButton
-var scaleMaxPlayers: Scale
-var sbtnPlayersNeededToStart: SpinButton
-var scalePlayersNeededToStart: Scale
-var chbtnFriendlyFire: CheckButton
-var chbtnAllowNoseCam: CheckButton
+var cbxHostGameMode: ComboBox
+var sbtnHostBotSkill: SpinButton
+var scaleHostBotSkill: Scale
+var sbtnHostTicketRatio: SpinButton
+var scaleHostTicketRatio: Scale
+var sbtnHostSpawnTime: SpinButton
+var scaleHostSpawnTime: Scale
+var sbtnHostRoundsPerMap: SpinButton
+var scaleHostRoundsPerMap: Scale
+var sbtnHostBots: SpinButton
+var scaleHostBots: Scale
+var sbtnHostMaxPlayers: SpinButton
+var scaleHostMaxPlayers: Scale
+var sbtnHostPlayersNeededToStart: SpinButton
+var scaleHostPlayersNeededToStart: Scale
+var chbtnHostFriendlyFire: CheckButton
+var chbtnHostAllowNoseCam: CheckButton
   # teamratio (also for coop?)
   # autobalance (also for coop?)
 var txtHostIpAddress: Entry
-var hboxMaps: Box
-var listSelectableMaps: TreeView
-var listSelectedMaps: TreeView
-var btnAddMap: Button
-var btnRemoveMap: Button
-var btnMapMoveUp: Button
-var btnMapMoveDown: Button
+var trvHostSelectableMap: TreeView
+var trvHostSelectedMap: TreeView
+var btnHostMapAdd: Button
+var btnHostMapDel: Button
+var btnHostMapMoveUp: Button
+var btnHostMapMoveDown: Button
 var btnHostLoginServer: Button
-var btnHost: Button
+var btnHostGameServer: Button
 var btnHostCancel: Button
-var hboxTerms: Box
-var termLoginServer: Terminal
-var termBF2142Server: Terminal
+var hboxHostTerms: Box
+var termHostLoginServer: Terminal
+var termHostGameServer: Terminal
 when defined(linux):
-  var swinBF2142Server: ScrolledWindow
+  var swinHostGameServer: ScrolledWindow
 ##
 ### Unlock controls
 var vboxUnlocks: Box
-var chbtnUnlockSquadGadgets: CheckButton
+var chbtnUnlocksUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
 var lblSettingsBF2142ClientPath: Label
@@ -723,7 +721,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     discard cbxHostMods.setActiveId("bf2142")
 
   # Unlocks
-  chbtnUnlockSquadGadgets.active = config.unlocks.unlockSquadGadgets
+  chbtnUnlocksUnlockSquadGadgets.active = config.unlocks.unlockSquadGadgets
 
   # Settings
   txtSettingsBF2142ClientPath.text = config.settings.bf2142ClientPath
@@ -1025,11 +1023,11 @@ proc updateLevelPreview(mapName, mapMode: string, mapSize: int) =
   if fileExists(imgPath):
     var pixbuf = newPixbufFromFile(imgPath)
     pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
-    imgLevelPreview.setFromPixbuf(pixbuf)
+    imgHostLevelPreview.setFromPixbuf(pixbuf)
   elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
+    imgHostLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
   else:
-    imgLevelPreview.clear()
+    imgHostLevelPreview.clear()
 
 proc updateLevelPreview(treeView: TreeView) =
   var mapName, mapMode: string
@@ -1083,8 +1081,8 @@ iterator maps(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] =
     whileCond = model.iterNext(iter)
 
 proc loadSelectableMapList() =
-  listSelectableMaps.clear()
-  var gameMode: string = cbxGameMode.activeId
+  trvHostSelectableMap.clear()
+  var gameMode: string = cbxHostGameMode.activeId
   var xmlMapInfo: XmlNode
   var invalidXmlFiles: seq[string]
   var descPath: string
@@ -1097,7 +1095,7 @@ proc loadSelectableMapList() =
       for xmlMode in xmlMapInfo.findAll("mode"):
         if xmlMode.attr("type") == gameMode:
           for xmlMapType in xmlMode.findAll("maptype"):
-            listSelectableMaps.appendMap(folder.path, gameMode, parseInt(xmlMapType.attr("players")))
+            trvHostSelectableMap.appendMap(folder.path, gameMode, parseInt(xmlMapType.attr("players")))
           break
     except xmlparser.XmlError:
       invalidXmlFiles.add(descPath)
@@ -1139,47 +1137,47 @@ proc loadSaveServerSettings(save: bool): bool =
     case setting:
       of SETTING_ROUNDS_PER_MAP:
         if save:
-          value = $sbtnRoundsPerMap.value.toInt()
+          value = $sbtnHostRoundsPerMap.value.toInt()
         else:
-          sbtnRoundsPerMap.value = value.parseFloat()
+          sbtnHostRoundsPerMap.value = value.parseFloat()
       of SETTING_BOT_SKILL:
         if save:
-          value = $sbtnBotSkill.value
+          value = $sbtnHostBotSkill.value
         else:
-          sbtnBotSkill.value = value.parseFloat()
+          sbtnHostBotSkill.value = value.parseFloat()
       of SETTING_TICKET_RATIO:
         if save:
-          value = $sbtnTicketRatio.value.toInt()
+          value = $sbtnHostTicketRatio.value.toInt()
         else:
-          sbtnTicketRatio.value = value.parseFloat()
+          sbtnHostTicketRatio.value = value.parseFloat()
       of SETTING_SPAWN_TIME:
         if save:
-          value = $sbtnSpawnTime.value.toInt()
+          value = $sbtnHostSpawnTime.value.toInt()
         else:
-          sbtnSpawnTime.value = value.parseFloat()
+          sbtnHostSpawnTime.value = value.parseFloat()
       of SETTING_SOLDIER_FRIENDLY_FIRE,
           SETTING_VEHICLE_FRIENDLY_FIRE,
           SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE,
           SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE:
         if save:
-          value = if chbtnFriendlyFire.active: "100" else: "0"
+          value = if chbtnHostFriendlyFire.active: "100" else: "0"
         else:
-          chbtnFriendlyFire.active = if value == "100": true else: false
+          chbtnHostFriendlyFire.active = if value == "100": true else: false
       of SETTING_ALLOW_NOSE_CAM:
         if save:
-          value = $chbtnAllowNoseCam.active.int
+          value = $chbtnHostAllowNoseCam.active.int
         else:
-          chbtnAllowNoseCam.active = value.parseBool()
+          chbtnHostAllowNoseCam.active = value.parseBool()
       of SETTING_MAX_PLAYERS:
         if save:
-          value = $sbtnMaxPlayers.value.toInt()
+          value = $sbtnHostMaxPlayers.value.toInt()
         else:
-          sbtnMaxPlayers.value = value.parseFloat()
+          sbtnHostMaxPlayers.value = value.parseFloat()
       of SETTING_PLAYERS_NEEDED_TO_START:
         if save:
-          value = $sbtnPlayersNeededToStart.value.toInt()
+          value = $sbtnHostPlayersNeededToStart.value.toInt()
         else:
-          sbtnPlayersNeededToStart.value = value.parseFloat()
+          sbtnHostPlayersNeededToStart.value = value.parseFloat()
       of SETTING_SERVER_IP:
         if save:
           value = "\"" & txtHostIpAddress.text & "\""
@@ -1222,9 +1220,9 @@ proc loadSaveAiSettings(save: bool): bool =
       continue
     if line.startsWith(AISETTING_BOTS):
       if save:
-        line = AISETTING_BOTS & " " & $sbtnBots.value.toInt()
+        line = AISETTING_BOTS & " " & $sbtnHostBots.value.toInt()
       else:
-        sbtnBots.value = line.split(' ')[1].parseFloat()
+        sbtnHostBots.value = line.split(' ')[1].parseFloat()
     elif line.startsWith(AISETTING_OVERRIDE_MENU_SETTINGS):
       if save:
         line = AISETTING_OVERRIDE_MENU_SETTINGS & " 1" # Necessary to change bot amount
@@ -1268,7 +1266,7 @@ proc saveMapList(): bool =
       continue
     mapListCon.add(line & "\n")
   fileTpl.file.close()
-  for map in listSelectedMaps.maps:
+  for map in trvHostSelectedMap.maps:
     mapListCon.add("mapList.append " & map.mapName & ' ' & map.mapMode & ' ' & $map.mapSize & '\n')
   return writeFile(currentMapListPath, mapListCon)
 
@@ -1277,12 +1275,12 @@ proc loadMapList(): bool =
   if not fileTpl.opened:
     return false
   var line, mapName, mapMode, mapSize: string
-  listSelectedMaps.clear()
+  trvHostSelectedMap.clear()
   while fileTpl.file.readLine(line):
     if not line.toLower().startsWith("maplist"):
       continue
     (mapName, mapMode, mapSize) = line.splitWhitespace()[1..3]
-    listSelectedMaps.appendMap(mapName, mapMode, parseInt(mapSize))
+    trvHostSelectedMap.appendMap(mapName, mapMode, parseInt(mapSize))
   fileTpl.file.close()
   return true
 
@@ -1405,23 +1403,21 @@ proc loadHostMods() =
         store.setValue(iter, 1, valMod)
 
 proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
-  # tblHostSettings.sensitive = not running
-  # hboxMaps.sensitive = not running
   btnHostLoginServer.visible = not running
-  btnHost.visible = not running
+  btnHostGameServer.visible = not running
   btnHostCancel.visible = running
-  hboxTerms.visible = running
-  termLoginServer.visible = running
+  hboxHostTerms.visible = running
+  termHostLoginServer.visible = running
   if bf2142ServerInvisible:
     when defined(windows):
-      termBF2142Server.visible = false
+      termHostGameServer.visible = false
     elif defined(linux):
-      swinBF2142Server.visible = false
+      swinHostGameServer.visible = false
   else:
     when defined(windows):
-      termBF2142Server.visible = running
+      termHostGameServer.visible = running
     elif defined(linux):
-      swinBF2142Server.visible = running
+      swinHostGameServer.visible = running
 
 proc applyJustPlayRunningSensitivity(running: bool) =
   termQuickJustPlay.visible = running
@@ -2038,10 +2034,10 @@ proc killProcess*(pid: int) = # TODO: Add some error handling
     var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
     discard hndlProcess.TerminateProcess(0) # TODO: Check result
     discard CloseHandle(hndlProcess)
-  if pid == termBF2142ServerPid:
-    termBF2142ServerPid = 0
-  elif pid == termLoginServerPid:
-    termLoginServerPid = 0
+  if pid == termHostGameServerPid:
+    termHostGameServerPid = 0
+  elif pid == termHostLoginServerPid:
+    termHostLoginServerPid = 0
 
 when defined(windows):
   proc threadGameServerProc(pid: int) {.thread.} =
@@ -2099,17 +2095,17 @@ when defined(windows):
       channelLoginUnlockServer.send(channelData)
       sleep(250)
 elif defined(linux):
-  proc onTermBF2142ServerContentsChanged(terminal: Terminal) =
-    var text: string = termBF2142Server.getText(nil, nil, cast[var ptr GArray00](nil))
+  proc ontermHostGameServerContentsChanged(terminal: Terminal) =
+    var text: string = termHostGameServer.getText(nil, nil, cast[var ptr GArray00](nil))
     if text.strip() == "":
       return
     var gsdata: GsData = text.parseGsData()
     if gsdata.status != lastGsStatus:
-      listSelectedMaps.update(gsdata)
+      trvHostSelectedMap.update(gsdata)
       lastGsStatus = gsdata.status
-  proc onTermBF2142ServerChildExited(terminal: Terminal, exitCode: int) =
+  proc ontermHostGameServerChildExited(terminal: Terminal, exitCode: int) =
     # Clears the colorized rows.
-    listSelectedMaps.update(GsData())
+    trvHostSelectedMap.update(GsData())
 
 proc startProcess(terminal: Terminal, command: string, params: string = "",
                   workingDir: string = os.getCurrentDir(), env: string = "",
@@ -2152,7 +2148,7 @@ proc startProcess(terminal: Terminal, command: string, params: string = "",
           break
         tryCounter.inc()
         sleep(500)
-      var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: terminal, treeView: listSelectedMaps)
+      var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: terminal, treeView: trvHostSelectedMap)
       discard timeoutAdd(250, timerGameServer, timerDataGameServer)
       threadGameServer.createThread(threadGameServerProc, result) # result = pid
     else:
@@ -2162,7 +2158,7 @@ proc startProcess(terminal: Terminal, command: string, params: string = "",
       threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, process)
 
 proc startBF2142Server() =
-  termBF2142Server.setSizeRequest(0, 300)
+  termHostGameServer.setSizeRequest(0, 300)
   var stupidPbSymlink: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "pb"
   if symlinkExists(stupidPbSymlink):
     if not removeFile(stupidPbSymlink):
@@ -2170,14 +2166,14 @@ proc startBF2142Server() =
   when defined(linux):
     var ldLibraryPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
-    termBF2142ServerPid = termBF2142Server.startProcess(
+    termHostGameServerPid = termHostGameServer.startProcess(
       command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
       workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
   elif defined(windows):
-    termBF2142ServerPid = termBF2142Server.startProcess(
+    termHostGameServerPid = termHostGameServer.startProcess(
       command = BF2142_SRV_UNLOCKER_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
       workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
@@ -2188,7 +2184,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
   when defined(linux):
     # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
-    termLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
+    termHostLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
     var tryCnt: int = 0
     while tryCnt < 3:
       if isAddrReachable($ipAddress, Port(18300), 1_000):
@@ -2197,7 +2193,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
         tryCnt.inc()
         sleep(250)
   elif defined(windows):
-    termLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlockSquadGadgets.active}")
+    termHostLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
 ##
 
 ### Events
@@ -2384,51 +2380,51 @@ proc onBtnQuickConnectClicked(self: Button00) {.signal.} =
 proc onBtnQuickJustPlayClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = parseIpAddress("127.0.0.1")
   txtQuickIpAddress.text = $ipAddress
-  if termLoginServerPid > 0:
-    killProcess(termLoginServerPid)
+  if termHostLoginServerPid > 0:
+    killProcess(termHostLoginServerPid)
   termQuickJustPlay.clear()
   termQuickJustPlay.startLoginServer(ipAddress)
   var prevAutoJoinVal: bool = cbtnQuickAutoJoin.active
   cbtnQuickAutoJoin.active = false
   if patchAndStartLogic():
-    termLoginServer.visible = false
+    termHostLoginServer.visible = false
     applyJustPlayRunningSensitivity(true)
-    if termBF2142ServerPid == 0:
+    if termHostGameServerPid == 0:
       applyHostRunningSensitivity(false)
   else:
     cbtnQuickAutoJoin.active = prevAutoJoinVal
-    killProcess(termLoginServerPid)
+    killProcess(termHostLoginServerPid)
 
 proc onBtnQuickJustPlayCancelClicked(self: Button00) {.signal.} =
-  killProcess(termLoginServerPid)
+  killProcess(termHostLoginServerPid)
   applyJustPlayRunningSensitivity(false)
 
 proc onBtnQuickCheckServerCancelClicked(self: Button00) {.signal.} =
   dlgQuickCheckServer.hide()
 
-proc onBtnAddMapClicked(self: Button00) {.signal.} =
+proc onBtnHostMapAddClicked(self: Button00) {.signal.} =
   var mapName, mapMode: string
   var mapSize: int
-  (mapName, mapMode, mapSize) = listSelectableMaps.selectedMap
+  (mapName, mapMode, mapSize) = trvHostSelectableMap.selectedMap
   if mapName == "" or mapMode == "" or mapSize == 0:
     return
-  listSelectedMaps.appendMap(mapName, mapMode, mapSize)
-  listSelectableMaps.selectNext()
-  listSelectableMaps.updateLevelPreview()
+  trvHostSelectedMap.appendMap(mapName, mapMode, mapSize)
+  trvHostSelectableMap.selectNext()
+  trvHostSelectableMap.updateLevelPreview()
 
-proc onBtnRemoveMapClicked(self: Button00) {.signal.} =
+proc onBtnHostMapDelClicked(self: Button00) {.signal.} =
   var mapName, mapMode: string
   var mapSize: int
-  (mapName, mapMode, mapSize) = listSelectedMaps.selectedMap
+  (mapName, mapMode, mapSize) = trvHostSelectedMap.selectedMap
   if mapName == "" or mapMode == "" or mapSize == 0: return
-  listSelectedMaps.removeSelected()
-  listSelectedMaps.updateLevelPreview()
+  trvHostSelectedMap.removeSelected()
+  trvHostSelectedMap.updateLevelPreview()
 
-proc onBtnMapMoveUpClicked(self: Button00) {.signal.} =
-  listSelectedMaps.moveSelectedUp()
+proc onBtnHostMapMoveUpClicked(self: Button00) {.signal.} =
+  trvHostSelectedMap.moveSelectedUp()
 
-proc onBtnMapMoveDownClicked(self: Button00) {.signal.} =
-  listSelectedMaps.moveSelectedDown()
+proc onBtnHostMapMoveDownClicked(self: Button00) {.signal.} =
+  trvHostSelectedMap.moveSelectedDown()
 #
 ## Server list
 ## TODO: Ping or connection gets closed after 30 seconds
@@ -2659,7 +2655,7 @@ proc onBtnMultiplayerPlayersRefreshClicked(self: Button00) {.signal.} =
   updatePlayerListAsync()
 #
 ## Host
-proc onBtnHostClicked(self: Button00) {.signal.} =
+proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   if not txtHostIpAddress.text.strip().isIpAddress() or
   txtHostIpAddress.text.strip().parseIpAddress().family != IPv4:
     newInfoDialog(dgettext("gui", "NO_VALID_IP_ADDRESS_TITLE"), dgettext("gui", "NO_VALID_IP_ADDRESS_MSG"))
@@ -2697,10 +2693,10 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   else:
     txtQuickIpAddress.text = $ipAddress
   cbtnQuickAutoJoin.active = true
-  if termLoginServerPid > 0:
-    killProcess(termLoginServerPid)
-  termLoginServer.clear()
-  termLoginServer.startLoginServer(ipAddress)
+  if termHostLoginServerPid > 0:
+    killProcess(termHostLoginServerPid)
+  termHostLoginServer.clear()
+  termHostLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
   discard cbxQuickMod.setActiveId(cbxHostMods.activeId)
 
@@ -2717,18 +2713,18 @@ proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   else:
     txtQuickIpAddress.text = $ipAddress
   cbtnQuickAutoJoin.active = false
-  if termLoginServerPid > 0:
-    killProcess(termLoginServerPid)
-  termLoginServer.clear()
-  termLoginServer.startLoginServer(ipAddress)
+  if termHostLoginServerPid > 0:
+    killProcess(termHostLoginServerPid)
+  termHostLoginServer.clear()
+  termHostLoginServer.startLoginServer(ipAddress)
 
 proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
   applyJustPlayRunningSensitivity(false)
-  killProcess(termLoginServerPid)
+  killProcess(termHostLoginServerPid)
   txtQuickIpAddress.text = ""
-  if termBF2142ServerPid > 0:
-    killProcess(termBF2142ServerPid)
+  if termHostGameServerPid > 0:
+    killProcess(termHostGameServerPid)
 
 proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   updatePathes()
@@ -2740,15 +2736,15 @@ proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   if not loadAiSettings():
     return
 
-proc onCbxGameModeChanged(self: ComboBox00) {.signal.} =
+proc onCbxHostGameModeChanged(self: ComboBox00) {.signal.} =
   updatePathes()
   loadSelectableMapList()
 
-proc onListSelectableMapsCursorChanged(self: TreeView00) {.signal.} =
-  listSelectableMaps.updateLevelPreview()
+proc onTrvHostSelectableMapCursorChanged(self: TreeView00) {.signal.} =
+  trvHostSelectableMap.updateLevelPreview()
 
-proc onListSelectedMapsRowActivated(self: TreeView00, path: TreePath00, column: TreeViewColumn00) {.signal.} =
-  listSelectedMaps.updateLevelPreview()
+proc onTrvHostSelectedMapRowActivated(self: TreeView00, path: TreePath00, column: TreeViewColumn00) {.signal.} =
+  trvHostSelectedMap.updateLevelPreview()
 #
 ## Settings
 proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
@@ -2817,7 +2813,7 @@ proc setBF2142ServerPath(path: string) =
   bf2142UnlockerConfig.settings.bf2142ServerPath = path
   if txtSettingsBF2142ServerPath.text != path:
     txtSettingsBF2142ServerPath.text = path
-  btnHost.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
+  btnHostGameServer.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
   ignoreEvents = true
   loadHostMods()
   if not cbxHostMods.setActiveId(bf2142UnlockerConfig.host.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
@@ -2919,45 +2915,45 @@ proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): boo
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
-    sendMsg(termBF2142ServerPid, command)
+    sendMsg(termHostGameServerPid, command)
   elif defined(linux):
-    termBF2142Server.feedChild(command)
+    termHostGameServer.feedChild(command)
 
-proc onBotSkillChanged(self: pointer) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnBotSkill.value, 1) & "\r")
+proc onHostBotSkillChanged(self: pointer) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnHostBotSkill.value, 1) & "\r")
 
-proc onTicketRatioChanged(self: pointer) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnTicketRatio.value.int & "\r")
+proc onHostTicketRatioChanged(self: pointer) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnHostTicketRatio.value.int & "\r")
 
-proc onSpawnTimeChanged(self: pointer) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnSpawnTime.value.int & "\r")
+proc onHostSpawnTimeChanged(self: pointer) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnHostSpawnTime.value.int & "\r")
 
-proc onRoundsPerMapChanged(self: pointer) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnRoundsPerMap.value.int & "\r")
+proc onHostRoundsPerMapChanged(self: pointer) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnHostRoundsPerMap.value.int & "\r")
 
-proc onPlayersNeededToStartChanged(self: pointer) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnPlayersNeededToStart.value.int & "\r")
+proc onHostPlayersNeededToStartChanged(self: pointer) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnHostPlayersNeededToStart.value.int & "\r")
 
-proc onFriendlyFireToggled(self: CheckButton00) {.signal.} =
-  var val: string = if chbtnFriendlyFire.active: "100" else: "0"
-  if termBF2142ServerPid > 0:
+proc onHostFriendlyFireToggled(self: CheckButton00) {.signal.} =
+  var val: string = if chbtnHostFriendlyFire.active: "100" else: "0"
+  if termHostGameServerPid > 0:
     execBF2142ServerCommand(SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
     execBF2142ServerCommand(SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
     execBF2142ServerCommand(SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
     execBF2142ServerCommand(SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
 
-proc onAllowNoseCamToggled(self: CheckButton00) {.signal.} =
-  if termBF2142ServerPid > 0:
-    execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnAllowNoseCam.active.int & "\r")
+proc onHostAllowNoseCamToggled(self: CheckButton00) {.signal.} =
+  if termHostGameServerPid > 0:
+    execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnHostAllowNoseCam.active.int & "\r")
 #
 ## Unlocks
-proc onChbtnUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
-  config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, $chbtnUnlockSquadGadgets.active)
+proc onChbtnUnlocksUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, $chbtnUnlocksUnlockSquadGadgets.active)
   config.writeConfig(CONFIG_FILE_NAME)
 #
 ##
@@ -2967,12 +2963,12 @@ proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00
     windowShown = true
 
 proc onQuit() =
-  if termBF2142ServerPid > 0:
+  if termHostGameServerPid > 0:
     echo "KILLING BF2142 GAME SERVER"
-    killProcess(termBF2142ServerPid)
-  if termLoginServerPid > 0:
+    killProcess(termHostGameServerPid)
+  if termHostLoginServerPid > 0:
     echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
-    killProcess(termLoginServerPid)
+    killProcess(termHostLoginServerPid)
   restoreOpenSpyIfExists()
 
 proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
@@ -3015,40 +3011,38 @@ proc onApplicationActivate(application: Application) =
   imgQuickCheckServerGpcmServer = builder.getImage("imgQuickCheckServerGpcmServer")
   imgQuickCheckServerUnlockServer = builder.getImage("imgQuickCheckServerUnlockServer")
   vboxHost = builder.getBox("vboxHost")
-  tblHostSettings = builder.getGrid("tblHostSettings")
-  imgLevelPreview = builder.getImage("imgLevelPreview")
+  imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
   cbxHostMods = builder.getComboBox("cbxHostMods")
-  cbxGameMode = builder.getComboBox("cbxGameMode")
-  sbtnBotSkill = builder.getSpinButton("sbtnBotSkill")
-  scaleBotSkill = builder.getScale("scaleBotSkill")
-  sbtnTicketRatio = builder.getSpinButton("sbtnTicketRatio")
-  scaleTicketRatio = builder.getScale("scaleTicketRatio")
-  sbtnSpawnTime = builder.getSpinButton("sbtnSpawnTime")
-  scaleSpawnTime = builder.getScale("scaleSpawnTime")
-  sbtnRoundsPerMap = builder.getSpinButton("sbtnRoundsPerMap")
-  scaleRoundsPerMap = builder.getScale("scaleRoundsPerMap")
-  sbtnBots = builder.getSpinButton("sbtnBots")
-  scaleBots = builder.getScale("scaleBots")
-  sbtnMaxPlayers = builder.getSpinButton("sbtnMaxPlayers")
-  scaleMaxPlayers = builder.getScale("scaleMaxPlayers")
-  sbtnPlayersNeededToStart = builder.getSpinButton("sbtnPlayersNeededToStart")
-  scalePlayersNeededToStart = builder.getScale("scalePlayersNeededToStart")
-  chbtnFriendlyFire = builder.getCheckButton("chbtnFriendlyFire")
-  chbtnAllowNoseCam = builder.getCheckButton("chbtnAllowNoseCam")
+  cbxHostGameMode = builder.getComboBox("cbxHostGameMode")
+  sbtnHostBotSkill = builder.getSpinButton("sbtnHostBotSkill")
+  scaleHostBotSkill = builder.getScale("scaleHostBotSkill")
+  sbtnHostTicketRatio = builder.getSpinButton("sbtnHostTicketRatio")
+  scaleHostTicketRatio = builder.getScale("scaleHostTicketRatio")
+  sbtnHostSpawnTime = builder.getSpinButton("sbtnHostSpawnTime")
+  scaleHostSpawnTime = builder.getScale("scaleHostSpawnTime")
+  sbtnHostRoundsPerMap = builder.getSpinButton("sbtnHostRoundsPerMap")
+  scaleHostRoundsPerMap = builder.getScale("scaleHostRoundsPerMap")
+  sbtnHostBots = builder.getSpinButton("sbtnHostBots")
+  scaleHostBots = builder.getScale("scaleHostBots")
+  sbtnHostMaxPlayers = builder.getSpinButton("sbtnHostMaxPlayers")
+  scaleHostMaxPlayers = builder.getScale("scaleHostMaxPlayers")
+  sbtnHostPlayersNeededToStart = builder.getSpinButton("sbtnHostPlayersNeededToStart")
+  scaleHostPlayersNeededToStart = builder.getScale("scaleHostPlayersNeededToStart")
+  chbtnHostFriendlyFire = builder.getCheckButton("chbtnHostFriendlyFire")
+  chbtnHostAllowNoseCam = builder.getCheckButton("chbtnHostAllowNoseCam")
   txtHostIpAddress = builder.getEntry("txtHostIpAddress")
-  hboxMaps = builder.getBox("hboxMaps")
-  listSelectableMaps = builder.getTreeView("listSelectableMaps")
-  listSelectedMaps = builder.getTreeView("listSelectedMaps")
-  btnAddMap = builder.getButton("btnAddMap")
-  btnRemoveMap = builder.getButton("btnRemoveMap")
-  btnMapMoveUp = builder.getButton("btnMapMoveUp")
-  btnMapMoveDown = builder.getButton("btnMapMoveDown")
+  trvHostSelectableMap = builder.getTreeView("trvHostSelectableMap")
+  trvHostSelectedMap = builder.getTreeView("trvHostSelectedMap")
+  btnHostMapAdd = builder.getButton("btnHostMapAdd")
+  btnHostMapDel = builder.getButton("btnHostMapDel")
+  btnHostMapMoveUp = builder.getButton("btnHostMapMoveUp")
+  btnHostMapMoveDown = builder.getButton("btnHostMapMoveDown")
   btnHostLoginServer = builder.getButton("btnHostLoginServer")
-  btnHost = builder.getButton("btnHost")
+  btnHostGameServer = builder.getButton("btnHostGameServer")
   btnHostCancel = builder.getButton("btnHostCancel")
-  hboxTerms = builder.getBox("hboxTerms")
+  hboxHostTerms = builder.getBox("hboxHostTerms")
   vboxUnlocks = builder.getBox("vboxUnlocks")
-  chbtnUnlockSquadGadgets = builder.getCheckButton("chbtnUnlockSquadGadgets")
+  chbtnUnlocksUnlockSquadGadgets = builder.getCheckButton("chbtnUnlocksUnlockSquadGadgets")
   lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
   txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
   btnSettingsBF2142ClientPath = builder.getButton("btnSettingsBF2142ClientPath")
@@ -3108,28 +3102,28 @@ proc onApplicationActivate(application: Application) =
   termQuickJustPlay.vexpand = true
   vboxQuickJustPlay.add(termQuickJustPlay)
   vboxQuickJustPlay.reorderChild(termQuickJustPlay, 0)
-  termLoginServer = newTerminal()
-  termLoginServer.hexpand = true
-  termBF2142Server = newTerminal()
-  termBF2142Server.hexpand = true
-  hboxTerms.add(termLoginServer)
+  termHostLoginServer = newTerminal()
+  termHostLoginServer.hexpand = true
+  termHostGameServer = newTerminal()
+  termHostGameServer.hexpand = true
+  hboxHostTerms.add(termHostLoginServer)
   when defined(windows):
-    hboxTerms.add(termBF2142Server)
+    hboxHostTerms.add(termHostGameServer)
   elif defined(linux):
     # Adding a horizontal scrollbar to display the whole server output.
     # This is required to parse the content otherwise the content is cutted.
-    termBF2142Server.connect("contents-changed", onTermBF2142ServerContentsChanged)
-    termBF2142Server.connect("child-exited", onTermBF2142ServerChildExited)
-    termBF2142Server.visible = true
+    termHostGameServer.connect("contents-changed", ontermHostGameServerContentsChanged)
+    termHostGameServer.connect("child-exited", ontermHostGameServerChildExited)
+    termHostGameServer.visible = true
     var box: Box = newHBox(false, 0)
     box.visible = true
-    box.setSizeRequest(termBF2142Server.getCharWidth().int * 80, -1)
-    box.add(termBF2142Server)
-    swinBF2142Server = newScrolledWindow(nil, nil)
-    swinBF2142Server.setSizeRequest(0, 300)
-    swinBF2142Server.hexpand = true
-    swinBF2142Server.add(box)
-    hboxTerms.add(swinBF2142Server)
+    box.setSizeRequest(termHostGameServer.getCharWidth().int * 80, -1)
+    box.add(termHostGameServer)
+    swinHostGameServer = newScrolledWindow(nil, nil)
+    swinHostGameServer.setSizeRequest(0, 300)
+    swinHostGameServer.hexpand = true
+    swinHostGameServer.add(box)
+    hboxHostTerms.add(swinHostGameServer)
   #
   ## Setting current language
   discard cbxLanguages.setActiveId(currentLocale)
@@ -3180,7 +3174,7 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
     vboxUnlocks.visible = false
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
-    btnHost.sensitive = false
+    btnHostGameServer.sensitive = false
 
   loadServerConfig()
   # updateServer()

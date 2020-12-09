@@ -1428,7 +1428,7 @@ Author: Dankr4d
                                         <property name="margin-bottom">5</property>
                                         <child>
                                           <!-- n-columns=3 n-rows=12 -->
-                                          <object class="GtkGrid" id="tblHostSettings">
+                                          <object class="GtkGrid">
                                             <property name="visible">True</property>
                                             <property name="can-focus">False</property>
                                             <property name="row-spacing">3</property>
@@ -1578,14 +1578,14 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnBotSkill">
+                                              <object class="GtkSpinButton" id="sbtnHostBotSkill">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_BOT_SKILL_TOOLTIP</property>
                                                 <property name="text" translatable="yes">0</property>
                                                 <property name="adjustment">adjBotSkill</property>
                                                 <property name="digits">2</property>
-                                                <signal name="value-changed" handler="onBotSkillChanged" swapped="no"/>
+                                                <signal name="value-changed" handler="onHostBotSkillChanged" swapped="no"/>
                                               </object>
                                               <packing>
                                                 <property name="left-attach">1</property>
@@ -1593,14 +1593,14 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnTicketRatio">
+                                              <object class="GtkSpinButton" id="sbtnHostTicketRatio">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_TICKET_RATIO_TOOLTIP</property>
                                                 <property name="text" translatable="yes">100</property>
                                                 <property name="adjustment">adjTicketRatio</property>
                                                 <property name="value">100</property>
-                                                <signal name="value-changed" handler="onTicketRatioChanged" swapped="no"/>
+                                                <signal name="value-changed" handler="onHostTicketRatioChanged" swapped="no"/>
                                               </object>
                                               <packing>
                                                 <property name="left-attach">1</property>
@@ -1608,14 +1608,14 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnSpawnTime">
+                                              <object class="GtkSpinButton" id="sbtnHostSpawnTime">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_SPAWN_TIME_TOOLTIP</property>
                                                 <property name="text" translatable="yes">15</property>
                                                 <property name="adjustment">adjSpawnTime</property>
                                                 <property name="value">15</property>
-                                                <signal name="value-changed" handler="onSpawnTimeChanged" swapped="no"/>
+                                                <signal name="value-changed" handler="onHostSpawnTimeChanged" swapped="no"/>
                                               </object>
                                               <packing>
                                                 <property name="left-attach">1</property>
@@ -1623,14 +1623,14 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnRoundsPerMap">
+                                              <object class="GtkSpinButton" id="sbtnHostRoundsPerMap">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_ROUNDS_PER_MAP_TOOLTIP</property>
                                                 <property name="text" translatable="yes">1</property>
                                                 <property name="adjustment">adjRoundsPerMap</property>
                                                 <property name="value">1</property>
-                                                <signal name="value-changed" handler="onRoundsPerMapChanged" swapped="no"/>
+                                                <signal name="value-changed" handler="onHostRoundsPerMapChanged" swapped="no"/>
                                               </object>
                                               <packing>
                                                 <property name="left-attach">1</property>
@@ -1638,7 +1638,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnBots">
+                                              <object class="GtkSpinButton" id="sbtnHostBots">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_BOT_AMOUNT_TOOLTIP</property>
@@ -1652,7 +1652,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnMaxPlayers">
+                                              <object class="GtkSpinButton" id="sbtnHostMaxPlayers">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_MAX_PLAYERS_TOOLTIP</property>
@@ -1666,14 +1666,14 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sbtnPlayersNeededToStart">
+                                              <object class="GtkSpinButton" id="sbtnHostPlayersNeededToStart">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_PLAYERS_NEEDED_TO_START_TOOLTIP</property>
                                                 <property name="text" translatable="yes">1</property>
                                                 <property name="adjustment">adjPlayersNeededToStart</property>
                                                 <property name="value">1</property>
-                                                <signal name="value-changed" handler="onPlayersNeededToStartChanged" swapped="no"/>
+                                                <signal name="value-changed" handler="onHostPlayersNeededToStartChanged" swapped="no"/>
                                               </object>
                                               <packing>
                                                 <property name="left-attach">1</property>
@@ -1681,13 +1681,13 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="chbtnFriendlyFire">
+                                              <object class="GtkCheckButton" id="chbtnHostFriendlyFire">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="receives-default">False</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_FRIENDLY_FIRE_TOOLTIP</property>
                                                 <property name="draw-indicator">True</property>
-                                                <signal name="toggled" handler="onFriendlyFireToggled" swapped="no"/>
+                                                <signal name="toggled" handler="onHostFriendlyFireToggled" swapped="no"/>
                                                 <child>
                                                   <placeholder/>
                                                 </child>
@@ -1710,7 +1710,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleTicketRatio">
+                                              <object class="GtkScale" id="scaleHostTicketRatio">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_TICKET_RATIO_TOOLTIP</property>
@@ -1724,7 +1724,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleSpawnTime">
+                                              <object class="GtkScale" id="scaleHostSpawnTime">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_SPAWN_TIME_TOOLTIP</property>
@@ -1738,7 +1738,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleRoundsPerMap">
+                                              <object class="GtkScale" id="scaleHostRoundsPerMap">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_ROUNDS_PER_MAP_TOOLTIP</property>
@@ -1752,7 +1752,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleBotSkill">
+                                              <object class="GtkScale" id="scaleHostBotSkill">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_BOT_SKILL_TOOLTIP</property>
@@ -1765,7 +1765,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleMaxPlayers">
+                                              <object class="GtkScale" id="scaleHostMaxPlayers">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_MAX_PLAYERS_TOOLTIP</property>
@@ -1779,7 +1779,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scaleBots">
+                                              <object class="GtkScale" id="scaleHostBots">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_BOT_AMOUNT_TOOLTIP</property>
@@ -1793,7 +1793,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkScale" id="scalePlayersNeededToStart">
+                                              <object class="GtkScale" id="scaleHostPlayersNeededToStart">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_PLAYERS_NEEDED_TO_START_TOOLTIP</property>
@@ -1833,7 +1833,7 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkComboBox" id="cbxGameMode">
+                                              <object class="GtkComboBox" id="cbxHostGameMode">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">False</property>
                                                 <property name="model">listStoreHostMode</property>
@@ -1841,7 +1841,7 @@ Author: Dankr4d
                                                 <property name="entry-text-column">1</property>
                                                 <property name="id-column">0</property>
                                                 <property name="active-id">gpm_coop</property>
-                                                <signal name="changed" handler="onCbxGameModeChanged" swapped="no"/>
+                                                <signal name="changed" handler="onCbxHostGameModeChanged" swapped="no"/>
                                                 <child internal-child="entry">
                                                   <object class="GtkEntry">
                                                     <property name="can-focus">False</property>
@@ -1867,13 +1867,13 @@ Author: Dankr4d
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="chbtnAllowNoseCam">
+                                              <object class="GtkCheckButton" id="chbtnHostAllowNoseCam">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">True</property>
                                                 <property name="receives-default">False</property>
                                                 <property name="tooltip-text" translatable="yes">HOST_ALLOW_NOSE_CAM_TOOLTIP</property>
                                                 <property name="draw-indicator">True</property>
-                                                <signal name="toggled" handler="onAllowNoseCamToggled" swapped="no"/>
+                                                <signal name="toggled" handler="onHostAllowNoseCamToggled" swapped="no"/>
                                                 <child>
                                                   <placeholder/>
                                                 </child>
@@ -1906,7 +1906,7 @@ Author: Dankr4d
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkImage" id="imgLevelPreview">
+                                          <object class="GtkImage" id="imgHostLevelPreview">
                                             <property name="visible">True</property>
                                             <property name="can-focus">False</property>
                                             <property name="halign">start</property>
@@ -1944,7 +1944,7 @@ Author: Dankr4d
                             <property name="can-focus">True</property>
                             <property name="expanded">True</property>
                             <child>
-                              <object class="GtkBox" id="hboxMaps">
+                              <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="margin-start">3</property>
@@ -1957,7 +1957,7 @@ Author: Dankr4d
                                     <property name="can-focus">True</property>
                                     <property name="shadow-type">in</property>
                                     <child>
-                                      <object class="GtkTreeView" id="listSelectableMaps">
+                                      <object class="GtkTreeView" id="trvHostSelectableMap">
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_SELECTABLE_MAPS_TOOLTIP</property>
@@ -1967,7 +1967,7 @@ Author: Dankr4d
                                         <property name="enable-grid-lines">horizontal</property>
                                         <property name="enable-tree-lines">True</property>
                                         <property name="activate-on-single-click">True</property>
-                                        <signal name="cursor-changed" handler="onListSelectableMapsCursorChanged" swapped="no"/>
+                                        <signal name="cursor-changed" handler="onTrvHostSelectableMapCursorChanged" swapped="no"/>
                                         <child internal-child="selection">
                                           <object class="GtkTreeSelection"/>
                                         </child>
@@ -2023,13 +2023,13 @@ Author: Dankr4d
                                     <property name="valign">center</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkButton" id="btnAddMap">
+                                      <object class="GtkButton" id="btnHostMapAdd">
                                         <property name="label" translatable="yes">→</property>
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_MAPS_ADD_TOOLTIP</property>
-                                        <signal name="clicked" handler="onBtnAddMapClicked" swapped="no"/>
+                                        <signal name="clicked" handler="onBtnHostMapAddClicked" swapped="no"/>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2038,13 +2038,13 @@ Author: Dankr4d
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="btnRemoveMap">
+                                      <object class="GtkButton" id="btnHostMapDel">
                                         <property name="label" translatable="yes">←</property>
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_MAPS_REMOVE_TOOLTIP</property>
-                                        <signal name="clicked" handler="onBtnRemoveMapClicked" swapped="no"/>
+                                        <signal name="clicked" handler="onBtnHostMapDelClicked" swapped="no"/>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2065,7 +2065,7 @@ Author: Dankr4d
                                     <property name="can-focus">True</property>
                                     <property name="shadow-type">in</property>
                                     <child>
-                                      <object class="GtkTreeView" id="listSelectedMaps">
+                                      <object class="GtkTreeView" id="trvHostSelectedMap">
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_SELECTED_MAPS_TOOLTIP</property>
@@ -2075,7 +2075,7 @@ Author: Dankr4d
                                         <property name="enable-grid-lines">horizontal</property>
                                         <property name="enable-tree-lines">True</property>
                                         <property name="activate-on-single-click">True</property>
-                                        <signal name="row-activated" handler="onListSelectedMapsRowActivated" swapped="no"/>
+                                        <signal name="row-activated" handler="onTrvHostSelectedMapRowActivated" swapped="no"/>
                                         <child internal-child="selection">
                                           <object class="GtkTreeSelection"/>
                                         </child>
@@ -2134,13 +2134,13 @@ Author: Dankr4d
                                     <property name="valign">center</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkButton" id="btnMapMoveUp">
+                                      <object class="GtkButton" id="btnHostMapMoveUp">
                                         <property name="label" translatable="yes">↑</property>
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_MAPS_MOVE_UP_TOOLTIP</property>
-                                        <signal name="clicked" handler="onBtnMapMoveUpClicked" swapped="no"/>
+                                        <signal name="clicked" handler="onBtnHostMapMoveUpClicked" swapped="no"/>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2149,13 +2149,13 @@ Author: Dankr4d
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="btnMapMoveDown">
+                                      <object class="GtkButton" id="btnHostMapMoveDown">
                                         <property name="label" translatable="yes">↓</property>
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
                                         <property name="tooltip-text" translatable="yes">HOST_MAPS_MOVE_DOWN_TOOLTIP</property>
-                                        <signal name="clicked" handler="onBtnMapMoveDownClicked" swapped="no"/>
+                                        <signal name="clicked" handler="onBtnHostMapMoveDownClicked" swapped="no"/>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2197,8 +2197,8 @@ Author: Dankr4d
                         <property name="can-focus">True</property>
                         <property name="expanded">True</property>
                         <child>
-                          <object class="GtkBox" id="hboxTerms">
-                            <property name="name">hboxTerms</property>
+                          <object class="GtkBox" id="hboxHostTerms">
+                            <property name="name">hboxHostTerms</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="margin-start">3</property>
@@ -2265,13 +2265,13 @@ Author: Dankr4d
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btnHost">
+                          <object class="GtkButton" id="btnHostGameServer">
                             <property name="label" translatable="yes">HOST_HOST</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">HOST_HOST_TOOLTIP</property>
-                            <signal name="clicked" handler="onBtnHostClicked" swapped="no"/>
+                            <signal name="clicked" handler="onBtnHostGameServerClicked" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -2353,12 +2353,12 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="chbtnUnlockSquadGadgets">
+                      <object class="GtkCheckButton" id="chbtnUnlocksUnlockSquadGadgets">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
                         <property name="draw-indicator">True</property>
-                        <signal name="toggled" handler="onChbtnUnlockSquadGadgetsToggled" swapped="no"/>
+                        <signal name="toggled" handler="onChbtnUnlocksUnlockSquadGadgetsToggled" swapped="no"/>
                         <child>
                           <placeholder/>
                         </child>
