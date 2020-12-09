@@ -357,26 +357,25 @@ var notebook: Notebook
 var lblVersion: Label
 var cbxLanguages: ComboBox
 ##
-### Join controls
-var vboxJoin: Box
-var vboxJustPlay: Box
-var cbxJoinMods: ComboBox
-var txtPlayerName: Entry
-var txtIpAddress: Entry
-var chbtnAutoJoin: CheckButton
-var btnJoin: Button # TODO: Rename to btnConnect
-var btnJustPlay: Button
-var btnJustPlayCancel: Button
-var termJustPlayServer: Terminal
-var dlgCheckServers: Dialog
-var btnCheckCancel: Button
-var throbberLoginServer: Spinner
-var throbberGpcmServer: Spinner
-var throbberUnlockServer: Spinner
-var imgLoginServer: Image
-var imgGpcmServer: Image
-var imgUnlockServer: Image
-var btnCheckServerCancel: Button
+### Quick controls
+var vboxQuick: Box
+var vboxQuickJustPlay: Box
+var cbxQuickMod: ComboBox
+var txtQuickPlayerName: Entry
+var txtQuickIpAddress: Entry
+var cbtnQuickAutoJoin: CheckButton
+var btnQuickConnect: Button
+var btnQuickJustPlay: Button
+var btnQuickJustPlayCancel: Button
+var termQuickJustPlay: Terminal
+var dlgQuickCheckServer: Dialog
+var spinnerQuickCheckServerLoginServer: Spinner # Rename to FeslServer
+var spinnerQuickCheckServerGpcmServer: Spinner
+var spinnerQuickCheckServerUnlockServer: Spinner # Rename to Statsserver?
+var imgQuickCheckServerLoginServer: Image
+var imgQuickCheckServerGpcmServer: Image
+var imgQuickCheckServerUnlockServer: Image
+var btnQuickCheckServerCancel: Button
 ##
 ### Server list
 var overlayServer: Overlay
@@ -712,11 +711,11 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
 
 proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   # Quick
-  if not cbxJoinMods.setActiveId(config.quick.`mod`):
+  if not cbxQuickMod.setActiveId(config.quick.`mod`):
     # When mod is removed or renamed set bf2142 as fallback
-    discard cbxJoinMods.setActiveId("bf2142")
-  txtPlayerName.text = config.quick.playername
-  chbtnAutoJoin.active = config.quick.autoJoin
+    discard cbxQuickMod.setActiveId("bf2142")
+  txtQuickPlayerName.text = config.quick.playername
+  cbtnQuickAutoJoin.active = config.quick.autoJoin
 
   # Host
   if not cbxHostMods.setActiveId(config.host.`mod`):
@@ -1352,7 +1351,7 @@ proc loadJoinMods() =
   var valMod: Value
   discard valMod.init(g_string_get_type())
   var iter: TreeIter
-  let store = listStore(cbxJoinMods.getModel())
+  let store = listStore(cbxQuickMod.getModel())
   store.clear()
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
     for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
@@ -1426,9 +1425,9 @@ proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = fa
       swinBF2142Server.visible = running
 
 proc applyJustPlayRunningSensitivity(running: bool) =
-  termJustPlayServer.visible = running
-  btnJustPlay.visible = not running
-  btnJustPlayCancel.visible = running
+  termQuickJustPlay.visible = running
+  btnQuickJustPlay.visible = not running
+  btnQuickJustPlayCancel.visible = running
 
 proc enableDisableIntroMovies(path: string, enable: bool): bool =
   var moviePathSplit: tuple[dir, name, ext: string]
@@ -2202,7 +2201,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
 ##
 
 ### Events
-## Join
+## Quick
 type
   BF2142Options* = object
     modPath*: Option[string]
@@ -2258,16 +2257,16 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   return true
 
 proc patchAndStartLogic(): bool =
-  let ipAddress: string = txtIpAddress.text.strip()
-  txtPlayerName.text = txtPlayerName.text.strip()
+  let ipAddress: string = txtQuickIpAddress.text.strip()
+  txtQuickPlayerName.text = txtQuickPlayerName.text.strip()
   var invalidStr: string
-  if chbtnAutoJoin.active and (ipAddress == "127.0.0.1" or ipAddress == "localhost"):
+  if cbtnQuickAutoJoin.active and (ipAddress == "127.0.0.1" or ipAddress == "localhost"):
     invalidStr.add("\t* Auto join feature won't work if you're trying to connect to a gameserver with 127.0.0.1 or localhost.\n")
   if not ipAddress.isIpAddress():
     invalidStr.add("\t* Your IP-address is not valid.\n")
   elif ipAddress.parseIpAddress().family == IPv6:
     invalidStr.add("\t* IPv6 not testes!\n") # TODO: Add ignore?
-  if txtPlayerName.text == "":
+  if txtQuickPlayerName.text == "":
     invalidStr.add("\t* You need to specify a playername with at least one character.\n")
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
@@ -2280,53 +2279,53 @@ proc patchAndStartLogic(): bool =
 
   ## Check Logic (TODO: Cleanup and check servers in thread)
   # var canConnect: bool = true
-  # throbberLoginServer.visible = true
-  # throbberGpcmServer.visible = true
-  # throbberUnlockServer.visible = true
-  # imgLoginServer.visible = false
-  # imgGpcmServer.visible = false
-  # imgUnlockServer.visible = false
+  # spinnerQuickCheckServerLoginServer.visible = true
+  # spinnerQuickCheckServerGpcmServer.visible = true
+  # spinnerQuickCheckServerUnlockServer.visible = true
+  # imgQuickCheckServerLoginServer.visible = false
+  # imgQuickCheckServerGpcmServer.visible = false
+  # imgQuickCheckServerUnlockServer.visible = false
   # # Login server
   # if isAddrReachable(ipAddress, Port(18300), 1_000):
-  #   throbberLoginServer.visible = false
-  #   imgLoginServer.visible = true
-  #   imgLoginServer.setFromIconName("gtk-apply", 0)
+  #   spinnerQuickCheckServerLoginServer.visible = false
+  #   imgQuickCheckServerLoginServer.visible = true
+  #   imgQuickCheckServerLoginServer.setFromIconName("gtk-apply", 0)
   # else:
   #   canConnect = false
-  #   throbberLoginServer.visible = false
-  #   imgLoginServer.visible = true
-  #   imgLoginServer.setFromIconName("gtk-cancel", 0)
+  #   spinnerQuickCheckServerLoginServer.visible = false
+  #   imgQuickCheckServerLoginServer.visible = true
+  #   imgQuickCheckServerLoginServer.setFromIconName("gtk-cancel", 0)
   # # GPCM server
   # if isAddrReachable(ipAddress, Port(29900), 1_000):
-  #   throbberGpcmServer.visible = false
-  #   imgGpcmServer.visible = true
-  #   imgGpcmServer.setFromIconName("gtk-apply", 0)
+  #   spinnerQuickCheckServerGpcmServer.visible = false
+  #   imgQuickCheckServerGpcmServer.visible = true
+  #   imgQuickCheckServerGpcmServer.setFromIconName("gtk-apply", 0)
   # else:
   #   canConnect = false
-  #   throbberGpcmServer.visible = false
-  #   imgGpcmServer.visible = true
-  #   imgGpcmServer.setFromIconName("gtk-cancel", 0)
+  #   spinnerQuickCheckServerGpcmServer.visible = false
+  #   imgQuickCheckServerGpcmServer.visible = true
+  #   imgQuickCheckServerGpcmServer.setFromIconName("gtk-cancel", 0)
   # # Unlock server
   # if isAddrReachable(ipAddress, Port(8085), 1_000):
-  #   throbberUnlockServer.visible = false
-  #   imgUnlockServer.visible = true
-  #   imgUnlockServer.setFromIconName("gtk-apply", 0)
+  #   spinnerQuickCheckServerUnlockServer.visible = false
+  #   imgQuickCheckServerUnlockServer.visible = true
+  #   imgQuickCheckServerUnlockServer.setFromIconName("gtk-apply", 0)
   # else:
   #   canConnect = false
-  #   throbberUnlockServer.visible = false
-  #   imgUnlockServer.visible = true
-  #   imgUnlockServer.setFromIconName("gtk-cancel", 0)
+  #   spinnerQuickCheckServerUnlockServer.visible = false
+  #   imgQuickCheckServerUnlockServer.visible = true
+  #   imgQuickCheckServerUnlockServer.setFromIconName("gtk-cancel", 0)
   # if not canConnect:
-  #   dlgCheckServers.show()
+  #   dlgQuickCheckServer.show()
   #   # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
   #   #       and if every server is reachable autoamtically hidden.
   #   return
   #
 
   # config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_IP_ADDRESS, ipAddress)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, cbxJoinMods.activeId)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, txtPlayerName.text)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $chbtnAutoJoin.active)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, cbxQuickMod.activeId)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, txtQuickPlayerName.text)
+  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $cbtnQuickAutoJoin.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
@@ -2353,16 +2352,16 @@ proc patchAndStartLogic(): bool =
 
   backupOpenSpyIfExists()
 
-  saveBF2142Profile(txtPlayerName.text, txtPlayerName.text)
+  saveBF2142Profile(txtQuickPlayerName.text, txtQuickPlayerName.text)
 
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
-  if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxJoinMods.activeId / "Movies", chbtnSettingsSkipMovies.active):
+  if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxQuickMod.activeId / "Movies", chbtnSettingsSkipMovies.active):
     return
 
   var options: BF2142Options
-  options.modPath = some("mods/" & cbxJoinMods.activeId)
+  options.modPath = some("mods/" & cbxQuickMod.activeId)
   options.menu = some(true)
   options.fullscreen = some(not chbtnSettingsWindowMode.active)
   if chbtnSettingsWindowMode.active:
@@ -2370,42 +2369,42 @@ proc patchAndStartLogic(): bool =
     options.szx = some(resolution.width)
     options.szy = some(resolution.height)
   options.widescreen = some(true) # TODO
-  options.eaAccountName = some(txtPlayerName.text)
+  options.eaAccountName = some(txtQuickPlayerName.text)
   options.eaAccountPassword = some("A")
-  options.soldierName = some(txtPlayerName.text)
-  if chbtnAutoJoin.active:
+  options.soldierName = some(txtQuickPlayerName.text)
+  if cbtnQuickAutoJoin.active:
     options.joinServer = some(ipAddress.parseIpAddress())
     options.port = some(Port(17567))
   return startBF2142(options)
 
-proc onBtnJoinClicked(self: Button00) {.signal.} =
+proc onBtnQuickConnectClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
 
 
-proc onBtnJustPlayClicked(self: Button00) {.signal.} =
+proc onBtnQuickJustPlayClicked(self: Button00) {.signal.} =
   var ipAddress: IpAddress = parseIpAddress("127.0.0.1")
-  txtIpAddress.text = $ipAddress
+  txtQuickIpAddress.text = $ipAddress
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
-  termJustPlayServer.clear()
-  termJustPlayServer.startLoginServer(ipAddress)
-  var prevAutoJoinVal: bool = chbtnAutoJoin.active
-  chbtnAutoJoin.active = false
+  termQuickJustPlay.clear()
+  termQuickJustPlay.startLoginServer(ipAddress)
+  var prevAutoJoinVal: bool = cbtnQuickAutoJoin.active
+  cbtnQuickAutoJoin.active = false
   if patchAndStartLogic():
     termLoginServer.visible = false
     applyJustPlayRunningSensitivity(true)
     if termBF2142ServerPid == 0:
       applyHostRunningSensitivity(false)
   else:
-    chbtnAutoJoin.active = prevAutoJoinVal
+    cbtnQuickAutoJoin.active = prevAutoJoinVal
     killProcess(termLoginServerPid)
 
-proc onBtnJustPlayCancelClicked(self: Button00) {.signal.} =
+proc onBtnQuickJustPlayCancelClicked(self: Button00) {.signal.} =
   killProcess(termLoginServerPid)
   applyJustPlayRunningSensitivity(false)
 
-proc onBtnCheckCancelClicked(self: Button00) {.signal.} =
-  dlgCheckServers.hide()
+proc onBtnQuickCheckServerCancelClicked(self: Button00) {.signal.} =
+  dlgQuickCheckServer.hide()
 
 proc onBtnAddMapClicked(self: Button00) {.signal.} =
   var mapName, mapMode: string
@@ -2694,16 +2693,16 @@ proc onBtnHostClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(true)
   if $ipAddress == "0.0.0.0":
      # When setting to 127.0.0.1 game doesn't connect to game server (doesn't load map)
-    txtIpAddress.text = getPrivateAddrs()[0]
+    txtQuickIpAddress.text = getPrivateAddrs()[0]
   else:
-    txtIpAddress.text = $ipAddress
-  chbtnAutoJoin.active = true
+    txtQuickIpAddress.text = $ipAddress
+  cbtnQuickAutoJoin.active = true
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
   termLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
-  discard cbxJoinMods.setActiveId(cbxHostMods.activeId)
+  discard cbxQuickMod.setActiveId(cbxHostMods.activeId)
 
 proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   if not txtHostIpAddress.text.strip().isIpAddress() or
@@ -2714,10 +2713,10 @@ proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
   applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
   if $ipAddress == "0.0.0.0":
-    txtIpAddress.text = "127.0.0.1"
+    txtQuickIpAddress.text = "127.0.0.1"
   else:
-    txtIpAddress.text = $ipAddress
-  chbtnAutoJoin.active = false
+    txtQuickIpAddress.text = $ipAddress
+  cbtnQuickAutoJoin.active = false
   if termLoginServerPid > 0:
     killProcess(termLoginServerPid)
   termLoginServer.clear()
@@ -2727,7 +2726,7 @@ proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
   applyJustPlayRunningSensitivity(false)
   killProcess(termLoginServerPid)
-  txtIpAddress.text = ""
+  txtQuickIpAddress.text = ""
   if termBF2142ServerPid > 0:
     killProcess(termBF2142ServerPid)
 
@@ -2771,16 +2770,16 @@ proc setBF2142Path(path: string) =
     )
     txtSettingsBF2142ClientPath.text = bf2142UnlockerConfig.settings.bf2142ClientPath
     return
-  vboxJoin.visible = true
+  vboxQuick.visible = true
   vboxHost.visible = true
   vboxUnlocks.visible = true
   bf2142UnlockerConfig.settings.bf2142ClientPath = path
   if txtSettingsBF2142ClientPath.text != path:
     txtSettingsBF2142ClientPath.text = path
   loadJoinMods()
-  if not cbxJoinMods.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
-    discard cbxJoinMods.setActiveId("bf2142")
+    discard cbxQuickMod.setActiveId("bf2142")
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
   when defined(linux):
     let wineStartPos: int = bf2142UnlockerConfig.settings.bf2142ClientPath.find(".wine")
@@ -2994,27 +2993,27 @@ proc onApplicationActivate(application: Application) =
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
   cbxLanguages = builder.getComboBox("cbxLanguages")
-  vboxJoin = builder.getBox("vboxJoin")
-  vboxJustPlay = builder.getBox("vboxJustPlay")
-  cbxJoinMods = builder.getComboBox("cbxJoinMods")
+  vboxQuick = builder.getBox("vboxQuick")
+  vboxQuickJustPlay = builder.getBox("vboxQuickJustPlay")
+  cbxQuickMod = builder.getComboBox("cbxQuickMod")
   lblSettingsResolution = builder.getLabel("lblSettingsResolution")
   cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
-  txtPlayerName = builder.getEntry("txtPlayerName")
-  txtIpAddress = builder.getEntry("txtIpAddress")
-  chbtnAutoJoin = builder.getCheckButton("chbtnAutoJoin")
+  txtQuickPlayerName = builder.getEntry("txtQuickPlayerName")
+  txtQuickIpAddress = builder.getEntry("txtQuickIpAddress")
+  cbtnQuickAutoJoin = builder.getCheckButton("cbtnQuickAutoJoin")
   chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
   chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
-  btnJoin = builder.getButton("btnJoin")
-  btnJustPlay = builder.getButton("btnJustPlay")
-  btnJustPlayCancel = builder.getButton("btnJustPlayCancel")
-  dlgCheckServers = builder.getDialog("dlgCheckServers")
-  btnCheckCancel = builder.getButton("btnCheckCancel")
-  throbberLoginServer = builder.getSpinner("throbberLoginServer")
-  throbberGpcmServer = builder.getSpinner("throbberGpcmServer")
-  throbberUnlockServer = builder.getSpinner("throbberUnlockServer")
-  imgLoginServer = builder.getImage("imgLoginServer")
-  imgGpcmServer = builder.getImage("imgGpcmServer")
-  imgUnlockServer = builder.getImage("imgUnlockServer")
+  btnQuickConnect = builder.getButton("btnQuickConnect")
+  btnQuickJustPlay = builder.getButton("btnQuickJustPlay")
+  btnQuickJustPlayCancel = builder.getButton("btnQuickJustPlayCancel")
+  dlgQuickCheckServer = builder.getDialog("dlgQuickCheckServer")
+  btnQuickCheckServerCancel = builder.getButton("btnQuickCheckServerCancel")
+  spinnerQuickCheckServerLoginServer = builder.getSpinner("spinnerQuickCheckServerLoginServer")
+  spinnerQuickCheckServerGpcmServer = builder.getSpinner("spinnerQuickCheckServerGpcmServer")
+  spinnerQuickCheckServerUnlockServer = builder.getSpinner("spinnerQuickCheckServerUnlockServer")
+  imgQuickCheckServerLoginServer = builder.getImage("imgQuickCheckServerLoginServer")
+  imgQuickCheckServerGpcmServer = builder.getImage("imgQuickCheckServerGpcmServer")
+  imgQuickCheckServerUnlockServer = builder.getImage("imgQuickCheckServerUnlockServer")
   vboxHost = builder.getBox("vboxHost")
   tblHostSettings = builder.getGrid("tblHostSettings")
   imgLevelPreview = builder.getImage("imgLevelPreview")
@@ -3105,10 +3104,10 @@ proc onApplicationActivate(application: Application) =
   #
 
   ## Terminals # TODO: Create a custom widget for glade
-  termJustPlayServer = newTerminal()
-  termJustPlayServer.vexpand = true
-  vboxJustPlay.add(termJustPlayServer)
-  vboxJustPlay.reorderChild(termJustPlayServer, 0)
+  termQuickJustPlay = newTerminal()
+  termQuickJustPlay.vexpand = true
+  vboxQuickJustPlay.add(termQuickJustPlay)
+  vboxQuickJustPlay.reorderChild(termQuickJustPlay, 0)
   termLoginServer = newTerminal()
   termLoginServer.hexpand = true
   termBF2142Server = newTerminal()
@@ -3177,7 +3176,7 @@ proc onApplicationActivate(application: Application) =
     txtSettingsStartupQuery.visible = false
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
-    vboxJoin.visible = false
+    vboxQuick.visible = false
     vboxHost.visible = false
     vboxUnlocks.visible = false
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":

@@ -77,7 +77,7 @@ Author: Dankr4d
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
-  <object class="GtkDialog" id="dlgCheckServers">
+  <object class="GtkDialog" id="dlgQuickCheckServer">
     <property name="can-focus">False</property>
     <property name="type-hint">dialog</property>
     <child internal-child="vbox">
@@ -90,15 +90,12 @@ Author: Dankr4d
             <property name="can-focus">False</property>
             <property name="layout-style">end</property>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <object class="GtkButton" id="btnCheckCancel">
+              <object class="GtkButton" id="btnQuickCheckServerCancel">
                 <property name="label" translatable="yes">CHECK_CANCEL</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
-                <signal name="clicked" handler="onBtnCheckCancelClicked" swapped="no"/>
+                <signal name="clicked" handler="onBtnQuickCheckServerCancelClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -172,7 +169,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkSpinner" id="throbberLoginServer">
+              <object class="GtkSpinner" id="spinnerQuickCheckServerLoginServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
               </object>
@@ -182,7 +179,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkSpinner" id="throbberGpcmServer">
+              <object class="GtkSpinner" id="spinnerQuickCheckServerGpcmServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
               </object>
@@ -192,7 +189,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkSpinner" id="throbberUnlockServer">
+              <object class="GtkSpinner" id="spinnerQuickCheckServerUnlockServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
               </object>
@@ -202,7 +199,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="imgLoginServer">
+              <object class="GtkImage" id="imgQuickCheckServerLoginServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="icon-name">gtk-missing-image</property>
@@ -213,7 +210,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="imgGpcmServer">
+              <object class="GtkImage" id="imgQuickCheckServerGpcmServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="icon-name">gtk-missing-image</property>
@@ -224,7 +221,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="imgUnlockServer">
+              <object class="GtkImage" id="imgQuickCheckServerUnlockServer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="icon-name">gtk-missing-image</property>
@@ -243,6 +240,9 @@ Author: Dankr4d
         </child>
       </object>
     </child>
+    <action-widgets>
+      <action-widget response="0">btnQuickCheckServerCancel</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkImage" id="imgServerListConnect">
     <property name="visible">True</property>
@@ -449,7 +449,7 @@ Author: Dankr4d
             <property name="can-focus">True</property>
             <signal name="switch-page" handler="onNotebookSwitchPage" swapped="no"/>
             <child>
-              <object class="GtkBox" id="vboxJoin">
+              <object class="GtkBox" id="vboxQuick">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
@@ -506,7 +506,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry" id="txtIpAddress">
+                              <object class="GtkEntry" id="txtQuickIpAddress">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
@@ -517,7 +517,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="chbtnAutoJoin">
+                              <object class="GtkCheckButton" id="cbtnQuickAutoJoin">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
@@ -533,13 +533,13 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkButton" id="btnJoin">
+                              <object class="GtkButton" id="btnQuickConnect">
                                 <property name="label" translatable="yes">JOIN_CONNECT</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="tooltip-text" translatable="yes">JOIN_CONNECT_TOOLTIP</property>
-                                <signal name="clicked" handler="onBtnJoinClicked" swapped="no"/>
+                                <signal name="clicked" handler="onBtnQuickConnectClicked" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left-attach">0</property>
@@ -617,7 +617,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry" id="txtPlayerName">
+                              <object class="GtkEntry" id="txtQuickPlayerName">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
@@ -628,7 +628,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkComboBox" id="cbxJoinMods">
+                              <object class="GtkComboBox" id="cbxQuickMod">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="model">listStoreJoinMods</property>
@@ -703,7 +703,7 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox" id="vboxJustPlay">
+                  <object class="GtkBox" id="vboxQuickJustPlay">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-start">3</property>
@@ -716,12 +716,12 @@ Author: Dankr4d
                       <placeholder/>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnJustPlayCancel">
+                      <object class="GtkButton" id="btnQuickJustPlayCancel">
                         <property name="label" translatable="yes">JOIN_JUST_PLAY_CANCEL</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">JOIN_JUST_PLAY_CANCEL_TOOLTIP</property>
-                        <signal name="clicked" handler="onBtnJustPlayCancelClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnQuickJustPlayCancelClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -730,13 +730,13 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnJustPlay">
+                      <object class="GtkButton" id="btnQuickJustPlay">
                         <property name="label" translatable="yes">JOIN_JUST_PLAY</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">JOIN_JUST_PLAY_TOOLTIP</property>
-                        <signal name="clicked" handler="onBtnJustPlayClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnQuickJustPlayClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
