@@ -182,6 +182,11 @@ else:
     cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
     cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
 
+proc copyServerConfig() =
+  when defined(windows):
+    cpFile("server.ini", BUILD_BIN_DIR / "server.ini")
+  else:
+    cpFile("server.ini", BUILD_DIR / "server.ini")
 
 proc copyAll() =
   when defined(windows):
@@ -194,6 +199,7 @@ proc copyAll() =
     cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
     copyNcurses()
     copyOpenSSL()
+  copyServerConfig()
   copyTranslation()
 ##
 
