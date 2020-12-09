@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 
+<!-- Generated with glade 3.38.2
 
 The MIT License (MIT)
 
@@ -765,7 +765,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="vboxMultiplayer">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
@@ -782,7 +782,7 @@ Author: Dankr4d
                         <property name="can-focus">False</property>
                         <property name="margin-top">3</property>
                         <child>
-                          <object class="GtkOverlay" id="overlayServer">
+                          <object class="GtkOverlay">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <child>
@@ -791,13 +791,13 @@ Author: Dankr4d
                                 <property name="can-focus">True</property>
                                 <property name="shadow-type">in</property>
                                 <child>
-                                  <object class="GtkTreeView" id="listServer">
+                                  <object class="GtkTreeView" id="trvMultiplayerServers">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="model">listStoreServer</property>
                                     <property name="search-column">0</property>
-                                    <signal name="button-press-event" handler="onListServerButtonPressEvent" swapped="no"/>
-                                    <signal name="cursor-changed" handler="onListServerCursorChanged" swapped="no"/>
+                                    <signal name="button-press-event" handler="onTrvMultiplayerServersButtonPressEvent" swapped="no"/>
+                                    <signal name="cursor-changed" handler="onTrvMultiplayerServersCursorChanged" swapped="no"/>
                                     <child internal-child="selection">
                                       <object class="GtkTreeSelection"/>
                                     </child>
@@ -939,7 +939,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child type="overlay">
-                              <object class="GtkSpinner" id="spinnerServer">
+                              <object class="GtkSpinner" id="spinnerMultiplayerServers">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                               </object>
@@ -973,13 +973,13 @@ Author: Dankr4d
                                 <property name="orientation">vertical</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <object class="GtkButton" id="btnServerListRefresh">
+                                  <object class="GtkButton" id="btnMultiplayerServersRefresh">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerListRefesh</property>
                                     <property name="always-show-image">True</property>
-                                    <signal name="clicked" handler="onBtnServerListRefreshClicked" swapped="no"/>
+                                    <signal name="clicked" handler="onBtnMultiplayerServersRefreshClicked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -988,14 +988,14 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkButton" id="btnServerListPlay">
+                                  <object class="GtkButton" id="btnMultiplayerServersPlay">
                                     <property name="visible">True</property>
                                     <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerListConnect</property>
                                     <property name="always-show-image">True</property>
-                                    <signal name="clicked" handler="onBtnServerListPlayClicked" swapped="no"/>
+                                    <signal name="clicked" handler="onBtnMultiplayerServersPlayClicked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1038,7 +1038,7 @@ Author: Dankr4d
                                 <property name="can-focus">False</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkLabel" id="lblTeam1">
+                                  <object class="GtkLabel" id="lblMultiplayerTeam1">
                                     <property name="height-request">20</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -1065,7 +1065,7 @@ Author: Dankr4d
                                         <property name="can-focus">True</property>
                                         <property name="shadow-type">in</property>
                                         <child>
-                                          <object class="GtkTreeView" id="listPlayerInfo1">
+                                          <object class="GtkTreeView" id="trvMultiplayerPlayers1">
                                             <property name="visible">True</property>
                                             <property name="can-focus">True</property>
                                             <property name="model">listStorePlayerInfo1</property>
@@ -1146,7 +1146,7 @@ Author: Dankr4d
                                       </packing>
                                     </child>
                                     <child type="overlay">
-                                      <object class="GtkSpinner" id="spinnerServerPlayerList1">
+                                      <object class="GtkSpinner" id="spinnerMultiplayerPlayers1">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                       </object>
@@ -1173,7 +1173,7 @@ Author: Dankr4d
                                 <property name="can-focus">False</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkLabel" id="lblTeam2">
+                                  <object class="GtkLabel" id="lblMultiplayerTeam2">
                                     <property name="height-request">20</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -1200,7 +1200,7 @@ Author: Dankr4d
                                         <property name="can-focus">True</property>
                                         <property name="shadow-type">in</property>
                                         <child>
-                                          <object class="GtkTreeView" id="listPlayerInfo2">
+                                          <object class="GtkTreeView" id="trvMultiplayerPlayers2">
                                             <property name="visible">True</property>
                                             <property name="can-focus">True</property>
                                             <property name="model">listStorePlayerInfo2</property>
@@ -1281,7 +1281,7 @@ Author: Dankr4d
                                       </packing>
                                     </child>
                                     <child type="overlay">
-                                      <object class="GtkSpinner" id="spinnerServerPlayerList2">
+                                      <object class="GtkSpinner" id="spinnerMultiplayerPlayers2">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                       </object>
@@ -1329,13 +1329,13 @@ Author: Dankr4d
                                 <property name="orientation">vertical</property>
                                 <property name="spacing">3</property>
                                 <child>
-                                  <object class="GtkButton" id="btnServerPlayerListRefresh">
+                                  <object class="GtkButton" id="btnMultiplayerPlayersRefresh">
                                     <property name="visible">True</property>
                                     <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="image">imgServerPlayerRefesh</property>
-                                    <signal name="clicked" handler="onBtnServerPlayerRefreshClicked" swapped="no"/>
+                                    <signal name="clicked" handler="onBtnMultiplayerPlayersRefreshClicked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1380,7 +1380,7 @@ Author: Dankr4d
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">TAB_SERVER</property>
+                <property name="label" translatable="yes">TAB_MULTIPLAYER</property>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -2952,15 +2952,15 @@ Author: Dankr4d
       </object>
     </child>
   </object>
-  <object class="GtkWindow" id="wndLogin">
+  <object class="GtkWindow" id="wndMultiplayerAccount">
     <property name="can-focus">False</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window-position">center-on-parent</property>
     <property name="transient-for">window</property>
-    <signal name="delete-event" handler="onWndLoginDeleteEvent" swapped="no"/>
-    <signal name="hide" handler="onWndLoginHide" swapped="no"/>
-    <signal name="show" handler="onWndLoginShow" swapped="no"/>
+    <signal name="delete-event" handler="onWndMultiplayerAccountDeleteEvent" swapped="no"/>
+    <signal name="hide" handler="onWndMultiplayerAccountHide" swapped="no"/>
+    <signal name="show" handler="onWndMultiplayerAccountShow" swapped="no"/>
     <child>
       <object class="GtkOverlay">
         <property name="visible">True</property>
@@ -2994,7 +2994,7 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="lblLoginStellaName">
+                  <object class="GtkLabel" id="lblMultiplayerAccountStellaName">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="xalign">0</property>
@@ -3018,12 +3018,12 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="chbtnLoginSave">
+                  <object class="GtkCheckButton" id="chbtnMultiplayerAccountSave">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
                     <property name="draw-indicator">True</property>
-                    <signal name="toggled" handler="onChbtnLoginSaveToggled" swapped="no"/>
+                    <signal name="toggled" handler="onChbtnMultiplayerAccountSaveToggled" swapped="no"/>
                     <child>
                       <placeholder/>
                     </child>
@@ -3054,7 +3054,7 @@ Author: Dankr4d
                     <property name="orientation">vertical</property>
                     <property name="spacing">3</property>
                     <child>
-                      <object class="GtkButton" id="btnLoginSoldierAdd">
+                      <object class="GtkButton" id="btnMultiplayerAccountSoldierAdd">
                         <property name="label" translatable="yes">+</property>
                         <property name="name">s</property>
                         <property name="visible">True</property>
@@ -3063,7 +3063,7 @@ Author: Dankr4d
                         <property name="receives-default">True</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
-                        <signal name="clicked" handler="onBtnLoginSoldierAddClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnMultiplayerAccountSoldierAddClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -3072,7 +3072,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="btnLoginSoldierDelete">
+                      <object class="GtkButton" id="btnMutliplayerAccountSoldierDel">
                         <property name="label" translatable="yes">-</property>
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
@@ -3080,7 +3080,7 @@ Author: Dankr4d
                         <property name="receives-default">True</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
-                        <signal name="clicked" handler="onBtnLoginSoldierDeleteClicked" swapped="no"/>
+                        <signal name="clicked" handler="onBtnMutliplayerAccountSoldierDelClicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -3107,14 +3107,14 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="txtLoginPassword">
+                  <object class="GtkEntry" id="txtMultiplayerAccountPassword">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="max-length">16</property>
                     <property name="visibility">False</property>
                     <property name="invisible-char">●</property>
-                    <signal name="delete-text" handler="onTxtLoginPasswordDeleteText" swapped="no"/>
-                    <signal name="insert-text" handler="onTxtLoginPasswordInsertText" swapped="no"/>
+                    <signal name="delete-text" handler="onTxtMultiplayerAccountPasswordDeleteText" swapped="no"/>
+                    <signal name="insert-text" handler="onTxtMultiplayerAccountPasswordInsertText" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left-attach">1</property>
@@ -3122,12 +3122,12 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="txtLoginUsername">
+                  <object class="GtkEntry" id="txtMultiplayerAccountUsername">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="max-length">16</property>
-                    <signal name="delete-text" handler="onTxtLoginUsernameDeleteText" swapped="no"/>
-                    <signal name="insert-text" handler="onTxtLoginUsernameInsertText" swapped="no"/>
+                    <signal name="delete-text" handler="onTxtMultiplayerAccountUsernameDeleteText" swapped="no"/>
+                    <signal name="insert-text" handler="onTxtMultiplayerAccountUsernameInsertText" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left-attach">1</property>
@@ -3135,13 +3135,13 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnLoginCheck">
+                  <object class="GtkButton" id="btnMultiplayerAccountLogin">
                     <property name="label" translatable="yes">LOGIN_CHECK</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <property name="halign">start</property>
-                    <signal name="clicked" handler="onBtnLoginCheckClicked" swapped="no"/>
+                    <signal name="clicked" handler="onBtnMultiplayerAccountLoginClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left-attach">2</property>
@@ -3174,7 +3174,7 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="lblLoginGameServerName">
+                  <object class="GtkLabel" id="lblMultiplayerAccountGameServerName">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="xalign">0</property>
@@ -3196,13 +3196,13 @@ Author: Dankr4d
                         <property name="shadow-type">in</property>
                         <property name="min-content-height">80</property>
                         <child>
-                          <object class="GtkTreeView" id="listLoginSoldiers">
+                          <object class="GtkTreeView" id="trvMultiplayerAccountSoldiers">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="model">listStoreLoginSoldiers</property>
                             <property name="headers-visible">False</property>
                             <property name="search-column">0</property>
-                            <signal name="cursor-changed" handler="onListLoginSoldiersCursorChanged" swapped="no"/>
+                            <signal name="cursor-changed" handler="onTrvMultiplayerAccountSoldiersCursorChanged" swapped="no"/>
                             <child internal-child="selection">
                               <object class="GtkTreeSelection"/>
                             </child>
@@ -3225,7 +3225,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child type="overlay">
-                      <object class="GtkSpinner" id="spinnerLoginSoldiers">
+                      <object class="GtkSpinner" id="spinnerMultiplayerAccountSoldiers">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                       </object>
@@ -3250,7 +3250,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkFrame" id="frameLoginError">
+              <object class="GtkFrame" id="frameMultiplayerAccountError">
                 <property name="can-focus">False</property>
                 <property name="margin-start">5</property>
                 <property name="margin-end">5</property>
@@ -3306,7 +3306,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblLoginErrorCode">
+                      <object class="GtkLabel" id="lblMultiplayerAccountErrorCode">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -3318,7 +3318,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblLoginErrorTxn">
+                      <object class="GtkLabel" id="lblMultiplayerAccountErrorTxn">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -3330,7 +3330,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="lblLoginErrorMsg">
+                      <object class="GtkLabel" id="lblMultiplayerAccountErrorMsg">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -3380,13 +3380,13 @@ Author: Dankr4d
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
-                  <object class="GtkButton" id="btnLoginCreate">
+                  <object class="GtkButton" id="btnMultiplayerAccountCreate">
                     <property name="label" translatable="yes">LOGIN_CREATE</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <property name="halign">start</property>
-                    <signal name="clicked" handler="onBtnLoginCreateClicked" swapped="no"/>
+                    <signal name="clicked" handler="onBtnMultiplayerAccountCreateClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -3395,13 +3395,13 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnLoginPlay">
+                  <object class="GtkButton" id="btnMultiplayerAccountPlay">
                     <property name="label" translatable="yes">LOGIN_PLAY</property>
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
-                    <signal name="clicked" handler="onBtnLoginPlayClicked" swapped="no"/>
+                    <signal name="clicked" handler="onBtnMultiplayerAccountPlayClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -3410,12 +3410,12 @@ Author: Dankr4d
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnLoginCancel">
+                  <object class="GtkButton" id="btnMultiplayerAccountCancel">
                     <property name="label" translatable="yes">LOGIN_CANCEL</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
-                    <signal name="clicked" handler="onBtnLoginCancelClicked" swapped="no"/>
+                    <signal name="clicked" handler="onBtnMultiplayerAccountCancelClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -3436,7 +3436,7 @@ Author: Dankr4d
           </packing>
         </child>
         <child type="overlay">
-          <object class="GtkSpinner" id="spinnerLogin">
+          <object class="GtkSpinner" id="spinnerMultiplayerAccount">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
           </object>
@@ -3447,12 +3447,12 @@ Author: Dankr4d
       </object>
     </child>
   </object>
-  <object class="GtkDialog" id="dlgLoginAddSoldier">
+  <object class="GtkDialog" id="dlgMultiplayerAccountSoldier">
     <property name="can-focus">False</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="type-hint">dialog</property>
-    <property name="transient-for">wndLogin</property>
+    <property name="transient-for">wndMultiplayerAccount</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -3467,7 +3467,7 @@ Author: Dankr4d
             <property name="can-focus">False</property>
             <property name="layout-style">end</property>
             <child>
-              <object class="GtkButton" id="btnLoginAddSoldierOk">
+              <object class="GtkButton" id="btnMultiplayerAccountSoldierOk">
                 <property name="label" translatable="yes">LOGIN_ADD_SOLDIER_OK</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -3481,7 +3481,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="btnLoginAddSoldierCancel">
+              <object class="GtkButton" id="btnMultiplayerAccountSoldierCancel">
                 <property name="label" translatable="yes">LOGIN_ADD_SOLDIER_CANCEL</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -3519,14 +3519,14 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="txtLoginAddSoldierName">
+              <object class="GtkEntry" id="txtMultiplayerAccountSoldierName">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="has-focus">True</property>
                 <property name="max-length">14</property>
-                <signal name="changed" handler="onTxtLoginAddSoldierNameChanged" swapped="no"/>
-                <signal name="delete-text" handler="onTxtLoginAddSoldierNameDeleteText" swapped="no"/>
-                <signal name="insert-text" handler="onTxtLoginAddSoldierNameInsertText" swapped="no"/>
+                <signal name="changed" handler="onTxtMultiplayerAccountSoldierNameChanged" swapped="no"/>
+                <signal name="delete-text" handler="onTxtMultiplayerAccountSoldierNameDeleteText" swapped="no"/>
+                <signal name="insert-text" handler="onTxtMultiplayerAccountSoldierNameInsertText" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -3544,16 +3544,16 @@ Author: Dankr4d
       </object>
     </child>
     <action-widgets>
-      <action-widget response="1">btnLoginAddSoldierOk</action-widget>
-      <action-widget response="0">btnLoginAddSoldierCancel</action-widget>
+      <action-widget response="1">btnMultiplayerAccountSoldierOk</action-widget>
+      <action-widget response="0">btnMultiplayerAccountSoldierCancel</action-widget>
     </action-widgets>
   </object>
-  <object class="GtkDialog" id="dlgLoginModMissing">
+  <object class="GtkDialog" id="dlgMultiplayerModMissing">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">LOGIN_MOD_MISSING_TITLE</property>
     <property name="resizable">False</property>
     <property name="type-hint">dialog</property>
-    <property name="transient-for">wndLogin</property>
+    <property name="transient-for">wndMultiplayerAccount</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -3602,7 +3602,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="lblModMissingLink">
+              <object class="GtkLabel" id="lblMultiplayerModMissingLink">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label" translatable="yes">LOGIN_MOD_MISSING_LINK</property>
@@ -3615,7 +3615,7 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
-              <object class="GtkLinkButton" id="lbtnLoginModMissing">
+              <object class="GtkLinkButton" id="lbtnMultiplayerModMissing">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>

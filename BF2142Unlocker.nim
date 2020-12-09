@@ -371,50 +371,50 @@ var termQuickJustPlay: Terminal
 var dlgQuickCheckServer: Dialog
 var spinnerQuickCheckServerLoginServer: Spinner # Rename to FeslServer
 var spinnerQuickCheckServerGpcmServer: Spinner
-var spinnerQuickCheckServerUnlockServer: Spinner # Rename to Statsserver?
+var spinnerQuickCheckServerUnlockServer: Spinner # Rename to StatsServer?
 var imgQuickCheckServerLoginServer: Image
 var imgQuickCheckServerGpcmServer: Image
 var imgQuickCheckServerUnlockServer: Image
 var btnQuickCheckServerCancel: Button
 ##
 ### Server list
-var overlayServer: Overlay
-var spinnerServer: Spinner
-var listServer: TreeView
-var btnServerListRefresh: Button
-var btnServerListPlay: Button
-var listPlayerInfo1: TreeView
-var spinnerServerPlayerList1: Spinner
-var listPlayerInfo2: TreeView
-var spinnerServerPlayerList2: Spinner
-var lblTeam1: Label
-var lblTeam2: Label
-var btnServerPlayerListRefresh: Button
-var wndLogin: gtk.Window
-var spinnerLogin: Spinner
-var lblLoginStellaName: Label
-var lblLoginGameServerName: Label
-var txtLoginUsername: Entry
-var txtLoginPassword: Entry
-var listLoginSoldiers: TreeView
-var spinnerLoginSoldiers: Spinner
-var btnLoginCheck: Button
-var btnLoginSoldierAdd: Button
-var btnLoginSoldierDelete: Button
-var chbtnLoginSave: CheckButton
-var frameLoginError: Frame
-var lblLoginErrorTxn: Label
-var lblLoginErrorCode: Label
-var lblLoginErrorMsg: Label
-var btnLoginCreate: Button
-var btnLoginPlay: Button
-var btnLoginCancel: Button
-var dlgLoginAddSoldier: Dialog
-var txtLoginAddSoldierName: Entry
-var btnLoginAddSoldierOk: Button
-var dlgLoginModMissing: Dialog
-var lblModMissingLink: Label
-var lbtnLoginModMissing: LinkButton
+var vboxMultiplayer: Box
+var spinnerMultiplayerServers: Spinner
+var trvMultiplayerServers: TreeView
+var btnMultiplayerServersRefresh: Button
+var btnMultiplayerServersPlay: Button
+var trvMultiplayerPlayers1: TreeView
+var spinnerMultiplayerPlayers1: Spinner
+var trvMultiplayerPlayers2: TreeView
+var spinnerMultiplayerPlayers2: Spinner
+var lblMultiplayerTeam1: Label
+var lblMultiplayerTeam2: Label
+var btnMultiplayerPlayersRefresh: Button
+var wndMultiplayerAccount: gtk.Window
+var spinnerMultiplayerAccount: Spinner
+var lblMultiplayerAccountStellaName: Label
+var lblMultiplayerAccountGameServerName: Label
+var txtMultiplayerAccountUsername: Entry
+var txtMultiplayerAccountPassword: Entry
+var trvMultiplayerAccountSoldiers: TreeView
+var spinnerMultiplayerAccountSoldiers: Spinner
+var btnMultiplayerAccountLogin: Button
+var btnMultiplayerAccountSoldierAdd: Button
+var btnMutliplayerAccountSoldierDel: Button
+var chbtnMultiplayerAccountSave: CheckButton
+var frameMultiplayerAccountError: Frame
+var lblMultiplayerAccountErrorTxn: Label
+var lblMultiplayerAccountErrorCode: Label
+var lblMultiplayerAccountErrorMsg: Label
+var btnMultiplayerAccountCreate: Button
+var btnMultiplayerAccountPlay: Button
+var btnMultiplayerAccountCancel: Button
+var dlgMultiplayerAccountSoldier: Dialog
+var txtMultiplayerAccountSoldierName: Entry
+var btnMultiplayerAccountSoldierOk: Button
+var dlgMultiplayerModMissing: Dialog
+var lblMultiplayerModMissingLink: Label
+var lbtnMultiplayerModMissing: LinkButton
 ##
 ### Host controls
 var vboxHost: Box
@@ -1112,7 +1112,6 @@ proc loadSelectableMapList() =
       newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
 
 proc updatePathes() =
-  echo "cbxHostMods.activeId: ", cbxHostMods.activeId
   var currentModPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "mods" / cbxHostMods.activeId
   currentModSettingsPath = currentModPath / "settings"
   currentServerSettingsPath = currentModSettingsPath / "serversettings.con"
@@ -1565,8 +1564,8 @@ proc timerUpdatePlayerList(TODO: int): bool =
   var
     valPID, valName, valScore, valKills, valDeaths, valPing: Value
     iter: TreeIter
-  let storePlayerInfo1: ListStore = listStore(listPlayerInfo1.getModel())
-  let storePlayerInfo2: ListStore = listStore(listPlayerInfo2.getModel())
+  let storePlayerInfo1: ListStore = listStore(trvMultiplayerPlayers1.getModel())
+  let storePlayerInfo2: ListStore = listStore(trvMultiplayerPlayers2.getModel())
   discard valPID.init(g_uint_get_type())
   discard valName.init(g_string_get_type())
   discard valScore.init(g_int_get_type())
@@ -1595,12 +1594,12 @@ proc timerUpdatePlayerList(TODO: int): bool =
     store.setValue(iter, 4, valDeaths)
     store.setValue(iter, 5, valPing)
 
-  lblTeam1.text = gspy.team.team_t[0].toUpper()
-  lblTeam2.text = gspy.team.team_t[1].toUpper()
+  lblMultiplayerTeam1.text = gspy.team.team_t[0].toUpper()
+  lblMultiplayerTeam2.text = gspy.team.team_t[1].toUpper()
 
-  btnServerPlayerListRefresh.sensitive = true
-  spinnerServerPlayerList1.stop()
-  spinnerServerPlayerList2.stop()
+  btnMultiplayerPlayersRefresh.sensitive = true
+  spinnerMultiplayerPlayers1.stop()
+  spinnerMultiplayerPlayers2.stop()
   timerUpdatePlayerListId = 0
 
   channelUpdatePlayerList.close()
@@ -1612,12 +1611,12 @@ proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: P
   channelUpdatePlayerList.send((gspy, gspyIpPort.gspyIp, gspyIpPort.gspyPort))
 
 proc updatePlayerListAsync() =
-  listPlayerInfo1.clear()
-  listPlayerInfo2.clear()
-  spinnerServerPlayerList1.start()
-  spinnerServerPlayerList2.start()
-  btnServerListPlay.sensitive = true
-  btnServerPlayerListRefresh.sensitive = false
+  trvMultiplayerPlayers1.clear()
+  trvMultiplayerPlayers2.clear()
+  spinnerMultiplayerPlayers1.start()
+  spinnerMultiplayerPlayers2.start()
+  btnMultiplayerServersPlay.sensitive = true
+  btnMultiplayerPlayersRefresh.sensitive = false
 
   channelUpdatePlayerList = Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]()
   channelUpdatePlayerList.open()
@@ -1638,7 +1637,7 @@ proc timerUpdateServer(TODO: int): bool =
     valMode, valMod, valIp, valPort, valGSpyPort: Value
     valStellaName: Value
     iter: TreeIter
-  let store = listStore(listServer.getModel())
+  let store = listStore(trvMultiplayerServers.getModel())
   discard valName.init(g_string_get_type())
   discard valCurrentPlayer.init(g_uint_get_type())
   discard valMaxPlayer.init(g_uint_get_type())
@@ -1673,16 +1672,16 @@ proc timerUpdateServer(TODO: int): bool =
     store.setValue(iter, 9, valGSpyPort)
     store.setValue(iter, 8, valStellaName)
 
-  spinnerServer.stop()
-  spinnerServerPlayerList1.stop()
-  spinnerServerPlayerList2.stop()
-  btnServerListRefresh.sensitive = true
+  spinnerMultiplayerServers.stop()
+  spinnerMultiplayerPlayers1.stop()
+  spinnerMultiplayerPlayers2.stop()
+  btnMultiplayerServersRefresh.sensitive = true
   if isServerSelected:
     # TODO: Maybe we can select the first server then this global var is obsolet.
     #       Options would be also a possibility but then we need to call get every currentServer access
-    listServer.selectServer = currentServer
-    btnServerListPlay.sensitive = true
-    btnServerPlayerListRefresh.sensitive = true
+    trvMultiplayerServers.selectServer = currentServer
+    btnMultiplayerServersPlay.sensitive = true
+    btnMultiplayerPlayersRefresh.sensitive = true
     updatePlayerListAsync()
 
   channelUpdateServer.close()
@@ -1716,13 +1715,13 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   channelUpdateServer.send(servers)
 
 proc updateServerAsync() =
-  listServer.clear()
-  listPlayerInfo1.clear()
-  listPlayerInfo2.clear()
-  spinnerServer.start()
-  btnServerListRefresh.sensitive = false
-  btnServerListPlay.sensitive = false
-  btnServerPlayerListRefresh.sensitive = false
+  trvMultiplayerServers.clear()
+  trvMultiplayerPlayers1.clear()
+  trvMultiplayerPlayers2.clear()
+  spinnerMultiplayerServers.start()
+  btnMultiplayerServersRefresh.sensitive = false
+  btnMultiplayerServersPlay.sensitive = false
+  btnMultiplayerPlayersRefresh.sensitive = false
 
   channelUpdateServer = Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]()
   channelUpdateServer.open()
@@ -1746,45 +1745,46 @@ proc timerFesl(TODO: int): bool =
   of FeslCommand.Create:
     if data.create.save and isNone(data.ex):
       saveLogin(currentServerConfig.server_name, data.create.username, data.create.password, "")
-    btnLoginSoldierAdd.sensitive = isNone(data.ex)
-    btnLoginSoldierDelete.sensitive = false
-    btnLoginPlay.sensitive = false
-    spinnerLogin.stop()
+    btnMultiplayerAccountSoldierAdd.sensitive = isNone(data.ex)
+    btnMutliplayerAccountSoldierDel.sensitive = false
+    btnMultiplayerAccountPlay.sensitive = false
+    spinnerMultiplayerAccount.stop()
   of FeslCommand.Login:
     if data.login.save and isNone(data.ex):
       saveLogin(currentServerConfig.server_name, data.login.username, data.login.password, get(data.login.soldier, ""))
-    btnLoginSoldierAdd.sensitive = isNone(data.ex)
+    btnMultiplayerAccountSoldierAdd.sensitive = isNone(data.ex)
     if isNone(data.ex):
-      listLoginSoldiers.soldiers = data.login.soldiers
+      trvMultiplayerAccountSoldiers.soldiers = data.login.soldiers
       if isSome(data.login.soldier):
-        listLoginSoldiers.selectedSoldier = get(data.login.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
-      let isSoldierSelected: bool = isSome(listLoginSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
-      btnLoginPlay.sensitive = isSoldierSelected
-      btnLoginSoldierDelete.sensitive = isSoldierSelected
+        trvMultiplayerAccountSoldiers.selectedSoldier = get(data.login.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
+      let isSoldierSelected: bool = isSome(trvMultiplayerAccountSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
+      btnMultiplayerAccountPlay.sensitive = isSoldierSelected
+      btnMutliplayerAccountSoldierDel.sensitive = isSoldierSelected
     else:
-      btnLoginPlay.sensitive = false
-      btnLoginSoldierDelete.sensitive = false
-    btnLoginCheck.sensitive = true
-    spinnerLogin.stop()
+      btnMultiplayerAccountPlay.sensitive = false
+      btnMutliplayerAccountSoldierDel.sensitive = false
+    btnMultiplayerAccountLogin.sensitive = true
+    spinnerMultiplayerAccount.stop()
   of FeslCommand.AddSoldier:
     if isNone(data.ex):
-      listLoginSoldiers.soldiers = data.soldier.soldiers
-      listLoginSoldiers.selectedSoldier = data.soldier.soldier
-      txtLoginAddSoldierName.text = ""
-      btnLoginPlay.sensitive = true
-    btnLoginSoldierDelete.sensitive = true
-    spinnerLoginSoldiers.stop()
+      trvMultiplayerAccountSoldiers.soldiers = data.soldier.soldiers
+      trvMultiplayerAccountSoldiers.selectedSoldier = data.soldier.soldier
+      ignoreEvents = true
+      txtMultiplayerAccountSoldierName.text = ""
+      ignoreEvents = false
+      btnMultiplayerAccountPlay.sensitive = true
+    btnMutliplayerAccountSoldierDel.sensitive = true
+    spinnerMultiplayerAccountSoldiers.stop()
   of FeslCommand.DelSoldier:
     if isNone(data.ex):
-      # listLoginSoldiers.selectNext()
-      listLoginSoldiers.removeSelected()
-    if chbtnLoginSave.active and isNone(data.ex): # TODO
-      saveLogin(currentServerConfig.server_name, txtLoginUsername.text, txtLoginPassword.text, "") # TODO
-    btnLoginSoldierDelete.sensitive = listLoginSoldiers.hasEntries()
-    btnLoginPlay.sensitive = isSome(listLoginSoldiers.selectedSoldier)
-    spinnerLoginSoldiers.stop()
-
-  wndLogin.sensitive = true
+      # trvMultiplayerAccountSoldiers.selectNext()
+      trvMultiplayerAccountSoldiers.removeSelected()
+    if chbtnMultiplayerAccountSave.active and isNone(data.ex): # TODO
+      saveLogin(currentServerConfig.server_name, txtMultiplayerAccountUsername.text, txtMultiplayerAccountPassword.text, "") # TODO
+    btnMutliplayerAccountSoldierDel.sensitive = trvMultiplayerAccountSoldiers.hasEntries()
+    btnMultiplayerAccountPlay.sensitive = isSome(trvMultiplayerAccountSoldiers.selectedSoldier)
+    spinnerMultiplayerAccountSoldiers.stop()
+  wndMultiplayerAccount.sensitive = true
 
   if isSome(data.ex):
     let ex: FeslException = get(data.ex)
@@ -1808,13 +1808,13 @@ proc timerFesl(TODO: int): bool =
     if errorMsg == "":
       errorMsg = "Unknown error."
 
-    frameLoginError.visible = true
-    lblLoginErrorTxn.text = $ex.exType
-    lblLoginErrorCode.text = $ex.code
-    lblLoginErrorMsg.text = errorMsg
+    frameMultiplayerAccountError.visible = true
+    lblMultiplayerAccountErrorTxn.text = $ex.exType
+    lblMultiplayerAccountErrorCode.text = $ex.code
+    lblMultiplayerAccountErrorMsg.text = errorMsg
 
   else:
-    frameLoginError.visible = false
+    frameMultiplayerAccountError.visible = false
   return SOURCE_CONTINUE
 
 
@@ -1890,27 +1890,27 @@ proc threadFeslProc() {.thread.} =
       channelFeslTimer.send(timerData)
 
 proc createAsync(save: bool) =
-  listLoginSoldiers.clear()
-  spinnerLogin.start()
-  wndLogin.sensitive = false
+  trvMultiplayerAccountSoldiers.clear()
+  spinnerMultiplayerAccount.start()
+  wndMultiplayerAccount.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Create)
   var createData: ThreadFeslCreateData
   createData.stella = parseUri(currentServerConfig.stella_prod).hostname
-  createData.username = txtLoginUsername.text
-  createData.password = txtLoginPassword.text
+  createData.username = txtMultiplayerAccountUsername.text
+  createData.password = txtMultiplayerAccountPassword.text
   createData.save = save
   data.create = createData
   channelFeslThread.send(data)
 
 proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
-  listLoginSoldiers.clear()
-  spinnerLogin.start()
-  wndLogin.sensitive = false
+  trvMultiplayerAccountSoldiers.clear()
+  spinnerMultiplayerAccount.start()
+  wndMultiplayerAccount.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Login)
   var loginData: ThreadFeslLoginData
   loginData.stella = parseUri(currentServerConfig.stella_prod).hostname
-  loginData.username = txtLoginUsername.text
-  loginData.password = txtLoginPassword.text
+  loginData.username = txtMultiplayerAccountUsername.text
+  loginData.password = txtMultiplayerAccountPassword.text
   loginData.save = save
   loginData.soldier = soldier
   data.login = loginData
@@ -2432,16 +2432,16 @@ proc onBtnMapMoveDownClicked(self: Button00) {.signal.} =
 #
 ## Server list
 ## TODO: Ping or connection gets closed after 30 seconds
-proc onListServerCursorChanged(self: TreeView00) {.signal.} =
-  currentServer = get(listServer.selectedServer)
+proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
+  currentServer = get(trvMultiplayerServers.selectedServer)
   isServerSelected = true
 
   for serverConfig in serverConfigs:
     if serverConfig.server_name == currentServer.stellaName:
       currentServerConfig = serverConfig
 
-  btnServerListPlay.sensitive = true
-  btnServerPlayerListRefresh.sensitive = true
+  btnMultiplayerServersPlay.sensitive = true
+  btnMultiplayerPlayersRefresh.sensitive = true
 
   updatePlayerListAsync()
 
@@ -2460,50 +2460,50 @@ proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool
   if pageNum == 1:
     updateServerAsync()
 
-proc onTxtLoginUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not isAlphaNumeric($cstr):
-    txtLoginUsername.signalStopEmissionByName("insert-text")
+    txtMultiplayerAccountUsername.signalStopEmissionByName("insert-text")
     return
-  btnLoginCheck.sensitive = (txtLoginUsername.text & $cstr).len > 0 and txtLoginPassword.text.len > 0
+  btnMultiplayerAccountLogin.sensitive = (txtMultiplayerAccountUsername.text & $cstr).len > 0 and txtMultiplayerAccountPassword.text.len > 0
 
-proc onTxtLoginUsernameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
-  btnLoginCheck.sensitive = (txtLoginUsername.text.len - (endPos - startPos)) > 0 and txtLoginPassword.text.len > 0
+proc onTxtMultiplayerAccountUsernameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  btnMultiplayerAccountLogin.sensitive = (txtMultiplayerAccountUsername.text.len - (endPos - startPos)) > 0 and txtMultiplayerAccountPassword.text.len > 0
 
-proc onTxtLoginPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+proc onTxtMultiplayerAccountPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not isAlphaNumeric($cstr):
-    txtLoginPassword.signalStopEmissionByName("insert-text")
+    txtMultiplayerAccountPassword.signalStopEmissionByName("insert-text")
     return
-  btnLoginCheck.sensitive = txtLoginUsername.text.len > 0 and (txtLoginPassword.text & $cstr).len > 0
+  btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text & $cstr).len > 0
 
-proc onTxtLoginPasswordDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
-  btnLoginCheck.sensitive = txtLoginUsername.text.len > 0 and (txtLoginPassword.text.len - (endPos - startPos)) > 0
+proc onTxtMultiplayerAccountPasswordDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text.len - (endPos - startPos)) > 0
 
-proc onTxtLoginAddSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
+proc onTxtMultiplayerAccountSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   var soldier: string
-  soldier = txtLoginAddSoldierName.text
+  soldier = txtMultiplayerAccountSoldierName.text
   soldier.insert($cstr, int(pos[]))
   if not validateSoldier(soldier):
-    txtLoginAddSoldierName.signalStopEmissionByName("insert-text")
+    txtMultiplayerAccountSoldierName.signalStopEmissionByName("insert-text")
 
-proc onTxtLoginAddSoldierNameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
-  var soldier: string = txtLoginAddSoldierName.text
+proc onTxtMultiplayerAccountSoldierNameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
+  var soldier: string = txtMultiplayerAccountSoldierName.text
   soldier.delete(int(startPos), int(endPos) - 1)
   if not validateSoldier(soldier):
-    txtLoginAddSoldierName.signalStopEmissionByName("delete-text")
+    txtMultiplayerAccountSoldierName.signalStopEmissionByName("delete-text")
 
-proc onTxtLoginAddSoldierNameChanged(self: Editable00) {.signal.} =
-  btnLoginAddSoldierOk.sensitive = txtLoginAddSoldierName.text.len >= 3
+proc onTxtMultiplayerAccountSoldierNameChanged(self: Editable00) {.signal.} =
+  btnMultiplayerAccountSoldierOk.sensitive = txtMultiplayerAccountSoldierName.text.len >= 3
 
-proc onBtnLoginCheckClicked(self: Button00) {.signal.} =
-  frameLoginError.visible = false
-  loginAsync(chbtnLoginSave.active)
+proc onBtnMultiplayerAccountLoginClicked(self: Button00) {.signal.} =
+  frameMultiplayerAccountError.visible = false
+  loginAsync(chbtnMultiplayerAccountSave.active)
 
-proc onBtnLoginCreateClicked(self: Button00) {.signal.} =
-  frameLoginError.visible = false
-  createAsync(chbtnLoginSave.active)
+proc onBtnMultiplayerAccountCreateClicked(self: Button00) {.signal.} =
+  frameMultiplayerAccountError.visible = false
+  createAsync(chbtnMultiplayerAccountSave.active)
 
-proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
-  frameLoginError.visible = false
+proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
+  frameMultiplayerAccountError.visible = false
 
   let modPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "TODO" # TODO: Remove TODO, just for testing
   if not dirExists(modPath):
@@ -2515,20 +2515,20 @@ proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
       uri = "https://www.moddb.com/mods/first-strike"
 
     if uri != "":
-      lblModMissingLink.visible = true
-      lbtnLoginModMissing.visible = true
-      lbtnLoginModMissing.label = uri
-      lbtnLoginModMissing.uri = uri
+      lblMultiplayerModMissingLink.visible = true
+      lbtnMultiplayerModMissing.visible = true
+      lbtnMultiplayerModMissing.label = uri
+      lbtnMultiplayerModMissing.uri = uri
     else:
-      lblModMissingLink.visible = false
-      lbtnLoginModMissing.visible = false
+      lblMultiplayerModMissingLink.visible = false
+      lbtnMultiplayerModMissing.visible = false
 
-    discard dlgLoginModMissing.run()
-    dlgLoginModMissing.hide()
+    discard dlgMultiplayerModMissing.run()
+    dlgMultiplayerModMissing.hide()
     return
 
-  let username: string = txtLoginUsername.text
-  let soldier: string = get(listLoginSoldiers.selectedSoldier)
+  let username: string = txtMultiplayerAccountUsername.text
+  let soldier: string = get(trvMultiplayerAccountSoldiers.selectedSoldier)
 
   backupOpenSpyIfExists()
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME, PatchConfig(currentServerConfig))
@@ -2542,56 +2542,56 @@ proc onBtnLoginPlayClicked(self: Button00) {.signal.} =
   options.szy = some(600.uint16) # TODO
   options.widescreen = some(true) # TODO
   options.eaAccountName = some(username)
-  options.eaAccountPassword = some(txtLoginPassword.text)
+  options.eaAccountPassword = some(txtMultiplayerAccountPassword.text)
   options.soldierName = some(soldier)
   options.joinServer = some(currentServer.ip)
   options.port = some(currentServer.port)
   discard startBF2142(options)
 
-proc onBtnLoginCancelClicked(self: Button) {.signal.} =
-  wndLogin.hide()
+proc onBtnMultiplayerAccountCancelClicked(self: Button) {.signal.} =
+  wndMultiplayerAccount.hide()
 
-proc onBtnLoginSoldierAddClicked(self: Button00) {.signal.} =
-  frameLoginError.visible = false
-  txtLoginAddSoldierName.grabFocus()
-  let dlgLoginAddSoldierCode: int = dlgLoginAddSoldier.run()
-  dlgLoginAddSoldier.hide()
-  if dlgLoginAddSoldierCode != 1:
+proc onBtnMultiplayerAccountSoldierAddClicked(self: Button00) {.signal.} =
+  frameMultiplayerAccountError.visible = false
+  txtMultiplayerAccountSoldierName.grabFocus()
+  let dlgMultiplayerAccountSoldierCode: int = dlgMultiplayerAccountSoldier.run()
+  dlgMultiplayerAccountSoldier.hide()
+  if dlgMultiplayerAccountSoldierCode != 1:
     return # User closed dialog
-  spinnerLoginSoldiers.start()
-  wndLogin.sensitive = false
+  spinnerMultiplayerAccountSoldiers.start()
+  wndMultiplayerAccount.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.AddSoldier)
   var dataSoldier: ThreadFeslSoldierData
-  dataSoldier.soldier = txtLoginAddSoldierName.text
+  dataSoldier.soldier = txtMultiplayerAccountSoldierName.text
   data.soldier = dataSoldier
   channelFeslThread.send(data)
 
 
-proc onBtnLoginSoldierDeleteClicked(self: Button00) {.signal.} =
-  spinnerLoginSoldiers.start()
-  wndLogin.sensitive = false
+proc onBtnMutliplayerAccountSoldierDelClicked(self: Button00) {.signal.} =
+  spinnerMultiplayerAccountSoldiers.start()
+  wndMultiplayerAccount.sensitive = false
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.DelSoldier)
   var dataSoldier: ThreadFeslSoldierData
-  dataSoldier.soldier = get(listLoginSoldiers.selectedSoldier)
+  dataSoldier.soldier = get(trvMultiplayerAccountSoldiers.selectedSoldier)
   data.soldier = dataSoldier
   channelFeslThread.send(data)
 
-proc onChbtnLoginSaveToggled(self: ToggleButton00) {.signal.} =
+proc onChbtnMultiplayerAccountSaveToggled(self: ToggleButton00) {.signal.} =
   var username, password, soldier: string
-  if chbtnLoginSave.active:
-    username = txtLoginUsername.text
-    password = txtLoginPassword.text
-    soldier = get(listLoginSoldiers.selectedSoldier, "")
+  if chbtnMultiplayerAccountSave.active:
+    username = txtMultiplayerAccountUsername.text
+    password = txtMultiplayerAccountPassword.text
+    soldier = get(trvMultiplayerAccountSoldiers.selectedSoldier, "")
   saveLogin(currentServerConfig.server_name, username, password, soldier)
 
-proc onListLoginSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
-  if chbtnLoginSave.active:
-    saveLogin(currentServerConfig.server_name, "", "", get(listLoginSoldiers.selectedSoldier), true)
-  btnLoginPlay.sensitive = true
-  btnLoginSoldierDelete.sensitive = true
+proc onTrvMultiplayerAccountSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
+  if chbtnMultiplayerAccountSave.active:
+    saveLogin(currentServerConfig.server_name, "", "", get(trvMultiplayerAccountSoldiers.selectedSoldier), true)
+  btnMultiplayerAccountPlay.sensitive = true
+  btnMutliplayerAccountSoldierDel.sensitive = true
   return EVENT_PROPAGATE
 
-proc onWndLoginShow(self: gtk.Window00) {.signal.} =
+proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
   notebook.sensitive = false
 
   channelFeslThread = Channel[ThreadFeslData]()
@@ -2602,60 +2602,60 @@ proc onWndLoginShow(self: gtk.Window00) {.signal.} =
   discard timeoutAdd(250, timerFesl, TODO)
   threadFesl.createThread(threadFeslProc)
 
-  lblLoginStellaName.text = currentServer.stellaName
-  lblLoginGameServerName.text = currentServer.name
+  lblMultiplayerAccountStellaName.text = currentServer.stellaName
+  lblMultiplayerAccountGameServerName.text = currentServer.name
 
   let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.server_name)
   if loginTplOpt.isSome:
     let loginTpl: tuple[username, password: string, soldier: Option[string]] = get(loginTplOpt)
     ignoreEvents = true
-    txtLoginUsername.text = loginTpl.username
-    txtLoginPassword.text = loginTpl.password
-    chbtnLoginSave.active = true
+    txtMultiplayerAccountUsername.text = loginTpl.username
+    txtMultiplayerAccountPassword.text = loginTpl.password
+    chbtnMultiplayerAccountSave.active = true
     ignoreEvents = false
     loginAsync(false, loginTpl.soldier)
     return
 
-  listLoginSoldiers.clear()
+  trvMultiplayerAccountSoldiers.clear()
   ignoreEvents = true
-  chbtnLoginSave.active = false
+  chbtnMultiplayerAccountSave.active = false
   ignoreEvents = false
 
-  btnLoginCheck.sensitive = false
-  btnLoginSoldierAdd.sensitive = false
-  btnLoginSoldierDelete.sensitive = false
-  btnLoginPlay.sensitive = false
+  btnMultiplayerAccountLogin.sensitive = false
+  btnMultiplayerAccountSoldierAdd.sensitive = false
+  btnMutliplayerAccountSoldierDel.sensitive = false
+  btnMultiplayerAccountPlay.sensitive = false
 
-proc onWndLoginDeleteEvent(self: gtk.Window00): bool {.signal.} =
-  wndLogin.hide()
+proc onWndMultiplayerAccountDeleteEvent(self: gtk.Window00): bool {.signal.} =
+  wndMultiplayerAccount.hide()
   return EVENT_STOP
 
-proc onWndLoginHide(self: gtk.Window00) {.signal.} =
+proc onWndMultiplayerAccountHide(self: gtk.Window00) {.signal.} =
   notebook.sensitive = true
-  frameLoginError.visible = false
+  frameMultiplayerAccountError.visible = false
 
-  txtLoginUsername.text = ""
-  txtLoginPassword.text = ""
+  txtMultiplayerAccountUsername.text = ""
+  txtMultiplayerAccountPassword.text = ""
   channelFeslThread.close() # Closes thread (see threadFeslProc)
   channelFeslTimer.close() # Closes timer (see timerFesl)
 
-proc onListServerButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =
+proc onTrvMultiplayerServersButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =
   var event: EventButton = new EventButton
   event.impl = event00
   event.ignoreFinalizer = true
   if event.eventType != gdk.EventType.doubleButtonPress:
     return
 
-  wndLogin.show()
+  wndMultiplayerAccount.show()
   return EVENT_PROPAGATE
 
-proc onBtnServerListRefreshClicked(self: Button00) {.signal.} =
+proc onBtnMultiplayerServersRefreshClicked(self: Button00) {.signal.} =
   updateServerAsync()
 
-proc onBtnServerListPlayClicked(self: Button00) {.signal.} =
-  wndLogin.show()
+proc onBtnMultiplayerServersPlayClicked(self: Button00) {.signal.} =
+  wndMultiplayerAccount.show()
 
-proc onBtnServerPlayerRefreshClicked(self: Button00) {.signal.} =
+proc onBtnMultiplayerPlayersRefreshClicked(self: Button00) {.signal.} =
   updatePlayerListAsync()
 #
 ## Host
@@ -3061,43 +3061,43 @@ proc onApplicationActivate(application: Application) =
   lblSettingsStartupQuery = builder.getLabel("lblSettingsStartupQuery")
   txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
 
-  overlayServer = builder.getOverlay("overlayServer")
-  spinnerServer = builder.getSpinner("spinnerServer")
-  listServer = builder.getTreeView("listServer")
-  btnServerListRefresh = builder.getButton("btnServerListRefresh")
-  btnServerListPlay = builder.getButton("btnServerListPlay")
-  listPlayerInfo1 = builder.getTreeView("listPlayerInfo1")
-  spinnerServerPlayerList1 = builder.getSpinner("spinnerServerPlayerList1")
-  listPlayerInfo2 = builder.getTreeView("listPlayerInfo2")
-  spinnerServerPlayerList2 = builder.getSpinner("spinnerServerPlayerList2")
-  lblTeam1 = builder.getLabel("lblTeam1")
-  lblTeam2 = builder.getLabel("lblTeam2")
-  btnServerPlayerListRefresh = builder.getButton("btnServerPlayerListRefresh")
-  wndLogin = builder.getWindow("wndLogin")
-  spinnerLogin = builder.getSpinner("spinnerLogin")
-  lblLoginStellaName = builder.getLabel("lblLoginStellaName")
-  lblLoginGameServerName = builder.getLabel("lblLoginGameServerName")
-  txtLoginUsername = builder.getEntry("txtLoginUsername")
-  txtLoginPassword = builder.getEntry("txtLoginPassword")
-  listLoginSoldiers = builder.getTreeView("listLoginSoldiers")
-  spinnerLoginSoldiers = builder.getSpinner("spinnerLoginSoldiers")
-  btnLoginCheck = builder.getButton("btnLoginCheck")
-  btnLoginSoldierAdd = builder.getButton("btnLoginSoldierAdd")
-  btnLoginSoldierDelete = builder.getButton("btnLoginSoldierDelete")
-  chbtnLoginSave = builder.getCheckButton("chbtnLoginSave")
-  frameLoginError = builder.getFrame("frameLoginError")
-  lblLoginErrorTxn = builder.getLabel("lblLoginErrorTxn")
-  lblLoginErrorCode = builder.getLabel("lblLoginErrorCode")
-  lblLoginErrorMsg = builder.getLabel("lblLoginErrorMsg")
-  btnLoginCreate = builder.getButton("btnLoginCreate")
-  btnLoginPlay = builder.getButton("btnLoginPlay")
-  btnLoginCancel = builder.getButton("btnLoginCancel")
-  dlgLoginAddSoldier = builder.getDialog("dlgLoginAddSoldier")
-  txtLoginAddSoldierName = builder.getEntry("txtLoginAddSoldierName")
-  btnLoginAddSoldierOk = builder.getButton("btnLoginAddSoldierOk")
-  dlgLoginModMissing = builder.getDialog("dlgLoginModMissing")
-  lblModMissingLink = builder.getLabel("lblModMissingLink")
-  lbtnLoginModMissing = builder.getLinkButton("lbtnLoginModMissing")
+  vboxMultiplayer = builder.getBox("vboxMultiplayer")
+  spinnerMultiplayerServers = builder.getSpinner("spinnerMultiplayerServers")
+  trvMultiplayerServers = builder.getTreeView("trvMultiplayerServers")
+  btnMultiplayerServersRefresh = builder.getButton("btnMultiplayerServersRefresh")
+  btnMultiplayerServersPlay = builder.getButton("btnMultiplayerServersPlay")
+  trvMultiplayerPlayers1 = builder.getTreeView("trvMultiplayerPlayers1")
+  spinnerMultiplayerPlayers1 = builder.getSpinner("spinnerMultiplayerPlayers1")
+  trvMultiplayerPlayers2 = builder.getTreeView("trvMultiplayerPlayers2")
+  spinnerMultiplayerPlayers2 = builder.getSpinner("spinnerMultiplayerPlayers2")
+  lblMultiplayerTeam1 = builder.getLabel("lblMultiplayerTeam1")
+  lblMultiplayerTeam2 = builder.getLabel("lblMultiplayerTeam2")
+  btnMultiplayerPlayersRefresh = builder.getButton("btnMultiplayerPlayersRefresh")
+  wndMultiplayerAccount = builder.getWindow("wndMultiplayerAccount")
+  spinnerMultiplayerAccount = builder.getSpinner("spinnerMultiplayerAccount")
+  lblMultiplayerAccountStellaName = builder.getLabel("lblMultiplayerAccountStellaName")
+  lblMultiplayerAccountGameServerName = builder.getLabel("lblMultiplayerAccountGameServerName")
+  txtMultiplayerAccountUsername = builder.getEntry("txtMultiplayerAccountUsername")
+  txtMultiplayerAccountPassword = builder.getEntry("txtMultiplayerAccountPassword")
+  trvMultiplayerAccountSoldiers = builder.getTreeView("trvMultiplayerAccountSoldiers")
+  spinnerMultiplayerAccountSoldiers = builder.getSpinner("spinnerMultiplayerAccountSoldiers")
+  btnMultiplayerAccountLogin = builder.getButton("btnMultiplayerAccountLogin")
+  btnMultiplayerAccountSoldierAdd = builder.getButton("btnMultiplayerAccountSoldierAdd")
+  btnMutliplayerAccountSoldierDel = builder.getButton("btnMutliplayerAccountSoldierDel")
+  chbtnMultiplayerAccountSave = builder.getCheckButton("chbtnMultiplayerAccountSave")
+  frameMultiplayerAccountError = builder.getFrame("frameMultiplayerAccountError")
+  lblMultiplayerAccountErrorTxn = builder.getLabel("lblMultiplayerAccountErrorTxn")
+  lblMultiplayerAccountErrorCode = builder.getLabel("lblMultiplayerAccountErrorCode")
+  lblMultiplayerAccountErrorMsg = builder.getLabel("lblMultiplayerAccountErrorMsg")
+  btnMultiplayerAccountCreate = builder.getButton("btnMultiplayerAccountCreate")
+  btnMultiplayerAccountPlay = builder.getButton("btnMultiplayerAccountPlay")
+  btnMultiplayerAccountCancel = builder.getButton("btnMultiplayerAccountCancel")
+  dlgMultiplayerAccountSoldier = builder.getDialog("dlgMultiplayerAccountSoldier")
+  txtMultiplayerAccountSoldierName = builder.getEntry("txtMultiplayerAccountSoldierName")
+  btnMultiplayerAccountSoldierOk = builder.getButton("btnMultiplayerAccountSoldierOk")
+  dlgMultiplayerModMissing = builder.getDialog("dlgMultiplayerModMissing")
+  lblMultiplayerModMissingLink = builder.getLabel("lblMultiplayerModMissingLink")
+  lbtnMultiplayerModMissing = builder.getLinkButton("lbtnMultiplayerModMissing")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
