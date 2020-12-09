@@ -707,7 +707,7 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
     result.settings.startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, "/usr/bin/wine")
   result.settings.skipMovies = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, "false"))
   result.settings.windowMode = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, "false"))
-  result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION) # TODO: Rename to windowResolution
+  result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, "800x600") # TODO: Rename to windowResolution
 
 
 proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
@@ -740,7 +740,8 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     txtStartupQuery.text = config.settings.startupQuery
   chbtnSkipMovies.active = config.settings.skipMovies
   chbtnWindowMode.active = config.settings.windowMode
-  discard cbxJoinResolutions.setActiveId(config.settings.resolution)
+  if not cbxJoinResolutions.setActiveId(config.settings.resolution):
+    cbxJoinResolutions.setActive(0)
 
 
 proc backupOpenSpyIfExists() =
@@ -1371,7 +1372,6 @@ proc loadJoinResolutions() =
   var iter: TreeIter
   let store = listStore(cbxJoinResolutions.getModel())
   store.clear()
-  var idx: int = 0
   for resolution in getAvailableResolutions():
     valResolution.setString($resolution.width & "x" & $resolution.height)
     valWidth.setUint(cast[int](resolution.width))
@@ -1381,8 +1381,6 @@ proc loadJoinResolutions() =
     store.setValue(iter, 1, valResolution)
     store.setValue(iter, 2, valWidth)
     store.setValue(iter, 3, valHeight)
-    idx.inc()
-  cbxJoinResolutions.setActive(0)
 
 proc getSelectedResolution(): tuple[width, height: uint16] =
   var iter: TreeIter
@@ -2329,9 +2327,9 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, cbxJoinMods.activeId)
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, txtPlayerName.text)
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $chbtnAutoJoin.active)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSkipMovies.active)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnWindowMode.active)
-  config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_SETTINGS_RESOLUTION, cbxJoinResolutions.activeId)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSkipMovies.active)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnWindowMode.active)
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxJoinResolutions.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
   if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
@@ -3148,11 +3146,10 @@ proc onApplicationActivate(application: Application) =
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
   window.show()
-  loadJoinResolutions()
   bf2142UnlockerConfig = getBF2142UnlockerConfig()
-  echo "bf2142UnlockerConfig.host.`mod`: ", bf2142UnlockerConfig.host.`mod`
   loadJoinMods()
   loadHostMods()
+  loadJoinResolutions()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
   lblJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode
   cbxJoinResolutions.visible = bf2142UnlockerConfig.settings.windowMode

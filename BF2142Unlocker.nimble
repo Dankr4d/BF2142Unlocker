@@ -153,9 +153,7 @@ when defined(windows):
     mkDir(BUILD_LIB_DIR)
     cpDir("C:" / "msys64" / "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
-    mkDir(BUILD_SHARE_DIR)
-    mkDir(BUILD_SHARE_DIR / "icons")
-    mkDir(BUILD_SHARE_DIR / "icons" / "Adwaita")
+    mkdir(BUILD_SHARE_THEME_DIR)
     cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
     cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
     mkDir(BUILD_SHARE_THEME_DIR / "scalable")
@@ -164,8 +162,7 @@ when defined(windows):
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
-
-    # cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita", BUILD_SHARE_DIR / "icons")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
 
     mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
     cpFile("C:" / "msys64" / "mingw64" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
