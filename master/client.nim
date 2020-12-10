@@ -207,6 +207,10 @@ proc queryGameServerListEnc1*(url: string, port: Port): seq[tuple[ip: IpAddress,
 
 ################################################################
 
+from os import splitPath
+const MASTER_SERVER_HEADER_PATH: string = currentSourcePath().splitPath.head & "/masterserver.h"
+
+
 
 import net
 import strutils
@@ -243,17 +247,17 @@ type ipport_t {.packed.} = object
   port: uint16
 
 # unsigned char *enctypex_decoder(unsigned char *key, unsigned char *validate, unsigned char *data, int *datalen, enctypex_data_t *enctypex_data)
-proc enctypex_decoder(key: ptr cuchar, validate: ptr cuchar, data: ptr cuchar, datalen: ptr cint, enctypex_data: ptr enctypex_data_t): ptr cuchar {.importc, cdecl, header: "masterserver.h".}
+proc enctypex_decoder(key: ptr cuchar, validate: ptr cuchar, data: ptr cuchar, datalen: ptr cint, enctypex_data: ptr enctypex_data_t): ptr cuchar {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 # int enctypex_decoder_convert_to_ipport(unsigned char *data, int datalen, unsigned char *out, unsigned char *infobuff, int infobuff_size, int infobuff_offset)
-proc enctypex_decoder_convert_to_ipport(data: ptr cuchar, datalen: cint, `out`: ptr cuchar, infobuff: ptr cuchar, infobuff_size: cint, infobuff_offset: cint): cint {.importc, cdecl, header: "masterserver.h".}
+proc enctypex_decoder_convert_to_ipport(data: ptr cuchar, datalen: cint, `out`: ptr cuchar, infobuff: ptr cuchar, infobuff_size: cint, infobuff_offset: cint): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 
 # int tcpxspr(int sd, u8 *gamestr, u8 *msgamestr, u8 *validate, u8 *filter, u8 *info, int type)
-proc tcpxspr(sd: cint, gamestr: ptr uint8, msgamestr: ptr uint8, validate: ptr uint8, filter: ptr uint8, info: ptr uint8, `type`: cint): cint {.importc, cdecl, header: "masterserver.h".}
+proc tcpxspr(sd: cint, gamestr: ptr uint8, msgamestr: ptr uint8, validate: ptr uint8, filter: ptr uint8, info: ptr uint8, `type`: cint): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 # int enctypex_decoder_rand_validate(unsigned char *validate)
-proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl, header: "masterserver.h".}
+proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 
 proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string): seq[tuple[address: IpAddress, port: Port]] =

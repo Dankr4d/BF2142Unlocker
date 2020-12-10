@@ -55,11 +55,11 @@ proc parseGsData*(raw: string): GsData =
     result.rounds = parseInt(rounds)
   result.status = parseEnum[GsStatus](raw.parse("Status: [", "]", currentPosition))
 
-when isMainModule:
+when isMainModule and defined(windows):
   import os
-  import getprocessbyname
-  import gethwndbypid
-  import stdoutreader
+  import ../modules/windows/getprocessbyname
+  import ../modules/windows/gethwndbypid
+  import ../modules/windows/stdoutreader
   import winim
   var pid: int = getPidByName("BF2142_w32dedUnlocker.exe")
   var hwnd: HWND = getHWndByPid(pid)

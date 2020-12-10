@@ -24,24 +24,31 @@ from strformat import fmt
 ##
 
 ### Consts
+const CPU_CORES: string = gorgeEx("nproc").output
+
 const
   BUILD_DIR: string = "build"
+  LANGUAGES: seq[string] = @["en", "de", "ru"]
+
+const # OpenSSL
   OPENSSL_VERSION: string = "1.0.2r"
-  NCURSES_VERSION: string = "5.9"
   OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
   OPENSSL_PATH: string = "deps" / "openssl"
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
-  NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
-  NCURSES_PATH: string = "deps" / "ncurses"
-  NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
-  LANGUAGES: seq[string] = @["en", "de", "ru"]
+
+when defined(linux):
+  const # Ncurses
+    NCURSES_VERSION: string = "5.9"
+    NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
+    NCURSES_PATH: string = "deps" / "ncurses"
+    NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
+
 when defined(windows):
   const
     BUILD_BIN_DIR: string = BUILD_DIR / "bin"
     BUILD_LIB_DIR: string = BUILD_DIR / "lib"
     BUILD_SHARE_DIR: string = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
-const CPU_CORES: string = gorgeEx("nproc").output
 ##
 
 ### Procs
@@ -79,11 +86,11 @@ proc compileGui() =
 proc compileServer() =
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
     else:
-      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
-    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "server".toExe & " server")
+    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
 proc compileOpenSsl() =
   mkDir("deps")
@@ -97,7 +104,7 @@ proc compileOpenSsl() =
         rmDir("openssl")
       mvDir(OPENSSL_DIR, "openssl")
   withDir(OPENSSL_PATH):
-    when buildOS == "linux":
+    if buildOS == "linux":
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
@@ -106,7 +113,7 @@ proc compileOpenSsl() =
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
         exec(fmt"make -j{CPU_CORES}")
-    elif buildOS == "windows":
+    else:
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
       exec(fmt"make -j{CPU_CORES}")
@@ -180,24 +187,30 @@ else:
     cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
     cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
 
-proc copyServerConfig() =
+proc copyServersConfig() =
   when defined(windows):
-    cpFile("server.ini", BUILD_BIN_DIR / "server.ini")
+    mkDir(BUILD_BIN_DIR / "configs")
+    cpFile("configs/servers.ini", BUILD_BIN_DIR / "configs/servers.ini")
   else:
-    cpFile("server.ini", BUILD_DIR / "server.ini")
+    mkDir(BUILD_DIR / "configs")
+    cpFile("configs/servers.ini", BUILD_DIR / "configs/servers.ini")
 
 proc copyAll() =
   when defined(windows):
-    cpDir("ssl_certs", BUILD_BIN_DIR / "ssl_certs")
-    cpFile("nopreview.png", BUILD_BIN_DIR / "nopreview.png")
+    mkDir(BUILD_BIN_DIR / "assets")
+    mkDir(BUILD_BIN_DIR / "logs")
+    cpDir("certs", BUILD_BIN_DIR / "certs")
+    cpFile("assets/nopreview.png", BUILD_BIN_DIR / "assets/nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
-    cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
-    cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
+    mkDir(BUILD_DIR / "assets")
+    mkDir(BUILD_DIR / "logs")
+    cpDir("certs", BUILD_DIR / "certs")
+    cpFile("assets/nopreview.png", BUILD_DIR / "assets/nopreview.png")
     copyNcurses()
     copyOpenSSL()
-  copyServerConfig()
+  copyServersConfig()
   copyTranslation()
 ##
 

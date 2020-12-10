@@ -9,8 +9,8 @@ WORKDIR /opt/Nim/
 RUN sh build_all.sh
 ENV PATH="/opt/Nim/bin:${PATH}"
 
-ADD . /opt/nimBF2142Unlocker
-WORKDIR /opt/nimBF2142Unlocker/
+ADD .. /opt/BF2142Unlocker
+WORKDIR /opt/BF2142Unlocker/
 ENV PATH="/root/.nimble:${PATH}"
 RUN nimble install -d
 RUN nimble release

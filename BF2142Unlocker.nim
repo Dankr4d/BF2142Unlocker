@@ -11,26 +11,28 @@ when defined(linux):
   import gintro/gmodule # Required to automatically bind signals on linux
 elif defined(windows):
   import winim
-  import docpath
-  import sendmsg # Required for to write to bf2142 game server
+  import modules/windows/docpath # Required to read out My Documents path
+  import modules/windows/sendmsg # Required to send messages bf2142 game server
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
-import localaddrs, checkserver # Required to get all local adresses and check if servers are reachable
-import signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
-import resolutions # Required to read out all possible resolutions
-import patcher # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
-import cdkey # Required to set an empty cd key if cd key not exists.
-import checkpermission # Required to check write permission before patching client
+import modules/localaddrs # Required to get all local adresses
+import modules/checkserver # Required to check if servers are reachable
+import macros/signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
+import modules/resolutions # Required to read out all possible resolutions
+import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
+import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
+import modules/checkpermission # Required to check write permission before patching client
 import math # Required for runtime configuration
-import gsapi # Required to parse data out of bf2142 game server # TODO: Make this work for linux too (stdoutreader for linux required)
+import gamesrv/parser # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
-import fesl_client # Required for getSoldiers proc (login and returning soldiers or error code)
+import fesl/client as feslClient # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
-import strhider # Simple string hide functionality with xor and base64 to hide username/password saved in logins.ini
-import masterserver, gspy # Required to query gamespy server and query each gamespy server (server listing)
+import modules/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in logins.ini
+import master/client as masterClient # Required to query master server
+import gspy/client as gspyClient # Required to query each gamespy server for game server information
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
@@ -119,15 +121,15 @@ when defined(linux):
   const BF2142_SRV_UNLOCKER_EXE_NAME: string = "bf2142Unlocker"
 else:
   const BF2142_SRV_EXE_NAME: string = "BF2142_w32ded.exe"
-  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "BF2142_w32dedUnlocker.exe"
+  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "BF2142_w32dedUnlocker.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
 const BF2142_EXE_NAME: string = "BF2142.exe"
-const BF2142_UNLOCKER_EXE_NAME: string = "BF2142Unlocker.exe"
+const BF2142_UNLOCKER_EXE_NAME: string = "BF2142Unlocker.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
-const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"]
+const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"] # TODO: Don't openspy hashes. Check for file names
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -286,14 +288,14 @@ const
   GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
-  BLANK_BIK: string = staticRead("blank.bik")
+  BLANK_BIK: string = staticRead("assets/blank.bik")
   BLANK_BIK_HASH: string = static: getMd5(BLANK_BIK)
 
 when defined(release):
   const GUI_CSS: string = staticRead("BF2142Unlocker.css")
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
 const
-  CONFIG_FILE_NAME: string = "config.ini"
+  CONFIG_FILE_NAME: string = "configs/config.ini"
   CONFIG_SECTION_QUICK: string = "Quick"
   CONFIG_SECTION_HOST: string = "Host"
   CONFIG_SECTION_UNLOCKS: string = "Unlocks"
@@ -316,7 +318,7 @@ const
   CONFIG_KEY_SETTINGS_RESOLUTION: string = "resolution"
 
 const
-  CONFIG_SERVER_FILE_NAME: string = "server.ini"
+  CONFIG_SERVER_FILE_NAME: string = "configs/servers.ini"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -331,7 +333,7 @@ const
   CONFIG_SERVER_KEY_GAME_STR: string = "game_str"
 
 const
-  CONFIG_LOGINS_FILE_NAME: string = "logins.ini"
+  CONFIG_LOGINS_FILE_NAME: string = "configs/logins.ini"
   CONFIG_LOGINS_KEY_USERNAME: string = "username"
   CONFIG_LOGINS_KEY_PASSWORD: string = "password"
   CONFIG_LOGINS_KEY_SOLDIER: string = "soldier"
@@ -341,7 +343,7 @@ const
 const LANGUAGE_FILE: string = "lang.txt"
 const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE", "ru_RU"]
 
-const NO_PREVIEW_IMG_PATH: string = "nopreview.png"
+const NO_PREVIEW_IMG_PATH: string = "assets/nopreview.png"
 
 var config: Config
 
@@ -481,7 +483,7 @@ var cbxSettingsResolution: ComboBox
 proc onQuit()
 
 import logging
-var logger: FileLogger = newFileLogger("error.log", fmtStr = verboseFmtStr)
+var logger: FileLogger = newFileLogger("logs/error.log", fmtStr = verboseFmtStr)
 addHandler(logger)
 
 proc `$`(ex: ref Exception): string =
@@ -2184,7 +2186,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
   term.setSizeRequest(0, 300)
   when defined(linux):
     # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
-    termHostLoginServerPid = term.startProcess(command = fmt"./server {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
+    termHostLoginServerPid = term.startProcess(command = fmt"./BF2142UnlockerSrv {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
     var tryCnt: int = 0
     while tryCnt < 3:
       if isAddrReachable($ipAddress, Port(18300), 1_000):
@@ -2193,7 +2195,7 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
         tryCnt.inc()
         sleep(250)
   elif defined(windows):
-    termHostLoginServerPid = term.startProcess(command = fmt"server.exe {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
+    termHostLoginServerPid = term.startProcess(command = fmt"BF2142UnlockerSrv.exe {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
 ##
 
 ### Events

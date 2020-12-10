@@ -1911,7 +1911,7 @@ Author: Dankr4d
                                             <property name="can-focus">False</property>
                                             <property name="halign">start</property>
                                             <property name="valign">start</property>
-                                            <property name="pixbuf">nopreview.png</property>
+                                            <property name="pixbuf">assets/nopreview.png</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>

@@ -1,5 +1,5 @@
 # BF2142 Unlocker
-![Logo](bf2142unlocker.png)
+![Logo](assets/bf2142unlocker.png)
 
 ## Description
 This project unlock all weapons in Battlefield 2142! You are able to customize your soldier ingame. The squad drones are on default deactivated (you can enable them in "Unlocks" tab). But be warned, bots in vanilla game cannot handle them. This got fixed in Project Remaster mod.<br />
@@ -31,13 +31,13 @@ BF2142Unlocker emulates the necessary login and unlock server to be able to play
 ### GUI:
 |   |   |
 | - | - |
-| ![Host menu](screenshots/gui_join.png) | ![Settings menu](screenshots/gui_host.png) |
-| ![Join menu](screenshots/gui_unlocks.png) | ![Join menu just play](screenshots/gui_settings.png) |
+| ![Host menu](assets/screenshots/gui_join.png) | ![Settings menu](assets/screenshots/gui_host.png) |
+| ![Join menu](assets/screenshots/gui_unlocks.png) | ![Join menu just play](assets/screenshots/gui_settings.png) |
 ### In game:
 |   |   |
 | - | - |
-| ![Ingame Recon](screenshots/ingame_recon.png) | ![Ingame Assault](screenshots/ingame_assault.png) |
-| ![Ingame Engineer](screenshots/ingame_engineer.png) | ![Ingame Support](screenshots/ingame_support.png) |
+| ![Ingame Recon](assets/screenshots/ingame_recon.png) | ![Ingame Assault](assets/screenshots/ingame_assault.png) |
+| ![Ingame Engineer](assets/screenshots/ingame_engineer.png) | ![Ingame Support](assets/screenshots/ingame_support.png) |
 
 ## Optional requirements
 ### Battlefield 2142 Dedicated Server
