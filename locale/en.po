@@ -10,36 +10,36 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "JOIN_IP_ADDRESS"
+msgid "QUICK_IP_ADDRESS"
 msgstr "IP-Address:"
 
-msgid "JOIN_IP_ADDRESS_TOOLTIP"
+msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
 "Enter the IP-Address of the target login-server you want to connect to.\n"
 "Default/Empty is your own computers IP-Address if you click on \"Just play\"."
 
-msgid "JOIN_AUTO_JOIN_SERVER"
+msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Auto join server:"
 
-msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgid "QUICK_AUTO_JOIN_SERVER_TOOLTIP"
 msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
 
-msgid "JOIN_CONNECT"
+msgid "QUICK_CONNECT"
 msgstr "Connect"
 
-msgid "JOIN_CONNECT_TOOLTIP"
+msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Connect to the login-server by using the IP-Address entered."
 
-msgid "JOIN_MODS"
+msgid "QUICK_MODS"
 msgstr "Mods:"
 
-msgid "JOIN_MODS_TOOLTIP"
+msgid "QUICK_MODS_TOOLTIP"
 msgstr "Choose the mod that the game should start with"
 
-msgid "JOIN_PLAYER_NAME"
+msgid "QUICK_PLAYER_NAME"
 msgstr "Player name:"
 
-msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Name of your Soldier that appears ingame."
 
 msgid "SETTINGS_SKIP_MOVIES"
@@ -60,29 +60,29 @@ msgstr "Resolution:"
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "The resolution the game get started in windowed mode."
 
-msgid "JOIN_JUST_PLAY_CANCEL"
+msgid "QUICK_JUST_PLAY_CANCEL"
 msgstr "Cancel"
 
-msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
+msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
 msgstr "Stop all servers"
 
-msgid "JOIN_JUST_PLAY"
+msgid "QUICK_JUST_PLAY"
 msgstr "Just play"
 
-msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgid "QUICK_JUST_PLAY_TOOLTIP"
 msgstr ""
 "Start the login-/unlockserver with your computers IP-Adress and launch the game with it!\n"
 "This is a quick way into singleplayer."
 
 # ##
 # ##### Host
-msgid "JOIN_GAME_SETTINGS"
+msgid "QUICK_GAME_SETTINGS"
 msgstr "Game settings"
 
-msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr "Connection-settings that control how you get into your or any login-/unlockserver"
 
-msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
 
 msgid "CHECK_CAN_NOT_CONNECT"

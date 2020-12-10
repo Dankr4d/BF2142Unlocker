@@ -12,36 +12,36 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 "X-Generator: Poedit 2.4.1\n"
 
-msgid "JOIN_IP_ADDRESS"
+msgid "QUICK_IP_ADDRESS"
 msgstr "IP адрес:"
 
-msgid "JOIN_IP_ADDRESS_TOOLTIP"
+msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
 "Введите IP целевого логин-сервера,к которому хотите подключиться.\n"
 "Стандарт/Пусто - это ваш компютер,если нажать \"Только играть\"."
 
-msgid "JOIN_AUTO_JOIN_SERVER"
+msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Автоприсоединение к серверу:"
 
-msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgid "QUICK_AUTO_JOIN_SERVER_TOOLTIP"
 msgstr "Автоматически подключитесь к игровому серверу, если он прослушивает тот же IP-адрес, что и логин-сервер."
 
-msgid "JOIN_CONNECT"
+msgid "QUICK_CONNECT"
 msgstr "Подключиться"
 
-msgid "JOIN_CONNECT_TOOLTIP"
+msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Подключитесь к логин-серверу, используя введенный IP-адрес."
 
-msgid "JOIN_MODS"
+msgid "QUICK_MODS"
 msgstr "Модификации:"
 
-msgid "JOIN_MODS_TOOLTIP"
+msgid "QUICK_MODS_TOOLTIP"
 msgstr "Выберете модификацию для запуска игры"
 
-msgid "JOIN_PLAYER_NAME"
+msgid "QUICK_PLAYER_NAME"
 msgstr "Имя игрока:"
 
-msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Позывной в игре."
 
 msgid "SETTINGS_SKIP_MOVIES"
@@ -62,27 +62,27 @@ msgstr "Разрешение:"
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "Разрешение экрана в оконном режиме"
 
-msgid "JOIN_JUST_PLAY_CANCEL"
+msgid "QUICK_JUST_PLAY_CANCEL"
 msgstr "Отмена"
 
-msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
+msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
 msgstr "Остановить все сервера"
 
-msgid "JOIN_JUST_PLAY"
+msgid "QUICK_JUST_PLAY"
 msgstr "Только играть"
 
-msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgid "QUICK_JUST_PLAY_TOOLTIP"
 msgstr ""
 "Запустите логин сервер или сервер с анлокми с IP aдресом вашего компьютера и запустите игру с ним.\n"
 "Это быстрый способ запустить одиночный режим"
 
-msgid "JOIN_GAME_SETTINGS"
+msgid "QUICK_GAME_SETTINGS"
 msgstr "Настройки игры"
 
-msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr "Настройки подключения для серверов"
 
-msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr "Базовые настройки, с кроторыми запуститя игра"
 
 msgid "CHECK_CAN_NOT_CONNECT"

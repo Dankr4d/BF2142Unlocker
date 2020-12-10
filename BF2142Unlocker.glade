@@ -465,7 +465,7 @@ Author: Dankr4d
                       <object class="GtkFrame">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">JOIN_CONNECT_FRAME_TOOLTIP</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_CONNECT_FRAME_TOOLTIP</property>
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
@@ -483,8 +483,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_IP_ADDRESS</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_IP_ADDRESS_TOOLTIP</property>
+                                <property name="label" translatable="yes">QUICK_IP_ADDRESS</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -496,8 +496,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_AUTO_JOIN_SERVER</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_AUTO_JOIN_SERVER_TOOLTIP</property>
+                                <property name="label" translatable="yes">QUICK_AUTO_JOIN_SERVER</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -509,7 +509,7 @@ Author: Dankr4d
                               <object class="GtkEntry" id="txtQuickIpAddress">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_IP_ADDRESS_TOOLTIP</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_IP_ADDRESS_TOOLTIP</property>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -521,7 +521,7 @@ Author: Dankr4d
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_AUTO_JOIN_SERVER_TOOLTIP</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_AUTO_JOIN_SERVER_TOOLTIP</property>
                                 <property name="draw-indicator">True</property>
                                 <child>
                                   <placeholder/>
@@ -534,11 +534,11 @@ Author: Dankr4d
                             </child>
                             <child>
                               <object class="GtkButton" id="btnQuickConnect">
-                                <property name="label" translatable="yes">JOIN_CONNECT</property>
+                                <property name="label" translatable="yes">QUICK_CONNECT</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_CONNECT_TOOLTIP</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_CONNECT_TOOLTIP</property>
                                 <signal name="clicked" handler="onBtnQuickConnectClicked" swapped="no"/>
                               </object>
                               <packing>
@@ -562,7 +562,7 @@ Author: Dankr4d
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">JOIN_CONNECT</property>
+                            <property name="label" translatable="yes">QUICK_CONNECT</property>
                           </object>
                         </child>
                       </object>
@@ -576,7 +576,7 @@ Author: Dankr4d
                       <object class="GtkFrame">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">JOIN_GAME_SETTINGS_FRAME_TOOLTIP</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_GAME_SETTINGS_FRAME_TOOLTIP</property>
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
@@ -594,8 +594,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_MODS_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_MODS</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_MODS_TOOLTIP</property>
+                                <property name="label" translatable="yes">QUICK_MODS</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -607,8 +607,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
-                                <property name="label" translatable="yes">JOIN_PLAYER_NAME</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_PLAYER_NAME_TOOLTIP</property>
+                                <property name="label" translatable="yes">QUICK_PLAYER_NAME</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -620,7 +620,7 @@ Author: Dankr4d
                               <object class="GtkEntry" id="txtQuickPlayerName">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">JOIN_PLAYER_NAME_TOOLTIP</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_PLAYER_NAME_TOOLTIP</property>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -685,7 +685,7 @@ Author: Dankr4d
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">JOIN_GAME_SETTINGS</property>
+                            <property name="label" translatable="yes">QUICK_GAME_SETTINGS</property>
                           </object>
                         </child>
                       </object>
@@ -717,10 +717,10 @@ Author: Dankr4d
                     </child>
                     <child>
                       <object class="GtkButton" id="btnQuickJustPlayCancel">
-                        <property name="label" translatable="yes">JOIN_JUST_PLAY_CANCEL</property>
+                        <property name="label" translatable="yes">QUICK_JUST_PLAY_CANCEL</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">JOIN_JUST_PLAY_CANCEL_TOOLTIP</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_JUST_PLAY_CANCEL_TOOLTIP</property>
                         <signal name="clicked" handler="onBtnQuickJustPlayCancelClicked" swapped="no"/>
                       </object>
                       <packing>
@@ -731,11 +731,11 @@ Author: Dankr4d
                     </child>
                     <child>
                       <object class="GtkButton" id="btnQuickJustPlay">
-                        <property name="label" translatable="yes">JOIN_JUST_PLAY</property>
+                        <property name="label" translatable="yes">QUICK_JUST_PLAY</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">JOIN_JUST_PLAY_TOOLTIP</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_JUST_PLAY_TOOLTIP</property>
                         <signal name="clicked" handler="onBtnQuickJustPlayClicked" swapped="no"/>
                       </object>
                       <packing>
