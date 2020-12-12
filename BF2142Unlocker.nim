@@ -28,11 +28,11 @@ import gamesrv/parser # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
-import fesl/client as feslClient # Required for getSoldiers proc (login and returning soldiers or error code)
+import clients/fesl # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 import modules/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in logins.ini
-import master/client as masterClient # Required to query master server
-import gspy/client as gspyClient # Required to query each gamespy server for game server information
+import clients/master # Required to query master server
+import clients/gspy # Required to query each gamespy server for game server information
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
@@ -1862,7 +1862,7 @@ proc threadFeslProc() {.thread.} =
           stella = threadData.login.stella
         else:
           raise # Create or Login command need to be send before sending other commands
-        fesl_client.connect(socket, stella)
+        fesl.connect(socket, stella)
         isSocketConnected = true
 
       case threadData.command:

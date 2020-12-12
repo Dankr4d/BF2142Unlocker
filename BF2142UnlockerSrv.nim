@@ -1,6 +1,6 @@
-import fesl/server as feslServer
-import gpcm/server as gpcmServer
-import stats/server as statsServer
+import servers/fesl
+import servers/gpcm
+import servers/stats
 import net
 import strformat # Required for fmt macro
 
@@ -13,9 +13,9 @@ proc run*(ipAddress: IpAddress, unlockAllSquadGadgets: bool = false) =
     threadFeslServer: Thread[IpAddress]
     threadGpcmServer: Thread[IpAddress]
     threadUnlockServer: Thread[UnlockParam]
-  threadFeslServer.createThread(feslServer.run, ipAddress)
-  threadGpcmServer.createThread(gpcmServer.run, ipAddress)
-  threadUnlockServer.createThread(statsServer.run, (ipAddress, unlockAllSquadGadgets))
+  threadFeslServer.createThread(fesl.run, ipAddress)
+  threadGpcmServer.createThread(gpcm.run, ipAddress)
+  threadUnlockServer.createThread(stats.run, (ipAddress, unlockAllSquadGadgets))
   joinThreads(threadFeslServer, threadGpcmServer)
   joinThread(threadUnlockServer) # TODO: Why is this not in joinThreads above?
 

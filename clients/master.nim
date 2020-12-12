@@ -208,7 +208,7 @@ proc queryGameServerListEnc1*(url: string, port: Port): seq[tuple[ip: IpAddress,
 ################################################################
 
 from os import splitPath
-const MASTER_SERVER_HEADER_PATH: string = currentSourcePath().splitPath.head & "/masterserver.h"
+const MASTER_SERVER_HEADER_PATH: string = currentSourcePath().splitPath.head & "/master.h"
 
 
 

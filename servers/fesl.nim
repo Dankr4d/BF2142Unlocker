@@ -1,4 +1,4 @@
-import fesl
+import ../protocols/fesl
 import net
 import ospaths
 import tables
@@ -67,7 +67,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
   stdout.flushFile()
 
 proc run*(ipAddress: IpAddress) {.thread.} =
-  var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "certs" / "cert.pem", keyFile = "certs" / "key.pem", cipherList = "SSLv3")
+  var sslContext: SslContext = newContext(protVersion = protSSLv23, verifyMode = CVerifyNone, certFile = "cert" / "cert.pem", keyFile = "cert" / "key.pem", cipherList = "SSLv3")
   var server: Socket = newSocket()
   let port: Port = Port(18300)
   sslContext.wrapSocket(server)

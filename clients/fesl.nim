@@ -1,4 +1,4 @@
-import fesl
+import ../protocols/fesl
 import net
 import tables
 import strutils

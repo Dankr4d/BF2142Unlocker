@@ -199,14 +199,14 @@ proc copyAll() =
   when defined(windows):
     mkDir(BUILD_BIN_DIR / "assets")
     mkDir(BUILD_BIN_DIR / "logs")
-    cpDir("certs", BUILD_BIN_DIR / "certs")
+    cpDir("cert", BUILD_BIN_DIR / "cert")
     cpFile("assets/nopreview.png", BUILD_BIN_DIR / "assets/nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
     mkDir(BUILD_DIR / "assets")
     mkDir(BUILD_DIR / "logs")
-    cpDir("certs", BUILD_DIR / "certs")
+    cpDir("cert", BUILD_DIR / "cert")
     cpFile("assets/nopreview.png", BUILD_DIR / "assets/nopreview.png")
     copyNcurses()
     copyOpenSSL()
