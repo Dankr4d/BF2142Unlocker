@@ -118,12 +118,12 @@ const VERSION: string = static:
 
 when defined(linux):
   const BF2142_SRV_EXE_NAME: string = "bf2142"
-  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "bf2142Unlocker"
+  const BF2142_SRV_PATCHED_EXE_NAME: string = "bf2142Patched"
 else:
   const BF2142_SRV_EXE_NAME: string = "BF2142_w32ded.exe"
-  const BF2142_SRV_UNLOCKER_EXE_NAME: string = "BF2142_w32dedUnlocker.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
+  const BF2142_SRV_PATCHED_EXE_NAME: string = "BF2142_w32dedPatched.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
 const BF2142_EXE_NAME: string = "BF2142.exe"
-const BF2142_UNLOCKER_EXE_NAME: string = "BF2142Unlocker.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
+const BF2142_PATCHED_EXE_NAME: string = "BF2142Patched.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
 const FILE_BACKUP_SUFFIX: string = ".original"
@@ -2169,14 +2169,14 @@ proc startBF2142Server() =
     var ldLibraryPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
     termHostGameServerPid = termHostGameServer.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_UNLOCKER_EXE_NAME,
+      command = "bin" / "amd-64" / BF2142_SRV_PATCHED_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
       workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
       env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
     )
   elif defined(windows):
     termHostGameServerPid = termHostGameServer.startProcess(
-      command = BF2142_SRV_UNLOCKER_EXE_NAME,
+      command = BF2142_SRV_PATCHED_EXE_NAME,
       params = "+modPath mods/" & cbxHostMods.activeId,
       workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
       searchForkedProcess = true
@@ -2225,7 +2225,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   when defined(linux):
     if txtSettingsStartupQuery.text != "":
       command.add(txtSettingsStartupQuery.text & ' ')
-  command.add(BF2142_UNLOCKER_EXE_NAME & ' ')
+  command.add(BF2142_PATCHED_EXE_NAME & ' ')
   if isSome(options.modPath):
     command.add("+modPath " & get(options.modPath) & ' ')
   if isSome(options.menu):
@@ -2326,13 +2326,13 @@ proc patchAndStartLogic(): bool =
   config.setSectionKey(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_AUTO_JOIN, $cbtnQuickAutoJoin.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
-  if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
-    if not copyFile(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_EXE_NAME, bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
+  if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+    if not copyFile(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_EXE_NAME, bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
       return
-  if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME):
+  if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
     newInfoDialog(
       dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
-      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME]
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME]
     )
     return
 
@@ -2346,7 +2346,7 @@ proc patchAndStartLogic(): bool =
   patchConfig.gamestats = ipAddress
   patchConfig.gpcm = ipAddress
   patchConfig.gpsp = ipAddress
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME, patchConfig)
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, patchConfig)
 
   backupOpenSpyIfExists()
 
@@ -2529,7 +2529,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   let soldier: string = get(trvMultiplayerAccountSoldiers.selectedSoldier)
 
   backupOpenSpyIfExists()
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_UNLOCKER_EXE_NAME, PatchConfig(currentServerConfig))
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig))
   saveBF2142Profile(username, soldier)
 
   var options: BF2142Options
@@ -2674,17 +2674,17 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   var serverExePath = bf2142UnlockerConfig.settings.bf2142ServerPath
   when defined(linux):
     serverExePath = serverExePath / "bin" / "amd-64"
-  if not fileExists(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+  if not fileExists(serverExePath / BF2142_SRV_PATCHED_EXE_NAME):
     if not copyFileWithPermissions(serverExePath / BF2142_SRV_EXE_NAME,
-    serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME, false):
+    serverExePath / BF2142_SRV_PATCHED_EXE_NAME, false):
       return
-  if not hasWritePermission(serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME):
+  if not hasWritePermission(serverExePath / BF2142_SRV_PATCHED_EXE_NAME):
     newInfoDialog(
       dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
-      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME]
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [serverExePath / BF2142_SRV_PATCHED_EXE_NAME]
     )
     return
-  serverExePath = serverExePath / BF2142_SRV_UNLOCKER_EXE_NAME
+  serverExePath = serverExePath / BF2142_SRV_PATCHED_EXE_NAME
   echo "Patching Battlefield 2142 server!"
   patchServer(serverExePath, parseIpAddress("127.0.0.1"), Port(8085))
   applyJustPlayRunningSensitivity(false)
