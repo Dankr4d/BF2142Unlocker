@@ -41,9 +41,9 @@ when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
 elif defined(windows):
   import streams # Required to read from process stream (login/unlock server)
-  import getprocessbyname # Required to get pid from forked process
-  import stdoutreader # Required for read stdoutput from another process
-  import gethwndbypid # Required to get window handle from pid
+  import modules/windows/getprocessbyname # Required to get pid from forked process
+  import modules/windows/stdoutreader # Required for read stdoutput from another process
+  import modules/windows/gethwndbypid # Required to get window handle from pid
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
   ## Terminal newTerminal and related helper procs
