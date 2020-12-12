@@ -2812,6 +2812,7 @@ proc setBF2142ServerPath(path: string) =
     )
     txtSettingsBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
     return
+  vboxHost.visible = true
   bf2142UnlockerConfig.settings.bf2142ServerPath = path
   if txtSettingsBF2142ServerPath.text != path:
     txtSettingsBF2142ServerPath.text = path
@@ -3173,10 +3174,11 @@ proc onApplicationActivate(application: Application) =
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxQuick.visible = false
-    vboxHost.visible = false
     vboxUnlocks.visible = false
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
     btnHostGameServer.sensitive = false
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == "" and bf2142UnlockerConfig.settings.bf2142ServerPath == "":
+    vboxHost.visible = false
 
   loadServerConfig()
   # updateServer()

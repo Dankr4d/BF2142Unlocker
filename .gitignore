@@ -50,6 +50,7 @@ config.ini
 logins.ini
 lang.txt
 BF2142Unlocker.res
+BF2142UnlockerSrv.res
 error.log
 
 libeay32.dll

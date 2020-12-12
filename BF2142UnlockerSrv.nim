@@ -4,6 +4,11 @@ import servers/stats
 import net
 import strformat # Required for fmt macro
 
+when defined(windows):
+  static:
+    discard staticExec("windres.exe BF2142UnlockerSrv.rc -O coff -o BF2142UnlockerSrv.res")
+
+
 type
   UnlockParam = tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]
 
