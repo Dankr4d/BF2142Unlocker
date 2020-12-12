@@ -15,8 +15,7 @@ msgstr "IP-Address:"
 
 msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
-"Enter the IP-Address of the target login-server you want to connect to.\n"
-"Default/Empty is your own computers IP-Address if you click on \"Just play\"."
+"Enter the IP-Address of the target login-server you want to connect to."
 
 msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Auto join server:"
@@ -60,29 +59,15 @@ msgstr "Resolution:"
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "The resolution the game get started in windowed mode."
 
-msgid "QUICK_JUST_PLAY_CANCEL"
-msgstr "Cancel"
-
-msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr "Stop all servers"
-
-msgid "QUICK_JUST_PLAY"
-msgstr "Just play"
-
-msgid "QUICK_JUST_PLAY_TOOLTIP"
-msgstr ""
-"Start the login-/unlockserver with your computers IP-Adress and launch the game with it!\n"
-"This is a quick way into singleplayer."
-
 # ##
 # ##### Host
-msgid "QUICK_GAME_SETTINGS"
-msgstr "Game settings"
+msgid "QUICK_SETTINGS"
+msgstr "Settings"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr "Connection-settings that control how you get into your or any login-/unlockserver"
 
-msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
 msgstr "Basic gamesettings that define how Battlefield 2142 will start"
 
 msgid "CHECK_CAN_NOT_CONNECT"
@@ -212,12 +197,6 @@ msgstr "Move map downwards in the rotation"
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
 
-msgid "HOST_LOGIN_UNLOCK_SERVER"
-msgstr "Host login/unlock server"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Start only the login-/unlockserver"
-
 msgid "HOST_HOST"
 msgstr "Host"
 
@@ -275,7 +254,7 @@ msgstr "Select"
 # ##
 # ##### Tabs
 msgid "TAB_QUICK"
-msgstr "Quick"
+msgstr "Play"
 
 msgid "TAB_QUICK_TOOLTIP"
 msgstr "TODO"

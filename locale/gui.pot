@@ -3,63 +3,63 @@ msgid ""
 msgstr ""
 
 
-###### Join
-msgid "JOIN_IP_ADDRESS"
+###### Quick
+msgid "QUICK_IP_ADDRESS"
 msgstr ""
-msgid "JOIN_IP_ADDRESS_TOOLTIP"
-msgstr ""
-
-msgid "JOIN_AUTO_JOIN_SERVER"
-msgstr ""
-msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_CONNECT"
+msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr ""
-msgid "JOIN_CONNECT_TOOLTIP"
-msgstr ""
-
-msgid "JOIN_MODS"
-msgstr ""
-msgid "JOIN_MODS_TOOLTIP"
+msgid "QUICK_AUTO_JOIN_SERVER_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_PLAYER_NAME"
+msgid "QUICK_CONNECT"
 msgstr ""
-msgid "JOIN_PLAYER_NAME_TOOLTIP"
-msgstr ""
-
-msgid "JOIN_SKIP_MOVIES"
-msgstr ""
-msgid "JOIN_SKIP_MOVIES_TOOLTIP"
+msgid "QUICK_CONNECT_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_WINDOW_MODE"
+msgid "QUICK_MODS"
 msgstr ""
-msgid "JOIN_WINDOW_MODE_TOOLTIP"
-msgstr ""
-
-msgid "JOIN_RESOLUTION"
-msgstr ""
-msgid "JOIN_RESOLUTION_TOOLTIP"
+msgid "QUICK_MODS_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_JUST_PLAY_CANCEL"
+msgid "QUICK_PLAYER_NAME"
 msgstr ""
-msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr ""
-
-msgid "JOIN_JUST_PLAY"
-msgstr ""
-msgid "JOIN_JUST_PLAY_TOOLTIP"
+msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_GAME_SETTINGS"
+msgid "QUICK_SKIP_MOVIES"
+msgstr ""
+msgid "QUICK_SKIP_MOVIES_TOOLTIP"
 msgstr ""
 
-msgid "JOIN_CONNECT_FRAME_TOOLTIP"
+msgid "QUICK_WINDOW_MODE"
 msgstr ""
-msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
+msgid "QUICK_WINDOW_MODE_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_RESOLUTION"
+msgstr ""
+msgid "QUICK_RESOLUTION_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_JUST_PLAY_CANCEL"
+msgstr ""
+msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_JUST_PLAY"
+msgstr ""
+msgid "QUICK_JUST_PLAY_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_GAME_SETTINGS"
+msgstr ""
+
+msgid "QUICK_CONNECT_FRAME_TOOLTIP"
+msgstr ""
+msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
 msgstr ""
 
 msgid "CHECK_CAN_NOT_CONNECT"
@@ -75,6 +75,18 @@ msgid "CHECK_UNLOCK_SERVER"
 msgstr ""
 
 msgid "CHECK_CANCEL"
+msgstr ""
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr ""
+
+msgid "QUICK_HOST"
+msgstr ""
+
+msgid "QUICK_HOST_LAN"
+msgstr ""
+
+msgid "QUICK_TERMINAL"
 msgstr ""
 ###
 

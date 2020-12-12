@@ -14,6 +14,13 @@ button.link {
   color: #CC0000;
 }
 
+#btnQuickSingleplayer, #btnQuickSingleplayerCancel,
+#btnQuickHost, #btnQuickHostCancel {
+  font-size: 2em;
+  padding: 25px;
+}
+
+
 /* Windows only
    Info: Terminal class is only added on windows build,
          because VTE is not supported on windows.

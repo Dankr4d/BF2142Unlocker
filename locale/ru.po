@@ -17,8 +17,7 @@ msgstr "IP адрес:"
 
 msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
-"Введите IP целевого логин-сервера,к которому хотите подключиться.\n"
-"Стандарт/Пусто - это ваш компютер,если нажать \"Только играть\"."
+"Введите IP целевого логин-сервера,к которому хотите подключиться."
 
 msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Автоприсоединение к серверу:"
@@ -62,27 +61,13 @@ msgstr "Разрешение:"
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "Разрешение экрана в оконном режиме"
 
-msgid "QUICK_JUST_PLAY_CANCEL"
-msgstr "Отмена"
-
-msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr "Остановить все сервера"
-
-msgid "QUICK_JUST_PLAY"
-msgstr "Только играть"
-
-msgid "QUICK_JUST_PLAY_TOOLTIP"
-msgstr ""
-"Запустите логин сервер или сервер с анлокми с IP aдресом вашего компьютера и запустите игру с ним.\n"
-"Это быстрый способ запустить одиночный режим"
-
-msgid "QUICK_GAME_SETTINGS"
-msgstr "Настройки игры"
+msgid "QUICK_SETTINGS"
+msgstr "Настройки"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr "Настройки подключения для серверов"
 
-msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
 msgstr "Базовые настройки, с кроторыми запуститя игра"
 
 msgid "CHECK_CAN_NOT_CONNECT"
@@ -211,12 +196,6 @@ msgstr "Переместить вниз по списку"
 
 msgid "HOST_TERMINALS"
 msgstr "Терминалы"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER"
-msgstr "Хост сервера с разболкировками"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Старт только логин/разблокировочного севрера"
 
 msgid "HOST_HOST"
 msgstr "Хост"

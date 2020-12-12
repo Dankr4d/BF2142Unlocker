@@ -15,8 +15,7 @@ msgstr "IP-Adresse:"
 
 msgid "QUICK_IP_ADDRESS_TOOLTIP"
 msgstr ""
-"Geben Sie die IP-Adresse des Anmeldeservers ein, zu dem Sie eine Verbindung herstellen möchten.\n"
-"Ist die IP-Adresse nicht ausgefüllt, wird diese automatisch ausgelesen, sobald du auf \"Einfach spielen\" klickst."
+"Geben Sie die IP-Adresse des Anmeldeservers ein, zu dem Sie eine Verbindung herstellen möchten."
 
 msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Automatisch verbinden:"
@@ -60,30 +59,16 @@ msgstr "Auflösung:"
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "Die Auflösung in der das Spiel im Fenstermodus gestartet wird."
 
-msgid "QUICK_JUST_PLAY_CANCEL"
-msgstr "Abbrechen"
-
-msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr "Stoppt alle gestarteten server."
-
-msgid "QUICK_JUST_PLAY"
-msgstr "Einfach spielen"
-
-msgid "QUICK_JUST_PLAY_TOOLTIP"
-msgstr ""
-"Startet den Anmelde-/Unlockserver mit der erst ausgelesenen IP-Adresse, startet das spiel und meldet sich automatisch an.\n"
-"Dies ermöglicht ein schnellen Spielstart ohne weiteres Wissen/konfigurationen (für den Singleplayer ausgelegt)."
-
 # ##
 # ##### Host
-msgid "QUICK_GAME_SETTINGS"
-msgstr "Spieleinstellungen"
+msgid "QUICK_SETTINGS"
+msgstr "Einstellungen"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr "Verbindungseinstellungen zum verbinden mit dem Anmelde-/Unlockserver."
 
-msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
-msgstr "Spieleeinstellungen mit denen Battlefield 2142 gestartet wird."
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
+msgstr "Einstellungen mit denen Battlefield 2142 gestartet wird."
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -209,12 +194,6 @@ msgstr "Verschiebt die ausgewählte Karte ein nach unten."
 
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER"
-msgstr "Anmelde-/Freischaltserver starten"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Startet nur den Anmelde-/Unlockserver"
 
 msgid "HOST_HOST"
 msgstr "Alle server starten"

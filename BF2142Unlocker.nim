@@ -361,15 +361,17 @@ var cbxLanguages: ComboBox
 ##
 ### Quick controls
 var vboxQuick: Box
-var vboxQuickJustPlay: Box
 var cbxQuickMod: ComboBox
 var txtQuickPlayerName: Entry
 var txtQuickIpAddress: Entry
 var cbtnQuickAutoJoin: CheckButton
 var btnQuickConnect: Button
-var btnQuickJustPlay: Button
-var btnQuickJustPlayCancel: Button
-var termQuickJustPlay: Terminal
+var btnQuickHost: Button
+var btnQuickHostCancel: Button
+var btnQuickSingleplayer: Button
+var btnQuickSingleplayerCancel: Button
+var frameQuickTerminal: Frame
+var termQuickJustPlay: Terminal # TODO: Rename
 var dlgQuickCheckServer: Dialog
 var spinnerQuickCheckServerLoginServer: Spinner # Rename to FeslServer
 var spinnerQuickCheckServerGpcmServer: Spinner
@@ -448,7 +450,6 @@ var btnHostMapAdd: Button
 var btnHostMapDel: Button
 var btnHostMapMoveUp: Button
 var btnHostMapMoveDown: Button
-var btnHostLoginServer: Button
 var btnHostGameServer: Button
 var btnHostCancel: Button
 var hboxHostTerms: Box
@@ -1404,27 +1405,17 @@ proc loadHostMods() =
         store.setValue(iter, 0, valMod)
         store.setValue(iter, 1, valMod)
 
-proc applyHostRunningSensitivity(running: bool, bf2142ServerInvisible: bool = false) =
-  btnHostLoginServer.visible = not running
+proc applyHostRunningSensitivity(running: bool) =
   btnHostGameServer.visible = not running
   btnHostCancel.visible = running
   hboxHostTerms.visible = running
   termHostLoginServer.visible = running
-  if bf2142ServerInvisible:
-    when defined(windows):
-      termHostGameServer.visible = false
-    elif defined(linux):
-      swinHostGameServer.visible = false
-  else:
-    when defined(windows):
-      termHostGameServer.visible = running
-    elif defined(linux):
-      swinHostGameServer.visible = running
-
-proc applyJustPlayRunningSensitivity(running: bool) =
-  termQuickJustPlay.visible = running
-  btnQuickJustPlay.visible = not running
-  btnQuickJustPlayCancel.visible = running
+  when defined(windows):
+    termHostGameServer.visible = running
+  elif defined(linux):
+    swinHostGameServer.visible = running
+  btnQuickHost.sensitive = not running
+  btnQuickSingleplayer.sensitive = not running
 
 proc enableDisableIntroMovies(path: string, enable: bool): bool =
   var moviePathSplit: tuple[dir, name, ext: string]
@@ -2378,28 +2369,57 @@ proc patchAndStartLogic(): bool =
 proc onBtnQuickConnectClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
 
-
-proc onBtnQuickJustPlayClicked(self: Button00) {.signal.} =
-  var ipAddress: IpAddress = parseIpAddress("127.0.0.1")
-  txtQuickIpAddress.text = $ipAddress
-  if termHostLoginServerPid > 0:
-    killProcess(termHostLoginServerPid)
-  termQuickJustPlay.clear()
+proc startQuickServer(singleplayer: bool) =
+  var ipAddress: IpAddress
+  if singleplayer:
+    ipAddress = parseIpAddress("127.0.0.1")
+  else:
+    ipAddress = parseIpAddress("0.0.0.0")
+  txtQuickIpAddress.text = "127.0.0.1"
   termQuickJustPlay.startLoginServer(ipAddress)
+  termQuickJustPlay.visible = true
   var prevAutoJoinVal: bool = cbtnQuickAutoJoin.active
   cbtnQuickAutoJoin.active = false
   if patchAndStartLogic():
-    termHostLoginServer.visible = false
-    applyJustPlayRunningSensitivity(true)
-    if termHostGameServerPid == 0:
-      applyHostRunningSensitivity(false)
+    if singleplayer:
+      btnQuickSingleplayer.visible = false
+      btnQuickSingleplayerCancel.visible = true
+      btnQuickHost.sensitive = false
+    else:
+      btnQuickHost.visible = false
+      btnQuickHostCancel.visible = true
+      btnQuickSingleplayer.sensitive = false
+    btnHostGameServer.sensitive = false
   else:
     cbtnQuickAutoJoin.active = prevAutoJoinVal
     killProcess(termHostLoginServerPid)
 
-proc onBtnQuickJustPlayCancelClicked(self: Button00) {.signal.} =
+proc stopQuickSever(singleplayer: bool) =
   killProcess(termHostLoginServerPid)
-  applyJustPlayRunningSensitivity(false)
+  txtQuickIpAddress.text = ""
+  termQuickJustPlay.clear()
+  termQuickJustPlay.visible = false
+  if singleplayer:
+    btnQuickSingleplayer.visible = true
+    btnQuickSingleplayerCancel.visible = false
+    btnQuickHost.sensitive = true
+  else:
+    btnQuickHost.visible = true
+    btnQuickHostCancel.visible = false
+    btnQuickSingleplayer.sensitive = true
+  btnHostGameServer.sensitive = true
+
+proc onBtnQuickHostClicked(self: Button00) {.signal.} =
+  startQuickServer(false)
+
+proc onBtnQuickHostCancelClicked(self: Button00) {.signal.} =
+  stopQuickSever(false)
+
+proc onBtnQuickSingleplayerClicked(self: Button00) {.signal.} =
+  startQuickServer(true)
+
+proc onBtnQuickSingleplayerCancelClicked(self: Button00) {.signal.} =
+  stopQuickSever(true)
 
 proc onBtnQuickCheckServerCancelClicked(self: Button00) {.signal.} =
   dlgQuickCheckServer.hide()
@@ -2687,7 +2707,6 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   serverExePath = serverExePath / BF2142_SRV_PATCHED_EXE_NAME
   echo "Patching Battlefield 2142 server!"
   patchServer(serverExePath, parseIpAddress("127.0.0.1"), Port(8085))
-  applyJustPlayRunningSensitivity(false)
   applyHostRunningSensitivity(true)
   if $ipAddress == "0.0.0.0":
      # When setting to 127.0.0.1 game doesn't connect to game server (doesn't load map)
@@ -2702,27 +2721,8 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   startBF2142Server()
   discard cbxQuickMod.setActiveId(cbxHostMods.activeId)
 
-proc onBtnHostLoginServerClicked(self: Button00) {.signal.} =
-  if not txtHostIpAddress.text.strip().isIpAddress() or
-  txtHostIpAddress.text.strip().parseIpAddress().family != IPv4:
-    newInfoDialog(dgettext("gui", "NO_VALID_IP_ADDRESS_TITLE"), dgettext("gui", "NO_VALID_IP_ADDRESS_MSG"))
-    return
-  var ipAddress: IpAddress = txtHostIpAddress.text.strip().parseIpAddress()
-  applyJustPlayRunningSensitivity(false)
-  applyHostRunningSensitivity(true, bf2142ServerInvisible = true)
-  if $ipAddress == "0.0.0.0":
-    txtQuickIpAddress.text = "127.0.0.1"
-  else:
-    txtQuickIpAddress.text = $ipAddress
-  cbtnQuickAutoJoin.active = false
-  if termHostLoginServerPid > 0:
-    killProcess(termHostLoginServerPid)
-  termHostLoginServer.clear()
-  termHostLoginServer.startLoginServer(ipAddress)
-
 proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
-  applyJustPlayRunningSensitivity(false)
   killProcess(termHostLoginServerPid)
   txtQuickIpAddress.text = ""
   if termHostGameServerPid > 0:
@@ -2993,7 +2993,6 @@ proc onApplicationActivate(application: Application) =
   lblVersion = builder.getLabel("lblVersion")
   cbxLanguages = builder.getComboBox("cbxLanguages")
   vboxQuick = builder.getBox("vboxQuick")
-  vboxQuickJustPlay = builder.getBox("vboxQuickJustPlay")
   cbxQuickMod = builder.getComboBox("cbxQuickMod")
   lblSettingsResolution = builder.getLabel("lblSettingsResolution")
   cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
@@ -3003,8 +3002,11 @@ proc onApplicationActivate(application: Application) =
   chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
   chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
   btnQuickConnect = builder.getButton("btnQuickConnect")
-  btnQuickJustPlay = builder.getButton("btnQuickJustPlay")
-  btnQuickJustPlayCancel = builder.getButton("btnQuickJustPlayCancel")
+  btnQuickHost = builder.getButton("btnQuickHost")
+  btnQuickHostCancel = builder.getButton("btnQuickHostCancel")
+  btnQuickSingleplayer = builder.getButton("btnQuickSingleplayer")
+  btnQuickSingleplayerCancel = builder.getButton("btnQuickSingleplayerCancel")
+  frameQuickTerminal = builder.getFrame("frameQuickTerminal")
   dlgQuickCheckServer = builder.getDialog("dlgQuickCheckServer")
   btnQuickCheckServerCancel = builder.getButton("btnQuickCheckServerCancel")
   spinnerQuickCheckServerLoginServer = builder.getSpinner("spinnerQuickCheckServerLoginServer")
@@ -3040,7 +3042,6 @@ proc onApplicationActivate(application: Application) =
   btnHostMapDel = builder.getButton("btnHostMapDel")
   btnHostMapMoveUp = builder.getButton("btnHostMapMoveUp")
   btnHostMapMoveDown = builder.getButton("btnHostMapMoveDown")
-  btnHostLoginServer = builder.getButton("btnHostLoginServer")
   btnHostGameServer = builder.getButton("btnHostGameServer")
   btnHostCancel = builder.getButton("btnHostCancel")
   hboxHostTerms = builder.getBox("hboxHostTerms")
@@ -3103,8 +3104,10 @@ proc onApplicationActivate(application: Application) =
   ## Terminals # TODO: Create a custom widget for glade
   termQuickJustPlay = newTerminal()
   termQuickJustPlay.vexpand = true
-  vboxQuickJustPlay.add(termQuickJustPlay)
-  vboxQuickJustPlay.reorderChild(termQuickJustPlay, 0)
+  termQuickJustPlay.marginBottom = 3
+  termQuickJustPlay.marginStart = 3
+  termQuickJustPlay.marginEnd = 3
+  frameQuickTerminal.add(termQuickJustPlay)
   termHostLoginServer = newTerminal()
   termHostLoginServer.hexpand = true
   termHostGameServer = newTerminal()

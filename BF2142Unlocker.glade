@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2
+<!-- Generated with glade 3.38.2 
 
 The MIT License (MIT)
 
@@ -454,29 +454,35 @@ Author: Dankr4d
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkBox">
+                  <!-- n-columns=2 n-rows=2 -->
+                  <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-start">3</property>
                     <property name="margin-end">3</property>
-                    <property name="margin-top">3</property>
-                    <property name="spacing">3</property>
+                    <property name="margin-top">6</property>
+                    <property name="margin-bottom">3</property>
+                    <property name="row-spacing">6</property>
+                    <property name="column-spacing">5</property>
                     <child>
                       <object class="GtkFrame">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">QUICK_CONNECT_FRAME_TOOLTIP</property>
+                        <property name="hexpand">True</property>
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
-                          <!-- n-columns=3 n-rows=3 -->
+                          <!-- n-columns=2 n-rows=3 -->
                           <object class="GtkGrid">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="halign">center</property>
+                            <property name="valign">start</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">6</property>
                             <property name="margin-top">3</property>
-                            <property name="margin-bottom">3</property>
+                            <property name="margin-bottom">6</property>
                             <property name="row-spacing">3</property>
                             <property name="column-spacing">3</property>
                             <child>
@@ -523,9 +529,6 @@ Author: Dankr4d
                                 <property name="receives-default">False</property>
                                 <property name="tooltip-text" translatable="yes">QUICK_AUTO_JOIN_SERVER_TOOLTIP</property>
                                 <property name="draw-indicator">True</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -547,15 +550,6 @@ Author: Dankr4d
                                 <property name="width">2</property>
                               </packing>
                             </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
                           </object>
                         </child>
                         <child type="label">
@@ -567,9 +561,8 @@ Author: Dankr4d
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">0</property>
                       </packing>
                     </child>
                     <child>
@@ -577,17 +570,20 @@ Author: Dankr4d
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="tooltip-text" translatable="yes">QUICK_GAME_SETTINGS_FRAME_TOOLTIP</property>
+                        <property name="hexpand">True</property>
                         <property name="label-xalign">0</property>
                         <property name="shadow-type">in</property>
                         <child>
-                          <!-- n-columns=3 n-rows=5 -->
+                          <!-- n-columns=2 n-rows=2 -->
                           <object class="GtkGrid">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="halign">center</property>
+                            <property name="valign">start</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">6</property>
                             <property name="margin-top">3</property>
-                            <property name="margin-bottom">3</property>
+                            <property name="margin-bottom">6</property>
                             <property name="row-spacing">3</property>
                             <property name="column-spacing">3</property>
                             <child>
@@ -631,6 +627,7 @@ Author: Dankr4d
                               <object class="GtkComboBox" id="cbxQuickMod">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_MODS_TOOLTIP</property>
                                 <property name="model">listStoreJoinMods</property>
                                 <property name="has-entry">True</property>
                                 <property name="entry-text-column">1</property>
@@ -646,38 +643,68 @@ Author: Dankr4d
                                 <property name="top-attach">0</property>
                               </packing>
                             </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">QUICK_SETTINGS</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_SINGLEPLAYER_FRAME_TOOLTIP</property>
+                        <property name="hexpand">True</property>
+                        <property name="label-xalign">0</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">6</property>
+                            <property name="margin-top">3</property>
+                            <property name="margin-bottom">6</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <placeholder/>
+                              <object class="GtkButton" id="btnQuickSingleplayer">
+                                <property name="label" translatable="yes">QUICK_SINGLEPLAYER</property>
+                                <property name="name">btnQuickSingleplayer</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_SINGLEPLAYER_TOOLTIP</property>
+                                <signal name="clicked" handler="onBtnQuickSingleplayerClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
                             <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
+                              <object class="GtkButton" id="btnQuickSingleplayerCancel">
+                                <property name="label" translatable="yes">QUICK_SINGLEPLAYER_CANCEL</property>
+                                <property name="name">btnQuickSingleplayerCancel</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_SINGLEPLAYER_CANCEL_TOOLTIP</property>
+                                <signal name="clicked" handler="onBtnQuickSingleplayerCancelClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
                             </child>
                           </object>
                         </child>
@@ -685,68 +712,108 @@ Author: Dankr4d
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">QUICK_GAME_SETTINGS</property>
+                            <property name="label" translatable="yes">QUICK_SINGLEPLAYER</property>
                           </object>
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">QUICK_HOST_FRAME_TOOLTIP</property>
+                        <property name="hexpand">True</property>
+                        <property name="label-xalign">0</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">6</property>
+                            <property name="margin-top">3</property>
+                            <property name="margin-bottom">6</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkButton" id="btnQuickHost">
+                                <property name="label" translatable="yes">QUICK_HOST</property>
+                                <property name="name">btnQuickHost</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_HOST_TOOLTIP</property>
+                                <signal name="clicked" handler="onBtnQuickHostClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btnQuickHostCancel">
+                                <property name="label" translatable="yes">QUICK_HOST_CANCEL</property>
+                                <property name="name">btnQuickHostCancel</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_HOST_CANCEL_TOOLTIP</property>
+                                <signal name="clicked" handler="onBtnQuickHostCancelClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">QUICK_HOST</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">1</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox" id="vboxQuickJustPlay">
+                  <object class="GtkFrame" id="frameQuickTerminal">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-start">3</property>
                     <property name="margin-end">3</property>
                     <property name="margin-top">3</property>
                     <property name="margin-bottom">3</property>
-                    <property name="orientation">vertical</property>
-                    <property name="spacing">2</property>
+                    <property name="label-xalign">0</property>
+                    <property name="shadow-type">in</property>
                     <child>
                       <placeholder/>
                     </child>
-                    <child>
-                      <object class="GtkButton" id="btnQuickJustPlayCancel">
-                        <property name="label" translatable="yes">QUICK_JUST_PLAY_CANCEL</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">QUICK_JUST_PLAY_CANCEL_TOOLTIP</property>
-                        <signal name="clicked" handler="onBtnQuickJustPlayCancelClicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnQuickJustPlay">
-                        <property name="label" translatable="yes">QUICK_JUST_PLAY</property>
+                    <child type="label">
+                      <object class="GtkLabel">
                         <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">QUICK_JUST_PLAY_TOOLTIP</property>
-                        <signal name="clicked" handler="onBtnQuickJustPlayClicked" swapped="no"/>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">QUICK_TERMINAL</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
@@ -2244,44 +2311,16 @@ Author: Dankr4d
                     <property name="margin-bottom">3</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkButton" id="btnHostGameServer">
+                        <property name="label" translatable="yes">HOST_HOST</property>
                         <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="spacing">1</property>
-                        <property name="homogeneous">True</property>
-                        <child>
-                          <object class="GtkButton" id="btnHostLoginServer">
-                            <property name="label" translatable="yes">HOST_LOGIN_UNLOCK_SERVER</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="tooltip-text" translatable="yes">HOST_LOGIN_UNLOCK_SERVER_TOOLTIP</property>
-                            <signal name="clicked" handler="onBtnHostLoginServerClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="btnHostGameServer">
-                            <property name="label" translatable="yes">HOST_HOST</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="tooltip-text" translatable="yes">HOST_HOST_TOOLTIP</property>
-                            <signal name="clicked" handler="onBtnHostGameServerClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">True</property>
+                        <property name="tooltip-text" translatable="yes">HOST_HOST_TOOLTIP</property>
+                        <signal name="clicked" handler="onBtnHostGameServerClicked" swapped="no"/>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
