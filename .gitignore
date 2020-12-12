@@ -9,6 +9,8 @@ BF2142UnlockerSrv
 BF2142UnlockerSrv.exe
 protocols/fesl
 protocols/fesl.exe
+protocols/gspy
+protocols/gspy.exe
 clients/fesl
 clients/fesl.exe
 clients/gspy
