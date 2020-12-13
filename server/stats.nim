@@ -8,11 +8,11 @@ import terminal
 # import ea
 
 ### PAGES
-import pages/getbackendinfo
-import pages/getplayerinfo
-import pages/getunlocksinfo
-import pages/getawardsinfo
-import pages/getplayerprogress
+import page/getbackendinfo
+import page/getplayerinfo
+import page/getunlocksinfo
+import page/getawardsinfo
+import page/getplayerprogress
 ##
 
 #[

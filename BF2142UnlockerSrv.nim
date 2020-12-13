@@ -1,6 +1,6 @@
-import servers/fesl
-import servers/gpcm
-import servers/stats
+import server/fesl
+import server/gpcm
+import server/stats
 import net
 import strformat # Required for fmt macro
 

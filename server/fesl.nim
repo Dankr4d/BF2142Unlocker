@@ -1,4 +1,4 @@
-import ../protocols/fesl
+import ../protocol/fesl
 import net
 import ospaths
 import tables

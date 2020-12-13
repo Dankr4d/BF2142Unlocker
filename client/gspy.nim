@@ -1,4 +1,4 @@
-import ../protocols/gspy
+import ../protocol/gspy
 import asyncnet, asyncdispatch, net
 import options
 export gspy

@@ -12,7 +12,7 @@ proc isAddrReachable*(ip: string, port: Port, timeout: int): bool =
     return false
 
 when isMainModule:
-  import localaddrs
+  import localaddr
   for localAddr in getLocalAddrs():
     echo "Unlock server is reachable: ", isAddrReachable(localAddr, Port(8085), 100)
     echo "Fesl server is reachable: ", isAddrReachable(localAddr, Port(18300), 100)

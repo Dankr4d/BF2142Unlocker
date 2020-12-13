@@ -33,14 +33,14 @@ const
 const # OpenSSL
   OPENSSL_VERSION: string = "1.0.2r"
   OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
-  OPENSSL_PATH: string = "deps" / "openssl"
+  OPENSSL_PATH: string = "thirdparty" / "openssl"
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
 
 when defined(linux):
   const # Ncurses
     NCURSES_VERSION: string = "5.9"
     NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
-    NCURSES_PATH: string = "deps" / "ncurses"
+    NCURSES_PATH: string = "thirdparty" / "ncurses"
     NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
 
 when defined(windows):
@@ -93,8 +93,8 @@ proc compileServer() =
     exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
 proc compileOpenSsl() =
-  mkDir("deps")
-  withDir("deps"):
+  mkDir("thirdparty")
+  withDir("thirdparty"):
     exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
     when defined(linux):
       exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz --one-top-level=openssl --strip=1")
@@ -120,14 +120,14 @@ proc compileOpenSsl() =
 
 when defined(linux):
   proc compileNcurses() =
-    mkDir("deps")
-    withDir("deps"):
+    mkDir("thirdparty")
+    withDir("thirdparty"):
       exec(fmt"wget {NCURSES_URL} -O {NCURSES_DIR}.tar.gz")
       mkDir("ncurses")
       exec(fmt"tar xvzf {NCURSES_DIR}.tar.gz --strip=1 -C ncurses")
     # Applying patch (fixes compilation with newer gcc)
     withDir(NCURSES_PATH):
-      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patches/ncurses-5.9-gcc-5.patch")
+      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../patch/ncurses-5.9-gcc-5.patch")
       # --without-cxx-binding is required or build fails
       exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
       exec(fmt"make -j{CPU_CORES}")
@@ -189,25 +189,25 @@ else:
 
 proc copyServersConfig() =
   when defined(windows):
-    mkDir(BUILD_BIN_DIR / "configs")
-    cpFile("configs/servers.ini", BUILD_BIN_DIR / "configs/servers.ini")
+    mkDir(BUILD_BIN_DIR / "config")
+    cpFile("config/server.ini", BUILD_BIN_DIR / "config/server.ini")
   else:
-    mkDir(BUILD_DIR / "configs")
-    cpFile("configs/servers.ini", BUILD_DIR / "configs/servers.ini")
+    mkDir(BUILD_DIR / "config")
+    cpFile("config/server.ini", BUILD_DIR / "config/server.ini")
 
 proc copyAll() =
   when defined(windows):
-    mkDir(BUILD_BIN_DIR / "assets")
-    mkDir(BUILD_BIN_DIR / "logs")
+    mkDir(BUILD_BIN_DIR / "asset")
+    mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
-    cpFile("assets/nopreview.png", BUILD_BIN_DIR / "assets/nopreview.png")
+    cpFile("asset/nopreview.png", BUILD_BIN_DIR / "asset/nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
-    mkDir(BUILD_DIR / "assets")
-    mkDir(BUILD_DIR / "logs")
+    mkDir(BUILD_DIR / "asset")
+    mkDir(BUILD_DIR / "log")
     cpDir("cert", BUILD_DIR / "cert")
-    cpFile("assets/nopreview.png", BUILD_DIR / "assets/nopreview.png")
+    cpFile("asset/nopreview.png", BUILD_DIR / "asset/nopreview.png")
     copyNcurses()
     copyOpenSSL()
   copyServersConfig()

@@ -11,28 +11,28 @@ when defined(linux):
   import gintro/gmodule # Required to automatically bind signals on linux
 elif defined(windows):
   import winim
-  import modules/windows/docpath # Required to read out My Documents path
-  import modules/windows/sendmsg # Required to send messages bf2142 game server
+  import module/windows/docpath # Required to read out My Documents path
+  import module/windows/sendmsg # Required to send messages bf2142 game server
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
-import modules/localaddrs # Required to get all local adresses
-import modules/checkserver # Required to check if servers are reachable
-import macros/signal # Required to use the custom signal pragma (checks windowShown flag and returns if false)
-import modules/resolutions # Required to read out all possible resolutions
+import module/localaddr # Required to get all local adresses
+import module/checkserver # Required to check if servers are reachable
+import "macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
+import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
-import modules/checkpermission # Required to check write permission before patching client
+import module/checkpermission # Required to check write permission before patching client
 import math # Required for runtime configuration
 import gamesrv/parser # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
-import clients/fesl # Required for getSoldiers proc (login and returning soldiers or error code)
+import client/fesl # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
-import modules/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in logins.ini
-import clients/master # Required to query master server
-import clients/gspy # Required to query each gamespy server for game server information
+import module/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in login.ini
+import client/master # Required to query master server
+import client/gspy # Required to query each gamespy server for game server information
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
@@ -41,9 +41,9 @@ when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
 elif defined(windows):
   import streams # Required to read from process stream (login/unlock server)
-  import modules/windows/getprocessbyname # Required to get pid from forked process
-  import modules/windows/stdoutreader # Required for read stdoutput from another process
-  import modules/windows/gethwndbypid # Required to get window handle from pid
+  import module/windows/getprocessbyname # Required to get pid from forked process
+  import module/windows/stdoutreader # Required for read stdoutput from another process
+  import module/windows/gethwndbypid # Required to get window handle from pid
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
   ## Terminal newTerminal and related helper procs
@@ -288,14 +288,14 @@ const
   GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
-  BLANK_BIK: string = staticRead("assets/blank.bik")
+  BLANK_BIK: string = staticRead("asset/blank.bik")
   BLANK_BIK_HASH: string = static: getMd5(BLANK_BIK)
 
 when defined(release):
   const GUI_CSS: string = staticRead("BF2142Unlocker.css")
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
 const
-  CONFIG_FILE_NAME: string = "configs/config.ini"
+  CONFIG_FILE_NAME: string = "config/config.ini"
   CONFIG_SECTION_QUICK: string = "Quick"
   CONFIG_SECTION_HOST: string = "Host"
   CONFIG_SECTION_UNLOCKS: string = "Unlocks"
@@ -318,7 +318,7 @@ const
   CONFIG_KEY_SETTINGS_RESOLUTION: string = "resolution"
 
 const
-  CONFIG_SERVER_FILE_NAME: string = "configs/servers.ini"
+  CONFIG_SERVER_FILE_NAME: string = "config/server.ini"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -333,7 +333,7 @@ const
   CONFIG_SERVER_KEY_GAME_STR: string = "game_str"
 
 const
-  CONFIG_LOGINS_FILE_NAME: string = "configs/logins.ini"
+  CONFIG_LOGINS_FILE_NAME: string = "config/login.ini"
   CONFIG_LOGINS_KEY_USERNAME: string = "username"
   CONFIG_LOGINS_KEY_PASSWORD: string = "password"
   CONFIG_LOGINS_KEY_SOLDIER: string = "soldier"
@@ -343,7 +343,7 @@ const
 const LANGUAGE_FILE: string = "lang.txt"
 const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE", "ru_RU"]
 
-const NO_PREVIEW_IMG_PATH: string = "assets/nopreview.png"
+const NO_PREVIEW_IMG_PATH: string = "asset/nopreview.png"
 
 var config: Config
 
@@ -484,7 +484,7 @@ var cbxSettingsResolution: ComboBox
 proc onQuit()
 
 import logging
-var logger: FileLogger = newFileLogger("logs/error.log", fmtStr = verboseFmtStr)
+var logger: FileLogger = newFileLogger("log/error.log", fmtStr = verboseFmtStr)
 addHandler(logger)
 
 proc `$`(ex: ref Exception): string =
