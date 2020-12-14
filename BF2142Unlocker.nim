@@ -370,7 +370,7 @@ var btnQuickHostCancel: Button
 var btnQuickSingleplayer: Button
 var btnQuickSingleplayerCancel: Button
 var frameQuickTerminal: Frame
-var termQuickJustPlay: Terminal # TODO: Rename
+var termQuickServer: Terminal
 var dlgQuickCheckServer: Dialog
 var spinnerQuickCheckServerLoginServer: Spinner # Rename to FeslServer
 var spinnerQuickCheckServerGpcmServer: Spinner
@@ -2366,8 +2366,8 @@ proc startQuickServer(singleplayer: bool) =
   else:
     ipAddress = parseIpAddress("0.0.0.0")
   txtQuickIpAddress.text = "127.0.0.1"
-  termQuickJustPlay.startLoginServer(ipAddress)
-  termQuickJustPlay.visible = true
+  termQuickServer.startLoginServer(ipAddress)
+  termQuickServer.visible = true
   var prevAutoJoinVal: bool = cbtnQuickAutoJoin.active
   cbtnQuickAutoJoin.active = false
   if patchAndStartLogic():
@@ -2387,8 +2387,8 @@ proc startQuickServer(singleplayer: bool) =
 proc stopQuickSever(singleplayer: bool) =
   killProcess(termHostLoginServerPid)
   txtQuickIpAddress.text = ""
-  termQuickJustPlay.clear()
-  termQuickJustPlay.visible = false
+  termQuickServer.clear()
+  termQuickServer.visible = false
   if singleplayer:
     btnQuickSingleplayer.visible = true
     btnQuickSingleplayerCancel.visible = false
@@ -3092,12 +3092,12 @@ proc onApplicationActivate(application: Application) =
   #
 
   ## Terminals # TODO: Create a custom widget for glade
-  termQuickJustPlay = newTerminal()
-  termQuickJustPlay.vexpand = true
-  termQuickJustPlay.marginBottom = 3
-  termQuickJustPlay.marginStart = 3
-  termQuickJustPlay.marginEnd = 3
-  frameQuickTerminal.add(termQuickJustPlay)
+  termQuickServer = newTerminal()
+  termQuickServer.vexpand = true
+  termQuickServer.marginBottom = 3
+  termQuickServer.marginStart = 3
+  termQuickServer.marginEnd = 3
+  frameQuickTerminal.add(termQuickServer)
   termHostLoginServer = newTerminal()
   termHostLoginServer.hexpand = true
   termHostGameServer = newTerminal()
