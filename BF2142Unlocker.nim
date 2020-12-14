@@ -121,15 +121,14 @@ when defined(linux):
   const BF2142_SRV_PATCHED_EXE_NAME: string = "bf2142Patched"
 else:
   const BF2142_SRV_EXE_NAME: string = "BF2142_w32ded.exe"
-  const BF2142_SRV_PATCHED_EXE_NAME: string = "BF2142_w32dedPatched.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
+  const BF2142_SRV_PATCHED_EXE_NAME: string = "BF2142_w32dedPatched.exe"
 const BF2142_EXE_NAME: string = "BF2142.exe"
-const BF2142_PATCHED_EXE_NAME: string = "BF2142Patched.exe" # TODO: Rename to "[...]Patched.exe" and try too when copying to unlocker folder
+const BF2142_PATCHED_EXE_NAME: string = "BF2142Patched.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
-const OPENSPY_MD5_HASHES: seq[string] = @["c74f5a6b4189767dd82ccfcb13fc23c4", "9c819a18af0e213447b7bb0e4ff41253"] # TODO: Don't openspy hashes. Check for file names
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -749,15 +748,11 @@ proc backupOpenSpyIfExists() =
   let originalRendDX9Path: string = bf2142UnlockerConfig.settings.bf2142ClientPath / ORIGINAL_RENDDX9_DLL_NAME
   if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
     return
-  let openspyDllRawOpt: Option[TaintedString] = readFile(openspyDllPath)
-  if openspyDllRawOpt.isNone:
-    return
   let originalRendDX9RawOpt: Option[TaintedString] = readFile(originalRendDX9Path)
   if originalRendDX9RawOpt.isNone:
     return
-  let openspyMd5Hash: string = getMD5(openspyDllRawOpt.get())
   let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
-  if openspyMd5Hash in OPENSPY_MD5_HASHES and originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
+  if originalRendDX9Hash == ORIGINAL_RENDDX9_MD5_HASH:
     echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Creating a backup and restoring original file!"
     if not copyFile(openspyDllPath, openspyDllPath & FILE_BACKUP_SUFFIX):
       return
@@ -785,28 +780,23 @@ proc restoreOpenSpyIfExists() =
   let openspyDllRestorePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
   if not fileExists(openspyDllBackupPath):
     return
-  let openspyMd5RawOpt: Option[TaintedString] = readFile(openspyDllBackupPath)
-  if openspyMd5RawOpt.isNone:
-    return
-  let openspyMd5Hash: string = getMD5(openspyMd5RawOpt.get())
-  if openspyMd5Hash in OPENSPY_MD5_HASHES:
-    echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
-    var tryCnt: int = 0
-    while tryCnt < 8:
-      try:
-        os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
-        os.removeFile(openspyDllBackupPath)
-        break
-      except OSError as ex:
-        tryCnt.inc()
-        if tryCnt == 8:
-          newInfoDialog(
-            fmt"Could not restore {OPENSPY_DLL_NAME}",
-            fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
-          )
-          return
-        else:
-          sleep(500)
+  echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
+  var tryCnt: int = 0
+  while tryCnt < 8:
+    try:
+      os.copyFile(openspyDllBackupPath, openspyDllRestorePath)
+      os.removeFile(openspyDllBackupPath)
+      break
+    except OSError as ex:
+      tryCnt.inc()
+      if tryCnt == 8:
+        newInfoDialog(
+          fmt"Could not restore {OPENSPY_DLL_NAME}",
+          fmt"Could not restore {OPENSPY_DLL_NAME}!" & "\n\n" & $ex
+        )
+        return
+      else:
+        sleep(500)
 
 proc typeTest(o: gobject.Object; s: string): bool =
   let gt = g_type_from_name(s)
