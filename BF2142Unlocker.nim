@@ -2759,7 +2759,7 @@ proc setBF2142Path(path: string) =
     txtSettingsBF2142ClientPath.text = bf2142UnlockerConfig.settings.bf2142ClientPath
     return
   vboxQuick.visible = true
-  vboxHost.visible = true
+  vboxMultiplayer.visible = true
   vboxUnlocks.visible = true
   bf2142UnlockerConfig.settings.bf2142ClientPath = path
   if txtSettingsBF2142ClientPath.text != path:
@@ -2802,11 +2802,10 @@ proc setBF2142ServerPath(path: string) =
     )
     txtSettingsBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
     return
-  vboxHost.visible = true
   bf2142UnlockerConfig.settings.bf2142ServerPath = path
   if txtSettingsBF2142ServerPath.text != path:
     txtSettingsBF2142ServerPath.text = path
-  btnHostGameServer.sensitive = bf2142UnlockerConfig.settings.bf2142ServerPath != ""
+  vboxHost.visible = true
   ignoreEvents = true
   loadHostMods()
   if not cbxHostMods.setActiveId(bf2142UnlockerConfig.host.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
@@ -3167,14 +3166,11 @@ proc onApplicationActivate(application: Application) =
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
     notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxQuick.visible = false
+    vboxMultiplayer.visible = false
     vboxUnlocks.visible = false
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
-    btnHostGameServer.sensitive = false
-  if bf2142UnlockerConfig.settings.bf2142ClientPath == "" and bf2142UnlockerConfig.settings.bf2142ServerPath == "":
     vboxHost.visible = false
-
   loadServerConfig()
-  # updateServer()
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
