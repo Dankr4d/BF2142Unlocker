@@ -2347,7 +2347,7 @@ proc patchAndStartLogic(): bool =
     var resolution: tuple[width, height: uint16] = getSelectedResolution()
     options.szx = some(resolution.width)
     options.szy = some(resolution.height)
-  options.widescreen = some(true) # TODO
+  options.widescreen = some(true)
   options.eaAccountName = some(txtQuickPlayerName.text)
   options.eaAccountPassword = some("A")
   options.soldierName = some(txtQuickPlayerName.text)
@@ -2513,7 +2513,7 @@ proc onBtnMultiplayerAccountCreateClicked(self: Button00) {.signal.} =
 proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   frameMultiplayerAccountError.visible = false
 
-  let modPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "TODO" # TODO: Remove TODO, just for testing
+  let modPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod`
   if not dirExists(modPath):
     var uri: string
 
@@ -2545,10 +2545,12 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   var options: BF2142Options
   options.modPath = some("mods/" & currentServer.`mod`)
   options.menu = some(true)
-  options.fullscreen = some(false) # TODO
-  options.szx = some(800.uint16) # TODO
-  options.szy = some(600.uint16) # TODO
-  options.widescreen = some(true) # TODO
+  options.fullscreen = some(not chbtnSettingsWindowMode.active)
+  if chbtnSettingsWindowMode.active:
+    var resolution: tuple[width, height: uint16] = getSelectedResolution()
+    options.szx = some(resolution.width)
+    options.szy = some(resolution.height)
+  options.widescreen = some(true)
   options.eaAccountName = some(username)
   options.eaAccountPassword = some(txtMultiplayerAccountPassword.text)
   options.soldierName = some(soldier)
