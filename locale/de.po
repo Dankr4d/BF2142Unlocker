@@ -41,6 +41,33 @@ msgstr "Spielername:"
 msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Dein Spielername den du ingame siehst (Soldiername)."
 
+msgid "QUICK_HOST"
+msgstr "Hosten"
+
+msgid "QUICK_HOST_CANCEL"
+msgstr "Abbrechen"
+
+msgid "QUICK_HOST_TOOLTIP"
+msgstr "Hosted alle benötigten server auf 0.0.0.0, patched BF2142 und started das spiel."
+
+msgid "QUICK_HOST_CANCEL_TOOLTIP"
+msgstr "Stoppt alle laufenden Server."
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr "Einzelspieler"
+
+msgid "QUICK_SINGLEPLAYER_CANCEL"
+msgstr "Abbrechen"
+
+msgid "QUICK_SINGLEPLAYER_TOOLTIP"
+msgstr "Hosted alle benötigten server auf 127.0.0.1, patched BF2142 und started das spiel."
+
+msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
+msgstr "Stoppt alle laufenden Server."
+
+msgid "QUICK_TERMINAL"
+msgstr "Terminal"
+
 msgid "SETTINGS_SKIP_MOVIES"
 msgstr "Intro Movies überspringen:"
 
@@ -65,10 +92,10 @@ msgid "QUICK_SETTINGS"
 msgstr "Einstellungen"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
-msgstr "Verbindungseinstellungen zum verbinden mit dem Anmelde-/Unlockserver."
+msgstr "Verbinde dich zu jemandem der die Server hostet."
 
 msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
-msgstr "Einstellungen mit denen Battlefield 2142 gestartet wird."
+msgstr "Wähle die Mod mit dem das Spiel gestartet werden soll und den Spielernamen aus."
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -134,7 +161,7 @@ msgid "HOST_BOT_AMOUNT"
 msgstr "Bot anzahl:"
 
 msgid "HOST_BOT_AMOUNT_TOOLTIP"
-msgstr "Die Anzahl der Bots im Spiel. Diese ist bis auf 255 Bots einstellbar, kann aber Performance einbußungen/lags hervorrufen"
+msgstr "Die Anzahl der Bots im Spiel. Diese ist bis auf 255 Bots einstellbar, kann aber Performance einbußungen/lags hervorrufen."
 
 msgid "HOST_MAX_PLAYERS"
 msgstr "Maximale Spieler"
@@ -199,7 +226,7 @@ msgid "HOST_HOST"
 msgstr "Alle server starten"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Startet den Anmelde-/Unlock und Gameserver."
+msgstr "Startet alle server."
 
 msgid "HOST_CANCEL"
 msgstr "Abbrechen"
@@ -250,16 +277,16 @@ msgstr "Auswählen"
 # ##
 # ##### Tabs
 msgid "TAB_QUICK"
-msgstr "Quick"
+msgstr "Spielen"
 
 msgid "TAB_QUICK_TOOLTIP"
-msgstr "TODO"
+msgstr "Hier kannst du im Singleplayer oder LAN spielen."
 
 msgid "TAB_HOST"
 msgstr "Bereitstellen"
 
 msgid "TAB_HOST_TOOLTIP"
-msgstr "Einstellungen zum hosten des Anmelde-/Unlockserver und/oder Gameserver."
+msgstr "Einstellungen zum hosten."
 
 msgid "TAB_UNLOCKS"
 msgstr "Unlocks"

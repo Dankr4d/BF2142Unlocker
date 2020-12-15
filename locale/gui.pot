@@ -29,37 +29,13 @@ msgstr ""
 msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr ""
 
-msgid "QUICK_SKIP_MOVIES"
-msgstr ""
-msgid "QUICK_SKIP_MOVIES_TOOLTIP"
-msgstr ""
-
-msgid "QUICK_WINDOW_MODE"
-msgstr ""
-msgid "QUICK_WINDOW_MODE_TOOLTIP"
-msgstr ""
-
-msgid "QUICK_RESOLUTION"
-msgstr ""
-msgid "QUICK_RESOLUTION_TOOLTIP"
-msgstr ""
-
-msgid "QUICK_JUST_PLAY_CANCEL"
-msgstr ""
-msgid "QUICK_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr ""
-
-msgid "QUICK_JUST_PLAY"
-msgstr ""
-msgid "QUICK_JUST_PLAY_TOOLTIP"
-msgstr ""
-
-msgid "QUICK_GAME_SETTINGS"
+msgid "QUICK_SETTINGS"
 msgstr ""
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
 msgstr ""
-msgid "QUICK_GAME_SETTINGS_FRAME_TOOLTIP"
+
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
 msgstr ""
 
 msgid "CHECK_CAN_NOT_CONNECT"
@@ -77,17 +53,37 @@ msgstr ""
 msgid "CHECK_CANCEL"
 msgstr ""
 
-msgid "QUICK_SINGLEPLAYER"
-msgstr ""
-
 msgid "QUICK_HOST"
 msgstr ""
 
-msgid "QUICK_HOST_LAN"
+msgid "QUICK_HOST_CANCEL"
 msgstr ""
+
+msgid "QUICK_HOST_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_HOST_CANCEL_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr ""
+
+msgid "QUICK_SINGLEPLAYER_CANCEL"
+msgstr ""
+
+msgid "QUICK_SINGLEPLAYER_TOOLTIP"
+msgstr ""
+
+msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
+msgstr """
 
 msgid "QUICK_TERMINAL"
 msgstr ""
+###
+
+
+###### Host
+
 ###
 
 
@@ -173,11 +169,6 @@ msgstr ""
 msgid "HOST_TERMINALS"
 msgstr ""
 
-msgid "HOST_LOGIN_UNLOCK_SERVER"
-msgstr ""
-msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr ""
-
 msgid "HOST_HOST"
 msgstr ""
 msgid "HOST_HOST_TOOLTIP"
@@ -222,6 +213,21 @@ msgid "SETTINGS_COPY_MAPS_SERVER"
 msgstr ""
 
 msgid "SETTINGS_SELECT"
+msgstr ""
+
+msgid "SETTINGS_SKIP_MOVIES"
+msgstr ""
+msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
+msgstr ""
+
+msgid "SETTINGS_WINDOW_MODE"
+msgstr ""
+msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
+msgstr ""
+
+msgid "SETTINGS_RESOLUTION"
+msgstr ""
+msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr ""
 ###
 

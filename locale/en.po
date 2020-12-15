@@ -33,13 +33,40 @@ msgid "QUICK_MODS"
 msgstr "Mods:"
 
 msgid "QUICK_MODS_TOOLTIP"
-msgstr "Choose the mod that the game should start with"
+msgstr "Choose the mod that the game should start with."
 
 msgid "QUICK_PLAYER_NAME"
 msgstr "Player name:"
 
 msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Name of your Soldier that appears ingame."
+
+msgid "QUICK_HOST"
+msgstr "Host"
+
+msgid "QUICK_HOST_CANCEL"
+msgstr "Cancel"
+
+msgid "QUICK_HOST_TOOLTIP"
+msgstr "Hosts all necessary servers on 0.0.0.0, patches BF2142 and start the game."
+
+msgid "QUICK_HOST_CANCEL_TOOLTIP"
+msgstr "Quit current running servers."
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr "Singleplayer"
+
+msgid "QUICK_SINGLEPLAYER_CANCEL"
+msgstr "Cancel"
+
+msgid "QUICK_SINGLEPLAYER_TOOLTIP"
+msgstr "Hosts all necessary servers on 127.0.0.1, patches BF2142 and start the game."
+
+msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
+msgstr "Quit current running servers."
+
+msgid "QUICK_TERMINAL"
+msgstr "Terminal"
 
 msgid "SETTINGS_SKIP_MOVIES"
 msgstr "Skip intro movies:"
@@ -65,10 +92,10 @@ msgid "QUICK_SETTINGS"
 msgstr "Settings"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
-msgstr "Connection-settings that control how you get into your or any login-/unlockserver"
+msgstr "Connect to any other who's hosting the servers."
 
 msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
-msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+msgstr "Select the mod you want to start and your player name."
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -96,7 +123,7 @@ msgid "HOST_MODS"
 msgstr "Mods:"
 
 msgid "HOST_MODS_TOOLTIP"
-msgstr "Choose the mod the server should run with"
+msgstr "Choose the mod the server should run with."
 
 msgid "HOST_GAME_MODE"
 msgstr "Game mode:"
@@ -110,31 +137,31 @@ msgid "HOST_BOT_SKILL"
 msgstr "Bot skill:"
 
 msgid "HOST_BOT_SKILL_TOOLTIP"
-msgstr "Controlls the difficulty of the bots"
+msgstr "Controlls the difficulty of the bots."
 
 msgid "HOST_TICKET_RATIO"
 msgstr "Ticket ratio:"
 
 msgid "HOST_TICKET_RATIO_TOOLTIP"
-msgstr "Tickets for each team in %"
+msgstr "Tickets for each team in %."
 
 msgid "HOST_SPAWN_TIME"
 msgstr "Spawn time:"
 
 msgid "HOST_SPAWN_TIME_TOOLTIP"
-msgstr "Time to wait before one can re-enter the battle if killed"
+msgstr "Time to wait before one can re-enter the battle if killed."
 
 msgid "HOST_ROUNDS_PER_MAP"
 msgstr "Rounds per map:"
 
 msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
-msgstr "Number of rounds to play each map before switching to the next one in the list"
+msgstr "Number of rounds to play each map before switching to the next one in the list."
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot amount:"
 
 msgid "HOST_BOT_AMOUNT_TOOLTIP"
-msgstr "Total number of all bots on the map"
+msgstr "Total number of all bots on the map."
 
 msgid "HOST_MAX_PLAYERS"
 msgstr "Max players:"
@@ -148,13 +175,13 @@ msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Players needed to start:"
 
 msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
-msgstr "Number of human players that need to be connected into the game to make a round start"
+msgstr "Number of human players that need to be connected into the game to make a round start."
 
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Friendly fire:"
 
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
-msgstr "Enable/Disable friendly fire"
+msgstr "Enable/Disable friendly fire."
 
 msgid "HOST_ALLOW_NOSE_CAM"
 msgstr "Allow nose cam:"
@@ -180,19 +207,19 @@ msgstr ""
 "This list is dependend on the gamemode you chose."
 
 msgid "HOST_SELECTED_MAPS_TOOLTIP"
-msgstr "List of maps already in your rotation"
+msgstr "List of maps already in your rotation."
 
 msgid "HOST_MAPS_ADD_TOOLTIP"
-msgstr "Add map to rotation"
+msgstr "Add map to rotation."
 
 msgid "HOST_MAPS_REMOVE_TOOLTIP"
-msgstr "Remove map from rotation"
+msgstr "Remove map from rotation."
 
 msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
-msgstr "Move map upwards in the rotation"
+msgstr "Move map upwards in the rotation."
 
 msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
-msgstr "Move map downwards in the rotation"
+msgstr "Move map downwards in the rotation."
 
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
@@ -201,7 +228,7 @@ msgid "HOST_HOST"
 msgstr "Host"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Start the login-/unlock and gameserver with the selected setting"
+msgstr "Start all the servers."
 
 msgid "HOST_CANCEL"
 msgstr "Cancel"
@@ -223,7 +250,7 @@ msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 game path:"
 
 msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
-msgstr "Select your Battlefield 2142 game folder"
+msgstr "Select your Battlefield 2142 game folder."
 
 msgid "SETTINGS_BF2142_SERVER_PATH"
 msgstr "Battlefield 2142 server path:"
@@ -257,13 +284,13 @@ msgid "TAB_QUICK"
 msgstr "Play"
 
 msgid "TAB_QUICK_TOOLTIP"
-msgstr "TODO"
+msgstr "Here you're able to play in singleplayer or LAN."
 
 msgid "TAB_HOST"
 msgstr "Host"
 
 msgid "TAB_HOST_TOOLTIP"
-msgstr "Settings to host a login and game-server"
+msgstr "Settings to host."
 
 msgid "TAB_UNLOCKS"
 msgstr "Unlocks"

@@ -43,6 +43,33 @@ msgstr "Имя игрока:"
 msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Позывной в игре."
 
+msgid "QUICK_HOST"
+msgstr "TODO"
+
+msgid "QUICK_HOST_CANCEL"
+msgstr "TODO"
+
+msgid "QUICK_HOST_TOOLTIP"
+msgstr "TODO"
+
+msgid "QUICK_HOST_CANCEL_TOOLTIP"
+msgstr "TODO"
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr "TODO"
+
+msgid "QUICK_SINGLEPLAYER_CANCEL"
+msgstr "TODO"
+
+msgid "QUICK_SINGLEPLAYER_TOOLTIP"
+msgstr "TODO"
+
+msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
+msgstr "TODO"
+
+msgid "QUICK_TERMINAL"
+msgstr "TODO"
+
 msgid "SETTINGS_SKIP_MOVIES"
 msgstr "Пропуск втупительных роликов"
 
@@ -65,10 +92,10 @@ msgid "QUICK_SETTINGS"
 msgstr "Настройки"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
-msgstr "Настройки подключения для серверов"
+msgstr "TODO"
 
 msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
-msgstr "Базовые настройки, с кроторыми запуститя игра"
+msgstr "TODO"
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -201,7 +228,7 @@ msgid "HOST_HOST"
 msgstr "Хост"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Запустить логин-сервер / серве разблокировок с выбранной настройкой"
+msgstr "TODO"
 
 msgid "HOST_CANCEL"
 msgstr "Отмена"
