@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2
+<!-- Generated with glade 3.38.2 
 
 The MIT License (MIT)
 
@@ -1978,7 +1978,7 @@ Author: Dankr4d
                                             <property name="can-focus">False</property>
                                             <property name="halign">start</property>
                                             <property name="valign">start</property>
-                                            <property name="pixbuf">asset/nopreview.png</property>
+                                            <property name="pixbuf">asset\nopreview.png</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -2991,6 +2991,105 @@ Author: Dankr4d
       </object>
     </child>
   </object>
+  <object class="GtkDialog" id="dlgSettingsBF2142ClientPathDetected">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE</property>
+    <property name="type-hint">dialog</property>
+    <property name="transient-for">window</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="margin-top">6</property>
+        <property name="margin-bottom">6</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="margin-top">10</property>
+            <property name="layout-style">end</property>
+            <child>
+              <object class="GtkButton" id="button4">
+                <property name="label" translatable="yes">SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button5">
+                <property name="label" translatable="yes">SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblSettingsBF2142ClientPathDetected">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="xalign">0</property>
+                <attributes>
+                  <attribute name="style" value="italic"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button4</action-widget>
+      <action-widget response="1">button5</action-widget>
+    </action-widgets>
+  </object>
   <object class="GtkWindow" id="wndMultiplayerAccount">
     <property name="can-focus">False</property>
     <property name="resizable">False</property>
@@ -3596,11 +3695,16 @@ Author: Dankr4d
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
+        <property name="margin-start">3</property>
+        <property name="margin-end">3</property>
+        <property name="margin-top">3</property>
+        <property name="margin-bottom">3</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
           <object class="GtkButtonBox">
             <property name="can-focus">False</property>
+            <property name="margin-top">10</property>
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton" id="button1">

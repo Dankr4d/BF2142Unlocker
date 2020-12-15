@@ -360,3 +360,16 @@ msgstr "No valid ip address"
 
 msgid "NO_VALID_IP_ADDRESS_MSG"
 msgstr "The ip address you've entered is not a valid IPv4 address."
+
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
+msgstr "A Battlefield 2142 installation path has been found"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG"
+msgstr "Should the following path set to be your Battlefield 2142 path?"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK"
+msgstr "Yes"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
+msgstr "No, select .."

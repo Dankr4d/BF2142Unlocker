@@ -462,6 +462,7 @@ var vboxUnlocks: Box
 var chbtnUnlocksUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
+var vboxSettings: Box
 var lblSettingsBF2142ClientPath: Label
 var txtSettingsBF2142ClientPath: Entry
 var btnSettingsBF2142ClientPath: Button
@@ -477,6 +478,8 @@ var chbtnSettingsSkipMovies: CheckButton
 var chbtnSettingsWindowMode: CheckButton
 var lblSettingsResolution: Label
 var cbxSettingsResolution: ComboBox
+var dlgSettingsBF2142ClientPathDetected: Dialog
+var lblSettingsBF2142ClientPathDetected: Label
 ##
 
 ### Exception procs # TODO: Replace tuple results with Option
@@ -2983,15 +2986,12 @@ proc onApplicationActivate(application: Application) =
   notebook = builder.getNotebook("notebook")
   lblVersion = builder.getLabel("lblVersion")
   cbxLanguages = builder.getComboBox("cbxLanguages")
+
   vboxQuick = builder.getBox("vboxQuick")
   cbxQuickMod = builder.getComboBox("cbxQuickMod")
-  lblSettingsResolution = builder.getLabel("lblSettingsResolution")
-  cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
   txtQuickPlayerName = builder.getEntry("txtQuickPlayerName")
   txtQuickIpAddress = builder.getEntry("txtQuickIpAddress")
   cbtnQuickAutoJoin = builder.getCheckButton("cbtnQuickAutoJoin")
-  chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
-  chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
   btnQuickConnect = builder.getButton("btnQuickConnect")
   btnQuickHost = builder.getButton("btnQuickHost")
   btnQuickHostCancel = builder.getButton("btnQuickHostCancel")
@@ -3006,49 +3006,6 @@ proc onApplicationActivate(application: Application) =
   imgQuickCheckServerLoginServer = builder.getImage("imgQuickCheckServerLoginServer")
   imgQuickCheckServerGpcmServer = builder.getImage("imgQuickCheckServerGpcmServer")
   imgQuickCheckServerUnlockServer = builder.getImage("imgQuickCheckServerUnlockServer")
-  vboxHost = builder.getBox("vboxHost")
-  imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
-  cbxHostMods = builder.getComboBox("cbxHostMods")
-  cbxHostGameMode = builder.getComboBox("cbxHostGameMode")
-  sbtnHostBotSkill = builder.getSpinButton("sbtnHostBotSkill")
-  scaleHostBotSkill = builder.getScale("scaleHostBotSkill")
-  sbtnHostTicketRatio = builder.getSpinButton("sbtnHostTicketRatio")
-  scaleHostTicketRatio = builder.getScale("scaleHostTicketRatio")
-  sbtnHostSpawnTime = builder.getSpinButton("sbtnHostSpawnTime")
-  scaleHostSpawnTime = builder.getScale("scaleHostSpawnTime")
-  sbtnHostRoundsPerMap = builder.getSpinButton("sbtnHostRoundsPerMap")
-  scaleHostRoundsPerMap = builder.getScale("scaleHostRoundsPerMap")
-  sbtnHostBots = builder.getSpinButton("sbtnHostBots")
-  scaleHostBots = builder.getScale("scaleHostBots")
-  sbtnHostMaxPlayers = builder.getSpinButton("sbtnHostMaxPlayers")
-  scaleHostMaxPlayers = builder.getScale("scaleHostMaxPlayers")
-  sbtnHostPlayersNeededToStart = builder.getSpinButton("sbtnHostPlayersNeededToStart")
-  scaleHostPlayersNeededToStart = builder.getScale("scaleHostPlayersNeededToStart")
-  chbtnHostFriendlyFire = builder.getCheckButton("chbtnHostFriendlyFire")
-  chbtnHostAllowNoseCam = builder.getCheckButton("chbtnHostAllowNoseCam")
-  txtHostIpAddress = builder.getEntry("txtHostIpAddress")
-  trvHostSelectableMap = builder.getTreeView("trvHostSelectableMap")
-  trvHostSelectedMap = builder.getTreeView("trvHostSelectedMap")
-  btnHostMapAdd = builder.getButton("btnHostMapAdd")
-  btnHostMapDel = builder.getButton("btnHostMapDel")
-  btnHostMapMoveUp = builder.getButton("btnHostMapMoveUp")
-  btnHostMapMoveDown = builder.getButton("btnHostMapMoveDown")
-  btnHostGameServer = builder.getButton("btnHostGameServer")
-  btnHostCancel = builder.getButton("btnHostCancel")
-  hboxHostTerms = builder.getBox("hboxHostTerms")
-  vboxUnlocks = builder.getBox("vboxUnlocks")
-  chbtnUnlocksUnlockSquadGadgets = builder.getCheckButton("chbtnUnlocksUnlockSquadGadgets")
-  lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
-  txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
-  btnSettingsBF2142ClientPath = builder.getButton("btnSettingsBF2142ClientPath")
-  lblSettingsBF2142ServerPath = builder.getLabel("lblSettingsBF2142ServerPath")
-  txtSettingsBF2142ServerPath = builder.getEntry("txtSettingsBF2142ServerPath")
-  btnSettingsBF2142ServerPath = builder.getButton("btnSettingsBF2142ServerPath")
-  lblSettingsWinePrefix = builder.getLabel("lblSettingsWinePrefix")
-  btnSettingsWinePrefix = builder.getButton("btnSettingsWinePrefix")
-  txtSettingsWinePrefix = builder.getEntry("txtSettingsWinePrefix")
-  lblSettingsStartupQuery = builder.getLabel("lblSettingsStartupQuery")
-  txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
 
   vboxMultiplayer = builder.getBox("vboxMultiplayer")
   spinnerMultiplayerServers = builder.getSpinner("spinnerMultiplayerServers")
@@ -3087,6 +3044,59 @@ proc onApplicationActivate(application: Application) =
   dlgMultiplayerModMissing = builder.getDialog("dlgMultiplayerModMissing")
   lblMultiplayerModMissingLink = builder.getLabel("lblMultiplayerModMissingLink")
   lbtnMultiplayerModMissing = builder.getLinkButton("lbtnMultiplayerModMissing")
+
+  vboxHost = builder.getBox("vboxHost")
+  imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
+  cbxHostMods = builder.getComboBox("cbxHostMods")
+  cbxHostGameMode = builder.getComboBox("cbxHostGameMode")
+  sbtnHostBotSkill = builder.getSpinButton("sbtnHostBotSkill")
+  scaleHostBotSkill = builder.getScale("scaleHostBotSkill")
+  sbtnHostTicketRatio = builder.getSpinButton("sbtnHostTicketRatio")
+  scaleHostTicketRatio = builder.getScale("scaleHostTicketRatio")
+  sbtnHostSpawnTime = builder.getSpinButton("sbtnHostSpawnTime")
+  scaleHostSpawnTime = builder.getScale("scaleHostSpawnTime")
+  sbtnHostRoundsPerMap = builder.getSpinButton("sbtnHostRoundsPerMap")
+  scaleHostRoundsPerMap = builder.getScale("scaleHostRoundsPerMap")
+  sbtnHostBots = builder.getSpinButton("sbtnHostBots")
+  scaleHostBots = builder.getScale("scaleHostBots")
+  sbtnHostMaxPlayers = builder.getSpinButton("sbtnHostMaxPlayers")
+  scaleHostMaxPlayers = builder.getScale("scaleHostMaxPlayers")
+  sbtnHostPlayersNeededToStart = builder.getSpinButton("sbtnHostPlayersNeededToStart")
+  scaleHostPlayersNeededToStart = builder.getScale("scaleHostPlayersNeededToStart")
+  chbtnHostFriendlyFire = builder.getCheckButton("chbtnHostFriendlyFire")
+  chbtnHostAllowNoseCam = builder.getCheckButton("chbtnHostAllowNoseCam")
+  txtHostIpAddress = builder.getEntry("txtHostIpAddress")
+  trvHostSelectableMap = builder.getTreeView("trvHostSelectableMap")
+  trvHostSelectedMap = builder.getTreeView("trvHostSelectedMap")
+  btnHostMapAdd = builder.getButton("btnHostMapAdd")
+  btnHostMapDel = builder.getButton("btnHostMapDel")
+  btnHostMapMoveUp = builder.getButton("btnHostMapMoveUp")
+  btnHostMapMoveDown = builder.getButton("btnHostMapMoveDown")
+  btnHostGameServer = builder.getButton("btnHostGameServer")
+  btnHostCancel = builder.getButton("btnHostCancel")
+  hboxHostTerms = builder.getBox("hboxHostTerms")
+
+  vboxUnlocks = builder.getBox("vboxUnlocks")
+  chbtnUnlocksUnlockSquadGadgets = builder.getCheckButton("chbtnUnlocksUnlockSquadGadgets")
+
+  vboxSettings = builder.getBox("vboxSettings")
+  lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
+  txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
+  btnSettingsBF2142ClientPath = builder.getButton("btnSettingsBF2142ClientPath")
+  lblSettingsBF2142ServerPath = builder.getLabel("lblSettingsBF2142ServerPath")
+  txtSettingsBF2142ServerPath = builder.getEntry("txtSettingsBF2142ServerPath")
+  btnSettingsBF2142ServerPath = builder.getButton("btnSettingsBF2142ServerPath")
+  lblSettingsWinePrefix = builder.getLabel("lblSettingsWinePrefix")
+  btnSettingsWinePrefix = builder.getButton("btnSettingsWinePrefix")
+  txtSettingsWinePrefix = builder.getEntry("txtSettingsWinePrefix")
+  lblSettingsStartupQuery = builder.getLabel("lblSettingsStartupQuery")
+  txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
+  chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
+  chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
+  lblSettingsResolution = builder.getLabel("lblSettingsResolution")
+  cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
+  dlgSettingsBF2142ClientPathDetected = builder.getDialog("dlgSettingsBF2142ClientPathDetected")
+  lblSettingsBF2142ClientPathDetected = builder.getLabel("lblSettingsBF2142ClientPathDetected")
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
@@ -3166,13 +3176,29 @@ proc onApplicationActivate(application: Application) =
     lblSettingsStartupQuery.visible = false
     txtSettingsStartupQuery.visible = false
   if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
-    notebook.currentPage = 2 # Switch to settings tab when no Battlefield 2142 path is set
     vboxQuick.visible = false
     vboxMultiplayer.visible = false
     vboxUnlocks.visible = false
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
     vboxHost.visible = false
   loadServerConfig()
+
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
+    let bf2142ClientPath: string = getBF2142ClientPath()
+    if bf2142ClientPath != "" and fileExists(bf2142ClientPath / BF2142_EXE_NAME):
+      vboxSettings.sensitive = false
+      lblSettingsBF2142ClientPathDetected.text = bf2142ClientPath
+      let responseId: int = dlgSettingsBF2142ClientPathDetected.run()
+      dlgSettingsBF2142ClientPathDetected.destroy()
+      if responseId == 0:
+        setBF2142Path(bf2142ClientPath)
+        notebook.currentPage = 0
+      elif responseId == 1:
+        let (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
+        if responseType == ResponseType.ok:
+          setBF2142Path(path)
+          notebook.currentPage = 0
+      vboxSettings.sensitive = true
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
