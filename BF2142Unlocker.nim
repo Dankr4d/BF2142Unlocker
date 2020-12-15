@@ -2494,6 +2494,11 @@ proc onTxtMultiplayerAccountPasswordDeleteText(self: Editable00, startPos, endPo
   btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text.len - (endPos - startPos)) > 0
   btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
+proc onMultiplayerAccountUsernamePasswordActivate(self: Entry00) {.signal.} =
+  if btnMultiplayerAccountLogin.sensitive: # TODO: create a isUsernamePasswordValid proc
+    frameMultiplayerAccountError.visible = false
+    loginAsync(chbtnMultiplayerAccountSave.active)
+
 proc onTxtMultiplayerAccountSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   var soldier: string
   soldier = txtMultiplayerAccountSoldierName.text
@@ -2644,6 +2649,7 @@ proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
   btnMultiplayerAccountSoldierAdd.sensitive = false
   btnMutliplayerAccountSoldierDel.sensitive = false
   btnMultiplayerAccountPlay.sensitive = false
+  txtMultiplayerAccountUsername.grabFocus()
 
 proc onWndMultiplayerAccountDeleteEvent(self: gtk.Window00): bool {.signal.} =
   wndMultiplayerAccount.hide()
