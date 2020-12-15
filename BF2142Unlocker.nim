@@ -2556,6 +2556,17 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   let username: string = txtMultiplayerAccountUsername.text
   let soldier: string = get(trvMultiplayerAccountSoldiers.selectedSoldier)
 
+
+  if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+    if not copyFile(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_EXE_NAME, bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+      return
+  if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+    newInfoDialog(
+      dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME]
+    )
+    return
+
   backupOpenSpyIfExists()
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig))
   saveBF2142Profile(username, soldier)
@@ -2575,6 +2586,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   options.joinServer = some(currentServer.ip)
   options.port = some(currentServer.port)
   discard startBF2142(options)
+  wndMultiplayerAccount.hide()
 
 proc onBtnMultiplayerAccountCancelClicked(self: Button) {.signal.} =
   wndMultiplayerAccount.hide()
