@@ -16,8 +16,7 @@ msgid "QUICK_IP_ADDRESS"
 msgstr "IP адрес:"
 
 msgid "QUICK_IP_ADDRESS_TOOLTIP"
-msgstr ""
-"Введите IP целевого логин-сервера,к которому хотите подключиться."
+msgstr "Введите IP целевого логин-сервера,к которому хотите подключиться."
 
 msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Автоприсоединение к серверу:"
@@ -42,6 +41,32 @@ msgstr "Имя игрока:"
 
 msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Позывной в игре."
+
+msgid "QUICK_SETTINGS"
+msgstr "Настройки"
+
+msgid "QUICK_CONNECT_FRAME_TOOLTIP"
+msgstr "TODO"
+
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
+msgstr "TODO"
+
+msgid "CHECK_CAN_NOT_CONNECT"
+msgstr ""
+"Не удалось подключиться к данному IP-адресу.\n"
+"Cледующий сервер недоступен:"
+
+msgid "CHECK_LOGIN_SERVER"
+msgstr "Логин-Сервер:"
+
+msgid "CHECK_GPCM_SERVER"
+msgstr "Сервер GPCM :"
+
+msgid "CHECK_UNLOCK_SERVER"
+msgstr "Сервер с разблокировкой:"
+
+msgid "CHECK_CANCEL"
+msgstr "Отмена"
 
 msgid "QUICK_HOST"
 msgstr "TODO"
@@ -70,49 +95,85 @@ msgstr "TODO"
 msgid "QUICK_TERMINAL"
 msgstr "TODO"
 
-msgid "SETTINGS_SKIP_MOVIES"
-msgstr "Пропуск втупительных роликов"
-
-msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
-msgstr "Пропустить видео при запуске"
-
-msgid "SETTINGS_WINDOW_MODE"
-msgstr "Оконный режим"
-
-msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
-msgstr "Запуск игры в оконном режиме."
-
-msgid "SETTINGS_RESOLUTION"
-msgstr "Разрешение:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "Разрешение экрана в оконном режиме"
-
-msgid "QUICK_SETTINGS"
-msgstr "Настройки"
-
-msgid "QUICK_CONNECT_FRAME_TOOLTIP"
+# ##
+# ##### Multiplayer
+msgid "TAB_MULTIPLAYER"
 msgstr "TODO"
 
-msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
+msgid "MULTIPLAYER_SERVERS_TOOLTIP"
 msgstr "TODO"
 
-msgid "CHECK_CAN_NOT_CONNECT"
-msgstr ""
-"Не удалось подключиться к данному IP-адресу.\n"
-"Cледующий сервер недоступен:"
+msgid "MULTIPLAYER_SERVERS_REFRESH_TOOLTIP"
+msgstr "TODO"
 
-msgid "CHECK_LOGIN_SERVER"
-msgstr "Логин-Сервер:"
+msgid "MULTIPLAYER_SERVERS_PLAY_TOOLTIP"
+msgstr "TODO"
 
-msgid "CHECK_GPCM_SERVER"
-msgstr "Сервер GPCM :"
+msgid "MULTIPLAYER_PLAYERS_TOOLTIP"
+msgstr "TODO"
 
-msgid "CHECK_UNLOCK_SERVER"
-msgstr "Сервер с разблокировкой:"
+msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
+msgstr "TODO"
 
-msgid "CHECK_CANCEL"
-msgstr "Отмена"
+msgid "LOGIN_STELLA_NAME"
+msgstr "TODO"
+
+msgid "LOGIN_GAME_SERVER_NAME"
+msgstr "TODO"
+
+msgid "LOGIN_USERNAME"
+msgstr "TODO"
+
+msgid "LOGIN_PASSWORD"
+msgstr "TODO"
+
+msgid "LOGIN_SOLDIER"
+msgstr "TODO"
+
+msgid "LOGIN_SAVE"
+msgstr "TODO"
+
+msgid "LOGIN_ERROR"
+msgstr "TODO"
+
+msgid "LOGIN_ERROR_CODE"
+msgstr "TODO"
+
+msgid "LOGIN_ERROR_TXN"
+msgstr "TODO"
+
+msgid "LOGIN_ERROR_MSG"
+msgstr "TODO"
+
+msgid "LOGIN_CHECK"
+msgstr "TODO"
+
+msgid "LOGIN_CREATE"
+msgstr "TODO"
+
+msgid "LOGIN_PLAY"
+msgstr "TODO"
+
+msgid "LOGIN_CANCEL"
+msgstr "TODO"
+
+msgid "LOGIN_ADD_SOLDIER_NAME"
+msgstr "TODO"
+
+msgid "LOGIN_ADD_SOLDIER_OK"
+msgstr "TODO"
+
+msgid "LOGIN_ADD_SOLDIER_CANCEL"
+msgstr "TODO"
+
+msgid "LOGIN_MOD_MISSING_MSG"
+msgstr "TODO"
+
+msgid "LOGIN_MOD_MISSING_LINK"
+msgstr "TODO"
+
+msgid "LOGIN_MOD_MISSING_OK"
+msgstr "TODO"
 
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
@@ -274,6 +335,36 @@ msgstr "Копир. карты на сервер"
 msgid "SETTINGS_SELECT"
 msgstr "Выбрать"
 
+msgid "SETTINGS_SKIP_MOVIES"
+msgstr "Пропуск втупительных роликов"
+
+msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
+msgstr "Пропустить видео при запуске"
+
+msgid "SETTINGS_WINDOW_MODE"
+msgstr "Оконный режим"
+
+msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
+msgstr "Запуск игры в оконном режиме."
+
+msgid "SETTINGS_RESOLUTION"
+msgstr "Разрешение:"
+
+msgid "SETTINGS_RESOLUTION_TOOLTIP"
+msgstr "Разрешение экрана в оконном режиме"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
+msgstr "TODO"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG"
+msgstr "TODO"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK"
+msgstr "TODO"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
+msgstr "TODO"
+
 msgid "TAB_QUICK"
 msgstr "TODO"
 
@@ -357,12 +448,6 @@ msgstr "Невозможно найти $#"
 
 msgid "COULD_NOT_FIND_MSG"
 msgstr "Не найдено $#. Неверный путь!"
-
-msgid "SELECT_MAPS_FOLDER_CLIENT"
-msgstr "Выберите папку с уровнями чтобы скопировать на клиент"
-
-msgid "SELECT_MAPS_FOLDER_SERVER"
-msgstr "Выберите папку с уровнями чтобы скопировать на сервер"
 
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
 msgstr "Не найден приватный локальный IP"

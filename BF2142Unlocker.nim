@@ -1746,6 +1746,7 @@ proc timerFesl(TODO: int): bool =
       btnMultiplayerAccountPlay.sensitive = false
       btnMutliplayerAccountSoldierDel.sensitive = false
     btnMultiplayerAccountLogin.sensitive = true
+    btnMultiplayerAccountCreate.sensitive = true
     spinnerMultiplayerAccount.stop()
   of FeslCommand.AddSoldier:
     if isNone(data.ex):
@@ -2476,18 +2477,22 @@ proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, 
     txtMultiplayerAccountUsername.signalStopEmissionByName("insert-text")
     return
   btnMultiplayerAccountLogin.sensitive = (txtMultiplayerAccountUsername.text & $cstr).len > 0 and txtMultiplayerAccountPassword.text.len > 0
+  btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onTxtMultiplayerAccountUsernameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
   btnMultiplayerAccountLogin.sensitive = (txtMultiplayerAccountUsername.text.len - (endPos - startPos)) > 0 and txtMultiplayerAccountPassword.text.len > 0
+  btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onTxtMultiplayerAccountPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not isAlphaNumeric($cstr):
     txtMultiplayerAccountPassword.signalStopEmissionByName("insert-text")
     return
   btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text & $cstr).len > 0
+  btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onTxtMultiplayerAccountPasswordDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
   btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text.len - (endPos - startPos)) > 0
+  btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onTxtMultiplayerAccountSoldierNameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   var soldier: string
@@ -2635,6 +2640,7 @@ proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
   ignoreEvents = false
 
   btnMultiplayerAccountLogin.sensitive = false
+  btnMultiplayerAccountCreate.sensitive = false
   btnMultiplayerAccountSoldierAdd.sensitive = false
   btnMutliplayerAccountSoldierDel.sensitive = false
   btnMultiplayerAccountPlay.sensitive = false

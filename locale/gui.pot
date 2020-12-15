@@ -75,15 +75,92 @@ msgid "QUICK_SINGLEPLAYER_TOOLTIP"
 msgstr ""
 
 msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
-msgstr """
+msgstr ""
 
 msgid "QUICK_TERMINAL"
 msgstr ""
 ###
 
 
-###### Host
+###### Multiplayer
+msgid "TAB_MULTIPLAYER"
+msgstr ""
 
+msgid "MULTIPLAYER_SERVERS_TOOLTIP"
+msgstr ""
+
+msgid "MULTIPLAYER_SERVERS_REFRESH_TOOLTIP"
+msgstr ""
+
+msgid "MULTIPLAYER_SERVERS_PLAY_TOOLTIP"
+msgstr ""
+
+msgid "MULTIPLAYER_PLAYERS_TOOLTIP"
+msgstr ""
+
+msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
+msgstr ""
+
+msgid "LOGIN_STELLA_NAME"
+msgstr ""
+
+msgid "LOGIN_GAME_SERVER_NAME"
+msgstr ""
+
+msgid "LOGIN_USERNAME"
+msgstr ""
+
+msgid "LOGIN_PASSWORD"
+msgstr ""
+
+msgid "LOGIN_SOLDIER"
+msgstr ""
+
+msgid "LOGIN_SAVE"
+msgstr ""
+
+msgid "LOGIN_ERROR"
+msgstr ""
+
+msgid "LOGIN_ERROR_CODE"
+msgstr ""
+
+msgid "LOGIN_ERROR_TXN"
+msgstr ""
+
+msgid "LOGIN_ERROR_MSG"
+msgstr ""
+
+msgid "LOGIN_CHECK"
+msgstr ""
+
+msgid "LOGIN_CREATE"
+msgstr ""
+
+msgid "LOGIN_PLAY"
+msgstr ""
+
+msgid "LOGIN_CANCEL"
+msgstr ""
+
+msgid "LOGIN_ADD_SOLDIER_NAME"
+msgstr ""
+
+msgid "LOGIN_ADD_SOLDIER_OK"
+msgstr ""
+
+msgid "LOGIN_ADD_SOLDIER_CANCEL"
+msgstr ""
+
+
+msgid "LOGIN_MOD_MISSING_MSG"
+msgstr ""
+
+msgid "LOGIN_MOD_MISSING_LINK"
+msgstr ""
+
+msgid "LOGIN_MOD_MISSING_OK"
+msgstr ""
 ###
 
 
@@ -229,13 +306,26 @@ msgid "SETTINGS_RESOLUTION"
 msgstr ""
 msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr ""
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
+msgstr ""
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG"
+msgstr ""
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK"
+msgstr ""
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
+msgstr ""
+
 ###
 
 
 ###### Tabs
-msgid "TAB_JOIN"
+msgid "TAB_QUICK"
 msgstr ""
-msgid "TAB_JOIN_TOOLTIP"
+msgid "TAB_QUICK_TOOLTIP"
 msgstr ""
 
 msgid "TAB_HOST"
@@ -298,21 +388,6 @@ msgid "COULD_NOT_FIND_TITLE"
 msgstr ""
 
 msgid "COULD_NOT_FIND_MSG"
-msgstr ""
-
-msgid "COPIED_MAPS"
-msgstr ""
-
-msgid "COPIED_MAPS_CLIENT"
-msgstr ""
-
-msgid "COPIED_MAPS_SERVER"
-msgstr ""
-
-msgid "SELECT_MAPS_FOLDER_CLIENT"
-msgstr ""
-
-msgid "SELECT_MAPS_FOLDER_SERVER"
 msgstr ""
 
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
