@@ -3183,22 +3183,23 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
   loadServerConfig()
 
-  if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
-    let bf2142ClientPath: string = getBF2142ClientPath()
-    if bf2142ClientPath != "" and fileExists(bf2142ClientPath / BF2142_EXE_NAME):
-      vboxSettings.sensitive = false
-      lblSettingsBF2142ClientPathDetected.text = bf2142ClientPath
-      let responseId: int = dlgSettingsBF2142ClientPathDetected.run()
-      dlgSettingsBF2142ClientPathDetected.destroy()
-      if responseId == 0:
-        setBF2142Path(bf2142ClientPath)
-        notebook.currentPage = 0
-      elif responseId == 1:
-        let (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
-        if responseType == ResponseType.ok:
-          setBF2142Path(path)
+  when defined(windows):
+    if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
+      let bf2142ClientPath: string = getBF2142ClientPath()
+      if bf2142ClientPath != "" and fileExists(bf2142ClientPath / BF2142_EXE_NAME):
+        vboxSettings.sensitive = false
+        lblSettingsBF2142ClientPathDetected.text = bf2142ClientPath
+        let responseId: int = dlgSettingsBF2142ClientPathDetected.run()
+        dlgSettingsBF2142ClientPathDetected.destroy()
+        if responseId == 0:
+          setBF2142Path(bf2142ClientPath)
           notebook.currentPage = 0
-      vboxSettings.sensitive = true
+        elif responseId == 1:
+          let (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
+          if responseType == ResponseType.ok:
+            setBF2142Path(path)
+            notebook.currentPage = 0
+        vboxSettings.sensitive = true
 
 when defined(windows): # TODO: Cleanup
   proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
