@@ -109,12 +109,17 @@ var documentsPath: string
 var bf2142ProfilePath: string
 var bf2142Profile0001Path: string
 
+const RC {.intdefine.}: int = 0
 const VERSION: string = static:
-  var raw: string = staticRead("BF2142Unlocker.nimble")
-  var posVersionStart: int = raw.find("version")
-  var posQuoteStart: int = raw.find('"', posVersionStart)
-  var posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
-  raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
+  let raw: string = staticRead("BF2142Unlocker.nimble")
+  let posVersionStart: int = raw.find("version")
+  let posQuoteStart: int = raw.find('"', posVersionStart)
+  let posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
+  let ver: string = raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
+  if RC != 0:
+    ver & " (RC: " & $RC & ")"
+  else:
+    ver
 
 when defined(linux):
   const BF2142_SRV_EXE_NAME: string = "bf2142"

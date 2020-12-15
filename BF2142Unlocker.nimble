@@ -1,7 +1,7 @@
 ### Package
-version       = "0.9.4"
+version       = "0.9.5"
 author        = "Dankrad"
-description   = "Play and host BF2142 server with all unlocks."
+description   = "Play and host BF2142 server with all unlocks or join multiplayer servers."
 license       = "MIT"
 srcDir        = "src"
 bin           = @[""]
@@ -74,14 +74,17 @@ when defined(windows):
   proc compileLauncher() =
     exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
 
-proc compileGui() =
+proc compileGui(rc: string) =
+  var rcStr: string
+  if rc != "":
+    rcStr =  "-d:RC=" & rc & " "
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
     else:
-      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
-    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+    exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
 
 proc compileServer() =
   when defined(windows):
@@ -132,10 +135,10 @@ when defined(linux):
       exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
       exec(fmt"make -j{CPU_CORES}")
 
-proc compileAll() =
+proc compileAll(rc: string) =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
-  compileGui() # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
+  compileGui(rc) # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
   when defined(windows):
     compileLauncher()
@@ -216,10 +219,13 @@ proc copyAll() =
 
 ### Tasks
 task release, "Compile and bundle (release).":
+  var rc: string
+  if paramStr(paramCount()) != "release":
+    rc = paramStr(paramCount())
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
-  compileAll()
+  compileAll(rc)
   copyAll()
 
 task translatePo, "Update po files from pot file.":
