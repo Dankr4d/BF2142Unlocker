@@ -1100,6 +1100,8 @@ proc loadSelectableMapList() =
           break
     except xmlparser.XmlError:
       invalidXmlFiles.add(descPath)
+    except system.IOError:
+      continue # Maybe desc file does not exists or is named wrong.
   var notFixableXmlFiles: seq[string]
   for path in invalidXmlFiles:
     if not fixMapDesc(path):
@@ -2567,9 +2569,12 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
     )
     return
 
-  backupOpenSpyIfExists()
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig))
+  backupOpenSpyIfExists()
   saveBF2142Profile(username, soldier)
+  when defined(windows): # TODO: Reading/setting cd key on linux
+    setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
+  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxQuickMod.activeId / "Movies", chbtnSettingsSkipMovies.active)
 
   var options: BF2142Options
   options.modPath = some("mods/" & currentServer.`mod`)
