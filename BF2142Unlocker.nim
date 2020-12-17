@@ -200,7 +200,7 @@ type
 
 var threadUpdateServer: system.Thread[seq[ServerConfig]]
 var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
-# TODO add a boolean that indicates if the server is refreshing to prevent reloading multiple times by pressing F5 or switching tabs
+var isMultiplayerServerUpdating: bool = false
 
 type
   FeslCommand = enum
@@ -1674,6 +1674,7 @@ proc timerUpdateServer(TODO: int): bool =
     updatePlayerListAsync()
 
   channelUpdateServer.close()
+  isMultiplayerServerUpdating = false
   return SOURCE_REMOVE
 
 proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
@@ -1704,6 +1705,8 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   channelUpdateServer.send(servers)
 
 proc updateServerAsync() =
+  isMultiplayerServerUpdating = true
+
   trvMultiplayerServers.clear()
   trvMultiplayerPlayers1.clear()
   trvMultiplayerPlayers2.clear()
@@ -2470,13 +2473,13 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   event.ignoreFinalizer = true
   if not notebook.currentPage == 1:
     return
-  if event.getKeyval() == KEY_F5: # TODO: Add tooltip info
+  if not isMultiplayerServerUpdating and event.getKeyval() == KEY_F5: # TODO: Add tooltip info
     updateServerAsync()
   if event.getKeyval() == KEY_F6 and isServerSelected: # TODO: Add tooltip info
     updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
-  if pageNum == 1:
+  if not isMultiplayerServerUpdating and pageNum == 1:
     updateServerAsync()
 
 proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
