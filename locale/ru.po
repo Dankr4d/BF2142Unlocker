@@ -166,6 +166,9 @@ msgstr "TODO"
 msgid "LOGIN_ADD_SOLDIER_CANCEL"
 msgstr "TODO"
 
+msgid "LOGIN_MOD_MISSING_TITLE"
+msgstr ""
+
 msgid "LOGIN_MOD_MISSING_MSG"
 msgstr "TODO"
 

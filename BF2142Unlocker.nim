@@ -2536,13 +2536,23 @@ proc onBtnMultiplayerAccountCreateClicked(self: Button00) {.signal.} =
 proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   frameMultiplayerAccountError.visible = false
 
-  let modPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod`
-  if not dirExists(modPath):
+  var modDirExists: bool = false
+  when defined(windows):
+    modDirExists = dirExists(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod`)
+  elif defined(linux):
+    # Case sensitive
+    for kind, path in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
+      echo "path: ", path
+      if kind == pcDir and path.toLower() == currentServer.`mod`:
+        modDirExists = true
+        break
+
+  if not modDirExists:
     var uri: string
 
-    if currentServer.`mod`.toLower() == "project_remaster_mp": # INFO: toLower shouldn't be required, just for safety
+    if currentServer.`mod`.toLower() == "project_remaster_mp":
       uri = "https://www.moddb.com/mods/project-remaster"
-    elif currentServer.`mod`.toLower() == "firststrike": # INFO: toLower shouldn't be required, just for safety
+    elif currentServer.`mod`.toLower() == "firststrike":
       uri = "https://www.moddb.com/mods/first-strike"
 
     if uri != "":

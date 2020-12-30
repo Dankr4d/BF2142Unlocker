@@ -152,6 +152,8 @@ msgstr ""
 msgid "LOGIN_ADD_SOLDIER_CANCEL"
 msgstr ""
 
+msgid "LOGIN_MOD_MISSING_TITLE"
+msgstr ""
 
 msgid "LOGIN_MOD_MISSING_MSG"
 msgstr ""

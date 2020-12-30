@@ -171,6 +171,9 @@ msgstr "Ok"
 msgid "LOGIN_ADD_SOLDIER_CANCEL"
 msgstr "Cancel"
 
+msgid "LOGIN_MOD_MISSING_TITLE"
+msgstr "Mod not found"
+
 msgid "LOGIN_MOD_MISSING_MSG"
 msgstr "The mod the server is running is not installed."
 
