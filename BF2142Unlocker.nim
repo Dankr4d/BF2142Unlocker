@@ -423,6 +423,8 @@ var btnMultiplayerAccountSoldierOk: Button
 var dlgMultiplayerModMissing: Dialog
 var lblMultiplayerModMissingLink: Label
 var lbtnMultiplayerModMissing: LinkButton
+var dlgMultiplayerMapMissing: Dialog
+var lblMultiplayerMapMissing: Label
 ##
 ### Host controls
 var vboxHost: Box
@@ -2536,15 +2538,21 @@ proc onBtnMultiplayerAccountCreateClicked(self: Button00) {.signal.} =
 proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   frameMultiplayerAccountError.visible = false
 
+  var modDir: string
+
   var modDirExists: bool = false
   when defined(windows):
     modDirExists = dirExists(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod`)
+    modDir = currentServer.`mod`
   elif defined(linux):
     # Case sensitive
     for kind, path in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
       echo "path: ", path
-      if kind == pcDir and path.toLower() == currentServer.`mod`:
+      if kind != pcDir:
+        continue
+      if path.toLower() == currentServer.`mod`:
         modDirExists = true
+        modDir = path
         break
 
   if not modDirExists:
@@ -2567,6 +2575,28 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
     discard dlgMultiplayerModMissing.run()
     dlgMultiplayerModMissing.hide()
     return
+
+  var mapDirExists: bool = false
+  when defined(windows):
+    mapDirExists = dirExists(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "levels" / currentServer.map)
+  elif defined(linux):
+    # Case sensitive
+    var levelDir: string
+    for kind, path in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / modDir, true):
+      if kind != pcDir:
+        continue
+      if path.toLower() == "levels":
+        levelDir = path
+        break
+    mapDirExists = dirExists(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / modDir / levelDir / currentServer.map)
+
+  if not mapDirExists:
+    lblMultiplayerMapMissing.text = dgettext("gui", "LOGIN_MAP_MISSING_MSG") % [currentServer.map]
+
+    discard dlgMultiplayerMapMissing.run()
+    dlgMultiplayerMapMissing.hide()
+    return
+
 
   let username: string = txtMultiplayerAccountUsername.text
   let soldier: string = get(trvMultiplayerAccountSoldiers.selectedSoldier)
@@ -3091,6 +3121,8 @@ proc onApplicationActivate(application: Application) =
   dlgMultiplayerModMissing = builder.getDialog("dlgMultiplayerModMissing")
   lblMultiplayerModMissingLink = builder.getLabel("lblMultiplayerModMissingLink")
   lbtnMultiplayerModMissing = builder.getLinkButton("lbtnMultiplayerModMissing")
+  dlgMultiplayerMapMissing = builder.getDialog("dlgMultiplayerMapMissing")
+  lblMultiplayerMapMissing = builder.getLabel("lblMultiplayerMapMissing")
 
   vboxHost = builder.getBox("vboxHost")
   imgHostLevelPreview = builder.getImage("imgHostLevelPreview")

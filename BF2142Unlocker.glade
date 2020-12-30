@@ -2995,6 +2995,163 @@ Author: Dankr4d
       </object>
     </child>
   </object>
+  <object class="GtkDialog" id="dlgMultiplayerMapMissing">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">LOGIN_MAP_MISSING_TITLE</property>
+    <property name="resizable">False</property>
+    <property name="type-hint">dialog</property>
+    <property name="transient-for">window</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="margin-start">3</property>
+        <property name="margin-end">3</property>
+        <property name="margin-top">3</property>
+        <property name="margin-bottom">3</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="margin-top">10</property>
+            <property name="layout-style">end</property>
+            <child>
+              <object class="GtkButton" id="button2">
+                <property name="label" translatable="yes">LOGIN_MAP_MISSING_OK</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="lblMultiplayerMapMissing">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">LOGIN_MAP_MISSING_MSG</property>
+            <property name="xalign">0</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button2</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="dlgMultiplayerModMissing">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">LOGIN_MOD_MISSING_TITLE</property>
+    <property name="resizable">False</property>
+    <property name="type-hint">dialog</property>
+    <property name="transient-for">window</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="margin-start">3</property>
+        <property name="margin-end">3</property>
+        <property name="margin-top">3</property>
+        <property name="margin-bottom">3</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="margin-top">10</property>
+            <property name="layout-style">end</property>
+            <child>
+              <object class="GtkButton" id="button1">
+                <property name="label" translatable="yes">LOGIN_MOD_MISSING_OK</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">LOGIN_MOD_MISSING_MSG</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblMultiplayerModMissingLink">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">LOGIN_MOD_MISSING_LINK</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLinkButton" id="lbtnMultiplayerModMissing">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="halign">start</property>
+                <property name="relief">none</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button1</action-widget>
+    </action-widgets>
+  </object>
   <object class="GtkDialog" id="dlgSettingsBF2142ClientPathDetected">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE</property>
@@ -3711,104 +3868,6 @@ Author: Dankr4d
     <action-widgets>
       <action-widget response="1">btnMultiplayerAccountSoldierOk</action-widget>
       <action-widget response="0">btnMultiplayerAccountSoldierCancel</action-widget>
-    </action-widgets>
-  </object>
-  <object class="GtkDialog" id="dlgMultiplayerModMissing">
-    <property name="can-focus">False</property>
-    <property name="title" translatable="yes">LOGIN_MOD_MISSING_TITLE</property>
-    <property name="resizable">False</property>
-    <property name="type-hint">dialog</property>
-    <property name="transient-for">wndMultiplayerAccount</property>
-    <child internal-child="vbox">
-      <object class="GtkBox">
-        <property name="can-focus">False</property>
-        <property name="margin-start">3</property>
-        <property name="margin-end">3</property>
-        <property name="margin-top">3</property>
-        <property name="margin-bottom">3</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox">
-            <property name="can-focus">False</property>
-            <property name="margin-top">10</property>
-            <property name="layout-style">end</property>
-            <child>
-              <object class="GtkButton" id="button1">
-                <property name="label" translatable="yes">LOGIN_MOD_MISSING_OK</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="label" translatable="yes">LOGIN_MOD_MISSING_MSG</property>
-                <property name="xalign">0</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="lblMultiplayerModMissingLink">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="label" translatable="yes">LOGIN_MOD_MISSING_LINK</property>
-                <property name="xalign">0</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLinkButton" id="lbtnMultiplayerModMissing">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <property name="halign">start</property>
-                <property name="relief">none</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <action-widgets>
-      <action-widget response="0">button1</action-widget>
     </action-widgets>
   </object>
 </interface>

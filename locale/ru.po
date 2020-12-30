@@ -178,6 +178,15 @@ msgstr "TODO"
 msgid "LOGIN_MOD_MISSING_OK"
 msgstr "TODO"
 
+msgid "LOGIN_MAP_MISSING_TITLE"
+msgstr ""
+
+msgid "LOGIN_MAP_MISSING_MSG"
+msgstr ""
+
+msgid "LOGIN_MAP_MISSING_OK"
+msgstr ""
+
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
 

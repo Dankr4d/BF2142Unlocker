@@ -183,6 +183,15 @@ msgstr "Du kannst sie hier runterladen:"
 msgid "LOGIN_MOD_MISSING_OK"
 msgstr "Ok"
 
+msgid "LOGIN_MAP_MISSING_TITLE"
+msgstr "Map nicht gefunden"
+
+msgid "LOGIN_MAP_MISSING_MSG"
+msgstr "Map '$#' nicht gefunden/nicht vorhanden."
+
+msgid "LOGIN_MAP_MISSING_OK"
+msgstr "Ok"
+
 # ##
 # ##### Host
 msgid "HOST_SETTINGS"

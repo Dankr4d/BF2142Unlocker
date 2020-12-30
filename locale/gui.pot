@@ -163,6 +163,15 @@ msgstr ""
 
 msgid "LOGIN_MOD_MISSING_OK"
 msgstr ""
+
+msgid "LOGIN_MAP_MISSING_TITLE"
+msgstr ""
+
+msgid "LOGIN_MAP_MISSING_MSG"
+msgstr ""
+
+msgid "LOGIN_MAP_MISSING_OK"
+msgstr ""
 ###
 
 
