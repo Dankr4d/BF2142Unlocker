@@ -37,7 +37,7 @@ proc patchServer*(fs: FileStream, ip: IpAddress, port: Port) =
     else:
       fs.writeStr(parseHexInt("00768FA0"), stellaProd, 31) # http://stella.prod.gamespy.com/
   elif defined(windows):
-    fs.writeStr(parseHexInt("003CE617"), stellaProd, 31)
+    fs.writeStr(parseHexInt("003CE610"), stellaProd, 31)
 
 proc patchServer*(path: string, ip: IpAddress, port: Port) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
