@@ -859,7 +859,6 @@ Author: Dankr4d
                                   <object class="GtkTreeView" id="trvMultiplayerServers">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <property name="tooltip-text" translatable="yes">MULTIPLAYER_SERVERS_TOOLTIP</property>
                                     <property name="model">listStoreServer</property>
                                     <property name="search-column">0</property>
                                     <signal name="button-press-event" handler="onTrvMultiplayerServersButtonPressEvent" swapped="no"/>
@@ -1024,6 +1023,7 @@ Author: Dankr4d
                           <object class="GtkFrame">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="tooltip-text" translatable="yes">MULTIPLAYER_SERVERS_TOOLTIP</property>
                             <property name="margin-start">3</property>
                             <property name="label-xalign">0</property>
                             <property name="label-yalign">0</property>
@@ -1136,7 +1136,6 @@ Author: Dankr4d
                                           <object class="GtkTreeView" id="trvMultiplayerPlayers1">
                                             <property name="visible">True</property>
                                             <property name="can-focus">True</property>
-                                            <property name="tooltip-text" translatable="yes">MULTIPLAYER_PLAYERS_TOOLTIP</property>
                                             <property name="model">listStorePlayerInfo1</property>
                                             <property name="search-column">1</property>
                                             <child internal-child="selection">
@@ -1272,7 +1271,6 @@ Author: Dankr4d
                                           <object class="GtkTreeView" id="trvMultiplayerPlayers2">
                                             <property name="visible">True</property>
                                             <property name="can-focus">True</property>
-                                            <property name="tooltip-text" translatable="yes">MULTIPLAYER_PLAYERS_TOOLTIP</property>
                                             <property name="model">listStorePlayerInfo2</property>
                                             <property name="search-column">1</property>
                                             <child internal-child="selection">
@@ -1384,7 +1382,7 @@ Author: Dankr4d
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="margin-start">3</property>
-                            <property name="margin-top">20</property>
+                            <property name="margin-top">23</property>
                             <property name="label-xalign">0</property>
                             <property name="label-yalign">0</property>
                             <property name="shadow-type">in</property>
@@ -1392,6 +1390,7 @@ Author: Dankr4d
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">MULTIPLAYER_PLAYERS_TOOLTIP</property>
                                 <property name="margin-start">3</property>
                                 <property name="margin-end">3</property>
                                 <property name="margin-top">3</property>
@@ -1982,7 +1981,7 @@ Author: Dankr4d
                                             <property name="can-focus">False</property>
                                             <property name="halign">start</property>
                                             <property name="valign">start</property>
-                                            <property name="pixbuf">asset/nopreview.png</property>
+                                            <property name="pixbuf">asset\nopreview.png</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
