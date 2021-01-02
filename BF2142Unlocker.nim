@@ -2466,7 +2466,13 @@ proc onBtnHostMapMoveDownClicked(self: Button00) {.signal.} =
 ## Server list
 ## TODO: Ping or connection gets closed after 30 seconds
 proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
+  var previousServer: Server = currentServer
+
   currentServer = get(trvMultiplayerServers.selectedServer)
+
+  if previousServer.ip == currentServer.ip and previousServer.port == currentServer.port:
+    return
+
   isServerSelected = true
 
   for serverConfig in serverConfigs:
