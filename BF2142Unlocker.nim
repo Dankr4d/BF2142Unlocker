@@ -1679,6 +1679,7 @@ proc timerUpdateServer(TODO: int): bool =
   isMultiplayerServerUpdating = false
   return SOURCE_REMOVE
 
+
 proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   var gslist: seq[tuple[address: IpAddress, port: Port]]
   var gslistTmp: seq[tuple[address: IpAddress, port: Port]]
@@ -1822,6 +1823,7 @@ proc threadFeslProc() {.thread.} =
 
   while true:
     msgAmount = channelFeslThread.peek()
+
     if msgAmount == -1:
       # if isSocketConnected:
       #   socket.close() # TODO: Investigate crashes when closing socket
@@ -1830,6 +1832,7 @@ proc threadFeslProc() {.thread.} =
     if msgAmount == 0:
       if not isSocketConnected:
         # No data and not connected, waiting for the first message send through channel
+        sleep(100)
         continue
       # No commands in channel (channelFeslThread) and connected to server,
       # so we're waiting for Ping packages and respond to them,
@@ -2728,6 +2731,7 @@ proc onWndMultiplayerAccountHide(self: gtk.Window00) {.signal.} =
   txtMultiplayerAccountPassword.text = ""
   channelFeslThread.close() # Closes thread (see threadFeslProc)
   channelFeslTimer.close() # Closes timer (see timerFesl)
+
 
 proc onTrvMultiplayerServersButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =
   var event: EventButton = new EventButton
