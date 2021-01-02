@@ -200,6 +200,7 @@ type
 
 var threadUpdateServer: system.Thread[seq[ServerConfig]]
 var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
+var isMultiplayerServerLoadedOnce: bool = false
 var isMultiplayerServerUpdating: bool = false
 
 type
@@ -1683,6 +1684,7 @@ proc timerUpdateServer(TODO: int): bool =
 
   channelUpdateServer.close()
   isMultiplayerServerUpdating = false
+  isMultiplayerServerLoadedOnce = true
   return SOURCE_REMOVE
 
 
@@ -2496,7 +2498,7 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
     updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
-  if not isMultiplayerServerUpdating and pageNum == 1:
+  if not isMultiplayerServerUpdating and not isMultiplayerServerLoadedOnce and pageNum == 1:
     updateServerAsync()
 
 proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
