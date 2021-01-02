@@ -1357,11 +1357,14 @@ proc loadJoinMods() =
   store.clear()
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
     for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
-      if folder.kind == pcDir:
-        valMod.setString(folder.path.toLower())
-        store.append(iter)
-        store.setValue(iter, 0, valMod)
-        store.setValue(iter, 1, valMod)
+      if folder.kind != pcDir:
+        continue
+      if folder.path.toLower() == "project_remaster_sp":
+        continue
+      valMod.setString(folder.path.toLower())
+      store.append(iter)
+      store.setValue(iter, 0, valMod)
+      store.setValue(iter, 1, valMod)
 
 proc loadJoinResolutions() =
   var valResolution: Value
@@ -1401,11 +1404,14 @@ proc loadHostMods() =
   store.clear()
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods", true):
-      if folder.kind == pcDir:
-        valMod.setString(folder.path)
-        store.append(iter)
-        store.setValue(iter, 0, valMod)
-        store.setValue(iter, 1, valMod)
+      if folder.kind != pcDir:
+        continue
+      if folder.path.toLower() == "project_remaster_sp":
+        continue
+      valMod.setString(folder.path)
+      store.append(iter)
+      store.setValue(iter, 0, valMod)
+      store.setValue(iter, 1, valMod)
 
 proc applyHostRunningSensitivity(running: bool) =
   btnHostGameServer.visible = not running
