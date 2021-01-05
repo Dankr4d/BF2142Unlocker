@@ -167,7 +167,7 @@ msgid "LOGIN_ADD_SOLDIER_CANCEL"
 msgstr "TODO"
 
 msgid "LOGIN_MOD_MISSING_TITLE"
-msgstr ""
+msgstr "TODO"
 
 msgid "LOGIN_MOD_MISSING_MSG"
 msgstr "TODO"
@@ -179,13 +179,13 @@ msgid "LOGIN_MOD_MISSING_OK"
 msgstr "TODO"
 
 msgid "LOGIN_MAP_MISSING_TITLE"
-msgstr ""
+msgstr "TODO"
 
 msgid "LOGIN_MAP_MISSING_MSG"
-msgstr ""
+msgstr "TODO"
 
 msgid "LOGIN_MAP_MISSING_OK"
-msgstr ""
+msgstr "TODO"
 
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
@@ -433,14 +433,6 @@ msgid "FIRST_STRIKE_MODDB_TOOLTIP"
 msgstr ""
 "Перейти на страницу проекта First Strike на ModDB.\n"
 "Они создали мод \"Звездные войны\"!"
-
-msgid "PLAY_ONLINE"
-msgstr "Играть онлайн"
-
-msgid "PLAY_ONLINE_TOOLTIP"
-msgstr ""
-"Откройте браузер на сайте проекта Reclamation's .\n"
-"Они держат онлайн-сервера BF2142!"
 
 msgid "GAMESERVER_CRASHED"
 msgstr ""

@@ -2950,34 +2950,6 @@ Author: Dankr4d
                     <property name="position">6</property>
                   </packing>
                 </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">|</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">7</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLinkButton" id="lbtnReclamation">
-                    <property name="label" translatable="yes">PLAY_ONLINE</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="tooltip-text" translatable="yes">PLAY_ONLINE_TOOLTIP</property>
-                    <property name="relief">none</property>
-                    <property name="uri">https://battlefield2142.co</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">8</property>
-                  </packing>
-                </child>
               </object>
               <packing>
                 <property name="pack-type">end</property>

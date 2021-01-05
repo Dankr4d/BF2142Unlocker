@@ -378,11 +378,6 @@ msgid "FIRST_STRIKE_MODDB"
 msgstr ""
 msgid "FIRST_STRIKE_MODDB_TOOLTIP"
 msgstr ""
-
-msgid "PLAY_ONLINE"
-msgstr ""
-msgid "PLAY_ONLINE_TOOLTIP"
-msgstr ""
 ###
 
 ### Other

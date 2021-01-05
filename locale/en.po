@@ -447,14 +447,6 @@ msgstr ""
 "Opens your web browser to First Strike's ModDB page.\n"
 "They made a Star Wars mod!"
 
-msgid "PLAY_ONLINE"
-msgstr "Play online"
-
-msgid "PLAY_ONLINE_TOOLTIP"
-msgstr ""
-"Opens your web browser to Reclamation's website.\n"
-"They host BF2142 online Multiplayer servers!"
-
 # ##
 # ## Other
 msgid "GAMESERVER_CRASHED"

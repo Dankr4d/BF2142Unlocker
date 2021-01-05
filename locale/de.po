@@ -443,15 +443,6 @@ msgstr ""
 "Öffnet die Moddb/Projektseite der First Strike Modifikation.\n"
 "Hierbei handelt es sich um eine Star Wars Modifikation!"
 
-msgid "PLAY_ONLINE"
-msgstr "Online spielen"
-
-msgid "PLAY_ONLINE_TOOLTIP"
-msgstr ""
-"Öffnet die Webseite zur Reclamation Modifikation.\n"
-"Diese gibt die die Möglichkeit online zu spielen.\n"
-"Aktuell läuft ein EU, ein US und ein Project Reamster Mod server."
-
 # ##
 # ## Other
 msgid "GAMESERVER_CRASHED"
