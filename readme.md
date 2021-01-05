@@ -20,18 +20,16 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - Set your Battlefield 2142 path in "Settings" tab (if BF2142Unlocker couldn't find the installation path).
 - Goto "Play" tab and click on "Singleplayer". You'll get logged in and can start playing games against bots in singleplayer.
 - Or host your LAN server by clicking on "Host".  Tell your friends your ip address they need to connect to.
-- If you want to play on multiplayer servers you maybe need to install custom maps (see bellow `Mappack for vanilla game`).
+- If you want to play on multiplayer servers you maybe need to install custom maps (see bellow "Mappack for vanilla game").
   <br />
-  Double click on any server (or click the play button) and a login window will show up. Enter your login data (or create an account), select or create your soldier and click on `Play`. This will start the game, login into your account, select your soldier and connect directly to the game server.
+  Goto "Multiplayer" tab, double click on any server (or click the play button) and a login window will show up. Enter your login data (or create an account), select or create your soldier and click on "Play". This will start the game, login into your account, select your soldier and connect directly to the game server.
   <br />
-  If this feature is broken in future you can also click on the `Quickstart` button as fallback (this will just patch the BF2142.exe and start the game).
+  If this feature is broken due login server changes, you can also click on the "Quickstart" button as fallback (this will just patch the BF2142.exe and start the game).
 
 ## Host dedicated server:
 - Set your Battlefield 2142 game serer path in "Settings" tab.
 - Goto "Host" tab, select your mod, create your map list and click on "Host".
-- Goto "Play" tab and click on connect (the ip address is set after you launched the server). Tell your friends the ip address to connect to.<br />
-  *Info: If your hosting through vpn, then you need to enter your private local ip address into "IP-Address" field in "Join" tab. Your friends need to connect to the vpn ip address. Setting "Auto join server" connects you automatically to your game server.*
-
+- Goto "Play" tab and click on connect (the ip address is set after you launched the server). Tell your friends the ip address to connect to.
 
 ## Screenshots (Linux version)
 ### GUI:
