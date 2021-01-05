@@ -985,7 +985,7 @@ Author: Dankr4d
                                     </child>
                                     <child>
                                       <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">StellaName</property>
+                                        <property name="title" translatable="yes">Stella</property>
                                         <property name="clickable">True</property>
                                         <property name="sort-column-id">8</property>
                                         <child>

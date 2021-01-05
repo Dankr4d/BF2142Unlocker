@@ -17,9 +17,14 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - Start the BF2142Unlocker:
   - Windows: BF2142Unlocker.exe
   - Linux: BF2142Unlocker
-- Set your Battlefield 2142 path in "Settings" tab (if BF2142Unlocker couldn't find the installatio path).
+- Set your Battlefield 2142 path in "Settings" tab (if BF2142Unlocker couldn't find the installation path).
 - Goto "Play" tab and click on "Singleplayer". You'll get logged in and can start playing games against bots in singleplayer.
 - Or host your LAN server by clicking on "Host".  Tell your friends your ip address they need to connect to.
+- If you want to play on multiplayer servers you maybe need to install custom maps (see bellow `Mappack for vanilla game`).
+  <br />
+  Double click on any server (or click the play button) and a login window will show up. Enter your login data (or create an account), select or create your soldier and click on `Play`. This will start the game, login into your account, select your soldier and connect directly to the game server.
+  <br />
+  If this feature is broken in future you can also click on the `Quickstart` button as fallback (this will just patch the BF2142.exe and start the game).
 
 ## Host dedicated server:
 - Set your Battlefield 2142 game serer path in "Settings" tab.
@@ -72,6 +77,6 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `nimble install -d # Install dependencies`
 - `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
 
-## Compile (Docker)
+## Compile (Docker) [Currently not maintained, maybe broken]
 - `docker-compose up`
 - `sh copydockerbuild.sh # Copies the compiled files from the docker container into the local build folder`
