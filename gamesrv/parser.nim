@@ -2,14 +2,6 @@ import parseutils # Required for for parsing gs output
 import strutils # Required for parseEnum
 
 type
-  MapMode* = enum
-    Conquest = "gpm_cq",
-    Titan = "gpm_ti",
-    Coop = "gpm_coop",
-    SupplyLine = "gpm_sl",
-    NoVehicles = "gpm_nv",
-    ConquestAssault = "gpm_ca"
-
   GsStatus* = enum
     None = "", # This should not be in result from parseGsData proc
     Pregame = "pregame",
@@ -18,7 +10,7 @@ type
 
   GsData* = object
     mapName*: string # Should be in extra Map object
-    mapMode*: MapMode # Should be in extra Map object
+    mapMode*: string # Should be in extra Map object
     mapSize*: int # uint8 and should be in extra Map object
     `mod`*: string
     players*: int
@@ -42,7 +34,7 @@ proc parse(str, `from`: string, to: string | set[char], pos: var int): string =
 proc parseGsData*(raw: string): GsData =
   var currentPosition: int = 0
   result.mapName = raw.parse("Map: ", {' ', '\n'}, currentPosition)
-  result.mapMode = parseEnum[MapMode](raw.parse("Game mode: ", "/", currentPosition))
+  result.mapMode = raw.parse("Game mode: ", "/", currentPosition)
   result.mapSize = parseInt(raw.parse("", " ", currentPosition))
   result.`mod` = raw.parse("Mod: ", {' ', '\n'}, currentPosition)
   result.players = parseInt(raw.parse("Players: ", "/", currentPosition))

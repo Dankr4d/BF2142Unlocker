@@ -1016,7 +1016,7 @@ proc update(treeView: TreeView, gsdata: GsData) =
     store.getValue(iter, 1, valMapMode)
     store.getValue(iter, 2, valMapSize)
     store.getValue(iter, 3, valBackgroundColor)
-    if valMapName.getString() ==  $gsdata.mapName and $valMapMode.getString() == $gsdata.mapMode and
+    if valMapName.getString() == gsdata.mapName and valMapMode.getString() == gsdata.mapMode and
     valMapSize.getInt() == gsdata.mapSize: # Current map. # TODO: This needs to be checked (get index from gs)
       var color: string
       case gsdata.status
@@ -1992,11 +1992,6 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
     options.szx = some(resolution.width)
     options.szy = some(resolution.height)
   options.widescreen = some(true)
-  # options.eaAccountName = some(username)
-  # options.eaAccountPassword = some(txtMultiplayerAccountPassword.text)
-  # options.soldierName = some(soldier)
-  # options.joinServer = some(currentServer.ip)
-  # options.port = some(currentServer.port)
   discard startBF2142(options)
 
 proc fillMultiplayerPatchAndStartBox() =
