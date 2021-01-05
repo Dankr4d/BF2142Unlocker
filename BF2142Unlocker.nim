@@ -179,6 +179,19 @@ var lastGsStatus: GsStatus = None
 var termHostLoginServerPid: int = 0
 var termHostGameServerPid: int = 0
 
+type
+  BF2142Options* = object
+    modPath*: Option[string]
+    menu*: Option[bool]
+    fullscreen*: Option[bool]
+    szx*: Option[uint16]
+    szy*: Option[uint16]
+    widescreen*: Option[bool]
+    eaAccountName*: Option[string]
+    eaAccountPassword*: Option[string]
+    soldierName*: Option[string]
+    joinServer*: Option[net.IpAddress]
+    port*: Option[Port]
 
 type
   ServerConfig* = object of PatchConfig
@@ -426,6 +439,7 @@ var lblMultiplayerModMissingLink: Label
 var lbtnMultiplayerModMissing: LinkButton
 var dlgMultiplayerMapMissing: Dialog
 var lblMultiplayerMapMissing: Label
+var bboxMultiplayerServers: ButtonBox
 ##
 ### Host controls
 var vboxHost: Box
@@ -1199,7 +1213,6 @@ proc loadSaveServerSettings(save: bool): bool =
     return writeFile(currentServerSettingsPath, serverConfig)
   return true
 
-
 proc saveServerSettings(): bool =
   return loadSaveServerSettings(save = true)
 
@@ -1542,6 +1555,49 @@ proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly:
     config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_PASSWORD, hideStr(password))
   config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_SOLDIER, hideStr(soldier))
   config.writeConfig(CONFIG_LOGINS_FILE_NAME)
+
+proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also an joinGSPort
+  var command: string
+  when defined(linux):
+    when defined(debug):
+      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
+    if txtSettingsWinePrefix.text != "":
+      command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
+  # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
+  when defined(linux):
+    if txtSettingsStartupQuery.text != "":
+      command.add(txtSettingsStartupQuery.text & ' ')
+  command.add(BF2142_PATCHED_EXE_NAME & ' ')
+  if isSome(options.modPath):
+    command.add("+modPath " & get(options.modPath) & ' ')
+  if isSome(options.menu):
+    command.add("+menu " & $get(options.menu).int & ' ') # TODO: Check if this is necessary
+  if isSome(options.fullscreen):
+    command.add("+fullscreen " & $get(options.fullscreen).int & ' ')
+    if get(options.fullscreen) == false:
+      if isSome(options.szx) and isSome(options.szy):
+        command.add("+szx " & $get(options.szx) & ' ')
+        command.add("+szy " & $get(options.szy) & ' ')
+  if isSome(options.widescreen):
+    command.add("+widescreen " & $get(options.widescreen).int & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
+  if isSome(options.eaAccountName):
+    command.add("+eaAccountName " & get(options.eaAccountName) & ' ')
+  if isSome(options.eaAccountPassword):
+    command.add("+eaAccountPassword " & get(options.eaAccountPassword) & ' ')
+  if isSome(options.soldierName):
+    command.add("+soldierName " & get(options.soldierName) & ' ')
+  if isSome(options.joinServer):
+    command.add("+joinServer " & $get(options.joinServer) & ' ')
+    if isSome(options.port):
+      command.add("+port " & $get(options.port) & ' ')
+  when defined(linux): # TODO: Check if bf2142Path is neccessary
+    let processCommand: string = command
+  elif defined(windows):
+    let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
+  var process: Process = startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
+    options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
+  )
+  return true
 
 proc timerUpdatePlayerList(TODO: int): bool =
   if channelUpdatePlayerList.peek() <= 0:
@@ -1921,6 +1977,39 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   loginData.soldier = soldier
   data.login = loginData
   channelFeslThread.send(data)
+
+proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerConfig) =
+  echo serverConfig.server_name & " CLICKED!"
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig))
+  backupOpenSpyIfExists()
+  when defined(windows): # TODO: Reading/setting cd key on linux
+    setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
+  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
+
+  var options: BF2142Options
+  options.modPath = some("mods/bf2142")
+  options.menu = some(true)
+  options.fullscreen = some(not chbtnSettingsWindowMode.active)
+  if chbtnSettingsWindowMode.active:
+    var resolution: tuple[width, height: uint16] = getSelectedResolution()
+    options.szx = some(resolution.width)
+    options.szy = some(resolution.height)
+  options.widescreen = some(true)
+  # options.eaAccountName = some(username)
+  # options.eaAccountPassword = some(txtMultiplayerAccountPassword.text)
+  # options.soldierName = some(soldier)
+  # options.joinServer = some(currentServer.ip)
+  # options.port = some(currentServer.port)
+  discard startBF2142(options)
+
+proc fillMultiplayerPatchAndStartBox() =
+  var button: Button
+  for serverConfig in serverConfigs:
+    echo serverConfig.server_name
+    button = newButton(serverConfig.server_name)
+    button.visible = true
+    button.connect("clicked", onMultiplayerPatchAndStartButtonClicked, serverConfig)
+    bboxMultiplayerServers.add(button)
 ##
 
 ### Terminal
@@ -2208,60 +2297,6 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
 
 ### Events
 ## Quick
-type
-  BF2142Options* = object
-    modPath*: Option[string]
-    menu*: Option[bool]
-    fullscreen*: Option[bool]
-    szx*: Option[uint16]
-    szy*: Option[uint16]
-    widescreen*: Option[bool]
-    eaAccountName*: Option[string]
-    eaAccountPassword*: Option[string]
-    soldierName*: Option[string]
-    joinServer*: Option[net.IpAddress]
-    port*: Option[Port]
-
-proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also an joinGSPort
-  var command: string
-  when defined(linux):
-    when defined(debug):
-      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
-    if txtSettingsWinePrefix.text != "":
-      command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
-  # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
-  when defined(linux):
-    if txtSettingsStartupQuery.text != "":
-      command.add(txtSettingsStartupQuery.text & ' ')
-  command.add(BF2142_PATCHED_EXE_NAME & ' ')
-  if isSome(options.modPath):
-    command.add("+modPath " & get(options.modPath) & ' ')
-  if isSome(options.menu):
-    command.add("+menu " & $get(options.menu).int & ' ') # TODO: Check if this is necessary
-  if isSome(options.fullscreen):
-    command.add("+fullscreen " & $get(options.fullscreen).int & ' ')
-    if get(options.fullscreen) == false:
-      if isSome(options.szx) and isSome(options.szy):
-        command.add("+szx " & $get(options.szx) & ' ')
-        command.add("+szy " & $get(options.szy) & ' ')
-  if isSome(options.widescreen):
-    command.add("+widescreen " & $get(options.widescreen).int & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
-  command.add("+eaAccountName " & get(options.eaAccountName) & ' ')
-  command.add("+eaAccountPassword " & get(options.eaAccountPassword) & ' ')
-  command.add("+soldierName " & get(options.soldierName) & ' ')
-  if isSome(options.joinServer):
-    command.add("+joinServer " & $get(options.joinServer) & ' ')
-    if isSome(options.port):
-      command.add("+port " & $get(options.port) & ' ')
-  when defined(linux): # TODO: Check if bf2142Path is neccessary
-    let processCommand: string = command
-  elif defined(windows):
-    let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
-  var process: Process = startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
-    options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
-  )
-  return true
-
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtQuickIpAddress.text.strip()
   txtQuickPlayerName.text = txtQuickPlayerName.text.strip()
@@ -2634,7 +2669,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   saveBF2142Profile(username, soldier)
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
-  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxQuickMod.activeId / "Movies", chbtnSettingsSkipMovies.active)
+  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "Movies", chbtnSettingsSkipMovies.active)
 
   var options: BF2142Options
   options.modPath = some("mods/" & currentServer.`mod`)
@@ -3141,6 +3176,7 @@ proc onApplicationActivate(application: Application) =
   lbtnMultiplayerModMissing = builder.getLinkButton("lbtnMultiplayerModMissing")
   dlgMultiplayerMapMissing = builder.getDialog("dlgMultiplayerMapMissing")
   lblMultiplayerMapMissing = builder.getLabel("lblMultiplayerMapMissing")
+  bboxMultiplayerServers = builder.getButtonBox("bboxMultiplayerServers")
 
   vboxHost = builder.getBox("vboxHost")
   imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
@@ -3279,6 +3315,7 @@ proc onApplicationActivate(application: Application) =
   if bf2142UnlockerConfig.settings.bf2142ServerPath == "":
     vboxHost.visible = false
   loadServerConfig()
+  fillMultiplayerPatchAndStartBox()
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

@@ -172,6 +172,9 @@ msgstr ""
 
 msgid "LOGIN_MAP_MISSING_OK"
 msgstr ""
+
+msgid "MULTIPLAYER_PATCH_AND_START"
+msgstr ""
 ###
 
 

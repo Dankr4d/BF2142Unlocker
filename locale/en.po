@@ -192,6 +192,9 @@ msgstr "Map '$#' not found/missing."
 msgid "LOGIN_MAP_MISSING_OK"
 msgstr "Ok"
 
+msgid "MULTIPLAYER_PATCH_AND_START"
+msgstr "Quickstart"
+
 # ##
 # ##### Host
 msgid "HOST_SETTINGS"

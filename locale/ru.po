@@ -187,6 +187,9 @@ msgstr "TODO"
 msgid "LOGIN_MAP_MISSING_OK"
 msgstr "TODO"
 
+msgid "MULTIPLAYER_PATCH_AND_START"
+msgstr "TODO"
+
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
 
