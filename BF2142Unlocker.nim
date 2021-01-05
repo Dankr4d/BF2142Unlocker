@@ -1490,7 +1490,6 @@ proc loadServerConfig() =
       serverConfigs.add(serverConfig)
       break
     of cfgSectionStart:   ## a ``[section]`` has been parsed
-      echo("new section: " & e.section)
       if isFirstSection:
         isFirstSection = false
       else:
@@ -1529,7 +1528,6 @@ proc loadServerConfig() =
     of cfgError:
       echo(e.msg)
   close(p)
-  echo serverConfigs
 
 proc getLogin(stellaName: string): Option[tuple[username, password: string, soldier: Option[string]]] =
   var config: Config
@@ -1979,7 +1977,6 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   channelFeslThread.send(data)
 
 proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerConfig) =
-  echo serverConfig.server_name & " CLICKED!"
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig))
   backupOpenSpyIfExists()
   when defined(windows): # TODO: Reading/setting cd key on linux
@@ -2005,7 +2002,6 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
 proc fillMultiplayerPatchAndStartBox() =
   var button: Button
   for serverConfig in serverConfigs:
-    echo serverConfig.server_name
     button = newButton(serverConfig.server_name)
     button.visible = true
     button.connect("clicked", onMultiplayerPatchAndStartButtonClicked, serverConfig)
