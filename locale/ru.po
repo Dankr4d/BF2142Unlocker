@@ -137,7 +137,7 @@ msgid "LOGIN_SOLDIER"
 msgstr "Солдат:"
 
 msgid "LOGIN_SAVE"
-msgstr "Сохранить"
+msgstr "Сохранить:"
 
 msgid "LOGIN_ERROR"
 msgstr "Ошибка"
@@ -357,13 +357,13 @@ msgid "SETTINGS_SELECT"
 msgstr "Выбрать"
 
 msgid "SETTINGS_SKIP_MOVIES"
-msgstr "Пропуск втупительных роликов"
+msgstr "Пропуск втупительных роликов:"
 
 msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Пропустить видео при запуске"
 
 msgid "SETTINGS_WINDOW_MODE"
-msgstr "Оконный режим"
+msgstr "Оконный режим:"
 
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Запуск игры в оконном режиме."

@@ -136,7 +136,7 @@ msgid "LOGIN_SOLDIER"
 msgstr "Soldat:"
 
 msgid "LOGIN_SAVE"
-msgstr "Speichern"
+msgstr "Speichern:"
 
 msgid "LOGIN_ERROR"
 msgstr "Fehler:"
