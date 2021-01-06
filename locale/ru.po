@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: BF 2142Unlocker\n"
+"Project-Id-Version: BF2142Unlocker\n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
 "Last-Translator: Automatically generated\n"

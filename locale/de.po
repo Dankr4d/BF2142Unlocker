@@ -1,7 +1,7 @@
 # Don't remove the two lines below, they're required for gettext to work correctly.
 msgid ""
 msgstr ""
-"Project-Id-Version: BF 2142Unlocker\n"
+"Project-Id-Version: BF2142Unlocker\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: de\n"
