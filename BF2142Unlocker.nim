@@ -3352,6 +3352,8 @@ proc languageLogic() =
         discard bind_textdomain_codeset("gui", "ISO-8859-1")
     else:
       discard setlocale(LC_ALL, currentLocale)
+      if currentLocale == "ru_RU":
+        discard bind_textdomain_codeset("gui", "KOI8-R")
   else:
     # locale in lang.txt is empty or locale.txt does not exists or is not available
     currentLocale = "en_US" # Set currentLocale to "auto" if not already set
