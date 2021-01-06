@@ -4,7 +4,7 @@ msgstr ""
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
 "Last-Translator: Automatically generated\n"
-"Language-Team: CptGnezdilov\n"
+"Language-Team: CptGnezdilov, Ognehod\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=KOI8-R\n"
@@ -46,10 +46,10 @@ msgid "QUICK_SETTINGS"
 msgstr "Настройки"
 
 msgid "QUICK_CONNECT_FRAME_TOOLTIP"
-msgstr "TODO"
+msgstr "Подключиться к любому хостеру сервера"
 
 msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
-msgstr "TODO"
+msgstr "Выберите мод и название аккаунта"
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -69,126 +69,132 @@ msgid "CHECK_CANCEL"
 msgstr "Отмена"
 
 msgid "QUICK_HOST"
-msgstr "TODO"
+msgstr "Хост"
 
 msgid "QUICK_HOST_CANCEL"
-msgstr "TODO"
+msgstr "Закрыть"
 
 msgid "QUICK_HOST_TOOLTIP"
-msgstr "TODO"
+msgstr "Хост всех серверов на 0.0.0.0, патчинг BF2142 и запуск игры."
 
 msgid "QUICK_HOST_CANCEL_TOOLTIP"
-msgstr "TODO"
+msgstr "Выйти из запущенных серверов"
 
 msgid "QUICK_SINGLEPLAYER"
-msgstr "TODO"
+msgstr "Одиночная игра"
 
 msgid "QUICK_SINGLEPLAYER_CANCEL"
-msgstr "TODO"
+msgstr "Закрыть"
 
 msgid "QUICK_SINGLEPLAYER_TOOLTIP"
-msgstr "TODO"
+msgstr "Хост всех серверов на 127.0.0.1, патчинг BF2142 и запуск игры."
 
 msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
-msgstr "TODO"
+msgstr "Выйти из запущенных серверов"
 
 msgid "QUICK_TERMINAL"
-msgstr "TODO"
+msgstr "Терминал"
 
 # ##
 # ##### Multiplayer
 msgid "TAB_MULTIPLAYER"
-msgstr "TODO"
+msgstr "Мультиплеер"
 
 msgid "MULTIPLAYER_SERVERS_TOOLTIP"
-msgstr "TODO"
+msgstr ""
+"Здесь находится список серверов.\n"
+"Вы можете обновить список, кликнув на кнопку \"обновить\", или нажав на клавишу F5"
+"Вы можете подключиться к серверу, кликнув на кнопку \"играть\", или двойным кликом по выбраному серверу"
 
 msgid "MULTIPLAYER_SERVERS_REFRESH_TOOLTIP"
-msgstr "TODO"
+msgstr "Обновить список серверов (F5)."
 
 msgid "MULTIPLAYER_SERVERS_PLAY_TOOLTIP"
-msgstr "TODO"
+msgstr "Подключиться к выбранному серверу"
 
 msgid "MULTIPLAYER_PLAYERS_TOOLTIP"
-msgstr "TODO"
+msgstr ""
+"Здесь находится список игроков.\n"
+"Вы можете обновить список, кликнув на кнопку \"обновить\", или нажав на клавишу F6."
+
 
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
-msgstr "TODO"
+msgstr "Обновить список игроков (F6)."
 
 msgid "LOGIN_STELLA_NAME"
-msgstr "TODO"
+msgstr "Провайдер:"
 
 msgid "LOGIN_GAME_SERVER_NAME"
-msgstr "TODO"
+msgstr "Игровой сервер:"
 
 msgid "LOGIN_USERNAME"
-msgstr "TODO"
+msgstr "Название аккаунта:"
 
 msgid "LOGIN_PASSWORD"
-msgstr "TODO"
+msgstr "Пароль:"
 
 msgid "LOGIN_SOLDIER"
-msgstr "TODO"
+msgstr "Солдат:"
 
 msgid "LOGIN_SAVE"
-msgstr "TODO"
+msgstr "Сохранить"
 
 msgid "LOGIN_ERROR"
-msgstr "TODO"
+msgstr "Ошибка"
 
 msgid "LOGIN_ERROR_CODE"
-msgstr "TODO"
+msgstr "Код:"
 
 msgid "LOGIN_ERROR_TXN"
-msgstr "TODO"
+msgstr "TXN:"
 
 msgid "LOGIN_ERROR_MSG"
-msgstr "TODO"
+msgstr "Сообщение:"
 
 msgid "LOGIN_CHECK"
-msgstr "TODO"
+msgstr "Войти"
 
 msgid "LOGIN_CREATE"
-msgstr "TODO"
+msgstr "Создать"
 
 msgid "LOGIN_PLAY"
-msgstr "TODO"
+msgstr "Играть"
 
 msgid "LOGIN_CANCEL"
-msgstr "TODO"
+msgstr "Закрыть"
 
 msgid "LOGIN_ADD_SOLDIER_NAME"
-msgstr "TODO"
+msgstr "Имя солдата:"
 
 msgid "LOGIN_ADD_SOLDIER_OK"
-msgstr "TODO"
+msgstr "ОК"
 
 msgid "LOGIN_ADD_SOLDIER_CANCEL"
-msgstr "TODO"
+msgstr "Закрыть"
 
 msgid "LOGIN_MOD_MISSING_TITLE"
-msgstr "TODO"
+msgstr "Мод не найден"
 
 msgid "LOGIN_MOD_MISSING_MSG"
-msgstr "TODO"
+msgstr "Запущенный на сервере мод не установлен."
 
 msgid "LOGIN_MOD_MISSING_LINK"
-msgstr "TODO"
+msgstr "Вы можете скачать его здесь:"
 
 msgid "LOGIN_MOD_MISSING_OK"
-msgstr "TODO"
+msgstr "ОК"
 
 msgid "LOGIN_MAP_MISSING_TITLE"
-msgstr "TODO"
+msgstr "Карта не найдена"
 
 msgid "LOGIN_MAP_MISSING_MSG"
-msgstr "TODO"
+msgstr "Карта '$#' не найдена/отсутствует."
 
 msgid "LOGIN_MAP_MISSING_OK"
-msgstr "TODO"
+msgstr "ОК"
 
 msgid "MULTIPLAYER_PATCH_AND_START"
-msgstr "TODO"
+msgstr "Быстрый запуск"
 
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
@@ -304,7 +310,7 @@ msgid "HOST_HOST"
 msgstr "Хост"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "TODO"
+msgstr "Запустить все сервера."
 
 msgid "HOST_CANCEL"
 msgstr "Отмена"
@@ -369,22 +375,22 @@ msgid "SETTINGS_RESOLUTION_TOOLTIP"
 msgstr "Разрешение экрана в оконном режиме"
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
-msgstr "TODO"
+msgstr "Найден путь установки Battlefield 2142"
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG"
-msgstr "TODO"
+msgstr "Выбрать данный путь как путь к папке Battlefield 2142?"
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK"
-msgstr "TODO"
+msgstr "Да"
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
-msgstr "TODO"
+msgstr "Нет, выбрать другой .."
 
 msgid "TAB_QUICK"
-msgstr "TODO"
+msgstr "Играть"
 
 msgid "TAB_QUICK_TOOLTIP"
-msgstr "TODO"
+msgstr "Здесь вы можете запустить одиночную или локальную игру."
 
 msgid "TAB_HOST"
 msgstr "Хост"
