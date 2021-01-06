@@ -1,0 +1,4 @@
+GlobalSettings.setDefaultUser "0001"
+GlobalSettings.setLastOnlineUser ""
+GlobalSettings.setEncryptedLogin ""
+GlobalSettings.setNamePrefix ""

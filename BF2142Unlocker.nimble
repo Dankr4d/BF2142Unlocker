@@ -1,7 +1,7 @@
 ### Package
-version       = "0.9.4"
+version       = "0.9.5"
 author        = "Dankrad"
-description   = "Play and host BF2142 server with all unlocks."
+description   = "Play and host BF2142 server with all unlocks or join multiplayer servers."
 license       = "MIT"
 srcDir        = "src"
 bin           = @[""]
@@ -9,8 +9,9 @@ bin           = @[""]
 
 ### Dependencies
 requires "nim >= 1.2.6"
-requires "gintro >= 0.8.1"
+requires "gintro >= 0.8.3"
 requires "winim >= 3.4.0"
+requires "regex >= 0.18.0" # Using this regex module because it doesn't depend to a shared library
 when defined(windows):
   requires "winregistry >= 0.2.1"
 when defined(linux):
@@ -23,24 +24,31 @@ from strformat import fmt
 ##
 
 ### Consts
+const CPU_CORES: string = gorgeEx("nproc").output
+
 const
   BUILD_DIR: string = "build"
-  OPENSSL_VERSION: string = "1.0.2r"
-  NCURSES_VERSION: string = "5.9"
-  OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
-  OPENSSL_PATH: string = "deps" / "openssl"
-  OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
-  NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
-  NCURSES_PATH: string = "deps" / "ncurses"
-  NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
   LANGUAGES: seq[string] = @["en", "de", "ru"]
+
+const # OpenSSL
+  OPENSSL_VERSION: string = "1.0.2r"
+  OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
+  OPENSSL_PATH: string = "thirdparty" / "openssl"
+  OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
+
+when defined(linux):
+  const # Ncurses
+    NCURSES_VERSION: string = "5.9"
+    NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
+    NCURSES_PATH: string = "thirdparty" / "ncurses"
+    NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
+
 when defined(windows):
   const
     BUILD_BIN_DIR: string = BUILD_DIR / "bin"
     BUILD_LIB_DIR: string = BUILD_DIR / "lib"
     BUILD_SHARE_DIR: string = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
-const CPU_CORES: string = gorgeEx("nproc").output
 ##
 
 ### Procs
@@ -66,27 +74,30 @@ when defined(windows):
   proc compileLauncher() =
     exec("nim c -d:release --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
 
-proc compileGui() =
+proc compileGui(rc: string) =
+  var rcStr: string
+  if rc != "":
+    rcStr =  "-d:RC=" & rc & " "
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
     else:
-      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
-    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+    exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
 
 proc compileServer() =
   when defined(windows):
     if buildOS == "linux":
-      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
     else:
-      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "server".toExe & " server")
+      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
-    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "server".toExe & " server")
+    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
 proc compileOpenSsl() =
-  mkDir("deps")
-  withDir("deps"):
+  mkDir("thirdparty")
+  withDir("thirdparty"):
     exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
     when defined(linux):
       exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz --one-top-level=openssl --strip=1")
@@ -96,7 +107,7 @@ proc compileOpenSsl() =
         rmDir("openssl")
       mvDir(OPENSSL_DIR, "openssl")
   withDir(OPENSSL_PATH):
-    when buildOS == "linux":
+    if buildOS == "linux":
       when defined(linux):
         exec("./config enable-ssl3 shared")
         exec("make depend")
@@ -105,29 +116,29 @@ proc compileOpenSsl() =
         exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
         exec("make depend")
         exec(fmt"make -j{CPU_CORES}")
-    elif buildOS == "windows":
+    else:
       exec("perl Configure mingw64 enable-ssl3 shared")
       exec("make depend")
       exec(fmt"make -j{CPU_CORES}")
 
 when defined(linux):
   proc compileNcurses() =
-    mkDir("deps")
-    withDir("deps"):
+    mkDir("thirdparty")
+    withDir("thirdparty"):
       exec(fmt"wget {NCURSES_URL} -O {NCURSES_DIR}.tar.gz")
       mkDir("ncurses")
       exec(fmt"tar xvzf {NCURSES_DIR}.tar.gz --strip=1 -C ncurses")
     # Applying patch (fixes compilation with newer gcc)
     withDir(NCURSES_PATH):
-      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patches/ncurses-5.9-gcc-5.patch")
+      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../patch/ncurses-5.9-gcc-5.patch")
       # --without-cxx-binding is required or build fails
       exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
       exec(fmt"make -j{CPU_CORES}")
 
-proc compileAll() =
+proc compileAll(rc: string) =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
-  compileGui() # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
+  compileGui(rc) # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
   when defined(windows):
     compileLauncher()
@@ -152,9 +163,7 @@ when defined(windows):
     mkDir(BUILD_LIB_DIR)
     cpDir("C:" / "msys64" / "mingw64" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
-    mkDir(BUILD_SHARE_DIR)
-    mkDir(BUILD_SHARE_DIR / "icons")
-    mkDir(BUILD_SHARE_DIR / "icons" / "Adwaita")
+    mkdir(BUILD_SHARE_THEME_DIR)
     cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
     cpFile("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
     mkDir(BUILD_SHARE_THEME_DIR / "scalable")
@@ -163,8 +172,7 @@ when defined(windows):
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
     cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
-
-    # cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita", BUILD_SHARE_DIR / "icons")
+    cpDir("C:" / "msys64" / "mingw64" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
 
     mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
     cpFile("C:" / "msys64" / "mingw64" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
@@ -178,27 +186,46 @@ when defined(windows):
 else:
   proc copyNcurses() =
     cpFile(NCURSES_PATH / "lib" / "libncurses.so.5.9", BUILD_DIR / "libncurses.so.5")
+  proc copyOpenSSL() =
+    cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
+    cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
 
+proc copyServersConfig() =
+  when defined(windows):
+    mkDir(BUILD_BIN_DIR / "config")
+    cpFile("config/server.ini", BUILD_BIN_DIR / "config/server.ini")
+  else:
+    mkDir(BUILD_DIR / "config")
+    cpFile("config/server.ini", BUILD_DIR / "config/server.ini")
 
 proc copyAll() =
   when defined(windows):
-    cpDir("ssl_certs", BUILD_BIN_DIR / "ssl_certs")
-    cpFile("nopreview.png", BUILD_BIN_DIR / "nopreview.png")
+    mkDir(BUILD_BIN_DIR / "asset")
+    mkDir(BUILD_BIN_DIR / "log")
+    cpDir("cert", BUILD_BIN_DIR / "cert")
+    cpFile("asset/nopreview.png", BUILD_BIN_DIR / "asset/nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
-    cpDir("ssl_certs", BUILD_DIR / "ssl_certs")
-    cpFile("nopreview.png", BUILD_DIR / "nopreview.png")
+    mkDir(BUILD_DIR / "asset")
+    mkDir(BUILD_DIR / "log")
+    cpDir("cert", BUILD_DIR / "cert")
+    cpFile("asset/nopreview.png", BUILD_DIR / "asset/nopreview.png")
     copyNcurses()
+    copyOpenSSL()
+  copyServersConfig()
   copyTranslation()
 ##
 
 ### Tasks
 task release, "Compile and bundle (release).":
+  var rc: string
+  if paramStr(paramCount()) != "release":
+    rc = paramStr(paramCount())
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
-  compileAll()
+  compileAll(rc)
   copyAll()
 
 task translatePo, "Update po files from pot file.":

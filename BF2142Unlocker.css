@@ -2,6 +2,24 @@ actionbar button.link {
   padding: 0 0.5em 0 0.5em;
 }
 
+button.link {
+  padding: 0;
+}
+
+.error > border {
+  border-color: #CC0000;
+}
+
+.error > label {
+  color: #CC0000;
+}
+
+#btnQuickSingleplayer, #btnQuickSingleplayerCancel,
+#btnQuickHost, #btnQuickHostCancel {
+  font-size: 2em;
+  padding: 25px;
+}
+
 
 /* Windows only
    Info: Terminal class is only added on windows build,

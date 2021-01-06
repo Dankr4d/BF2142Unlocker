@@ -1,7 +1,7 @@
 # Don't remove the two lines below, they're required for gettext to work correctly.
 msgid ""
 msgstr ""
-"Project-Id-Version: BF 2142Unlocker\n"
+"Project-Id-Version: BF2142Unlocker\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en\n"
@@ -10,80 +10,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "JOIN_IP_ADDRESS"
+msgid "QUICK_IP_ADDRESS"
 msgstr "IP-Address:"
 
-msgid "JOIN_IP_ADDRESS_TOOLTIP"
-msgstr ""
-"Enter the IP-Address of the target login-server you want to connect to.\n"
-"Default/Empty is your own computers IP-Address if you click on \"Just play\"."
+msgid "QUICK_IP_ADDRESS_TOOLTIP"
+msgstr "Enter the IP-Address of the target login-server you want to connect to."
 
-msgid "JOIN_AUTO_JOIN_SERVER"
+msgid "QUICK_AUTO_JOIN_SERVER"
 msgstr "Auto join server:"
 
-msgid "JOIN_AUTO_JOIN_SERVER_TOOLTIP"
+msgid "QUICK_AUTO_JOIN_SERVER_TOOLTIP"
 msgstr "Autojoin a gameserver if it listens to the same IP-Address as the loginserver."
 
-msgid "JOIN_CONNECT"
+msgid "QUICK_CONNECT"
 msgstr "Connect"
 
-msgid "JOIN_CONNECT_TOOLTIP"
+msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Connect to the login-server by using the IP-Address entered."
 
-msgid "JOIN_MODS"
+msgid "QUICK_MODS"
 msgstr "Mods:"
 
-msgid "JOIN_MODS_TOOLTIP"
-msgstr "Choose the mod that the game should start with"
+msgid "QUICK_MODS_TOOLTIP"
+msgstr "Choose the mod that the game should start with."
 
-msgid "JOIN_PLAYER_NAME"
+msgid "QUICK_PLAYER_NAME"
 msgstr "Player name:"
 
-msgid "JOIN_PLAYER_NAME_TOOLTIP"
+msgid "QUICK_PLAYER_NAME_TOOLTIP"
 msgstr "Name of your Soldier that appears ingame."
-
-msgid "JOIN_SKIP_MOVIES"
-msgstr "Skip intro movies:"
-
-msgid "JOIN_SKIP_MOVIES_TOOLTIP"
-msgstr "Skips the intro movies on startup."
-
-msgid "JOIN_WINDOW_MODE"
-msgstr "Window mode:"
-
-msgid "JOIN_WINDOW_MODE_TOOLTIP"
-msgstr "Starts the game in windowed mode."
-
-msgid "JOIN_RESOLUTION"
-msgstr "Resolution:"
-
-msgid "JOIN_RESOLUTION_TOOLTIP"
-msgstr "The resolution the game get started in windowed mode."
-
-msgid "JOIN_JUST_PLAY_CANCEL"
-msgstr "Cancel"
-
-msgid "JOIN_JUST_PLAY_CANCEL_TOOLTIP"
-msgstr "Stop all servers"
-
-msgid "JOIN_JUST_PLAY"
-msgstr "Just play"
-
-msgid "JOIN_JUST_PLAY_TOOLTIP"
-msgstr ""
-"Start the login-/unlockserver with your computers IP-Adress and launch the game with it!\n"
-"This is a quick way into singleplayer."
 
 # ##
 # ##### Host
-msgid "JOIN_GAME_SETTINGS"
-msgstr "Game settings"
+msgid "QUICK_SETTINGS"
+msgstr "Settings"
 
-msgid "JOIN_CONNECT_FRAME_TOOLTIP"
-msgstr "Connection-settings that control how you get into your or any login-/unlockserver"
+msgid "QUICK_CONNECT_FRAME_TOOLTIP"
+msgstr "Connect to any other who's hosting the servers."
 
-msgid "JOIN_GAME_SETTINGS_FRAME_TOOLTIP"
-msgstr "Basic gamesettings that define how Battlefield 2142 will start"
+msgid "QUICK_SETTINGS_FRAME_TOOLTIP"
+msgstr "Select the mod you want to start and your player name."
 
 msgid "CHECK_CAN_NOT_CONNECT"
 msgstr ""
@@ -102,6 +68,133 @@ msgstr "Unlock-Server:"
 msgid "CHECK_CANCEL"
 msgstr "Cancel"
 
+msgid "QUICK_HOST"
+msgstr "Host"
+
+msgid "QUICK_HOST_CANCEL"
+msgstr "Cancel"
+
+msgid "QUICK_HOST_TOOLTIP"
+msgstr "Hosts all necessary servers on 0.0.0.0, patches BF2142 and start the game."
+
+msgid "QUICK_HOST_CANCEL_TOOLTIP"
+msgstr "Quit current running servers."
+
+msgid "QUICK_SINGLEPLAYER"
+msgstr "Singleplayer"
+
+msgid "QUICK_SINGLEPLAYER_CANCEL"
+msgstr "Cancel"
+
+msgid "QUICK_SINGLEPLAYER_TOOLTIP"
+msgstr "Hosts all necessary servers on 127.0.0.1, patches BF2142 and start the game."
+
+msgid "QUICK_SINGLEPLAYER_CANCEL_TOOLTIP"
+msgstr "Quit current running servers."
+
+msgid "QUICK_TERMINAL"
+msgstr "Terminal"
+
+# ##
+# ##### Multiplayer
+msgid "TAB_MULTIPLAYER"
+msgstr "Multiplayer"
+
+msgid "MULTIPLAYER_SERVERS_TOOLTIP"
+msgstr ""
+"This is the server list.\n"
+"You can refresh it by clicking the refresh button or hitting F5.\n"
+"You can connect to a server by clicking the play button or double click the server."
+
+msgid "MULTIPLAYER_SERVERS_REFRESH_TOOLTIP"
+msgstr "Refreshes the server list (F5)."
+
+msgid "MULTIPLAYER_SERVERS_PLAY_TOOLTIP"
+msgstr "Connect to selected the server."
+
+msgid "MULTIPLAYER_PLAYERS_TOOLTIP"
+msgstr ""
+"This is the player list.\n"
+"You can refresh it by clicking the refresh button or hitting F6."
+
+msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
+msgstr "Refreshes the player list (F6)."
+
+msgid "LOGIN_STELLA_NAME"
+msgstr "Stella name:"
+
+msgid "LOGIN_GAME_SERVER_NAME"
+msgstr "Game server:"
+
+msgid "LOGIN_USERNAME"
+msgstr "Username:"
+
+msgid "LOGIN_PASSWORD"
+msgstr "Password:"
+
+msgid "LOGIN_SOLDIER"
+msgstr "Soldier:"
+
+msgid "LOGIN_SAVE"
+msgstr "Save:"
+
+msgid "LOGIN_ERROR"
+msgstr "Error"
+
+msgid "LOGIN_ERROR_CODE"
+msgstr "Code:"
+
+msgid "LOGIN_ERROR_TXN"
+msgstr "TXN:"
+
+msgid "LOGIN_ERROR_MSG"
+msgstr "Message:"
+
+msgid "LOGIN_CHECK"
+msgstr "Login"
+
+msgid "LOGIN_CREATE"
+msgstr "Create"
+
+msgid "LOGIN_PLAY"
+msgstr "Play"
+
+msgid "LOGIN_CANCEL"
+msgstr "Cancel"
+
+msgid "LOGIN_ADD_SOLDIER_NAME"
+msgstr "Soldier name:"
+
+msgid "LOGIN_ADD_SOLDIER_OK"
+msgstr "Ok"
+
+msgid "LOGIN_ADD_SOLDIER_CANCEL"
+msgstr "Cancel"
+
+msgid "LOGIN_MOD_MISSING_TITLE"
+msgstr "Mod not found"
+
+msgid "LOGIN_MOD_MISSING_MSG"
+msgstr "The mod the server is running is not installed."
+
+msgid "LOGIN_MOD_MISSING_LINK"
+msgstr "You can download it here:"
+
+msgid "LOGIN_MOD_MISSING_OK"
+msgstr "Ok"
+
+msgid "LOGIN_MAP_MISSING_TITLE"
+msgstr "Map not found"
+
+msgid "LOGIN_MAP_MISSING_MSG"
+msgstr "Map '$#' not found/missing."
+
+msgid "LOGIN_MAP_MISSING_OK"
+msgstr "Ok"
+
+msgid "MULTIPLAYER_PATCH_AND_START"
+msgstr "Quickstart"
+
 # ##
 # ##### Host
 msgid "HOST_SETTINGS"
@@ -111,7 +204,7 @@ msgid "HOST_MODS"
 msgstr "Mods:"
 
 msgid "HOST_MODS_TOOLTIP"
-msgstr "Choose the mod the server should run with"
+msgstr "Choose the mod the server should run with."
 
 msgid "HOST_GAME_MODE"
 msgstr "Game mode:"
@@ -125,31 +218,31 @@ msgid "HOST_BOT_SKILL"
 msgstr "Bot skill:"
 
 msgid "HOST_BOT_SKILL_TOOLTIP"
-msgstr "Controlls the difficulty of the bots"
+msgstr "Controlls the difficulty of the bots."
 
 msgid "HOST_TICKET_RATIO"
 msgstr "Ticket ratio:"
 
 msgid "HOST_TICKET_RATIO_TOOLTIP"
-msgstr "Tickets for each team in %"
+msgstr "Tickets for each team in %."
 
 msgid "HOST_SPAWN_TIME"
 msgstr "Spawn time:"
 
 msgid "HOST_SPAWN_TIME_TOOLTIP"
-msgstr "Time to wait before one can re-enter the battle if killed"
+msgstr "Time to wait before one can re-enter the battle if killed."
 
 msgid "HOST_ROUNDS_PER_MAP"
 msgstr "Rounds per map:"
 
 msgid "HOST_ROUNDS_PER_MAP_TOOLTIP"
-msgstr "Number of rounds to play each map before switching to the next one in the list"
+msgstr "Number of rounds to play each map before switching to the next one in the list."
 
 msgid "HOST_BOT_AMOUNT"
 msgstr "Bot amount:"
 
 msgid "HOST_BOT_AMOUNT_TOOLTIP"
-msgstr "Total number of all bots on the map"
+msgstr "Total number of all bots on the map."
 
 msgid "HOST_MAX_PLAYERS"
 msgstr "Max players:"
@@ -163,13 +256,13 @@ msgid "HOST_PLAYERS_NEEDED_TO_START"
 msgstr "Players needed to start:"
 
 msgid "HOST_PLAYERS_NEEDED_TO_START_TOOLTIP"
-msgstr "Number of human players that need to be connected into the game to make a round start"
+msgstr "Number of human players that need to be connected into the game to make a round start."
 
 msgid "HOST_FRIENDLY_FIRE"
 msgstr "Friendly fire:"
 
 msgid "HOST_FRIENDLY_FIRE_TOOLTIP"
-msgstr "Enable/Disable friendly fire"
+msgstr "Enable/Disable friendly fire."
 
 msgid "HOST_ALLOW_NOSE_CAM"
 msgstr "Allow nose cam:"
@@ -195,34 +288,28 @@ msgstr ""
 "This list is dependend on the gamemode you chose."
 
 msgid "HOST_SELECTED_MAPS_TOOLTIP"
-msgstr "List of maps already in your rotation"
+msgstr "List of maps already in your rotation."
 
 msgid "HOST_MAPS_ADD_TOOLTIP"
-msgstr "Add map to rotation"
+msgstr "Add map to rotation."
 
 msgid "HOST_MAPS_REMOVE_TOOLTIP"
-msgstr "Remove map from rotation"
+msgstr "Remove map from rotation."
 
 msgid "HOST_MAPS_MOVE_UP_TOOLTIP"
-msgstr "Move map upwards in the rotation"
+msgstr "Move map upwards in the rotation."
 
 msgid "HOST_MAPS_MOVE_DOWN_TOOLTIP"
-msgstr "Move map downwards in the rotation"
+msgstr "Move map downwards in the rotation."
 
 msgid "HOST_TERMINALS"
 msgstr "Terminals"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER"
-msgstr "Host login/unlock server"
-
-msgid "HOST_LOGIN_UNLOCK_SERVER_TOOLTIP"
-msgstr "Start only the login-/unlockserver"
 
 msgid "HOST_HOST"
 msgstr "Host"
 
 msgid "HOST_HOST_TOOLTIP"
-msgstr "Start the login-/unlock and gameserver with the selected setting"
+msgstr "Start all the servers."
 
 msgid "HOST_CANCEL"
 msgstr "Cancel"
@@ -244,7 +331,7 @@ msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr "Battlefield 2142 game path:"
 
 msgid "SETTINGS_BF2142_GAME_PATH_TOOLTIP"
-msgstr "Select your Battlefield 2142 game folder"
+msgstr "Select your Battlefield 2142 game folder."
 
 msgid "SETTINGS_BF2142_SERVER_PATH"
 msgstr "Battlefield 2142 server path:"
@@ -272,19 +359,49 @@ msgstr "Copy maps to server"
 msgid "SETTINGS_SELECT"
 msgstr "Select"
 
+msgid "SETTINGS_SKIP_MOVIES"
+msgstr "Skip intro movies:"
+
+msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
+msgstr "Skips the intro movies on startup."
+
+msgid "SETTINGS_WINDOW_MODE"
+msgstr "Window mode:"
+
+msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
+msgstr "Starts the game in windowed mode."
+
+msgid "SETTINGS_RESOLUTION"
+msgstr "Resolution:"
+
+msgid "SETTINGS_RESOLUTION_TOOLTIP"
+msgstr "The resolution the game get started in windowed mode."
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
+msgstr "A Battlefield 2142 installation path has been found"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_MSG"
+msgstr "Should the following path set to be your Battlefield 2142 path?"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_OK"
+msgstr "Yes"
+
+msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
+msgstr "No, select .."
+
 # ##
 # ##### Tabs
-msgid "TAB_JOIN"
-msgstr "Join"
+msgid "TAB_QUICK"
+msgstr "Play"
 
-msgid "TAB_JOIN_TOOLTIP"
-msgstr "Settings to join a login-server"
+msgid "TAB_QUICK_TOOLTIP"
+msgstr "Here you're able to play in singleplayer or LAN."
 
 msgid "TAB_HOST"
 msgstr "Host"
 
 msgid "TAB_HOST_TOOLTIP"
-msgstr "Settings to host a login and game-server"
+msgstr "Settings to host."
 
 msgid "TAB_UNLOCKS"
 msgstr "Unlocks"
@@ -333,14 +450,6 @@ msgstr ""
 "Opens your web browser to First Strike's ModDB page.\n"
 "They made a Star Wars mod!"
 
-msgid "PLAY_ONLINE"
-msgstr "Play online"
-
-msgid "PLAY_ONLINE_TOOLTIP"
-msgstr ""
-"Opens your web browser to Reclamation's website.\n"
-"They host BF2142 online Multiplayer servers!"
-
 # ##
 # ## Other
 msgid "GAMESERVER_CRASHED"
@@ -361,29 +470,6 @@ msgstr "Could not find $#"
 
 msgid "COULD_NOT_FIND_MSG"
 msgstr "Could not find $#. Path is invalid!"
-
-msgid "COPIED_MAPS"
-msgstr "Maps copied"
-
-msgid "COPIED_MAPS_CLIENT"
-msgstr "Copied maps to client successfully!"
-
-msgid "COPIED_MAPS_SERVER"
-msgstr "Copied maps to server successfully!"
-
-msgid "SELECT_MAPS_FOLDER_CLIENT"
-msgstr "Select level folder to copy to client"
-
-msgid "SELECT_MAPS_FOLDER_SERVER"
-msgstr "Select level folder to copy to server"
-
-msgid "NO_LOCAL_IP_ADDRESS_TITLE"
-msgstr "No local ip address read out"
-
-msgid "NO_LOCAL_IP_ADDRESS_MSG"
-msgstr ""
-"No local ip address could be read out.\n"
-"Please connect to router (with DHCP enabled) or configure one manually."
 
 msgid "NO_PRIVATE_IP_ADDRESS_TITLE"
 msgstr "No private local ip address read out"
