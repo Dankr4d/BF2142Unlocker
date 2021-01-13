@@ -330,8 +330,10 @@ proc parseGSpyServer*(data: string, server: var GSpyServer, pos: var int) =
 
 
 proc parseList[T](data: string, pos: var int): seq[T] =
+  if pos + 2 > data.high: # Invalid data, the sserver just cutted of after 1400 bytes (packet end)
+    pos = data.len
+    return
   if data[pos .. pos + 2] == "\0\0\0": # Empty list
-    # echo "EMPTY LIST!!!"
     pos.inc(3)
     return
   pos.inc(2) # Skip 00 byte and offset # TODO: offset (currently ignored because the last entry isn't added)
