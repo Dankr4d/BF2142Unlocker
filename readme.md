@@ -10,8 +10,8 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - Battlefield 2142 updated to version 1.51.
 
 ## Downloads
-- [Download BF2142 Unlocker v0.9.5 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.5/BF2142Unlocker_v0.9.5_win.zip)
-- [Download BF2142 Unlocker v0.9.5 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.5/BF2142Unlocker_v0.9.5_linux.zip)
+- [Download BF2142 Unlocker v0.9.6 (Windows)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.6/BF2142Unlocker_v0.9.6_win.zip)
+- [Download BF2142 Unlocker v0.9.6 (Linux)](https://github.com/Dankr4d/BF2142Unlocker/releases/download/v0.9.6/BF2142Unlocker_v0.9.6_linux.zip)
 
 ## Instructions / How to play:
 - Start the BF2142Unlocker:
