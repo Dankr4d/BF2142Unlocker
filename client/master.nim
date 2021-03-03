@@ -262,7 +262,11 @@ proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl
 
 proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string, timeout: int = -1): seq[tuple[address: IpAddress, port: Port]] =
   var client: Socket = newSocket()
-  client.connect(url, port)
+
+  try:
+    client.connect(url, port)
+  except OSError:
+    return # If master server doesn't respond or connection is refused
 
   var msgamename: ptr uint8 = cast[ptr uint8](gameName.cstring)
   var msgamekey: ptr uint8 = cast[ptr uint8](gameKey.cstring)

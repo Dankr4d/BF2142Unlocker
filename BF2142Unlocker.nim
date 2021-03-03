@@ -1671,8 +1671,7 @@ proc timerUpdatePlayerList(TODO: int): bool =
   return SOURCE_REMOVE
 
 proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: Port]) =
-  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort)
-
+  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 500)
   channelUpdatePlayerList.send((gspy, gspyIpPort.gspyIp, gspyIpPort.gspyPort))
 
 proc updatePlayerListAsync() =
@@ -1766,10 +1765,8 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
     # TODO2: Query master servers async like in `queryServers` proc
     try:
       gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
-    except OSError:
-      break # If master server doesn't respond or connection is refused
     except:
-      break # TODO: Temprariy fixing issue #69
+      break # TODO: Temprariy fixing issue #69 and #72
     gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
         return false
