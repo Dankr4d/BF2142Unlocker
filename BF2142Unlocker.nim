@@ -1610,7 +1610,20 @@ proc timerUpdatePlayerList(TODO: int): bool =
     if gspyTpl.gspyIp == currentServer.ip and gspyTpl.gspyPort == currentServer.gspyPort:
       gspy = gspyTpl.gspy
       found = true
+
   if found == false:
+    return SOURCE_CONTINUE
+
+  # Return if data/seq len is incorrect (server send uncomplete data or parse couldn't parse it)
+  let pidLen: int = gspy.player.pid.len
+  if gspy.player.deaths.len != pidLen or
+  gspy.player.score.len != pidLen or
+  gspy.player.skill.len != pidLen or
+  gspy.player.team.len != pidLen or
+  gspy.player.ping.len != pidLen or
+  gspy.player.player.len != pidLen or
+  gspy.team.team_t.len != 2 or
+  gspy.team.score_t.len != 2:
     return SOURCE_CONTINUE
 
   var
