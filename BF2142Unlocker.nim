@@ -313,7 +313,7 @@ when defined(release):
   const GUI_CSS: string = staticRead("BF2142Unlocker.css")
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
 const
-  CONFIG_FILE_NAME: string = "config/config.ini"
+  CONFIG_FILE_NAME: string = "config" / "config.ini"
   CONFIG_SECTION_QUICK: string = "Quick"
   CONFIG_SECTION_HOST: string = "Host"
   CONFIG_SECTION_UNLOCKS: string = "Unlocks"
@@ -336,7 +336,7 @@ const
   CONFIG_KEY_SETTINGS_RESOLUTION: string = "resolution"
 
 const
-  CONFIG_SERVER_FILE_NAME: string = "config/server.ini"
+  CONFIG_SERVER_FILE_NAME: string = "config" / "server.ini"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -351,7 +351,7 @@ const
   CONFIG_SERVER_KEY_GAME_STR: string = "game_str"
 
 const
-  CONFIG_LOGINS_FILE_NAME: string = "config/login.ini"
+  CONFIG_LOGINS_FILE_NAME: string = "config" / "login.ini"
   CONFIG_LOGINS_KEY_USERNAME: string = "username"
   CONFIG_LOGINS_KEY_PASSWORD: string = "password"
   CONFIG_LOGINS_KEY_SOLDIER: string = "soldier"
@@ -508,14 +508,14 @@ var lblSettingsBF2142ClientPathDetected: Label
 proc onQuit()
 
 import logging
-var logger: FileLogger = newFileLogger("log/error.log", fmtStr = verboseFmtStr)
+var logger: FileLogger = newFileLogger("log" / "error.log", fmtStr = verboseFmtStr)
 addHandler(logger)
 
 proc `$`(ex: ref Exception): string =
   result.add("Exception: \n\t" & $ex.name & "\n")
   result.add("Message: \n\t" & ex.msg.strip() & "\n")
   result.add("Stacktrace: \n")
-  for line in splitLines(getStackTrace()):
+  for line in splitLines(getStackTrace(ex)):
     result.add("\t" & line & "\n")
 
 proc log(ex: ref Exception) =
@@ -1759,13 +1759,14 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   var gslistTmp: seq[tuple[address: IpAddress, port: Port]]
   var serverConfigsTbl: tables.Table[string, ServerConfig] = initTable[string, ServerConfig]()
   var servers: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]
+
   for idx, serverConfig in serverConfigs:
     # TODO: Querying openspy and novgames master server takes ~500ms
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
     # TODO2: Query master servers async like in `queryServers` proc
     try:
       gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
-    except:
+    except RangeDefect:
       break # TODO: Temprariy fixing issue #69 and #72
     gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
@@ -1959,7 +1960,6 @@ proc threadFeslProc() {.thread.} =
         socket.delSoldier(threadData.soldier.soldier)
         timerData.soldier.soldiers = socket.soldiers()
         channelFeslTimer.send(timerData)
-
     except FeslException as ex:
       timerData.ex = some(ex)
       channelFeslTimer.send(timerData)
@@ -3389,5 +3389,27 @@ proc main =
     # TODO: This is a workaround.
     ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
+
+when defined(release):
+  proc unhandledException(msg: string) =
+    var dialog: Dialog = newDialog()
+    dialog.title = "UNHANDLED EXCEPTION"
+    var lblText: Label = newLabel(msg)
+    dialog.contentArea.add(lblText)
+    var btnOk: Button = newButton("Ok")
+    dialog.contentArea.add(btnOk)
+    proc onBtnOkClicked(self: Button, dialog: Dialog) =
+      dialog.close()
+    btnOk.connect("clicked", onBtnOkClicked, dialog)
+    dialog.contentArea.showAll()
+    system.writeFile("log" / "crash_" & format(now(), "yyyy-MM-dd'T'hh-mm-ss-ms") & ".log", msg)
+    discard dialog.run()
+    dialog.destroy()
+    if termHostGameServerPid > 0:
+      killProcess(termHostGameServerPid)
+    if termHostLoginServerPid > 0:
+      killProcess(termHostLoginServerPid)
+    quit(1)
+  onUnhandledException = unhandledException
 
 main()

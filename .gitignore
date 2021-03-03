@@ -73,4 +73,5 @@ registry/bf2142.exe
 config/config.ini
 config/login.ini
 
-log/error.log
+log/
+!log/.gitkeep
