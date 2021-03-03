@@ -1873,10 +1873,8 @@ proc timerFesl(TODO: int): bool =
         if ex.code == 160:
           errorMsg = "Soldier already taken or an other unknown error."
       of FeslExceptionType.Login:
-        if ex.code == 101:
-          errorMsg = "Username doesn't exists."
-        elif ex.code == 122:
-          errorMsg = "Password is incorrect."
+        if ex.code == 101 or ex.code == 122:
+          errorMsg = "Username or password is incorrect."
       else:
         discard
     if errorMsg == "":
