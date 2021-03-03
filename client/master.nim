@@ -266,6 +266,7 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   try:
     client.connect(url, port)
   except OSError:
+    client.close()
     return # If master server doesn't respond or connection is refused
 
   var msgamename: ptr uint8 = cast[ptr uint8](gameName.cstring)

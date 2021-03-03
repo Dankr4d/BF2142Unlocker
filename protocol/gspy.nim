@@ -168,10 +168,10 @@ proc serialize*(protocol00C: Protocol00C): string =
 
 proc sendProtocol00B*(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = -1): Future[seq[Response00B]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-
   try:
     await socket.sendTo($address, port, protocol00B.serialize())
   except OSError:
+    socket.close()
     return
 
   var response00B: Response00B
@@ -198,12 +198,14 @@ proc sendProtocol00B*(address: IpAddress, port: Port, protocol00B: Protocol00B, 
     result.add(response00B)
     if isLastMessage:
       break
+  socket.close()
 
 proc sendProtocol00C*(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = -1): Future[Option[Response00C]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
   try:
     await socket.sendTo($address, port, protocol00C.serialize())
   except OSError:
+    socket.close()
     return none(Response00C) # Server not reachable
 
   var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
@@ -216,6 +218,8 @@ proc sendProtocol00C*(address: IpAddress, port: Port, protocol00C: Protocol00C, 
       break
   else:
     resp = await respFuture
+
+  socket.close()
 
   var response: Response00C
   response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
