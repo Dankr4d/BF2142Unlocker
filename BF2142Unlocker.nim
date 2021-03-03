@@ -1581,7 +1581,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   if isSome(options.eaAccountName):
     command.add("+eaAccountName \"" & get(options.eaAccountName) & "\" ")
   if isSome(options.eaAccountPassword):
-    command.add("+soldierName \"" & get(options.soldierName) & "\" ")
+    command.add("+eaAccountPassword \"" & get(options.eaAccountPassword) & "\" ")
   if isSome(options.soldierName):
     command.add("+soldierName \"" & get(options.soldierName) & "\" ")
   if isSome(options.joinServer):
