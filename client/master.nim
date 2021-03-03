@@ -262,7 +262,12 @@ proc enctypex_decoder_rand_validate(validate: ptr cuchar): cint {.importc, cdecl
 
 proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string, timeout: int = -1): seq[tuple[address: IpAddress, port: Port]] =
   var client: Socket = newSocket()
-  client.connect(url, port)
+
+  try:
+    client.connect(url, port, timeout)
+  except OSError, TimeoutError:
+    client.close()
+    return # If master server doesn't respond or connection is refused
 
   var msgamename: ptr uint8 = cast[ptr uint8](gameName.cstring)
   var msgamekey: ptr uint8 = cast[ptr uint8](gameKey.cstring)
@@ -317,14 +322,17 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
       prevLen = curLen
     except TimeoutError:
       break
+
+  client.close()
+
   var len: cint = curLen.cint
 
   var ipport: ptr ipport_t
   var enctypex_data: enctypex_data_t
-  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr cuchar](msgamekey), validate, buffer, len.addr, enctypex_data.addr))
+  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr cuchar](msgamekey), validate, buffer, len.addr, enctypex_data.addr)) # TODO: Maybe #72 (maybe wrong buffer len?)
 
   var enctypextmp: ptr uint8
-  enctypextmp = enctypextmp.resize(((len / 5) * 6).int);
+  enctypextmp = enctypextmp.resize(((len / 5) * 6).int) # TODO: Issue #69
   len = enctypex_decoder_convert_to_ipport(buffer + enctypex_data.start, len - enctypex_data.start, cast[ptr cuchar](enctypextmp), nil, 0, 0)
 
   ipport = cast[ptr ipport_t](enctypextmp)
