@@ -317,6 +317,9 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
       prevLen = curLen
     except TimeoutError:
       break
+
+  client.close()
+
   var len: cint = curLen.cint
 
   var ipport: ptr ipport_t

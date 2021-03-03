@@ -1764,7 +1764,10 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
     # TODO: Querying openspy and novgames master server takes ~500ms
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
     # TODO2: Query master servers async like in `queryServers` proc
-    gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
+    try:
+      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
+    except OSError:
+      break # If master server doesn't respond or connection is refused
     gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
         return false
