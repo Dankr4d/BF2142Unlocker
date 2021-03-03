@@ -324,7 +324,7 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
 
   var ipport: ptr ipport_t
   var enctypex_data: enctypex_data_t
-  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr cuchar](msgamekey), validate, buffer, len.addr, enctypex_data.addr))
+  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr cuchar](msgamekey), validate, buffer, len.addr, enctypex_data.addr)) # TODO: Maybe #72 (maybe wrong buffer len?)
 
   var enctypextmp: ptr uint8
   enctypextmp = enctypextmp.resize(((len / 5) * 6).int) # TODO: Issue #69
