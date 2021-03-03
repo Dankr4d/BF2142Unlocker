@@ -3392,19 +3392,7 @@ proc main =
 
 when defined(release):
   proc unhandledException(msg: string) =
-    var dialog: Dialog = newDialog()
-    dialog.title = "UNHANDLED EXCEPTION"
-    var lblText: Label = newLabel(msg)
-    dialog.contentArea.add(lblText)
-    var btnOk: Button = newButton("Ok")
-    dialog.contentArea.add(btnOk)
-    proc onBtnOkClicked(self: Button, dialog: Dialog) =
-      dialog.close()
-    btnOk.connect("clicked", onBtnOkClicked, dialog)
-    dialog.contentArea.showAll()
     system.writeFile("log" / "crash_" & format(now(), "yyyy-MM-dd'T'hh-mm-ss-ms") & ".log", msg)
-    discard dialog.run()
-    dialog.destroy()
     if termHostGameServerPid > 0:
       killProcess(termHostGameServerPid)
     if termHostLoginServerPid > 0:

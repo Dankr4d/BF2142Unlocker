@@ -168,16 +168,49 @@ proc serialize*(protocol00C: Protocol00C): string =
 
 proc sendProtocol00B*(address: IpAddress, port: Port, protocol00B: Protocol00B, timeout: int = -1): Future[seq[Response00B]] {.async.} =
   var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+  var resp: tuple[data: string, address: string, port: Port]
+  var response00B: Response00B
+
   try:
     await socket.sendTo($address, port, protocol00B.serialize())
+
+    while true: ## todo read up to a max limit to not stall the client when server fucks up
+      var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
+      if timeout > -1:
+        if await withTimeout(respFuture, timeout):
+          resp = await respFuture
+        else:
+          # echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
+          break
+      else:
+        resp = await respFuture
+
+      response00B = Response00B()
+      response00B.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
+      # response00B.timeStamp = cast[TimeStamp](resp[1..5])
+      response00B.splitNum = resp.data[13].byte
+      let lastAndMessageNum: byte = resp.data[14].byte
+      let isLastMessage: bool = lastAndMessageNum.shr(7).bool
+      response00B.messageNumber = lastAndMessageNum.shl(1).shr(1)
+      response00B.data = resp.data[15..^1]
+      result.add(response00B)
+      if isLastMessage:
+        break
+    socket.close()
   except OSError:
     socket.close()
     return
 
-  var response00B: Response00B
-  while true: ## todo read up to a max limit to not stall the client when server fucks up
+
+proc sendProtocol00C*(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = -1): Future[Option[Response00C]] {.async.} =
+  var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+  var resp: tuple[data: string, address: string, port: Port]
+
+  try:
+    await socket.sendTo($address, port, protocol00C.serialize())
+
     var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
-    var resp: tuple[data: string, address: string, port: Port]
+
     if timeout > -1:
       if await withTimeout(respFuture, timeout):
         resp = await respFuture
@@ -186,40 +219,10 @@ proc sendProtocol00B*(address: IpAddress, port: Port, protocol00B: Protocol00B, 
         break
     else:
       resp = await respFuture
-
-    response00B = Response00B()
-    response00B.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
-    # response00B.timeStamp = cast[TimeStamp](resp[1..5])
-    response00B.splitNum = resp.data[13].byte
-    let lastAndMessageNum: byte = resp.data[14].byte
-    let isLastMessage: bool = lastAndMessageNum.shr(7).bool
-    response00B.messageNumber = lastAndMessageNum.shl(1).shr(1)
-    response00B.data = resp.data[15..^1]
-    result.add(response00B)
-    if isLastMessage:
-      break
-  socket.close()
-
-proc sendProtocol00C*(address: IpAddress, port: Port, protocol00C: Protocol00C, timeout: int = -1): Future[Option[Response00C]] {.async.} =
-  var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-  try:
-    await socket.sendTo($address, port, protocol00C.serialize())
+    socket.close()
   except OSError:
     socket.close()
     return none(Response00C) # Server not reachable
-
-  var respFuture: Future[tuple[data: string, address: string, port: Port]] = socket.recvFrom(1400)
-  var resp: tuple[data: string, address: string, port: Port]
-  if timeout > -1:
-    if await withTimeout(respFuture, timeout):
-      resp = await respFuture
-    else:
-      # echo "TIMEOUT QUERYING GAMESPY SERVER (", address, ":", $port, ") ... BREAKING OUT"
-      break
-  else:
-    resp = await respFuture
-
-  socket.close()
 
   var response: Response00C
   response.protocolId = resp.data[0].ProtocolId #parseEnum[ProtocolId](resp[0])
