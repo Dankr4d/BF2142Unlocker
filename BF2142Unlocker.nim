@@ -1579,11 +1579,11 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   if isSome(options.widescreen):
     command.add("+widescreen " & $get(options.widescreen).int & ' ') # INFO: Enables widescreen resolutions in bf2142 ingame graphic settings
   if isSome(options.eaAccountName):
-    command.add("+eaAccountName " & get(options.eaAccountName) & ' ')
+    command.add("+eaAccountName \"" & get(options.eaAccountName) & "\" ")
   if isSome(options.eaAccountPassword):
-    command.add("+eaAccountPassword " & get(options.eaAccountPassword) & ' ')
+    command.add("+soldierName \"" & get(options.soldierName) & "\" ")
   if isSome(options.soldierName):
-    command.add("+soldierName " & get(options.soldierName) & ' ')
+    command.add("+soldierName \"" & get(options.soldierName) & "\" ")
   if isSome(options.joinServer):
     command.add("+joinServer " & $get(options.joinServer) & ' ')
     if isSome(options.port):
