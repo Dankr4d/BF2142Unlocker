@@ -3,7 +3,7 @@
 
 The MIT License (MIT)
 
-Copyright (c)
+Copyright (c) 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -839,7 +839,6 @@ Author: Dankr4d
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="orientation">vertical</property>
-                    <property name="position">300</property>
                     <property name="wide-handle">True</property>
                     <child>
                       <object class="GtkBox">
@@ -855,6 +854,7 @@ Author: Dankr4d
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="shadow-type">in</property>
+                                <property name="overlay-scrolling">False</property>
                                 <child>
                                   <object class="GtkTreeView" id="trvMultiplayerServers">
                                     <property name="visible">True</property>
@@ -1085,7 +1085,7 @@ Author: Dankr4d
                         </child>
                       </object>
                       <packing>
-                        <property name="resize">False</property>
+                        <property name="resize">True</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
@@ -1098,7 +1098,6 @@ Author: Dankr4d
                           <object class="GtkPaned">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="hexpand">True</property>
                             <property name="wide-handle">True</property>
                             <child>
                               <object class="GtkBox">
@@ -1132,6 +1131,7 @@ Author: Dankr4d
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="shadow-type">in</property>
+                                        <property name="overlay-scrolling">False</property>
                                         <child>
                                           <object class="GtkTreeView" id="trvMultiplayerPlayers1">
                                             <property name="visible">True</property>
@@ -1231,7 +1231,7 @@ Author: Dankr4d
                                 </child>
                               </object>
                               <packing>
-                                <property name="resize">False</property>
+                                <property name="resize">True</property>
                                 <property name="shrink">True</property>
                               </packing>
                             </child>
@@ -1267,6 +1267,7 @@ Author: Dankr4d
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="shadow-type">in</property>
+                                        <property name="overlay-scrolling">False</property>
                                         <child>
                                           <object class="GtkTreeView" id="trvMultiplayerPlayers2">
                                             <property name="visible">True</property>
@@ -1366,13 +1367,13 @@ Author: Dankr4d
                                 </child>
                               </object>
                               <packing>
-                                <property name="resize">False</property>
+                                <property name="resize">True</property>
                                 <property name="shrink">True</property>
                               </packing>
                             </child>
                           </object>
                           <packing>
-                            <property name="expand">False</property>
+                            <property name="expand">True</property>
                             <property name="fill">True</property>
                             <property name="position">0</property>
                           </packing>
@@ -1519,6 +1520,7 @@ Author: Dankr4d
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="vexpand">True</property>
+                                <property name="overlay-scrolling">False</property>
                                 <child>
                                   <object class="GtkViewport">
                                     <property name="visible">True</property>
@@ -2061,6 +2063,7 @@ Author: Dankr4d
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="shadow-type">in</property>
+                                    <property name="overlay-scrolling">False</property>
                                     <child>
                                       <object class="GtkTreeView" id="trvHostSelectableMap">
                                         <property name="visible">True</property>
@@ -2169,6 +2172,7 @@ Author: Dankr4d
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="shadow-type">in</property>
+                                    <property name="overlay-scrolling">False</property>
                                     <child>
                                       <object class="GtkTreeView" id="trvHostSelectedMap">
                                         <property name="visible">True</property>

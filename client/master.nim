@@ -264,7 +264,7 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   var client: Socket = newSocket()
 
   try:
-    client.connect(url, port, timeout)
+    client.connect(url, port, 5_000)
   except OSError, TimeoutError:
     client.close()
     return # If master server doesn't respond or connection is refused
