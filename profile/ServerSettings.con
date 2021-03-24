@@ -1,6 +1,6 @@
 GameServerSettings.setServerName "Battlefield 2142"
 GameServerSettings.setPassword ""
-GameServerSettings.setInternet 0
+GameServerSettings.setInternet 1
 GameServerSettings.setMaxPlayers 64
 GameServerSettings.setSpawnTime 15
 GameServerSettings.setTicketRatio 100
@@ -18,13 +18,13 @@ GameServerSettings.setMinPlayersForVoting 2
 GameServerSettings.setVoipEnabled 1
 GameServerSettings.setVoipQuality 5
 GameServerSettings.setVoipServerRemote 0
-GameServerSettings.setVoipServerRemoteIP 
+GameServerSettings.setVoipServerRemoteIP
 GameServerSettings.setVoipServerPort 55125
 GameServerSettings.setVoipBFClientPort 55123
 GameServerSettings.setVoipBFServerPort 55124
-GameServerSettings.setVoipSharedPassword 
+GameServerSettings.setVoipSharedPassword
 GameServerSettings.setAutoRecord 0
 GameServerSettings.setSvPunkBuster 0
 GameServerSettings.setTeamRatio 100
 GameServerSettings.setAutoBalanceTeam 0
-GameServerSettings.setGameMode 
+GameServerSettings.setGameMode

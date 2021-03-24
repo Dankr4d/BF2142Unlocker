@@ -1344,6 +1344,7 @@ proc saveBF2142Profile(username, profile: string) =
   checkBF2142ProfileFiles()
 
   var profileConPath: string = bf2142Profile0001Path / "Profile.con"
+  var serverSettingsConPath: string = bf2142Profile0001Path / "ServerSettings.con"
   var globalConPath: string = bf2142ProfilePath / "Global.con"
   var fileTpl: tuple[opened: bool, file: system.File]
   var line, content: string
@@ -1377,6 +1378,20 @@ proc saveBF2142Profile(username, profile: string) =
       content.add(line & '\n')
   fileTpl.file.close()
   discard writeFile(globalConPath, content)
+
+  # ServerSettings.con (set internet flag to 1)
+  fileTpl = open(serverSettingsConPath, fmRead)
+  if not fileTpl.opened:
+    return
+  while fileTpl.file.readLine(line):
+    if line == "GameServerSettings.setInternet 0":
+      # Required to get bf2 icon, bestbuy weapon and dogtag knife
+      content.add("GameServerSettings.setInternet 1\n")
+    else:
+      content.add(line & '\n')
+  fileTpl.file.close()
+  discard writeFile(serverSettingsConPath, content)
+
 
 proc loadMods(cbx: ComboBox, path: string) =
   var valMod: Value
