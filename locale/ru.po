@@ -31,10 +31,10 @@ msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Подключитесь к логин-серверу, используя введенный IP-адрес."
 
 msgid "QUICK_MODS"
-msgstr "Модификации:"
+msgstr "Мод:"
 
 msgid "QUICK_MODS_TOOLTIP"
-msgstr "Выберете модификацию для запуска игры"
+msgstr "Выберете мод для запуска игры"
 
 msgid "QUICK_PLAYER_NAME"
 msgstr "Имя игрока:"
@@ -117,9 +117,14 @@ msgstr ""
 "Здесь находится список игроков.\n"
 "Вы можете обновить список, кликнув на кнопку \"обновить\", или нажав на клавишу F6."
 
-
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr "Обновить список игроков (F6)."
+
+msgid "MULTIPLAYER_MODS"
+msgstr "Мод:"
+
+msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgstr "Выберете мод для запуска игры"
 
 msgid "LOGIN_STELLA_NAME"
 msgstr "Провайдер:"
@@ -200,10 +205,10 @@ msgid "HOST_SETTINGS"
 msgstr "Настройки"
 
 msgid "HOST_MODS"
-msgstr "Модификации:"
+msgstr "Мод:"
 
 msgid "HOST_MODS_TOOLTIP"
-msgstr "Выбрать модификацию, с которой запустится сервер"
+msgstr "Выбрать мод, с которой запустится сервер"
 
 msgid "HOST_GAME_MODE"
 msgstr "Режим игры:"

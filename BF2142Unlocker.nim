@@ -85,6 +85,8 @@ type
     `mod`: string
     playername: string
     autojoin: bool
+  BF2142UnlockerConfigMultiplayer = object
+    `mod`: string
   BF2142UnlockerConfigHost = object
     `mod`: string
   BF2142UnlockerConfigUnlocks = object
@@ -100,6 +102,7 @@ type
     skipMovies: bool
   BF2142UnlockerConfig = object
     quick: BF2142UnlockerConfigQuick
+    multiplayer: BF2142UnlockerConfigMultiplayer
     host: BF2142UnlockerConfigHost
     unlocks: BF2142UnlockerConfigUnlocks
     settings: BF2142UnlockerConfigSettings
@@ -315,6 +318,7 @@ when defined(release):
 const
   CONFIG_FILE_NAME: string = "config" / "config.ini"
   CONFIG_SECTION_QUICK: string = "Quick"
+  CONFIG_SECTION_MULTIPLAYER: string = "Multiplayer"
   CONFIG_SECTION_HOST: string = "Host"
   CONFIG_SECTION_UNLOCKS: string = "Unlocks"
   CONFIG_SECTION_SETTINGS: string = "Settings"
@@ -322,6 +326,8 @@ const
   CONFIG_KEY_QUICK_AUTO_JOIN: string = "autojoin"
   CONFIG_KEY_QUICK_MOD: string = "mod"
   CONFIG_KEY_QUICK_PLAYER_NAME: string = "playername"
+  # Multiplayer
+  CONFIG_KEY_MULTIPLAYER_MOD: string = "mod"
   # Host
   CONFIG_KEY_HOST_MOD: string = "mod"
   # Unlocks
@@ -440,6 +446,7 @@ var lbtnMultiplayerModMissing: LinkButton
 var dlgMultiplayerMapMissing: Dialog
 var lblMultiplayerMapMissing: Label
 var bboxMultiplayerServers: ButtonBox
+var cbxMultiplayerMod: ComboBox
 ##
 ### Host controls
 var vboxHost: Box
@@ -717,6 +724,9 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
   result.quick.`mod` = config.getSectionValue(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_MOD, "bf2142")
   result.quick.playername = config.getSectionValue(CONFIG_SECTION_QUICK, CONFIG_KEY_QUICK_PLAYER_NAME, "Player")
 
+  # Multiplayer
+  result.multiplayer.`mod` = config.getSectionValue(CONFIG_SECTION_MULTIPLAYER, CONFIG_KEY_MULTIPLAYER_MOD, "bf2142")
+
   # Host
   result.host.`mod` = config.getSectionValue(CONFIG_SECTION_HOST, CONFIG_KEY_HOST_MOD, "bf2142")
 
@@ -741,6 +751,11 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     discard cbxQuickMod.setActiveId("bf2142")
   txtQuickPlayerName.text = config.quick.playername
   cbtnQuickAutoJoin.active = config.quick.autoJoin
+
+  # Multiplayer
+  if not cbxMultiplayerMod.setActiveId(config.multiplayer.`mod`):
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxMultiplayerMod.setActiveId("bf2142")
 
   # Host
   if not cbxHostMods.setActiveId(config.host.`mod`):
@@ -1363,20 +1378,19 @@ proc saveBF2142Profile(username, profile: string) =
   fileTpl.file.close()
   discard writeFile(globalConPath, content)
 
-proc loadJoinMods() =
+proc loadMods(cbx: ComboBox, path: string) =
   var valMod: Value
   discard valMod.init(g_string_get_type())
   var iter: TreeIter
-  let store = listStore(cbxQuickMod.getModel())
+  let store = listStore(cbx.getModel())
   store.clear()
-  if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
-    for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
-      if folder.kind != pcDir:
-        continue
-      valMod.setString(folder.path.toLower())
-      store.append(iter)
-      store.setValue(iter, 0, valMod)
-      store.setValue(iter, 1, valMod)
+  for folder in walkDir(path, true):
+    if folder.kind != pcDir:
+      continue
+    valMod.setString(folder.path.toLower())
+    store.append(iter)
+    store.setValue(iter, 0, valMod)
+    store.setValue(iter, 1, valMod)
 
 proc loadJoinResolutions() =
   var valResolution: Value
@@ -1407,21 +1421,6 @@ proc getSelectedResolution(): tuple[width, height: uint16] =
   store.getValue(iter, 2, valWidth)
   store.getValue(iter, 3, valHeight)
   return (cast[uint16](valWidth.getUint()), cast[uint16](valHeight.getUint()))
-
-proc loadHostMods() =
-  var valMod: Value
-  discard valMod.init(g_string_get_type())
-  var iter: TreeIter
-  let store = listStore(cbxHostMods.getModel())
-  store.clear()
-  if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
-    for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods", true):
-      if folder.kind != pcDir:
-        continue
-      valMod.setString(folder.path)
-      store.append(iter)
-      store.setValue(iter, 0, valMod)
-      store.setValue(iter, 1, valMod)
 
 proc applyHostRunningSensitivity(running: bool) =
   btnHostGameServer.visible = not running
@@ -1986,6 +1985,9 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   channelFeslThread.send(data)
 
 proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerConfig) =
+  config.setSectionKey(CONFIG_SECTION_MULTIPLAYER, CONFIG_KEY_MULTIPLAYER_MOD, cbxMultiplayerMod.activeId)
+  config.writeConfig(CONFIG_FILE_NAME)
+
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig))
   backupOpenSpyIfExists()
   when defined(windows): # TODO: Reading/setting cd key on linux
@@ -2903,10 +2905,14 @@ proc setBF2142Path(path: string) =
   bf2142UnlockerConfig.settings.bf2142ClientPath = path
   if txtSettingsBF2142ClientPath.text != path:
     txtSettingsBF2142ClientPath.text = path
-  loadJoinMods()
+  cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
   if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxQuickMod.setActiveId("bf2142")
+  cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
+  if not cbxMultiplayerMod.setActiveId(bf2142UnlockerConfig.multiplayer.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+    # When mod is removed or renamed set bf2142 as fallback
+    discard cbxMultiplayerMod.setActiveId("bf2142")
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
   when defined(linux):
     let wineStartPos: int = bf2142UnlockerConfig.settings.bf2142ClientPath.find(".wine")
@@ -2946,7 +2952,7 @@ proc setBF2142ServerPath(path: string) =
     txtSettingsBF2142ServerPath.text = path
   vboxHost.visible = true
   ignoreEvents = true
-  loadHostMods()
+  cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
   if not cbxHostMods.setActiveId(bf2142UnlockerConfig.host.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxHostMods.setActiveId("bf2142")
@@ -3181,6 +3187,7 @@ proc onApplicationActivate(application: Application) =
   dlgMultiplayerMapMissing = builder.getDialog("dlgMultiplayerMapMissing")
   lblMultiplayerMapMissing = builder.getLabel("lblMultiplayerMapMissing")
   bboxMultiplayerServers = builder.getButtonBox("bboxMultiplayerServers")
+  cbxMultiplayerMod = builder.getComboBox("cbxMultiplayerMod")
 
   vboxHost = builder.getBox("vboxHost")
   imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
@@ -3293,8 +3300,11 @@ proc onApplicationActivate(application: Application) =
   builder.connectSignals(cast[pointer](nil))
   window.show()
   bf2142UnlockerConfig = getBF2142UnlockerConfig()
-  loadJoinMods()
-  loadHostMods()
+  if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
+    cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
+    cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
+  if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
+    cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
   loadJoinResolutions()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
   lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode

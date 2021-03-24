@@ -120,6 +120,12 @@ msgstr ""
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr "Lädt die Spielerliste neu (F6)."
 
+msgid "MULTIPLAYER_MODS"
+msgstr "Mods:"
+
+msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgstr "Wähle die Modifikation aus mit der das Spiel gestartet werden soll."
+
 msgid "LOGIN_STELLA_NAME"
 msgstr "Stella name:"
 

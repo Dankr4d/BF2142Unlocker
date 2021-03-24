@@ -101,6 +101,11 @@ msgstr ""
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr ""
 
+msgid "MULTIPLAYER_MODS"
+msgstr ""
+msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgstr ""
+
 msgid "LOGIN_STELLA_NAME"
 msgstr ""
 
