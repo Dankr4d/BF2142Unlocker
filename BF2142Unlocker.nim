@@ -130,7 +130,7 @@ else:
 const BF2142_EXE_NAME: string = "BF2142.exe"
 const BF2142_PATCHED_EXE_NAME: string = "BF2142Patched.exe"
 const OPENSPY_DLL_NAME: string = "RendDX9.dll"
-const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation hub and remaster mod
+const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation
 const FILE_BACKUP_SUFFIX: string = ".original"
 
 const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
@@ -1373,8 +1373,6 @@ proc loadJoinMods() =
     for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
       if folder.kind != pcDir:
         continue
-      if folder.path.toLower() == "project_remaster_sp":
-        continue
       valMod.setString(folder.path.toLower())
       store.append(iter)
       store.setValue(iter, 0, valMod)
@@ -1419,8 +1417,6 @@ proc loadHostMods() =
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     for folder in walkDir(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods", true):
       if folder.kind != pcDir:
-        continue
-      if folder.path.toLower() == "project_remaster_sp":
         continue
       valMod.setString(folder.path)
       store.append(iter)
@@ -2613,9 +2609,9 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   if not modDirExists:
     var uri: string
 
-    if currentServer.`mod`.toLower() == "project_remaster_mp":
+    if currentServer.`mod`.startsWith("project_remaster"):
       uri = "https://www.moddb.com/mods/project-remaster"
-    elif currentServer.`mod`.toLower() == "firststrike":
+    elif currentServer.`mod` == "firststrike":
       uri = "https://www.moddb.com/mods/first-strike"
 
     if uri != "":
