@@ -2603,7 +2603,6 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   elif defined(linux):
     # Case sensitive
     for kind, path in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods", true):
-      echo "path: ", path
       if kind != pcDir:
         continue
       if path.toLower() == currentServer.`mod`:
@@ -2644,7 +2643,12 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
       if path.toLower() == "levels":
         levelDir = path
         break
-    mapDirExists = dirExists(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / modDir / levelDir / currentServer.map)
+    for kind, path in walkDir(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / modDir / levelDir, true):
+      if kind != pcDir:
+        continue
+      if path.toLower() == currentServer.map.toLower():
+        mapDirExists = true
+        break
 
   if not mapDirExists:
     lblMultiplayerMapMissing.text = dgettext("gui", "LOGIN_MAP_MISSING_MSG") % [currentServer.map]
