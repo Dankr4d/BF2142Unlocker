@@ -312,6 +312,11 @@ const
   BLANK_BIK: string = staticRead("asset/blank.bik")
   BLANK_BIK_HASH: string = static: getMd5(BLANK_BIK)
 
+const
+  GPM_COOP_FIX_PY: string = staticRead("fix/bf2142/gpm_coop_fix.py")
+  GPM_COOP_FIX_PY_FILENAME: string = "gpm_coop_fix.py"
+  # GPM_COOP_FIX_PY_HASH: string = static: getMd5(GPM_COOP_FIX_PY)
+
 when defined(release):
   const GUI_CSS: string = staticRead("BF2142Unlocker.css")
   const GUI_GLADE: string = staticRead("BF2142Unlocker.glade")
@@ -697,6 +702,28 @@ proc fixMapDesc(path: string): bool =
 ##
 
 ### Helper procs
+proc fixBF2142CoopPyLogic() =
+  let gameModePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "python" / "game" / "gamemodes"
+  if fileExists(gameModePath / GPM_COOP_FIX_PY_FILENAME): # and getMD5(gameModePath / GPM_COOP_FIX_PY_FILENAME) == GPM_COOP_FIX_PY_HASH:
+    # Return if file exists # and md5 hash is the same
+    return
+  var gameStatusChangedIdx: int = -1
+  let gpmCoopRawOpt: Option[TaintedString] = readFile(gameModePath / "gpm_coop.py")
+  if isNone(gpmCoopRawOpt):
+    return
+  var lines: seq[string] = splitLines(get(gpmCoopRawOpt))
+  for idx, line in lines:
+    if line == "def onGameStatusChanged(status):":
+      if lines[idx + 1].strip() == "":
+        gameStatusChangedIdx = idx
+        break
+  if gameStatusChangedIdx == -1:
+    return
+  lines.insert("import gpm_coop_fix", 0)
+  lines.insert("\tgpm_coop_fix.onGameStatusChanged(status)", gameStatusChangedIdx + 2)
+  discard writeFile(gameModePath / "gpm_coop.py", lines.join("\n"))
+  discard writeFile(gameModePath / GPM_COOP_FIX_PY_FILENAME, GPM_COOP_FIX_PY)
+
 proc isAlphaNumeric(str: string): bool =
   for ch in str:
     if not isAlphaNumeric(ch):
@@ -731,7 +758,7 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
   result.host.`mod` = config.getSectionValue(CONFIG_SECTION_HOST, CONFIG_KEY_HOST_MOD, "bf2142")
 
   # Unlocks
-  result.unlocks.unlockSquadGadgets = parseBool(config.getSectionValue(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, "false"))
+  result.unlocks.unlockSquadGadgets = parseBool(config.getSectionValue(CONFIG_SECTION_UNLOCKS, CONFIG_KEY_UNLOCKS_UNLOCK_SQUAD_GADGETS, "true"))
 
   # Settings
   result.settings.bf2142ClientPath = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH)
@@ -2938,6 +2965,7 @@ proc setBF2142Path(path: string) =
         txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
+  fixBF2142CoopPyLogic()
 
 proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
@@ -3318,6 +3346,7 @@ proc onApplicationActivate(application: Application) =
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
     cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
     cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
+    fixBF2142CoopPyLogic()
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
   loadJoinResolutions()
