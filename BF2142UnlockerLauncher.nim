@@ -2,5 +2,8 @@ when isMainModule and defined(windows):
   import os
   import osproc
 
-  setCurrentDir(getCurrentDir() / "bin")
-  discard execCmd("cmd /c " & "BF2142Unlocker.exe")
+  discard startProcess(
+    command = "cmd",
+    args = @["/c", "BF2142Unlocker.exe"],
+    workingDir = getCurrentDir() / "bin"
+  )
