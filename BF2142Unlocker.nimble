@@ -79,19 +79,13 @@ proc compileGui(rc: string) =
   if rc != "":
     rcStr =  "-d:RC=" & rc & " "
   when defined(windows):
-    if buildOS == "linux":
-      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
-    else:
-      exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
+    exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
     exec("nim c " & rcStr & " -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
 
 proc compileServer() =
   when defined(windows):
-    if buildOS == "linux":
-      exec("nim c -d:release --stackTrace:on --lineTrace:on -d:mingw --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
-    else:
-      exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
+    exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
     exec("nim c -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
@@ -107,19 +101,14 @@ proc compileOpenSsl() =
         rmDir("openssl")
       mvDir(OPENSSL_DIR, "openssl")
   withDir(OPENSSL_PATH):
-    if buildOS == "linux":
-      when defined(linux):
-        exec("./config enable-ssl3 shared")
-        exec("make depend")
-        exec(fmt"make -j{CPU_CORES}")
-      elif defined(windows):
-        exec("./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared")
-        exec("make depend")
-        exec(fmt"make -j{CPU_CORES}")
-    else:
-      exec("perl Configure mingw64 enable-ssl3 shared")
-      exec("make depend")
-      exec(fmt"make -j{CPU_CORES}")
+  when defined(windows):
+    exec("perl Configure mingw64 enable-ssl3 shared")
+    exec("make depend")
+    exec(fmt"make -j{CPU_CORES}")
+  else:
+    exec("./config enable-ssl3 shared")
+    exec("make depend")
+    exec(fmt"make -j{CPU_CORES}")
 
 when defined(linux):
   proc compileNcurses() =

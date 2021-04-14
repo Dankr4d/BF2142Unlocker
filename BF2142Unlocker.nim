@@ -13,6 +13,7 @@ elif defined(windows):
   import winim
   import module/windows/docpath # Required to read out My Documents path
   import module/windows/sendmsg # Required to send messages bf2142 game server
+  import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import times # Requierd for rudimentary level backup with epochtime suffix
@@ -21,7 +22,6 @@ import module/checkserver # Required to check if servers are reachable
 import "macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
-import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
 import module/checkpermission # Required to check write permission before patching client
 import math # Required for runtime configuration
 import gamesrv/parser # Required to parse data out of bf2142 game server
