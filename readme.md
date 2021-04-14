@@ -53,12 +53,14 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 
 ---
 
-## Compile (Windows 64 bit)
-- Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 64bit" at the end of installation wizard]
-- Start MSYS2 MINGW64
+## Compile (Windows)
+- Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 32/64bit" at the end of installation wizard]
+- Start MSYS2 MINGW64 (64 bit) or MSYS2 MINGW32 (32 bit)
 - `pacman -Syu # Upgrade base`
 - `pacman -Syu # Upgrade all packages`
-- `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject make tar git`
+- `pacman -S make tar git`
+- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject`
+- 32 bit: `pacman -S mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject`
 - `cd /c/Users/$USER && mkdir projects && cd projects`
 - `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
@@ -68,12 +70,12 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
 - `nimble install -d # Install dependencies`
-- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
+- `nim build BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Linux)
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
 - `nimble install -d # Install dependencies`
-- `nimble release # Build BF2142Unlocker and bundle it into "build" folder`
+- `nim build BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 
 ## Compile (Docker) [Currently not maintained, maybe broken]
 - `docker-compose up`
