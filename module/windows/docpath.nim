@@ -1,13 +1,11 @@
-import winregistry
+import registry
 
 const
-  REG_PATH = """HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\"""
-  MY_DOCUMENTS_REG_KEY = "Personal"
+  REG_PATH_MY_DOCUMENTS = """Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\"""
+  REG_KEY_MY_DOCUMENTS = "Personal"
 
 proc getDocumentsPath*(): string =
-  var rhndl: RegHandle = open(REG_PATH, samRead)
-  result = rhndl.readString(MY_DOCUMENTS_REG_KEY)
-  rhndl.close()
+  return getUnicodeValue(REG_PATH_MY_DOCUMENTS, REG_KEY_MY_DOCUMENTS, HKEY_CURRENT_USER)
 
 when isMainModule:
   echo getDocumentsPath()

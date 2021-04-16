@@ -22,7 +22,7 @@ proc run*(ipAddress: IpAddress, unlockAllSquadGadgets: bool = false) =
   threadGpcmServer.createThread(gpcm.run, ipAddress)
   threadUnlockServer.createThread(stats.run, (ipAddress, unlockAllSquadGadgets))
   joinThreads(threadFeslServer, threadGpcmServer)
-  joinThread(threadUnlockServer) # TODO: Why is this not in joinThreads above?
+  joinThread(threadUnlockServer)
 
 when isMainModule:
   import os # Required for commandLineParams

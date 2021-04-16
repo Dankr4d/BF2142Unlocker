@@ -1,29 +1,29 @@
-import winregistry
+import registry
+
+const
+  REG_PATH_CD_KEY: string = """SOFTWARE\Wow6432Node\Electronic Arts\EA Games\Battlefield 2142\ergc"""
+  REG_KEY_CD_KEY: string = ""
+
+const
+  REG_PATH_INSTALL_DIR: string = """SOFTWARE\Wow6432Node\Electronic Arts\EA Games\Battlefield 2142"""
+  REG_KEY_INSTALL_DIR: string = "InstallDir"
 
 
 proc setCdKeyIfNotExists*() =
-  var rhndl: RegHandle = createOrOpen(
-    """HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Electronic Arts\EA Games\Battlefield 2142\ergc""",
-    samRead or samWrite
-  )
   try:
-    discard rhndl.readString("")
-  except RegistryError:
-    rhndl.writeString("", "x9392")
-  rhndl.close()
+    discard getUnicodeValue(REG_PATH_CD_KEY, REG_KEY_CD_KEY, HKEY_LOCAL_MACHINE)
+  except OSError:
+    # Set empty cd key if registry key doesn't exists
+    setUnicodeValue(REG_PATH_CD_KEY, REG_KEY_CD_KEY, "x9392", HKEY_LOCAL_MACHINE)
 
 proc getBF2142ClientPath*(): string =
-  var rhndl: RegHandle = open(
-    """HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Electronic Arts\EA Games\Battlefield 2142""",
-    samRead
-  )
   try:
-    result = rhndl.readString("InstallDir")
-  except RegistryError:
-    discard
-  rhndl.close()
+    return getUnicodeValue(REG_PATH_INSTALL_DIR, REG_KEY_INSTALL_DIR, HKEY_LOCAL_MACHINE)
+  except OSError:
+    # Cannot read out reg key
+    return ""
 
 
 when isMainModule:
-  # setCdKeyIfNotExists()
-  echo getInstallDir()
+  echo getBF2142ClientPath()
+  setCdKeyIfNotExists()

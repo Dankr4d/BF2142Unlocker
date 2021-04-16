@@ -93,4 +93,6 @@ proc run*(ipAddress: IpAddress) {.thread.} =
     # thread.joinThread()
 
 when isMainModule:
-  run("0.0.0.0".parseIpAddress()) # TODO
+  var thread: Thread[IpAddress]
+  thread.createThread(run, parseIpAddress("0.0.0.0"))
+  joinThread(thread)

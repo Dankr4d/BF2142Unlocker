@@ -8,10 +8,9 @@ license       = "MIT"
 ### Dependencies
 requires "nim >= 1.2.6"
 requires "gintro >= 0.8.3"
-requires "winim >= 3.4.0"
 requires "regex >= 0.18.0" # Using this regex module because it doesn't depend to a shared library
 when defined(windows):
-  requires "winregistry >= 0.2.1"
+  requires "winim >= 3.4.0"
 when defined(linux):
   requires "psutil >= 0.6.0"
 ##

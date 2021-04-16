@@ -12,7 +12,8 @@ when defined(windows):
 else:
   discard # TODO
 
-const COMPILE_PARAMS: string = "-d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s" & (if CPU_ARCH == 32: " --cpu:i386 -t:-m32 -l:-m32" else: "")
+const COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s" &
+  (if CPU_ARCH == 32: " --cpu:i386 --passC:-m32 --passL:-m32" else: "") # 32 Bit
 
 template filename: string = instantiationInfo().filename
 import os
@@ -23,7 +24,7 @@ const
   LANGUAGES: seq[string] = @["en", "de", "ru"]
 
 const # OpenSSL
-  OPENSSL_VERSION: string = "1.0.2r"
+  OPENSSL_VERSION: string = "1.0.2u"
   OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
   OPENSSL_PATH: string = "thirdparty" / "openssl"
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
@@ -77,24 +78,33 @@ proc compileGui(rc: string) =
 
 proc compileServer() =
   when defined(windows):
-    exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
+    # TODO: https://github.com/nim-lang/Nim/issues/16268
+    #       Crashes without any exception in net module, in loadCertificates, while calling SSL_CTX_use_certificate_chain_file
+    if CPU_ARCH == 64:
+      exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
+    else:
+      exec("nim c -f --opt:speed --passL:-s --cpu:i386 --passC:-m32 --passL:-m32 -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
     exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
 proc compileOpenSsl() =
   mkDir("thirdparty")
   withDir("thirdparty"):
-    exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
-    when defined(linux):
-      exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz --one-top-level=openssl --strip=1")
-    elif defined(windows):
+    if not fileExists(fmt"{OPENSSL_DIR}.tar.gz"):
+      exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
+    if dirExists("openssl"):
+      rmDir("openssl")
+    when defined(windows):
       exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz")
-      if dirExists("openssl"):
-        rmDir("openssl")
       mvDir(OPENSSL_DIR, "openssl")
+    else:
+      exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz --one-top-level=openssl --strip=1")
   withDir(OPENSSL_PATH):
     when defined(windows):
-      exec("perl Configure mingw64 enable-ssl3 shared")
+      if CPU_ARCH == 64:
+        exec("perl Configure mingw64 enable-ssl3 shared")
+      else:
+        exec("perl Configure mingw enable-ssl3 shared -m32")
       exec("make depend")
       exec(fmt"make -j{CPU_CORES}")
     else:
