@@ -36,8 +36,7 @@ const
 when defined(linux):
   const # Ncurses
     NCURSES_VERSION: string = "5.9"
-    NCURSES_DIR: string = fmt"ncurses-{NCURSES_VERSION}"
-    NCURSES_PATH: string = "thirdparty" / "ncurses"
+    NCURSES_ARCHIVE_BASENAME = fmt"ncurses-{NCURSES_VERSION}"
     NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
 
 when defined(windows):
@@ -59,6 +58,11 @@ var BUILD_DIR: string
 # OpenSSL
 var OPENSSL_DIR: string
 var OPENSSL_PATH: string
+
+# Ncurses
+when defined(linux):
+  var NCURSES_DIR: string
+  var NCURSES_PATH: string
 ##
 
 ### Procs
@@ -110,7 +114,7 @@ proc compileOpenSsl() =
     if not fileExists(fmt"{OPENSSL_ARCHIVE_BASENAME}.tar.gz"):
       exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_ARCHIVE_BASENAME}.tar.gz")
     if dirExists(OPENSSL_DIR):
-      rmDir(OPENSSL_DIR)
+      rmDir(OPENSSL_DIR) # TODO: make clean?
     when defined(windows):
       exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz")
       mvDir(OPENSSL_ARCHIVE_BASENAME, OPENSSL_DIR)
@@ -119,40 +123,42 @@ proc compileOpenSsl() =
   withDir(OPENSSL_PATH):
     when defined(windows):
       if CPU_ARCH == 64:
-        exec("perl Configure mingw64 enable-ssl3 shared")
+        exec("perl Configure mingw64 enable-ssl3 shared -m64")
       else:
         exec("perl Configure mingw enable-ssl3 shared -m32")
-      exec("make depend")
-      exec(fmt"make -j{CPU_CORES}")
     else:
-      exec("./config enable-ssl3 shared")
-      exec("make depend")
-      exec(fmt"make -j{CPU_CORES}")
+      exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH}")
+    exec("make depend")
+    exec(fmt"make -j{CPU_CORES}")
 
 when defined(linux):
   proc compileNcurses() =
     mkDir("thirdparty")
     withDir("thirdparty"):
-      exec(fmt"wget {NCURSES_URL} -O {NCURSES_DIR}.tar.gz")
-      mkDir("ncurses")
-      exec(fmt"tar xvzf {NCURSES_DIR}.tar.gz --strip=1 -C ncurses")
+      if not fileExists(fmt"{NCURSES_ARCHIVE_BASENAME}.tar.gz"):
+        exec(fmt"wget {NCURSES_URL} -O {NCURSES_ARCHIVE_BASENAME}.tar.gz")
+      if dirExists(NCURSES_DIR):
+        rmDir(NCURSES_DIR) # TODO: make clean?
+      exec(fmt"tar xvzf {NCURSES_ARCHIVE_BASENAME}.tar.gz --one-top-level={NCURSES_DIR} --strip=1")
     # Applying patch (fixes compilation with newer gcc)
     withDir(NCURSES_PATH):
       exec(fmt"patch ncurses/base/MKlib_gen.sh < ../patch/ncurses-5.9-gcc-5.patch")
-      # --without-cxx-binding is required or build fails
-      exec("./configure --with-shared --without-debug --without-normal --without-cxx-binding")
+      if CPU_ARCH == 64:
+        exec("./configure x86_64-pc-linux-gnu --with-shared --without-debug --without-normal --without-cxx-binding --without-gpm CFLAGS=-m64 CXXFLAGS=-m64 LDFLAGS=-m64")
+      else:
+        exec("./configure i686-pc-linux-gnu --with-shared --without-debug --without-normal --without-cxx-binding --without-gpm CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32")
       exec(fmt"make -j{CPU_CORES}")
 
 proc compileAll(rc: string) =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
+  when defined(linux):
+    if not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
+      compileNcurses()
   compileGui(rc) # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
   when defined(windows):
     compileLauncher()
-  else:
-    if not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
-      compileNcurses()
   createTranslationMo()
 
 when defined(windows):
@@ -239,8 +245,14 @@ proc prepare() =
     BUILD_LIB_DIR = BUILD_DIR / "lib"
     BUILD_SHARE_DIR = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR = BUILD_SHARE_DIR / "icons" / "Adwaita"
-  if CPU_ARCH == 32:
-    COMPILE_PARAMS &= " --cpu:i386 --passC:-m32 --passL:-m32"
+  else:
+    NCURSES_DIR = fmt"{NCURSES_ARCHIVE_BASENAME}_{CPU_ARCH}"
+    NCURSES_PATH = "thirdparty" / NCURSES_DIR
+  if CPU_ARCH == 64:
+    COMPILE_PARAMS &= " --cpu:amd64"
+  else:
+    COMPILE_PARAMS &= " --cpu:i386"
+  COMPILE_PARAMS &= fmt" --passC:-m{CPU_ARCH} --passL:-m{CPU_ARCH}"
 
 proc compile() =
   var rc: string
