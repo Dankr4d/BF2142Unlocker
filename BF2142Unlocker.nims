@@ -7,16 +7,6 @@ from strutils import strip, toLower, find
 ### Consts
 const CPU_CORES: string = gorgeEx("nproc").output # TODO: staticExec instead of gorgeEx
 
-when defined(windows):
-  const CPU_ARCH: int = when staticExec("gcc -dumpmachine").strip() == "x86_64-w64-mingw32": 64 else: 32
-else:
-  discard # TODO
-
-# TODO: Rename: 32 -> i868, 64 -> amd64? ... If yes, fix BUILD_DIR const
-# TODO: Rename CPU_ARCh -> COMPILER_ARCH?
-const COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s" &
-  (if CPU_ARCH == 32: " --cpu:i386 --passC:-m32 --passL:-m32" else: "") # 32 Bit
-
 template filename: string = instantiationInfo().filename
 import os
 const FILE_NAME: string = splitFile(filename()).name
@@ -35,15 +25,12 @@ const VERSION: string = static:
   # else:
   #   ver
 
-const
-  BUILD_DIR: string = "build" / fmt"BF2142Unlocker_v{VERSION}_" & (when defined(windows): "win" else: "linux") & fmt"_{CPU_ARCH}bit"
-  LANGUAGES: seq[string] = @["en", "de", "ru"]
+const LANGUAGES: seq[string] = @["en", "de", "ru"]
 
-const # OpenSSL
+# OpenSSL
+const
   OPENSSL_VERSION: string = "1.0.2u"
   OPENSSL_ARCHIVE_BASENAME: string = fmt"openssl-{OPENSSL_VERSION}"
-  OPENSSL_DIR: string = fmt"{OPENSSL_ARCHIVE_BASENAME}_{CPU_ARCH}"
-  OPENSSL_PATH: string = "thirdparty" / OPENSSL_DIR
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
 
 when defined(linux):
@@ -59,6 +46,19 @@ when defined(windows):
     BUILD_LIB_DIR: string = BUILD_DIR / "lib"
     BUILD_SHARE_DIR: string = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
+##
+
+### VARS
+# TODO: Rename: 32 -> i868, 64 -> amd64? ... If yes, fix BUILD_DIR const
+# TODO: Rename CPU_ARCH -> COMPILER_ARCH?
+var CPU_ARCH: int
+var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s"
+
+var BUILD_DIR: string
+
+# OpenSSL
+var OPENSSL_DIR: string
+var OPENSSL_PATH: string
 ##
 
 ### Procs
@@ -115,7 +115,7 @@ proc compileOpenSsl() =
       exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz")
       mvDir(OPENSSL_ARCHIVE_BASENAME, OPENSSL_DIR)
     else:
-      exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz --one-top-level=openssl --strip=1")
+      exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz --one-top-level={OPENSSL_DIR} --strip=1")
   withDir(OPENSSL_PATH):
     when defined(windows):
       if CPU_ARCH == 64:
@@ -229,10 +229,20 @@ proc copyAll() =
     copyOpenSSL()
   copyServersConfig()
   copyTranslation()
-##
 
-### Tasks
-task build, "Compile and bundle (release).":
+proc prepare() =
+  OPENSSL_DIR = fmt"{OPENSSL_ARCHIVE_BASENAME}_{CPU_ARCH}"
+  OPENSSL_PATH = "thirdparty" / OPENSSL_DIR
+  BUILD_DIR = "build" / fmt"BF2142Unlocker_v{VERSION}_" & (when defined(windows): "win" else: "linux") & fmt"_{CPU_ARCH}bit"
+  when defined(windows):
+    BUILD_BIN_DIR = BUILD_DIR / "bin"
+    BUILD_LIB_DIR = BUILD_DIR / "lib"
+    BUILD_SHARE_DIR = BUILD_DIR / "share"
+    BUILD_SHARE_THEME_DIR = BUILD_SHARE_DIR / "icons" / "Adwaita"
+  if CPU_ARCH == 32:
+    COMPILE_PARAMS &= " --cpu:i386 --passC:-m32 --passL:-m32"
+
+proc compile() =
   var rc: string
   if paramStr(paramCount()).toLower() != FILE_NAME.toLower():
     rc = paramStr(paramCount())
@@ -241,6 +251,18 @@ task build, "Compile and bundle (release).":
   mkDir(BUILD_DIR)
   compileAll(rc)
   copyAll()
+##
+
+### Tasks
+task build64, "Compile and bundle 64 bit release.":
+  CPU_ARCH = 64
+  prepare()
+  compile()
+
+task build32, "Compile and bundle 32 bit release.":
+  CPU_ARCH = 32
+  prepare()
+  compile()
 
 task translatePo, "Update po files from pot file.":
   mode = Verbose
