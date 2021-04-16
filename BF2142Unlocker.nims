@@ -1,7 +1,7 @@
 ### imports
 from os import `/`
 from strformat import fmt
-from strutils import strip, toLower
+from strutils import strip, toLower, find
 ##
 
 ### Consts
@@ -12,6 +12,8 @@ when defined(windows):
 else:
   discard # TODO
 
+# TODO: Rename: 32 -> i868, 64 -> amd64? ... If yes, fix BUILD_DIR const
+# TODO: Rename CPU_ARCh -> COMPILER_ARCH?
 const COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s" &
   (if CPU_ARCH == 32: " --cpu:i386 --passC:-m32 --passL:-m32" else: "") # 32 Bit
 
@@ -19,14 +21,29 @@ template filename: string = instantiationInfo().filename
 import os
 const FILE_NAME: string = splitFile(filename()).name
 
+# TODO: Redundant (see BF2142Unlocker.nim ... pass this via symbol?)
+const VERSION: string = static:
+  let raw: string = staticRead("BF2142Unlocker.nimble")
+  let posVersionStart: int = raw.find("version")
+  let posQuoteStart: int = raw.find('"', posVersionStart)
+  let posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
+  raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
+  # TODO: RC
+  # let ver: string = raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
+  # if RC != 0:
+  #   ver & " (RC: " & $RC & ")"
+  # else:
+  #   ver
+
 const
-  BUILD_DIR: string = "build"
+  BUILD_DIR: string = "build" / fmt"BF2142Unlocker_v{VERSION}_" & (when defined(windows): "win" else: "linux") & fmt"_{CPU_ARCH}bit"
   LANGUAGES: seq[string] = @["en", "de", "ru"]
 
 const # OpenSSL
   OPENSSL_VERSION: string = "1.0.2u"
-  OPENSSL_DIR: string = fmt"openssl-{OPENSSL_VERSION}"
-  OPENSSL_PATH: string = "thirdparty" / "openssl"
+  OPENSSL_ARCHIVE_BASENAME: string = fmt"openssl-{OPENSSL_VERSION}"
+  OPENSSL_DIR: string = fmt"{OPENSSL_ARCHIVE_BASENAME}_{CPU_ARCH}"
+  OPENSSL_PATH: string = "thirdparty" / OPENSSL_DIR
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
 
 when defined(linux):
@@ -83,22 +100,22 @@ proc compileServer() =
     if CPU_ARCH == 64:
       exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
     else:
-      exec("nim c -f --opt:speed --passL:-s --cpu:i386 --passC:-m32 --passL:-m32 -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
+      exec("nim c -f --passL:-s --cpu:i386 --passC:-m32 --passL:-m32 -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
     exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
 proc compileOpenSsl() =
   mkDir("thirdparty")
   withDir("thirdparty"):
-    if not fileExists(fmt"{OPENSSL_DIR}.tar.gz"):
-      exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_DIR}.tar.gz")
-    if dirExists("openssl"):
-      rmDir("openssl")
+    if not fileExists(fmt"{OPENSSL_ARCHIVE_BASENAME}.tar.gz"):
+      exec(fmt"wget {OPENSSL_URL} -O {OPENSSL_ARCHIVE_BASENAME}.tar.gz")
+    if dirExists(OPENSSL_DIR):
+      rmDir(OPENSSL_DIR)
     when defined(windows):
-      exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz")
-      mvDir(OPENSSL_DIR, "openssl")
+      exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz")
+      mvDir(OPENSSL_ARCHIVE_BASENAME, OPENSSL_DIR)
     else:
-      exec(fmt"tar xvzf {OPENSSL_DIR}.tar.gz --one-top-level=openssl --strip=1")
+      exec(fmt"tar xvzf {OPENSSL_ARCHIVE_BASENAME}.tar.gz --one-top-level=openssl --strip=1")
   withDir(OPENSSL_PATH):
     when defined(windows):
       if CPU_ARCH == 64:
@@ -190,24 +207,24 @@ else:
 proc copyServersConfig() =
   when defined(windows):
     mkDir(BUILD_BIN_DIR / "config")
-    cpFile("config/server.ini", BUILD_BIN_DIR / "config/server.ini")
+    cpFile("config" / "server.ini", BUILD_BIN_DIR / "config" / "server.ini")
   else:
     mkDir(BUILD_DIR / "config")
-    cpFile("config/server.ini", BUILD_DIR / "config/server.ini")
+    cpFile("config" / "server.ini", BUILD_DIR / "config" / "server.ini")
 
 proc copyAll() =
   when defined(windows):
     mkDir(BUILD_BIN_DIR / "asset")
     mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
-    cpFile("asset/nopreview.png", BUILD_BIN_DIR / "asset/nopreview.png")
+    cpFile("asset" / "nopreview.png", BUILD_BIN_DIR / "asset" / "nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
     mkDir(BUILD_DIR / "asset")
     mkDir(BUILD_DIR / "log")
     cpDir("cert", BUILD_DIR / "cert")
-    cpFile("asset/nopreview.png", BUILD_DIR / "asset/nopreview.png")
+    cpFile("asset" / "nopreview.png", BUILD_DIR / "asset" / "nopreview.png")
     copyNcurses()
     copyOpenSSL()
   copyServersConfig()

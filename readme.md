@@ -77,6 +77,8 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `nimble install -d # Install dependencies`
 - `nim build BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 
+## TODO: UPDATE AND COMPILE (git pull)
+
 ## Compile (Docker) [Currently not maintained, maybe broken]
 - `docker-compose up`
 - `sh copydockerbuild.sh # Copies the compiled files from the docker container into the local build folder`
