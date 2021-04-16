@@ -53,7 +53,8 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 
 ---
 
-## Compile (Windows)
+## Compile
+### Prepare (Windows)
 - Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 32/64bit" at the end of installation wizard]
 - Start MSYS2 MINGW64 (64 bit) or MSYS2 MINGW32 (32 bit)
 - `pacman -Syu # Upgrade base`
@@ -61,7 +62,7 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `pacman -S make tar git`
 - 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject`
 - 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject`
-- `cd /c/Users/$USER && mkdir projects && cd projects`
+- `mkdir -p /c/Users/$USER/projects && cd /c/Users/$USER/projects`
 - `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
 - `./build_all.bat # Build nim and all tools (like nimble)`
@@ -70,14 +71,40 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
 - `nimble install -d # Install dependencies`
-- `nim build BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
-
-## Compile (Linux)
+### Prepare (Linux)
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
+- `mkdir -p /home/$USER/projects && cd /home/$USER/projects`
+- `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
+- `cd Nim`
+- `sh build_all.sh # Build nim and all tools (like nimble)`
+- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
+- `cd ..`
+- `git clone https://github.com/Dankr4d/BF2142Unlocker`
+- `cd BF2142Unlocker`
 - `nimble install -d # Install dependencies`
-- `nim build BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
+### Compile
+- 64 bit: `nim build64 BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
+- 32 bit: `nim build32 BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 
-## TODO: UPDATE AND COMPILE (git pull)
+### Update (Windows)
+- `pacman -Syu # Optional, only required if library names changed`
+- `cd /c/Users/$USER/projects/Nim`
+- `git pull`
+- If there are any updates: `./build_all.bat`
+- `cd /c/Users/$USER/projects/BF2142Unlocker`
+- `git pull`
+- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
+- `nimble install -d # Install dependencies`
+- Continue with [Compile](#Compile-1)
+### Update (Linux)
+- `cd /home/$USER/projects/Nim`
+- `git pull`
+- If there are any updates: `sh build_all.sh`
+- `cd /home/$USER/projects/BF2142Unlocker`
+- `git pull`
+- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
+- `nimble install -d # Install dependencies`
+- Continue with [Compile](#Compile-1)
 
 ## Compile (Docker) [Currently not maintained, maybe broken]
 - `docker-compose up`
