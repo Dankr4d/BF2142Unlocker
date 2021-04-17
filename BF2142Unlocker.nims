@@ -238,7 +238,7 @@ proc prepare() =
     BUILD_SHARE_THEME_DIR = BUILD_SHARE_DIR / "icons" / "Adwaita"
 
     # GTK
-    var GTK_LIBS: seq[string] = @[
+    GTK_LIBS = @[
       "gdbus.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
       "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libssp-0.dll",
       "libffi-7.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll",
