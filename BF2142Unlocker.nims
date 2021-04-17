@@ -38,13 +38,6 @@ when defined(linux):
     NCURSES_VERSION: string = "5.9"
     NCURSES_ARCHIVE_BASENAME = fmt"ncurses-{NCURSES_VERSION}"
     NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
-
-when defined(windows):
-  const
-    BUILD_BIN_DIR: string = BUILD_DIR / "bin"
-    BUILD_LIB_DIR: string = BUILD_DIR / "lib"
-    BUILD_SHARE_DIR: string = BUILD_DIR / "share"
-    BUILD_SHARE_THEME_DIR: string = BUILD_SHARE_DIR / "icons" / "Adwaita"
 ##
 
 ### VARS
@@ -54,6 +47,14 @@ var CPU_ARCH: int
 var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s"
 
 var BUILD_DIR: string
+when defined(windows):
+  var BUILD_BIN_DIR: string
+  var BUILD_LIB_DIR: string
+  var BUILD_SHARE_DIR: string
+  var BUILD_SHARE_THEME_DIR: string
+
+  # GTK
+  var GTK_LIBS: seq[string]
 
 # OpenSSL
 var OPENSSL_DIR: string
@@ -76,13 +77,18 @@ proc createTranslationMo() =
     exec(fmt"msgfmt -o locale/{lang}/LC_MESSAGES/gui.mo locale/{lang}.po")
 
 proc copyTranslation() =
-  when defined(windows):
-    let path: string = BUILD_BIN_DIR
+  var path: string
+  if defined(windows):
+    path = BUILD_BIN_DIR
   else:
-    let path: string = BUILD_DIR
+    path = BUILD_DIR
   for lang in LANGUAGES:
     mkDir(path / "locale" / lang / "LC_MESSAGES")
-    cpFile("locale" / lang / "LC_MESSAGES" / "gui.mo", path / "locale" / lang / "LC_MESSAGES" / "gui.mo")
+    # Workaround: Storing in vars is required, otherwise it will crash with a sigsegv when calling cpFile.. Wtf?!?
+    var src: string = "locale" / lang / "LC_MESSAGES" / "gui.mo"
+    var dst: string = path / "locale" / lang / "LC_MESSAGES" / "gui.mo"
+    cpFile(src, dst)
+
 
 when defined(windows):
   proc compileLauncher() =
@@ -162,43 +168,26 @@ proc compileAll(rc: string) =
   createTranslationMo()
 
 when defined(windows):
-  var GTK_LIBS: seq[string] = @[
-    "gdbus.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
-    "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libssp-0.dll",
-    "libffi-7.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll",
-    "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
-    "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
-    "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",
-    "libpangowin32-1.0-0.dll", "libpcre-1.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll",
-    "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll", "libbrotlidec.dll",
-    "libbrotlicommon.dll"
-  ]
-  when CPU_ARCH == 64: # 64 bit
-    GTK_LIBS.add("gspawn-win64-helper-console.exe")
-    GTK_LIBS.add("libgcc_s_seh-1.dll")
-  else: # 32 bit
-    GTK_LIBS.add("gspawn-win32-helper-console.exe")
-
   proc copyGtk() =
     mkDir(BUILD_LIB_DIR)
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
     mkdir(BUILD_SHARE_THEME_DIR)
-    cpFile("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
-    cpFile("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
+    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
+    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
     mkDir(BUILD_SHARE_THEME_DIR / "scalable")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
-    cpDir("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
+    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
 
     mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
-    cpFile("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
+    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
 
     for lib in GTK_LIBS:
-      cpFile("C:" / "msys64" / (if CPU_ARCH == 64: "mingw64" else: "mingw32") / "bin" / lib, BUILD_BIN_DIR / lib)
+      cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "bin" / lib, BUILD_BIN_DIR / lib)
 
   proc copyOpenSSL() =
     cpFile(OPENSSL_PATH / "libeay32.dll", BUILD_BIN_DIR / "libeay32.dll")
@@ -237,17 +226,40 @@ proc copyAll() =
   copyTranslation()
 
 proc prepare() =
+  # OpenSSL
   OPENSSL_DIR = fmt"{OPENSSL_ARCHIVE_BASENAME}_{CPU_ARCH}"
   OPENSSL_PATH = "thirdparty" / OPENSSL_DIR
+
   BUILD_DIR = "build" / fmt"BF2142Unlocker_v{VERSION}_" & (when defined(windows): "win" else: "linux") & fmt"_{CPU_ARCH}bit"
   when defined(windows):
     BUILD_BIN_DIR = BUILD_DIR / "bin"
     BUILD_LIB_DIR = BUILD_DIR / "lib"
     BUILD_SHARE_DIR = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR = BUILD_SHARE_DIR / "icons" / "Adwaita"
+
+    # GTK
+    var GTK_LIBS: seq[string] = @[
+      "gdbus.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
+      "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libssp-0.dll",
+      "libffi-7.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll",
+      "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
+      "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
+      "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",
+      "libpangowin32-1.0-0.dll", "libpcre-1.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll",
+      "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll", "libbrotlidec.dll",
+      "libbrotlicommon.dll"
+    ]
+    if CPU_ARCH == 64:
+      GTK_LIBS.add("gspawn-win64-helper-console.exe")
+      GTK_LIBS.add("libgcc_s_seh-1.dll")
+    else:
+      GTK_LIBS.add("gspawn-win32-helper-console.exe")
   else:
+    # NCURSES
     NCURSES_DIR = fmt"{NCURSES_ARCHIVE_BASENAME}_{CPU_ARCH}"
     NCURSES_PATH = "thirdparty" / NCURSES_DIR
+
+  # Additional compile parameter
   if CPU_ARCH == 64:
     COMPILE_PARAMS &= " --cpu:amd64"
   else:
