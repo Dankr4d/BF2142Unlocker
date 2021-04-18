@@ -107,10 +107,12 @@ proc compileServer() =
   when defined(windows):
     # TODO: https://github.com/nim-lang/Nim/issues/16268
     #       Crashes without any exception in net module, in loadCertificates, while calling SSL_CTX_use_certificate_chain_file
+    #       This is caused by "-fomit-frame-pointer" flag (which is set by optimization level 1 to 3 from gcc)
+    #       Workaround: Set -fno-omit-frame-pointer compiler flag
     if CPU_ARCH == 64:
       exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
     else:
-      exec("nim c -f --passL:-s --cpu:i386 --passC:-m32 --passL:-m32 -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
+      exec("nim c " & COMPILE_PARAMS & " --passC:-fno-omit-frame-pointer -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
   else:
     exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
 
