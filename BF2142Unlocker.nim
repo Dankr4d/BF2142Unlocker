@@ -78,7 +78,11 @@ elif defined(windows):
 # Create precompiled resource file
 when defined(windows):
   static:
-    discard staticExec("windres.exe BF2142Unlocker.rc -O coff -o BF2142Unlocker.res")
+    when defined(mingw):
+      discard staticExec("x86_64-w64-mingw32-windres BF2142Unlocker.rc -O coff -o BF2142Unlocker.res")
+    else:
+      discard staticExec("windres.exe BF2142Unlocker.rc -O coff -o BF2142Unlocker.res")
+
 
 type
   BF2142UnlockerConfigQuick = object

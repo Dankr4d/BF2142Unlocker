@@ -8,7 +8,7 @@ from strutils import strip, toLower, find
 const CPU_CORES: string = gorgeEx("nproc").output # TODO: staticExec instead of gorgeEx
 
 template filename: string = instantiationInfo().filename
-import os
+from os import splitFile
 const FILE_NAME: string = splitFile(filename()).name
 
 # TODO: Redundant (see BF2142Unlocker.nim ... pass this via symbol?)
@@ -33,37 +33,45 @@ const
   OPENSSL_ARCHIVE_BASENAME: string = fmt"openssl-{OPENSSL_VERSION}"
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
 
-when defined(linux):
-  const # Ncurses
-    NCURSES_VERSION: string = "5.9"
-    NCURSES_ARCHIVE_BASENAME = fmt"ncurses-{NCURSES_VERSION}"
-    NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
+# Ncurses (linux)
+const
+  NCURSES_VERSION: string = "5.9"
+  NCURSES_ARCHIVE_BASENAME = fmt"ncurses-{NCURSES_VERSION}"
+  NCURSES_URL: string = fmt"https://ftp.gnu.org/gnu/ncurses/ncurses-{NCURSES_VERSION}.tar.gz"
 ##
 
 ### VARS
 # TODO: Rename: 32 -> i868, 64 -> amd64? ... If yes, fix BUILD_DIR const
 # TODO: Rename CPU_ARCH -> COMPILER_ARCH?
 var CPU_ARCH: int
-var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s"
+var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -d:lto"
+
+var CROSS_COMPILE: bool = false
 
 var BUILD_DIR: string
-when defined(windows):
-  var BUILD_BIN_DIR: string
-  var BUILD_LIB_DIR: string
-  var BUILD_SHARE_DIR: string
-  var BUILD_SHARE_THEME_DIR: string
+var BUILD_BIN_DIR: string
 
-  # GTK
-  var GTK_LIBS: seq[string]
+# when defined(windows):
+var BUILD_LIB_DIR: string
+var BUILD_SHARE_DIR: string
+var BUILD_SHARE_THEME_DIR: string
+
+# GTK
+var GTK_LIBS: seq[string]
 
 # OpenSSL
 var OPENSSL_DIR: string
 var OPENSSL_PATH: string
 
-# Ncurses
-when defined(linux):
-  var NCURSES_DIR: string
-  var NCURSES_PATH: string
+# Ncurses (linux)
+var NCURSES_DIR: string
+var NCURSES_PATH: string
+##
+
+### Procs helper
+proc toExe*(filename: string): string =
+  ## On Windows adds ".exe" to `filename`, else returns `filename` unmodified.
+  (if defined(windows) or defined(linux) and CROSS_COMPILE: filename & ".exe" else: filename)
 ##
 
 ### Procs
@@ -78,7 +86,7 @@ proc createTranslationMo() =
 
 proc copyTranslation() =
   var path: string
-  if defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     path = BUILD_BIN_DIR
   else:
     path = BUILD_DIR
@@ -89,22 +97,20 @@ proc copyTranslation() =
     var dst: string = path / "locale" / lang / "LC_MESSAGES" / "gui.mo"
     cpFile(src, dst)
 
-
-when defined(windows):
-  proc compileLauncher() =
-    exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
+proc compileLauncher() =
+  exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
 
 proc compileGui(rc: string) =
   var rcStr: string
   if rc != "":
     rcStr =  "-d:RC=" & rc & " "
-  when defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     exec("nim c " & COMPILE_PARAMS & " " & rcStr & " -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
     exec("nim c " & COMPILE_PARAMS & " " & rcStr & " -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
 
 proc compileServer() =
-  when defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     # TODO: https://github.com/nim-lang/Nim/issues/16268
     #       Crashes without any exception in net module, in loadCertificates, while calling SSL_CTX_use_certificate_chain_file
     #       This is caused by "-fomit-frame-pointer" flag (which is set by optimization level 1 to 3 from gcc)
@@ -135,7 +141,13 @@ proc compileOpenSsl() =
       else:
         exec("perl Configure mingw enable-ssl3 shared -m32")
     else:
-      exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH}")
+      if CROSS_COMPILE:
+        if CPU_ARCH == 64:
+          exec(fmt"./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared -m64")
+        else:
+          exec(fmt"./Configure --cross-compile-prefix=i686-w64-mingw32- mingw enable-ssl3 shared -m32")
+      else:
+        exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH}")
     exec("make depend")
     exec(fmt"make -j{CPU_CORES}")
 
@@ -150,7 +162,7 @@ when defined(linux):
       exec(fmt"tar xvzf {NCURSES_ARCHIVE_BASENAME}.tar.gz --one-top-level={NCURSES_DIR} --strip=1")
     # Applying patch (fixes compilation with newer gcc)
     withDir(NCURSES_PATH):
-      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../patch/ncurses-5.9-gcc-5.patch")
+      exec(fmt"patch ncurses/base/MKlib_gen.sh < ../../patch/ncurses-5.9-gcc-5.patch")
       if CPU_ARCH == 64:
         exec("./configure x86_64-pc-linux-gnu --with-shared --without-debug --without-normal --without-cxx-binding --without-gpm CFLAGS=-m64 CXXFLAGS=-m64 LDFLAGS=-m64")
       else:
@@ -161,48 +173,49 @@ proc compileAll(rc: string) =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
   when defined(linux):
-    if not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
+    if not CROSS_COMPILE and not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
       compileNcurses()
   compileGui(rc) # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
-  when defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     compileLauncher()
   createTranslationMo()
 
-when defined(windows):
-  proc copyGtk() =
-    mkDir(BUILD_LIB_DIR)
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
+# if defined(windows) or defined(linux) and CROSS_COMPILE:
+proc copyGtk() =
+  mkDir(BUILD_LIB_DIR)
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
 
-    mkdir(BUILD_SHARE_THEME_DIR)
-    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
-    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
-    mkDir(BUILD_SHARE_THEME_DIR / "scalable")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
-    cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
+  mkdir(BUILD_SHARE_THEME_DIR)
+  cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
+  cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
+  mkDir(BUILD_SHARE_THEME_DIR / "scalable")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
+  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
 
-    mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
-    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
+  mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
+  cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
 
-    for lib in GTK_LIBS:
-      cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "bin" / lib, BUILD_BIN_DIR / lib)
+  for lib in GTK_LIBS:
+    cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "bin" / lib, BUILD_BIN_DIR / lib)
 
-  proc copyOpenSSL() =
+proc copyNcurses() =
+  cpFile(NCURSES_PATH / "lib" / "libncurses.so.5.9", BUILD_DIR / "libncurses.so.5")
+
+proc copyOpenSSL() =
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     cpFile(OPENSSL_PATH / "libeay32.dll", BUILD_BIN_DIR / "libeay32.dll")
     cpFile(OPENSSL_PATH / "ssleay32.dll", BUILD_BIN_DIR / "ssleay32.dll")
-else:
-  proc copyNcurses() =
-    cpFile(NCURSES_PATH / "lib" / "libncurses.so.5.9", BUILD_DIR / "libncurses.so.5")
-  proc copyOpenSSL() =
+  else:
     cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
     cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
 
 proc copyServersConfig() =
-  when defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     mkDir(BUILD_BIN_DIR / "config")
     cpFile("config" / "server.ini", BUILD_BIN_DIR / "config" / "server.ini")
   else:
@@ -210,12 +223,12 @@ proc copyServersConfig() =
     cpFile("config" / "server.ini", BUILD_DIR / "config" / "server.ini")
 
 proc copyAll() =
-  when defined(windows):
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     mkDir(BUILD_BIN_DIR / "asset")
     mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
     cpFile("asset" / "nopreview.png", BUILD_BIN_DIR / "asset" / "nopreview.png")
-    copyGtk()
+    # copyGtk()
     copyOpenSSL()
   else:
     mkDir(BUILD_DIR / "asset")
@@ -229,11 +242,27 @@ proc copyAll() =
 
 proc prepare() =
   # OpenSSL
-  OPENSSL_DIR = fmt"{OPENSSL_ARCHIVE_BASENAME}_{CPU_ARCH}"
+  OPENSSL_DIR = fmt"{OPENSSL_ARCHIVE_BASENAME}_"
+  if CROSS_COMPILE:
+    when defined(windows):
+      OPENSSL_DIR &= "linux"
+    else:
+      OPENSSL_DIR &= "win"
+  else:
+    when defined(windows):
+      OPENSSL_DIR &= "win"
+    else:
+      OPENSSL_DIR &= "linux"
+  OPENSSL_DIR &= fmt"_{CPU_ARCH}"
   OPENSSL_PATH = "thirdparty" / OPENSSL_DIR
 
-  BUILD_DIR = "build" / fmt"BF2142Unlocker_v{VERSION}_" & (when defined(windows): "win" else: "linux") & fmt"_{CPU_ARCH}bit"
-  when defined(windows):
+  BUILD_DIR = "build" / fmt"BF2142Unlocker_v{VERSION}_"
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
+    BUILD_DIR &= "win"
+  else:
+    BUILD_DIR &= "linux"
+  BUILD_DIR &= fmt"_{CPU_ARCH}bit"
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
     BUILD_BIN_DIR = BUILD_DIR / "bin"
     BUILD_LIB_DIR = BUILD_DIR / "lib"
     BUILD_SHARE_DIR = BUILD_DIR / "share"
@@ -266,6 +295,10 @@ proc prepare() =
     COMPILE_PARAMS &= " --cpu:amd64"
   else:
     COMPILE_PARAMS &= " --cpu:i386"
+
+  if CROSS_COMPILE:
+    COMPILE_PARAMS &= " -d:mingw"
+
   COMPILE_PARAMS &= fmt" --passC:-m{CPU_ARCH} --passL:-m{CPU_ARCH}"
 
 proc compile() =
@@ -280,6 +313,14 @@ proc compile() =
 ##
 
 ### Tasks
+task buildall, "Compile and bundle 64 bit release.":
+  CPU_ARCH = 64
+  prepare()
+  compile()
+  CPU_ARCH = 32
+  prepare()
+  compile()
+
 task build64, "Compile and bundle 64 bit release.":
   CPU_ARCH = 64
   prepare()
@@ -289,6 +330,12 @@ task build32, "Compile and bundle 32 bit release.":
   CPU_ARCH = 32
   prepare()
   compile()
+
+# task xbuild64, "Cross compile and bundle 64 bit release.":
+#   CPU_ARCH = 64
+#   CROSS_COMPILE = true
+#   prepare()
+#   compile()
 
 task translatePo, "Update po files from pot file.":
   mode = Verbose

@@ -6,7 +6,11 @@ import strformat # Required for fmt macro
 
 when defined(windows):
   static:
-    discard staticExec("windres.exe BF2142UnlockerSrv.rc -O coff -o BF2142UnlockerSrv.res")
+    when defined(mingw):
+      discard staticExec("x86_64-w64-mingw32-windres BF2142UnlockerSrv.rc -O coff -o BF2142UnlockerSrv.res")
+    else:
+      discard staticExec("windres.exe BF2142UnlockerSrv.rc -O coff -o BF2142UnlockerSrv.res")
+
 
 
 type
