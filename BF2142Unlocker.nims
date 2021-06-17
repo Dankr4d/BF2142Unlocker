@@ -44,7 +44,8 @@ const
 # TODO: Rename: 32 -> i868, 64 -> amd64? ... If yes, fix BUILD_DIR const
 # TODO: Rename CPU_ARCH -> COMPILER_ARCH?
 var CPU_ARCH: int
-var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s -d:lto"
+# TODO: LTO crashes openssl and also when launching singleplayer the first time (starting unlocker without config.ini) on 32bit build
+var COMPILE_PARAMS: string = "-f -d:release --stackTrace:on --lineTrace:on --opt:speed --passL:-s" # -d:lto"
 
 var CROSS_COMPILE: bool = false
 
@@ -92,10 +93,7 @@ proc copyTranslation() =
     path = BUILD_DIR
   for lang in LANGUAGES:
     mkDir(path / "locale" / lang / "LC_MESSAGES")
-    # Workaround: Storing in vars is required, otherwise it will crash with a sigsegv when calling cpFile.. Wtf?!?
-    var src: string = "locale" / lang / "LC_MESSAGES" / "gui.mo"
-    var dst: string = path / "locale" / lang / "LC_MESSAGES" / "gui.mo"
-    cpFile(src, dst)
+    cpFile("locale" / lang / "LC_MESSAGES" / "gui.mo", path / "locale" / lang / "LC_MESSAGES" / "gui.mo")
 
 proc compileLauncher() =
   exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
@@ -112,9 +110,10 @@ proc compileGui(rc: string) =
 proc compileServer() =
   if defined(windows) or defined(linux) and CROSS_COMPILE:
     # TODO: https://github.com/nim-lang/Nim/issues/16268
-    #       Crashes without any exception in net module, in loadCertificates, while calling SSL_CTX_use_certificate_chain_file
-    #       This is caused by "-fomit-frame-pointer" flag (which is set by optimization level 1 to 3 from gcc)
-    #       Workaround: Set -fno-omit-frame-pointer compiler flag
+    #       Crashes without any exception in net module, in loadCertificates, while calling SSL_CTX_use_certificate_chain_file.
+    #       This is caused by "-fomit-frame-pointer" flag (which is set by optimization level 1 to 3 from gcc).
+    #       Also link time optimization (-d:lto) causes crashes.
+    #       Workaround: Set -fno-omit-frame-pointer compiler flag.
     if CPU_ARCH == 64:
       exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe & " BF2142UnlockerSrv")
     else:
@@ -228,7 +227,7 @@ proc copyAll() =
     mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
     cpFile("asset" / "nopreview.png", BUILD_BIN_DIR / "asset" / "nopreview.png")
-    # copyGtk()
+    copyGtk()
     copyOpenSSL()
   else:
     mkDir(BUILD_DIR / "asset")
@@ -285,6 +284,7 @@ proc prepare() =
       GTK_LIBS.add("libgcc_s_seh-1.dll")
     else:
       GTK_LIBS.add("gspawn-win32-helper-console.exe")
+      GTK_LIBS.add("libgcc_s_dw2-1.dll")
   else:
     # NCURSES
     NCURSES_DIR = fmt"{NCURSES_ARCHIVE_BASENAME}_{CPU_ARCH}"
