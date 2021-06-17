@@ -706,8 +706,8 @@ proc fixMapDesc(path: string): bool =
 ##
 
 ### Helper procs
-proc fixBF2142CoopPyLogic() =
-  let gameModePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "python" / "game" / "gamemodes"
+proc fixBF2142CoopPyLogic(path: string) =
+  let gameModePath: string = path / "mods" / "bf2142" / "python" / "game" / "gamemodes"
   if fileExists(gameModePath / GPM_COOP_FIX_PY_FILENAME): # and getMD5(gameModePath / GPM_COOP_FIX_PY_FILENAME) == GPM_COOP_FIX_PY_HASH:
     # Return if file exists # and md5 hash is the same
     return
@@ -725,6 +725,8 @@ proc fixBF2142CoopPyLogic() =
     return
   lines.insert("import gpm_coop_fix", 0)
   lines.insert("\tgpm_coop_fix.onGameStatusChanged(status)", gameStatusChangedIdx + 2)
+  if not fileExists(gameModePath / "gpm_coop.py.original"):
+    discard copyFile(gameModePath / "gpm_coop.py", gameModePath / "gpm_coop.py.original")
   discard writeFile(gameModePath / "gpm_coop.py", lines.join("\n"))
   discard writeFile(gameModePath / GPM_COOP_FIX_PY_FILENAME, GPM_COOP_FIX_PY)
 
@@ -2991,7 +2993,7 @@ proc setBF2142Path(path: string) =
         txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
   config.writeConfig(CONFIG_FILE_NAME)
-  fixBF2142CoopPyLogic()
+  fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
 
 proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
@@ -3039,6 +3041,7 @@ proc setBF2142ServerPath(path: string) =
   ignoreEvents = false
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_SERVER_PATH, bf2142UnlockerConfig.settings.bf2142ServerPath)
   config.writeConfig(CONFIG_FILE_NAME)
+  fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
 
 proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ServerPath.text[0..^2])
@@ -3371,9 +3374,10 @@ proc onApplicationActivate(application: Application) =
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
     cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
     cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
-    fixBF2142CoopPyLogic()
+    fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
+    fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
   loadJoinResolutions()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
   lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
