@@ -2169,7 +2169,10 @@ when defined(windows):
     timerData.terminal.text = channelData.data
     var gsdata: GsData
     if channelData.running:
-      gsdata = channelData.data.parseGsData()
+      try:
+        gsdata = channelData.data.parseGsData()
+      except ValueError:
+        discard # Data couldn't be parsed
     if gsdata.status != lastGsStatus:
       timerData.treeView.update(gsdata)
       lastGsStatus = gsdata.status
