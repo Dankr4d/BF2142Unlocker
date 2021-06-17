@@ -2034,14 +2034,25 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
   config.setSectionKey(CONFIG_SECTION_MULTIPLAYER, CONFIG_KEY_MULTIPLAYER_MOD, cbxMultiplayerMod.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
+  if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+    newInfoDialog(
+      dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),
+      dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME]
+    )
+    return
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig))
+
   backupOpenSpyIfExists()
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
-  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
+  discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxMultiplayerMod.activeId / "Movies", chbtnSettingsSkipMovies.active)
+  if cbxMultiplayerMod.activeId != "bf2142":
+    # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
+    discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
+
 
   var options: BF2142Options
-  options.modPath = some("mods/bf2142")
+  options.modPath = some("mods/" & cbxMultiplayerMod.activeId)
   options.menu = some(true)
   options.fullscreen = some(not chbtnSettingsWindowMode.active)
   if chbtnSettingsWindowMode.active:
@@ -2449,6 +2460,11 @@ proc patchAndStartLogic(): bool =
   if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxQuickMod.activeId / "Movies", chbtnSettingsSkipMovies.active):
     return
 
+  if cbxQuickMod.activeId != "bf2142":
+    # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
+    if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active):
+      return
+
   var options: BF2142Options
   options.modPath = some("mods/" & cbxQuickMod.activeId)
   options.menu = some(true)
@@ -2468,6 +2484,21 @@ proc patchAndStartLogic(): bool =
 
 proc onBtnQuickConnectClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
+
+proc stopQuickSever(singleplayer: bool) =
+  killProcess(termHostLoginServerPid)
+  txtQuickIpAddress.text = ""
+  termQuickServer.clear()
+  termQuickServer.visible = false
+  if singleplayer:
+    btnQuickSingleplayer.visible = true
+    btnQuickSingleplayerCancel.visible = false
+    btnQuickHost.sensitive = true
+  else:
+    btnQuickHost.visible = true
+    btnQuickHostCancel.visible = false
+    btnQuickSingleplayer.sensitive = true
+  btnHostGameServer.sensitive = true
 
 proc startQuickServer(singleplayer: bool) =
   var ipAddress: IpAddress
@@ -2492,22 +2523,7 @@ proc startQuickServer(singleplayer: bool) =
     btnHostGameServer.sensitive = false
   else:
     cbtnQuickAutoJoin.active = prevAutoJoinVal
-    killProcess(termHostLoginServerPid)
-
-proc stopQuickSever(singleplayer: bool) =
-  killProcess(termHostLoginServerPid)
-  txtQuickIpAddress.text = ""
-  termQuickServer.clear()
-  termQuickServer.visible = false
-  if singleplayer:
-    btnQuickSingleplayer.visible = true
-    btnQuickSingleplayerCancel.visible = false
-    btnQuickHost.sensitive = true
-  else:
-    btnQuickHost.visible = true
-    btnQuickHostCancel.visible = false
-    btnQuickSingleplayer.sensitive = true
-  btnHostGameServer.sensitive = true
+    stopQuickSever(singleplayer)
 
 proc onBtnQuickHostClicked(self: Button00) {.signal.} =
   startQuickServer(false)
@@ -2722,6 +2738,9 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   when defined(windows): # TODO: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
   discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "Movies", chbtnSettingsSkipMovies.active)
+  if currentServer.`mod` != "bf2142":
+    # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
+    discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
 
   var options: BF2142Options
   options.modPath = some("mods/" & currentServer.`mod`)
@@ -3338,10 +3357,9 @@ proc onApplicationActivate(application: Application) =
   when defined(windows):
     var settings: gtk.Settings = getDefaultSettings()
     var preferDarkTheme: Value
-    settings.getProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
-    if not preferDarkTheme.getBoolean():
-      preferDarkTheme.setBoolean(true)
-      settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
+    discard preferDarkTheme.init(g_boolean_get_type())
+    preferDarkTheme.setBoolean(true)
+    settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
