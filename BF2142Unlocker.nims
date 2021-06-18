@@ -1,7 +1,7 @@
 ### imports
 from os import `/`
 from strformat import fmt
-from strutils import strip, toLower, find
+from strutils import strip, toLower, find, parseInt
 ##
 
 ### Consts
@@ -18,12 +18,6 @@ const VERSION: string = static:
   let posQuoteStart: int = raw.find('"', posVersionStart)
   let posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
   raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
-  # TODO: RC
-  # let ver: string = raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
-  # if RC != 0:
-  #   ver & " (RC: " & $RC & ")"
-  # else:
-  #   ver
 
 const LANGUAGES: seq[string] = @["en", "de", "ru"]
 
@@ -51,6 +45,9 @@ var CROSS_COMPILE: bool = false
 
 var BUILD_DIR: string
 var BUILD_BIN_DIR: string
+var BUILD_DIR_NAME: string
+
+var RC: int = 0
 
 # when defined(windows):
 var BUILD_LIB_DIR: string
@@ -98,10 +95,10 @@ proc copyTranslation() =
 proc compileLauncher() =
   exec("nim c " & COMPILE_PARAMS & " -o:" & BUILD_DIR / "BF2142Unlocker".toExe & " BF2142UnlockerLauncher.nim")
 
-proc compileGui(rc: string) =
+proc compileGui() =
   var rcStr: string
-  if rc != "":
-    rcStr =  "-d:RC=" & rc & " "
+  if RC > 0:
+    rcStr =  fmt"-d:RC={RC} "
   if defined(windows) or defined(linux) and CROSS_COMPILE:
     exec("nim c " & COMPILE_PARAMS & " " & rcStr & " -o:" & BUILD_BIN_DIR / "BF2142Unlocker".toExe & " BF2142Unlocker")
   else:
@@ -168,13 +165,13 @@ when defined(linux):
         exec("./configure i686-pc-linux-gnu --with-shared --without-debug --without-normal --without-cxx-binding --without-gpm CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32")
       exec(fmt"make -j{CPU_CORES}")
 
-proc compileAll(rc: string) =
+proc compileAll() =
   if not fileExists(OPENSSL_PATH / "libssl.a") or not fileExists(OPENSSL_PATH / "libcrypto.a"):
     compileOpenSsl()
   when defined(linux):
     if not CROSS_COMPILE and not fileExists(NCURSES_PATH / "lib" / "libncurses.so.5.9"):
       compileNcurses()
-  compileGui(rc) # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
+  compileGui() # Needs to be build before Launcher get's build, because it creates the BF2142Unlocker.res ressource file during compile time
   compileServer()
   if defined(windows) or defined(linux) and CROSS_COMPILE:
     compileLauncher()
@@ -240,6 +237,10 @@ proc copyAll() =
   copyTranslation()
 
 proc prepare() =
+  # Parse release candidate number if any is provided
+  if paramStr(paramCount()).toLower() != FILE_NAME.toLower():
+    RC = parseInt(paramStr(paramCount()))
+
   # OpenSSL
   OPENSSL_DIR = fmt"{OPENSSL_ARCHIVE_BASENAME}_"
   if CROSS_COMPILE:
@@ -255,12 +256,15 @@ proc prepare() =
   OPENSSL_DIR &= fmt"_{CPU_ARCH}"
   OPENSSL_PATH = "thirdparty" / OPENSSL_DIR
 
-  BUILD_DIR = "build" / fmt"BF2142Unlocker_v{VERSION}_"
+  BUILD_DIR_NAME = fmt"BF2142Unlocker_v{VERSION}_"
+  if RC > 0:
+    BUILD_DIR_NAME &= fmt"rc{RC}_"
   if defined(windows) or defined(linux) and CROSS_COMPILE:
-    BUILD_DIR &= "win"
+    BUILD_DIR_NAME &= "win"
   else:
-    BUILD_DIR &= "linux"
-  BUILD_DIR &= fmt"_{CPU_ARCH}bit"
+    BUILD_DIR_NAME &= "linux"
+  BUILD_DIR_NAME &= fmt"_{CPU_ARCH}bit"
+  BUILD_DIR = "build" / BUILD_DIR_NAME
   if defined(windows) or defined(linux) and CROSS_COMPILE:
     BUILD_BIN_DIR = BUILD_DIR / "bin"
     BUILD_LIB_DIR = BUILD_DIR / "lib"
@@ -302,14 +306,17 @@ proc prepare() =
   COMPILE_PARAMS &= fmt" --passC:-m{CPU_ARCH} --passL:-m{CPU_ARCH}"
 
 proc compile() =
-  var rc: string
-  if paramStr(paramCount()).toLower() != FILE_NAME.toLower():
-    rc = paramStr(paramCount())
   mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
-  compileAll(rc)
+  compileAll()
   copyAll()
+
+proc zip() =
+  withDir("build"):
+    if fileExists(BUILD_DIR_NAME & ".zip"):
+      rmFile(BUILD_DIR_NAME & ".zip")
+    exec(fmt"zip -r {BUILD_DIR_NAME}.zip {BUILD_DIR_NAME}")
 ##
 
 ### Tasks
@@ -317,19 +324,28 @@ task buildall, "Compile and bundle 64 bit release.":
   CPU_ARCH = 64
   prepare()
   compile()
+  zip()
   CPU_ARCH = 32
   prepare()
   compile()
+  zip()
 
 task build64, "Compile and bundle 64 bit release.":
   CPU_ARCH = 64
   prepare()
   compile()
+  zip()
 
 task build32, "Compile and bundle 32 bit release.":
   CPU_ARCH = 32
   prepare()
   compile()
+  zip()
+
+task zip, "":
+  CPU_ARCH = 64
+  prepare()
+  zip()
 
 # task xbuild64, "Cross compile and bundle 64 bit release.":
 #   CPU_ARCH = 64
