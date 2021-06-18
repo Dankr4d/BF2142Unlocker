@@ -16,7 +16,7 @@ elif defined(windows):
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import module/localaddr # Required to get all local adresses
-import module/checkserver # Required to check if servers are reachable
+# import module/checkserver # Required to check if servers are reachable
 import "macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
@@ -41,11 +41,10 @@ elif defined(windows):
   import streams # Required to read from process stream (login/unlock server)
   import module/windows/getprocessbyname # Required to get pid from forked process
   import module/windows/stdoutreader # Required for read stdoutput from another process
-  import module/windows/gethwndbypid # Required to get window handle from pid
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
   ## Terminal newTerminal and related helper procs
-  proc newTerminal(): Terminal =
+  proc newTerminal(): Terminal {.used.} =
     var textView = newTextView()
     textView.wrapMode = WrapMode.wordChar
     textView.editable = false
@@ -54,21 +53,21 @@ elif defined(windows):
     scrolledWindow.add(textView)
     scrolledWindow.styleContext.addClass("terminal")
     result = cast[Terminal](scrolledWindow)
-  proc textView(terminal: Terminal): TextView =
+  proc textView(terminal: Terminal): TextView {.used.} =
     return cast[TextView](terminal.getChild())
-  proc buffer(terminal: Terminal): TextBuffer =
+  proc buffer(terminal: Terminal): TextBuffer {.used.} =
     return terminal.textView.getBuffer()
-  proc `text=`(terminal: Terminal, text: string) =
+  proc `text=`(terminal: Terminal, text: string) {.used.} =
     terminal.buffer.setText(text, text.len)
-  proc text(terminal: Terminal): string =
+  proc text(terminal: Terminal): string {.used.} =
     var startIter: TextIter
     var endIter: TextIter
     terminal.buffer.getStartIter(startIter)
     terminal.buffer.getEndIter(endIter)
     return terminal.buffer.getText(startIter, endIter, true)
-  proc visible(terminal: Terminal): bool =
+  proc visible(terminal: Terminal): bool {.used.} =
     return terminal.textView.visible
-  proc `visible=`(terminal: Terminal, visible: bool) =
+  proc `visible=`(terminal: Terminal, visible: bool) {.used.} =
     cast[ScrolledWindow](terminal).visible = visible
     terminal.textView.visible = visible
   #
@@ -3384,8 +3383,6 @@ proc onApplicationActivate(application: Application) =
         vboxSettings.sensitive = true
 
 when defined(windows): # TODO: Cleanup
-  proc setlocale(category: int, other: cstring): cstring {.header: "<locale.h>", importc.}
-  var LC_ALL {.header: "<locale.h>", importc.}: int
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
