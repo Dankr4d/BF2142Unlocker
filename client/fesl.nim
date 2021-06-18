@@ -4,7 +4,6 @@ import tables
 import strutils
 import random # Required for randomEmail
 import sequtils # Required for randomEmail
-import base64 # Some servers are decoding there data
 export fesl
 
 randomize() # Required for randomEmail
@@ -19,7 +18,7 @@ type
     AddSubAccount
     DisableSubAccount
     Unhandled
-  FeslException* = ref object of Exception
+  FeslException* = ref object of IOError
     exType*: FeslExceptionType
     code*: uint32
     notReceived*: bool # Determines if data has been received or not (server is answering or not)

@@ -213,7 +213,6 @@ const MASTER_SERVER_HEADER_PATH: string = currentSourcePath().splitPath.head & "
 
 
 import net
-import strutils
 
 const BUFFER_SIZE: cint = 8192
 

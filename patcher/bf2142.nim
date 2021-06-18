@@ -1,7 +1,6 @@
 import streams
 import net
 import strutils # Required for parseHexInt proc
-import options
 import nativesockets # Required for getHostByName
 import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 

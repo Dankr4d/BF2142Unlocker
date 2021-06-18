@@ -1,6 +1,5 @@
 import ../protocol/fesl
 import net
-import ospaths
 import tables
 import terminal
 import strformat # Required for fmt macro
@@ -19,8 +18,6 @@ proc pingInterval*(data: tuple[client: Socket, channelKillThread: ptr Channel[vo
     data.client.send(newPing(), 0)
 
 proc handleFeslClient(client: Socket) {.thread.} =
-  var prefix: string
-  var length: uint32
   var id: uint8
   var data: string
   var playerName: string

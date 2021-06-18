@@ -380,7 +380,7 @@ proc parseData*(data: string): Table[string, string] =
   for line in data.split('\n'):
     var keyVal: seq[string] = line.split("=", 1)
     if keyVal.len == 1: break
-    result.add($cstring(keyVal[0]), $cstring(keyVal[1])) # Some server send a cstring
+    result[$cstring(keyVal[0])] = $cstring(keyVal[1]) # Some server send a cstring
   if result.hasKey("data"):
     result = parseData(base64.decode(result["data"]))
 

@@ -8,7 +8,6 @@ import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
   import posix # Requierd for getlogin and killProcess
-  import gintro/gmodule # Required to automatically bind signals on linux
 elif defined(windows):
   import winim
   import module/windows/docpath # Required to read out My Documents path
@@ -16,7 +15,6 @@ elif defined(windows):
   import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
-import times # Requierd for rudimentary level backup with epochtime suffix
 import module/localaddr # Required to get all local adresses
 import module/checkserver # Required to check if servers are reachable
 import "macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
@@ -140,7 +138,6 @@ const OPENSPY_DLL_NAME: string = "RendDX9.dll"
 const ORIGINAL_RENDDX9_DLL_NAME: string = "RendDX9_ori.dll" # Named by reclamation
 const FILE_BACKUP_SUFFIX: string = ".original"
 
-const ORIGINAL_CLIENT_MD5_HASH: string = "6ca5c59cd1623b78191e973b3e8088bc"
 const ORIGINAL_RENDDX9_MD5_HASH: string = "18a7be5d8761e54d43130b8a2a3078b9"
 
 const
@@ -542,15 +539,15 @@ proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INF
   dialog.title = "ERROR: " & osErrorMsg(osLastError())
   var lblText: Label = newLabel($ex)
   dialog.contentArea.add(lblText)
-  var vboxButtons: HBox = newHBox(true, 5)
-  dialog.contentArea.add(vboxButtons)
+  var hboxButtons: Box = newBox(Orientation.horizontal, 5)
+  dialog.contentArea.add(hboxButtons)
   var btnOk: Button = newButton("Ok")
-  vboxButtons.add(btnOk)
+  hboxButtons.add(btnOk)
   proc onBtnOkClicked(self: Button, dialog: Dialog) =
     dialog.destroy()
   btnOk.connect("clicked", onBtnOkClicked, dialog)
   var btnCloseAll: Button = newButton("Close BF2142Unlocker")
-  vboxButtons.add(btnCloseAll)
+  hboxButtons.add(btnCloseAll)
   proc onBtnCloseAllClicked(self: Button, dialog: Dialog) =
     onQuit()
     quit(0)
@@ -564,7 +561,7 @@ proc handle(ex: ref Exception) =
   log(ex)
   show(ex)
 
-proc writeFile(filename, content: string): bool =
+proc writeFile(filename, content: string): bool {.used.} =
   try:
     system.writeFile(filename, content)
     return true
@@ -572,14 +569,14 @@ proc writeFile(filename, content: string): bool =
     ex.handle()
     return false
 
-proc readFile(filename: string): Option[TaintedString] =
+proc readFile(filename: string): Option[TaintedString] {.used.} =
   try:
     return some(system.readFile(filename))
   except system.IOError as ex:
     ex.handle()
     return none(TaintedString)
 
-proc moveFile(source, dest: string): bool =
+proc moveFile(source, dest: string): bool {.used.} =
   try:
     os.moveFile(source, dest)
     return true
@@ -587,7 +584,7 @@ proc moveFile(source, dest: string): bool =
     ex.handle()
     return false
 
-proc moveDir(source, dest: string): bool =
+proc moveDir(source, dest: string): bool {.used.} =
   try:
     os.moveDir(source, dest)
     return true
@@ -595,7 +592,7 @@ proc moveDir(source, dest: string): bool =
     ex.handle()
     return false
 
-proc copyFile(source, dest: string): bool =
+proc copyFile(source, dest: string): bool {.used.} =
   try:
     os.copyFile(source, dest)
     return true
@@ -603,7 +600,7 @@ proc copyFile(source, dest: string): bool =
     ex.handle()
     return false
 
-proc copyFileWithPermissions(source, dest: string, ignorePermissionErrors = true): bool =
+proc copyFileWithPermissions(source, dest: string, ignorePermissionErrors = true): bool {.used.} =
   try:
     os.copyFileWithPermissions(source, dest, ignorePermissionErrors)
     return true
@@ -611,7 +608,7 @@ proc copyFileWithPermissions(source, dest: string, ignorePermissionErrors = true
     ex.handle()
     return false
 
-proc copyDir(source, dest: string): bool =
+proc copyDir(source, dest: string): bool {.used.} =
   try:
     os.copyDir(source, dest)
     return true
@@ -619,7 +616,7 @@ proc copyDir(source, dest: string): bool =
     ex.handle()
     return false
 
-proc removeFile(file: string): bool =
+proc removeFile(file: string): bool {.used.} =
   try:
     os.removeFile(file)
     return true
@@ -627,7 +624,7 @@ proc removeFile(file: string): bool =
     ex.handle()
     return false
 
-proc removeDir(dir: string): bool = # TODO: in newer version, theres also a "checkDir = false" param
+proc removeDir(dir: string): bool {.used.}= # TODO: in newer version, theres also a "checkDir = false" param
   try:
     os.removeDir(dir)
     return true
@@ -635,14 +632,14 @@ proc removeDir(dir: string): bool = # TODO: in newer version, theres also a "che
     ex.handle()
     return false
 
-proc open(filename: string; mode: FileMode = fmRead; bufSize: int = -1): tuple[opened: bool, file: system.File] =
+proc open(filename: string; mode: FileMode = fmRead; bufSize: int = -1): tuple[opened: bool, file: system.File] {.used.} =
   try:
     return (true, system.open(filename, mode, bufSize))
   except system.IOError as ex:
     ex.handle()
     return (false, nil)
 
-proc existsOrCreateDir(dir: string): tuple[succeed: bool, exists: bool] =
+proc existsOrCreateDir(dir: string): tuple[succeed: bool, exists: bool] {.used.} =
   try:
     return (true, os.existsOrCreateDir(dir))
   except OSError as ex:
@@ -1635,7 +1632,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
     let processCommand: string = command
   elif defined(windows):
     let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
-  var process: Process = startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
+  discard startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
     options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
   )
   return true
@@ -2992,6 +2989,8 @@ proc setBF2142Path(path: string) =
       if txtSettingsWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
         txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
+        documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
+        updateProfilePathes()
   config.writeConfig(CONFIG_FILE_NAME)
   fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
 
@@ -3083,44 +3082,6 @@ proc onChbtnSettingsWindowModeToggled(self: CheckButton00) {.signal.} =
 proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
-
-proc copyLevels(srcLevelPath, dstLevelPath: string, isServer: bool = false): bool =
-  result = true
-  var srcPath, dstPath, dstArchiveMd5Path, levelName: string
-  for levelFolder in walkDir(srcLevelPath, true):
-    levelName = levelFolder.path
-    when defined(linux):
-      if isServer:
-        levelName = levelFolder.path.toLower()
-    if not existsOrCreateDir(dstLevelPath / levelName).succeed:
-      return false
-    echo "Copying level: ", levelName
-    for levelFiles in walkDir(srcLevelPath / levelFolder.path, true):
-      dstPath = dstLevelPath / levelName
-      when defined(linux):
-        if isServer and levelFiles.kind == pcDir and levelFiles.path == "Info":
-          dstPath = dstPath / levelFiles.path.toLower()
-        else:
-          dstPath = dstPath / levelFiles.path
-      else:
-        dstPath = dstPath / levelFiles.path
-      srcPath = srcLevelPath / levelFolder.path / levelFiles.path
-      if levelFiles.kind == pcDir:
-        if not copyDir(srcPath, dstPath):
-          return
-      elif levelFiles.kind == pcFile:
-        if not copyFile(srcPath, dstPath):
-          return
-    when defined(linux):
-      if isServer: # Moving all files in levels info folder to lowercase names
-        let infoPath = dstLevelPath / levelName / "info"
-        for fileName in walkDir(infoPath, true):
-          if fileName.kind == pcFile:
-            let srcDescPath = infoPath / fileName.path
-            let dstDescPath = infoPath / fileName.path.toLower()
-            if srcDescPath != dstDescPath:
-              if not moveFile(srcDescPath, dstDescPath):
-                return
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
@@ -3338,7 +3299,7 @@ proc onApplicationActivate(application: Application) =
     termHostGameServer.connect("contents-changed", ontermHostGameServerContentsChanged)
     termHostGameServer.connect("child-exited", ontermHostGameServerChildExited)
     termHostGameServer.visible = true
-    var box: Box = newHBox(false, 0)
+    var box: Box = newBox(Orientation.horizontal, 0)
     box.visible = true
     box.setSizeRequest(termHostGameServer.getCharWidth().int * 80, -1)
     box.add(termHostGameServer)
@@ -3472,6 +3433,7 @@ proc main =
   discard run(application)
 
 when defined(release):
+  import times
   proc unhandledException(msg: string) =
     system.writeFile("log" / "crash_" & format(now(), "yyyy-MM-dd'T'hh-mm-ss-ms") & ".log", msg)
     if termHostGameServerPid > 0:
