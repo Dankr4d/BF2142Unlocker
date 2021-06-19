@@ -8,6 +8,7 @@ import strformat # Required for fmt macro
 import xmlparser, xmltree # Requierd for map infos (and available modes for maps)
 when defined(linux):
   import posix # Requierd for getlogin and killProcess
+  import module/checkserver # Required to check if servers are reachable
 elif defined(windows):
   import winim
   import module/windows/docpath # Required to read out My Documents path
@@ -16,7 +17,6 @@ elif defined(windows):
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import module/localaddr # Required to get all local adresses
-# import module/checkserver # Required to check if servers are reachable
 import "macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
 import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
