@@ -1,4 +1,4 @@
-import gintro/[gtk, glib, gobject, gdk, cairo, gdkpixbuf]
+import gintro/[gtk, glib, gobject, gdk]
 import gintro/gio except ListStore
 import os
 import net # Requierd for ip parsing and type
@@ -372,8 +372,6 @@ const
 const LANGUAGE_FILE: string = "lang.txt"
 const AVAILABLE_LANGUAGES: seq[string] = @["en_US", "de_DE", "ru_RU"]
 
-const NO_PREVIEW_IMG_PATH: string = "asset/nopreview.png"
-
 var config: Config
 
 ### Required vars for signal module
@@ -455,7 +453,6 @@ var cbxMultiplayerMod: ComboBox
 ##
 ### Host controls
 var vboxHost: Box
-var imgHostLevelPreview: Image
 var cbxHostMods: ComboBox
 var cbxHostGameMode: ComboBox
 var sbtnHostBotSkill: SpinButton
@@ -1078,24 +1075,6 @@ proc update(treeView: TreeView, gsdata: GsData) =
         valBackgroundColor.setString("")
         store.setValue(iter, 3, valBackgroundColor)
     doIter = store.iterNext(iter)
-
-proc updateLevelPreview(mapName, mapMode: string, mapSize: int) =
-  var imgPath: string
-  imgPath = currentLevelFolderPath / mapName / "info" / mapMode & "_" & $mapSize & "_menumap.png" # TODO: Use fmt
-  if fileExists(imgPath):
-    var pixbuf = newPixbufFromFile(imgPath)
-    pixbuf = pixbuf.scaleSimple(478, 341, InterpType.bilinear) # 478x341 is the default size of BF2142 menumap images
-    imgHostLevelPreview.setFromPixbuf(pixbuf)
-  elif fileExists(NO_PREVIEW_IMG_PATH):
-    imgHostLevelPreview.setFromFile(NO_PREVIEW_IMG_PATH) # TODO: newPixbufFromBytes
-  else:
-    imgHostLevelPreview.clear()
-
-proc updateLevelPreview(treeView: TreeView) =
-  var mapName, mapMode: string
-  var mapSize: int
-  (mapName, mapMode, mapSize) = treeView.selectedMap
-  updateLevelPreview(mapName, mapMode, mapSize)
 
 proc selectNext(treeView: TreeView) =
   ignoreEvents = true
@@ -2549,7 +2528,6 @@ proc onBtnHostMapAddClicked(self: Button00) {.signal.} =
     return
   trvHostSelectedMap.appendMap(mapName, mapMode, mapSize)
   trvHostSelectableMap.selectNext()
-  trvHostSelectableMap.updateLevelPreview()
 
 proc onBtnHostMapDelClicked(self: Button00) {.signal.} =
   var mapName, mapMode: string
@@ -2557,7 +2535,6 @@ proc onBtnHostMapDelClicked(self: Button00) {.signal.} =
   (mapName, mapMode, mapSize) = trvHostSelectedMap.selectedMap
   if mapName == "" or mapMode == "" or mapSize == 0: return
   trvHostSelectedMap.removeSelected()
-  trvHostSelectedMap.updateLevelPreview()
 
 proc onBtnHostMapMoveUpClicked(self: Button00) {.signal.} =
   trvHostSelectedMap.moveSelectedUp()
@@ -2938,18 +2915,10 @@ proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
 proc onCbxHostGameModeChanged(self: ComboBox00) {.signal.} =
   updatePathes()
   loadSelectableMapList()
-
-proc onTrvHostSelectableMapCursorChanged(self: TreeView00) {.signal.} =
-  trvHostSelectableMap.updateLevelPreview()
-
-proc onTrvHostSelectedMapRowActivated(self: TreeView00, path: TreePath00, column: TreeViewColumn00) {.signal.} =
-  trvHostSelectedMap.updateLevelPreview()
 #
 ## Settings
 proc selectFolderDialog(title: string): tuple[responseType: ResponseType, path: string] =
-  var dialog: FileChooserDialog = newFileChooserDialog(title, window, FileChooserAction.selectFolder)
-  discard dialog.addButton("OK", ResponseType.ok.ord)
-  discard dialog.addButton("Cancel", ResponseType.cancel.ord)
+  var dialog: FileChooserNative = newFileChooserNative(title, window, FileChooserAction.selectFolder)
   let responseId: int = dialog.run()
   let path: string = dialog.getFilename()
   dialog.destroy()
@@ -2995,7 +2964,7 @@ proc setBF2142Path(path: string) =
 
 proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
-  if responseType != ResponseType.ok:
+  if responseType != ResponseType.accept:
     return
   setBF2142Path(path)
 
@@ -3043,7 +3012,7 @@ proc setBF2142ServerPath(path: string) =
 
 proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ServerPath.text[0..^2])
-  if responseType != ResponseType.ok:
+  if responseType != ResponseType.accept:
     return
   setBF2142ServerPath(path)
 
@@ -3052,7 +3021,7 @@ proc onTxtSettingsBF2142ServerPathFocusOutEvent(self: Entry00) {.signal.} =
 
 proc onBtnSettingsWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsWinePrefix.text[0..^2])
-  if responseType != ResponseType.ok:
+  if responseType != ResponseType.accept:
     return
   if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
     return
@@ -3127,7 +3096,9 @@ proc onChbtnUnlocksUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
 #
 ##
 
-proc onApplicationWindowDraw(self: ApplicationWindow00, context: cairo.Context00): bool {.signalNoCheck.} =
+proc onApplicationWindowDraw(self: ApplicationWindow00, context: pointer): bool {.signalNoCheck.} =
+  # INFO: context is of type cairo.Context00, but i set it to pointer, to remove dependency.
+  #       But cairo is still required as shared library when bundling
   if not windowShown:
     windowShown = true
 
@@ -3222,7 +3193,6 @@ proc onApplicationActivate(application: Application) =
   cbxMultiplayerMod = builder.getComboBox("cbxMultiplayerMod")
 
   vboxHost = builder.getBox("vboxHost")
-  imgHostLevelPreview = builder.getImage("imgHostLevelPreview")
   cbxHostMods = builder.getComboBox("cbxHostMods")
   cbxHostGameMode = builder.getComboBox("cbxHostGameMode")
   sbtnHostBotSkill = builder.getSpinButton("sbtnHostBotSkill")
@@ -3377,7 +3347,7 @@ proc onApplicationActivate(application: Application) =
           notebook.currentPage = 0
         elif responseId == 1:
           let (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
-          if responseType == ResponseType.ok:
+          if responseType == ResponseType.accept:
             setBF2142Path(path)
             notebook.currentPage = 0
         vboxSettings.sensitive = true

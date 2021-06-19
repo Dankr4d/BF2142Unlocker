@@ -179,19 +179,54 @@ proc compileAll() =
 
 # if defined(windows) or defined(linux) and CROSS_COMPILE:
 proc copyGtk() =
-  mkDir(BUILD_LIB_DIR)
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0", BUILD_LIB_DIR / "gdk-pixbuf-2.0")
+  mkDir(BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders")
+  cpFile(
+    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-png.dll",
+    BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-png.dll"
+  )
+  cpFile(
+    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-svg.dll",
+    BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-svg.dll"
+  )
+  cpFile(
+    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders.cache",
+    BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders.cache"
+  )
 
-  mkdir(BUILD_SHARE_THEME_DIR)
-  cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "icon-theme.cache", BUILD_SHARE_THEME_DIR / "icon-theme.cache")
+  mkDir(BUILD_SHARE_THEME_DIR)
   cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
-  mkDir(BUILD_SHARE_THEME_DIR / "scalable")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions", BUILD_SHARE_THEME_DIR / "scalable" / "actions")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "devices", BUILD_SHARE_THEME_DIR / "scalable" / "devices")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "mimetypes", BUILD_SHARE_THEME_DIR / "scalable" / "mimetypes")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "places", BUILD_SHARE_THEME_DIR / "scalable" / "places")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui", BUILD_SHARE_THEME_DIR / "scalable" / "ui")
-  cpDir("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32", BUILD_SHARE_THEME_DIR / "scalable-up-to-32") # GtkSpinner
+
+  # actions
+  mkDir(BUILD_SHARE_THEME_DIR / "scalable" / "actions")
+  for svg in @[
+    "media-playback-start-symbolic.svg", # play button multiplayer
+    "view-refresh-symbolic.svg", # reload multiplayer
+    "list-add-symbolic.svg", # spinner increase
+    "list-remove-symbolic.svg", # spinner decrease
+  ]:
+    cpFile(
+      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions" / svg,
+      BUILD_SHARE_THEME_DIR / "scalable" / "actions" / svg
+    )
+
+  # ui
+  mkDir(BUILD_SHARE_THEME_DIR / "scalable" / "ui")
+  for svg in @[
+    "pan-up-symbolic.svg", # Sort treeview + combobox icon
+    "pan-down-symbolic.svg", # Sort treeview
+  ]:
+    cpFile(
+      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui" / svg,
+      BUILD_SHARE_THEME_DIR / "scalable" / "ui" / svg
+    )
+  #
+
+  # scalable-up-to-32
+  mkDir(BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status")
+  cpFile(
+    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32" / "status" / "process-working-symbolic.svg",
+    BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status" / "process-working-symbolic.svg"
+  ) # Multiplayer spinner
 
   mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
   cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
@@ -223,14 +258,12 @@ proc copyAll() =
     mkDir(BUILD_BIN_DIR / "asset")
     mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
-    cpFile("asset" / "nopreview.png", BUILD_BIN_DIR / "asset" / "nopreview.png")
     copyGtk()
     copyOpenSSL()
   else:
     mkDir(BUILD_DIR / "asset")
     mkDir(BUILD_DIR / "log")
     cpDir("cert", BUILD_DIR / "cert")
-    cpFile("asset" / "nopreview.png", BUILD_DIR / "asset" / "nopreview.png")
     copyNcurses()
     copyOpenSSL()
   copyServersConfig()
@@ -340,11 +373,6 @@ task build32, "Compile and bundle 32 bit release.":
   CPU_ARCH = 32
   prepare()
   compile()
-  zip()
-
-task zip, "":
-  CPU_ARCH = 64
-  prepare()
   zip()
 
 # task xbuild64, "Cross compile and bundle 64 bit release.":

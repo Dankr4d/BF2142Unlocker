@@ -2094,18 +2094,7 @@ Author: Dankr4d
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkImage" id="imgHostLevelPreview">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="halign">start</property>
-                                            <property name="valign">start</property>
-                                            <property name="pixbuf">asset/nopreview.png</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">1</property>
-                                          </packing>
+                                          <placeholder/>
                                         </child>
                                       </object>
                                     </child>
@@ -2156,7 +2145,6 @@ Author: Dankr4d
                                         <property name="enable-grid-lines">horizontal</property>
                                         <property name="enable-tree-lines">True</property>
                                         <property name="activate-on-single-click">True</property>
-                                        <signal name="cursor-changed" handler="onTrvHostSelectableMapCursorChanged" swapped="no"/>
                                         <child internal-child="selection">
                                           <object class="GtkTreeSelection"/>
                                         </child>
@@ -2265,7 +2253,6 @@ Author: Dankr4d
                                         <property name="enable-grid-lines">horizontal</property>
                                         <property name="enable-tree-lines">True</property>
                                         <property name="activate-on-single-click">True</property>
-                                        <signal name="row-activated" handler="onTrvHostSelectedMapRowActivated" swapped="no"/>
                                         <child internal-child="selection">
                                           <object class="GtkTreeSelection"/>
                                         </child>
