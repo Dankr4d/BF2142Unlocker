@@ -255,13 +255,11 @@ proc copyServersConfig() =
 
 proc copyAll() =
   if defined(windows) or defined(linux) and CROSS_COMPILE:
-    mkDir(BUILD_BIN_DIR / "asset")
     mkDir(BUILD_BIN_DIR / "log")
     cpDir("cert", BUILD_BIN_DIR / "cert")
     copyGtk()
     copyOpenSSL()
   else:
-    mkDir(BUILD_DIR / "asset")
     mkDir(BUILD_DIR / "log")
     cpDir("cert", BUILD_DIR / "cert")
     copyNcurses()
