@@ -13,16 +13,23 @@ proc stringify(buffer: PCHAR_INFO, length: int): string =
     result.add(charInfo.Char.AsciiChar)
 
 proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
-  if FreeConsole().bool == false:
-    return (GetLastError().uint32, "")
+  # Info: Maybe check with GetConsoleWindow if a console is attached
+  # if FreeConsole().bool == false:
+  #   return (GetLastError().uint32, "FreeConsole().bool == false")
+
   if AttachConsole(pid.DWORD).bool == false:
-    return (GetLastError().uint32, "")
+    return (GetLastError().uint32, "AttachConsole")
   var stdHandle: HANDLE = GetStdHandle(STD_OUTPUT_HANDLE)
   if stdHandle == INVALID_HANDLE_VALUE:
-    return (GetLastError().uint32, "")
+    result = (GetLastError().uint32, "stdHandle == INVALID_HANDLE_VALUE")
+    discard FreeConsole()
+    return
   var screenBufferInfo: CONSOLE_SCREEN_BUFFER_INFO
   if GetConsoleScreenBufferInfo(stdHandle, addr screenBufferInfo).bool == false:
-    return (GetLastError().uint32, "")
+    result = (GetLastError().uint32, "GetConsoleScreenBufferInfo")
+    discard CloseHandle(stdHandle)
+    discard FreeConsole()
+    return
   var bufferLen: int = screenBufferInfo.dwSize.X * screenBufferInfo.dwSize.Y
   var buffer: PCHAR_INFO
   buffer = resize(buffer, bufferLen)
@@ -38,11 +45,19 @@ proc readStdOut*(pid: int): tuple[lastError: uint32, stdout: string] =
   lpReadRegion.Right = screenBufferInfo.dwSize.X
   lpReadRegion.Bottom = screenBufferInfo.dwSize.Y
   if ReadConsoleOutput(stdHandle, buffer, dwBufferSize, dwBufferCoord, addr lpReadRegion).bool == false:
-    return (GetLastError().uint32, "")
+    result = (GetLastError().uint32, "ReadConsoleOutput")
+    discard CloseHandle(stdHandle)
+    discard FreeConsole()
+    return
+  if CloseHandle(stdHandle).bool == false:
+    result = (GetLastError().uint32, "CloseHandle")
+    discard FreeConsole()
+    return
   if FreeConsole().bool == false:
-    return (GetLastError().uint32, "")
-  if AttachConsole(ATTACH_PARENT_PROCESS).bool == false:
-    return (GetLastError().uint32, "")
+    return (GetLastError().uint32, "FreeConsole")
+
+  # if AttachConsole(ATTACH_PARENT_PROCESS).bool == false:
+  #   return (GetLastError().uint32, "AttachConsole(ATTACH_PARENT_PROCESS).bool == false")
 
   result = (0.uint32, stringify(buffer, bufferLen))
   dealloc(buffer)

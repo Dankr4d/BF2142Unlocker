@@ -3,7 +3,7 @@ when isMainModule and defined(windows):
   import osproc
 
   discard startProcess(
-    command = "cmd",
-    args = @["/c", "BF2142Unlocker.exe"],
-    workingDir = getCurrentDir() / "bin"
+    command = getCurrentDir() / "bin" / "BF2142Unlocker.exe",
+    workingDir = getCurrentDir() / "bin",
+    options = {poParentStreams}
   )

@@ -39,7 +39,6 @@ when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
 elif defined(windows):
   import streams # Required to read from process stream (login/unlock server)
-  import module/windows/getprocessbyname # Required to get pid from forked process
   import module/windows/stdoutreader # Required for read stdoutput from another process
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
@@ -179,8 +178,14 @@ var currentAiSettingsPath: string
 var currentLocale: string
 
 var lastGsStatus: GsStatus = None
-var termHostLoginServerPid: int = 0
-var termHostGameServerPid: int = 0
+when defined(windows):
+  var processLoginServer: Process
+  new(processLoginServer)
+  var processGameServer: Process
+  new(processGameServer)
+else:
+  var loginServerPid: int = 0
+  var gameServerPid: int = 0
 
 type
   BF2142Options* = object
@@ -846,6 +851,7 @@ proc restoreOpenSpyIfExists() =
   let openspyDllRestorePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
   if not fileExists(openspyDllBackupPath):
     return
+  # TODO: Check if processGameClient is running and wait until it closed. remove try counter
   echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
   var tryCnt: int = 0
   while tryCnt < 8:
@@ -2128,7 +2134,7 @@ when defined(windows):
       running: bool
       data: string
   var threadLoginUnlockServer: system.Thread[Process]
-  var threadGameServer: system.Thread[int]
+  var threadGameServer: system.Thread[Process]
   var channelGameServer: Channel[ChannelData]
   var channelLoginUnlockServer: Channel[ChannelData]
   channelGameServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
@@ -2164,39 +2170,44 @@ when defined(windows):
     timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
     return SOURCE_CONTINUE
 
-proc killProcess*(pid: int) = # TODO: Add some error handling
-  when defined(linux):
-    if kill(Pid(pid), SIGKILL) < 0:
-      echo "ERROR: Cannot kill process!" # TODO: Create a popup
-  elif defined(windows):
-    var hndlProcess = OpenProcess(PROCESS_TERMINATE, false.WINBOOL, pid.DWORD)
-    discard hndlProcess.TerminateProcess(0) # TODO: Check result
-    discard CloseHandle(hndlProcess)
-  if pid == termHostGameServerPid:
-    termHostGameServerPid = 0
-  elif pid == termHostLoginServerPid:
-    termHostLoginServerPid = 0
+proc killLoginServer() =
+  when defined(windows):
+    if processLoginServer.running:
+      processLoginServer.kill()
+  else:
+    if loginServerPid > 0:
+      # TODO: Show popupif it didn't work
+      discard kill(Pid(loginServerPid), SIGKILL)
+
+proc killGameServer() =
+  when defined(windows):
+    if processGameServer.running:
+        processGameServer.kill()
+  else:
+    if gameServerPid > 0:
+      # TODO: Show popupif it didn't work
+      discard kill(Pid(gameServerPid), SIGKILL)
 
 when defined(windows):
-  proc threadGameServerProc(pid: int) {.thread.} =
-    var exitCode: DWORD
-    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, pid.DWORD)
-    # Disable resizing and maximize button (this breaks readability and
-    # stdoutreader fails if region rect is wrong because of resizing)
-    SetWindowLongPtrA(hndl, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
+  proc threadGameServerProc(process: Process) {.thread.} =
     var channelData: ChannelData = ChannelData(running: true, data: "")
+    var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, process.processID.DWORD)
     if hndl == 0:
       channelData.running = false
       channelData.data = "ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError())
       channelGameServer.send(channelData)
       return
+    # Disable resizing and maximize button (this breaks readability and
+    # stdoutreader fails if region rect is wrong because of resizing)
+    SetWindowLongPtrA(hndl, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
+    discard CloseHandle(hndl)
     while channelData.running:
-      if GetExitCodeProcess(hndl, unsafeAddr exitCode).bool == false or exitCode != STILL_ACTIVE:
+      if not process.running:
         channelData.running = false
         channelData.data = dgettext("gui", "GAMESERVER_CRASHED")
         channelGameServer.send(channelData)
         continue # Continue to cleanup after while loop
-      var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(pid)
+      var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(process.processID)
       if stdoutTuple.lastError == 0:
         channelData.data = stdoutTuple.stdout
         channelGameServer.send(channelData)
@@ -2210,30 +2221,20 @@ when defined(windows):
         channelData.data = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
         channelGameServer.send(channelData)
       sleep(250)
-    ## Cleanup
-    discard CloseHandle(hndl)
-    #
 
   proc threadLoginUnlockServerProc(process: Process) {.thread.} =
     var channelData: ChannelData = ChannelData(running: true, data: "")
-    var exitCode: int
     while channelData.running:
-      exitCode = process.peekExitCode()
-      if exitCode == 0:
+      if not process.running:
         channelData.running = false
-        channelData.data = ""
-        channelLoginUnlockServer.send(channelData)
-        return
-      elif exitCode > 0:
-        channelData.running = false
-        channelData.data = "" # TODO: Send error message through channel
+        channelData.data = "Login-/Unlockserver terminated (exit code: " & $process.peekExitCode() & ")"
         channelLoginUnlockServer.send(channelData)
         return
       channelData.data = process.outputStream.readAll()
       channelLoginUnlockServer.send(channelData)
       sleep(250)
 elif defined(linux):
-  proc ontermHostGameServerContentsChanged(terminal: Terminal) =
+  proc onTermHostGameServerContentsChanged(terminal: Terminal) =
     var text: string = termHostGameServer.getText(nil, nil, cast[var ptr GArray00](nil))
     if text.strip() == "":
       return
@@ -2241,59 +2242,9 @@ elif defined(linux):
     if gsdata.status != lastGsStatus:
       trvHostSelectedMap.update(gsdata)
       lastGsStatus = gsdata.status
-  proc ontermHostGameServerChildExited(terminal: Terminal, exitCode: int) =
+  proc onTermHostGameServerChildExited(terminal: Terminal, exitCode: int) =
     # Clears the colorized rows.
     trvHostSelectedMap.update(GsData())
-
-proc startProcess(terminal: Terminal, command: string, params: string = "",
-                  workingDir: string = os.getCurrentDir(), env: string = "",
-                  searchForkedProcess: bool = false): int =
-  when defined(linux):
-    var argv: seq[string] = command.strip().splitWhitespace()
-    if params != "":
-      argv.add(params)
-    discard terminal.spawnSync(
-      ptyFlags = {PtyFlag.noLastlog},
-      workingDirectory = workingDir,
-      argv = argv,
-      envv = env.strip().splitWhitespace(),
-      spawnFlags = {glib.SpawnFlag.doNotReapChild},
-      childSetup = nil,
-      childSetupData = nil,
-      childPid = result
-    )
-  elif defined(windows):
-    var process: Process
-    if searchForkedProcess == true:
-      process = startProcess(
-        command = """cmd /c """" & workingDir / command & "\" " & params, # TODO: Use fmt
-        workingDir = workingDir,
-        options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
-      )
-    else:
-      process = startProcess(
-        command = workingDir / command & " " & params,
-        workingDir = workingDir,
-        options = {poStdErrToStdOut, poEvalCommand, poEchoCmd}
-      )
-    result = process.processID
-    if searchForkedProcess:
-      # Gameserver
-      var tryCounter: int = 0
-      while tryCounter < 10: # TODO: Raise an exception if proess could not be found
-        result = getPidByName(command)
-        if result > 0:
-          break
-        tryCounter.inc()
-        sleep(500)
-      var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: terminal, treeView: trvHostSelectedMap)
-      discard timeoutAdd(250, timerGameServer, timerDataGameServer)
-      threadGameServer.createThread(threadGameServerProc, result) # result = pid
-    else:
-      # Login/unlock server
-      var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
-      discard timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer)
-      threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, process)
 
 proc startBF2142Server() =
   termHostGameServer.setSizeRequest(0, 300)
@@ -2304,25 +2255,41 @@ proc startBF2142Server() =
   when defined(linux):
     var ldLibraryPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
-    termHostGameServerPid = termHostGameServer.startProcess(
-      command = "bin" / "amd-64" / BF2142_SRV_PATCHED_EXE_NAME,
-      params = "+modPath mods/" & cbxHostMods.activeId,
-      workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
-      env = fmt"TERM=xterm LD_LIBRARY_PATH={ldLibraryPath}"
+    discard terminal.spawnSync(
+      ptyFlags = {PtyFlag.noLastlog},
+      workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath,
+      argv = ["bin" / "amd-64" / BF2142_SRV_PATCHED_EXE_NAME, "+modPath", fmt"mods/{cbxHostMods.activeId}"],
+      envv = [fmt"TERM=xterm", "LD_LIBRARY_PATH={ldLibraryPath}"],
+      spawnFlags = {glib.SpawnFlag.doNotReapChild},
+      childSetup = nil,
+      childSetupData = nil,
+      childPid = gameServerPid
     )
   elif defined(windows):
-    termHostGameServerPid = termHostGameServer.startProcess(
-      command = BF2142_SRV_PATCHED_EXE_NAME,
-      params = "+modPath mods/" & cbxHostMods.activeId,
+    processGameServer = startProcess(
+      command = bf2142UnlockerConfig.settings.bf2142ServerPath / BF2142_SRV_PATCHED_EXE_NAME,
       workingDir = bf2142UnlockerConfig.settings.bf2142ServerPath,
-      searchForkedProcess = true
+      args = @["+modPath", fmt"mods/{cbxHostMods.activeId}"],
+      options = {poParentStreams}
     )
 
-proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
-  term.setSizeRequest(0, 300)
+    var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: termHostGameServer, treeView: trvHostSelectedMap)
+    discard timeoutAdd(250, timerGameServer, timerDataGameServer)
+    threadGameServer.createThread(threadGameServerProc, processGameServer)
+
+proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
+  terminal.setSizeRequest(0, 300)
   when defined(linux):
+    discard terminal.spawnSync(
+      ptyFlags = {PtyFlag.noLastlog},
+      workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath,
+      argv = ["BF2142UnlockerSrv", $ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      spawnFlags = {glib.SpawnFlag.doNotReapChild},
+      childSetup = nil,
+      childSetupData = nil,
+      childPid = loginServerPid
+    )
     # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
-    termHostLoginServerPid = term.startProcess(command = fmt"./BF2142UnlockerSrv {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
     var tryCnt: int = 0
     while tryCnt < 3:
       if isAddrReachable($ipAddress, Port(18300), 1_000):
@@ -2331,7 +2298,15 @@ proc startLoginServer(term: Terminal, ipAddress: IpAddress) =
         tryCnt.inc()
         sleep(250)
   elif defined(windows):
-    termHostLoginServerPid = term.startProcess(command = fmt"BF2142UnlockerSrv.exe {$ipAddress} {$chbtnUnlocksUnlockSquadGadgets.active}")
+    processLoginServer = startProcess(
+      command = "BF2142UnlockerSrv.exe",
+      args = [$ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      options = {poStdErrToStdOut, poDaemon}
+    )
+
+    var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
+    discard timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer)
+    threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, processLoginServer)
 ##
 
 ### Events
@@ -2466,7 +2441,7 @@ proc onBtnQuickConnectClicked(self: Button00) {.signal.} =
   discard patchAndStartLogic()
 
 proc stopQuickSever(singleplayer: bool) =
-  killProcess(termHostLoginServerPid)
+  killLoginServer()
   txtQuickIpAddress.text = ""
   termQuickServer.clear()
   termQuickServer.visible = false
@@ -2888,8 +2863,6 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   else:
     txtQuickIpAddress.text = $ipAddress
   cbtnQuickAutoJoin.active = true
-  if termHostLoginServerPid > 0:
-    killProcess(termHostLoginServerPid)
   termHostLoginServer.clear()
   termHostLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
@@ -2897,10 +2870,9 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
 
 proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
-  killProcess(termHostLoginServerPid)
   txtQuickIpAddress.text = ""
-  if termHostGameServerPid > 0:
-    killProcess(termHostGameServerPid)
+  killLoginServer()
+  killGameServer()
 
 proc onCbxHostModsChanged(self: ComboBox00) {.signal.} =
   updatePathes()
@@ -3053,41 +3025,48 @@ proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
-    sendMsg(termHostGameServerPid, command)
+    sendMsg(processGameServer.processID, command)
   elif defined(linux):
     termHostGameServer.feedChild(command)
 
 proc onHostBotSkillChanged(self: pointer) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnHostBotSkill.value, 1) & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnHostBotSkill.value, 1) & "\r")
 
 proc onHostTicketRatioChanged(self: pointer) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnHostTicketRatio.value.int & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnHostTicketRatio.value.int & "\r")
 
 proc onHostSpawnTimeChanged(self: pointer) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnHostSpawnTime.value.int & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnHostSpawnTime.value.int & "\r")
 
 proc onHostRoundsPerMapChanged(self: pointer) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnHostRoundsPerMap.value.int & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnHostRoundsPerMap.value.int & "\r")
 
 proc onHostPlayersNeededToStartChanged(self: pointer) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnHostPlayersNeededToStart.value.int & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnHostPlayersNeededToStart.value.int & "\r")
 
 proc onHostFriendlyFireToggled(self: CheckButton00) {.signal.} =
+  if not processGameServer.running:
+    return
   var val: string = if chbtnHostFriendlyFire.active: "100" else: "0"
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
-    execBF2142ServerCommand(SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
-    execBF2142ServerCommand(SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
-    execBF2142ServerCommand(SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+  execBF2142ServerCommand(SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
+  execBF2142ServerCommand(SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
+  execBF2142ServerCommand(SETTING_SOLDIER_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
+  execBF2142ServerCommand(SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
 
 proc onHostAllowNoseCamToggled(self: CheckButton00) {.signal.} =
-  if termHostGameServerPid > 0:
-    execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnHostAllowNoseCam.active.int & "\r")
+  if not processGameServer.running:
+    return
+  execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnHostAllowNoseCam.active.int & "\r")
 #
 ## Unlocks
 proc onChbtnUnlocksUnlockSquadGadgetsToggled(self: CheckButton00) {.signal.} =
@@ -3103,12 +3082,8 @@ proc onApplicationWindowDraw(self: ApplicationWindow00, context: pointer): bool 
     windowShown = true
 
 proc onQuit() =
-  if termHostGameServerPid > 0:
-    echo "KILLING BF2142 GAME SERVER"
-    killProcess(termHostGameServerPid)
-  if termHostLoginServerPid > 0:
-    echo "KILLING BF2142 LOGIN/UNLOCK SERVER"
-    killProcess(termHostLoginServerPid)
+  killLoginServer()
+  killGameServer()
   restoreOpenSpyIfExists()
 
 proc onApplicationWindowDestroy(self: ApplicationWindow00) {.signal.} =
@@ -3392,21 +3367,16 @@ proc main =
   languageLogic()
   application = newApplication()
   application.connect("activate", onApplicationActivate)
-  when defined(windows) and defined(release):
-    # Hiding cmd, because I could not compile it as gui.
-    # Warning: Do not start gui from cmd (it becomes invisible and need to be killed via taskmanager)
-    # TODO: This is a workaround.
-    ShowWindow(GetConsoleWindow(), SW_HIDE)
   discard run(application)
 
 when defined(release):
   import times
   proc unhandledException(msg: string) =
     system.writeFile("log" / "crash_" & format(now(), "yyyy-MM-dd'T'hh-mm-ss-ms") & ".log", msg)
-    if termHostGameServerPid > 0:
-      killProcess(termHostGameServerPid)
-    if termHostLoginServerPid > 0:
-      killProcess(termHostLoginServerPid)
+    {.cast(gcsafe).}:
+      # TODO: Should I store the processId globally for windows too and kill by pid?
+      killLoginServer()
+      killGameServer()
     quit(1)
   onUnhandledException = unhandledException
 
