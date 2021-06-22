@@ -118,11 +118,14 @@ const VERSION: string = static:
   let posVersionStart: int = raw.find("version")
   let posQuoteStart: int = raw.find('"', posVersionStart)
   let posQuoteEnd: int = raw.find('"', posQuoteStart + 1)
-  let ver: string = raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
-  if RC != 0:
-    ver & " (RC: " & $RC & ")"
+  var ver: string = raw.substr(posQuoteStart + 1, posQuoteEnd - 1)
+  when defined(amd64):
+    ver &= " (64-bit)"
   else:
-    ver
+    ver &= " (32-bit)"
+  if RC > 0:
+    ver &= " | RC: " & $RC
+  ver
 
 when defined(linux):
   const BF2142_SRV_EXE_NAME: string = "bf2142"
