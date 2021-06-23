@@ -2258,11 +2258,11 @@ proc startBF2142Server() =
   when defined(linux):
     var ldLibraryPath: string = bf2142UnlockerConfig.settings.bf2142ServerPath / "bin" / "amd-64"
     ldLibraryPath &= ":" & os.getCurrentDir()
-    discard terminal.spawnSync(
+    discard termHostGameServer.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
       workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath,
       argv = ["bin" / "amd-64" / BF2142_SRV_PATCHED_EXE_NAME, "+modPath", fmt"mods/{cbxHostMods.activeId}"],
-      envv = [fmt"TERM=xterm", "LD_LIBRARY_PATH={ldLibraryPath}"],
+      envv = ["TERM=xterm", fmt"LD_LIBRARY_PATH={ldLibraryPath}"],
       spawnFlags = {glib.SpawnFlag.doNotReapChild},
       childSetup = nil,
       childSetupData = nil,
@@ -2285,8 +2285,9 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
   when defined(linux):
     discard terminal.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
-      workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath,
-      argv = ["BF2142UnlockerSrv", $ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      workingDirectory = "",
+      argv = ["./BF2142UnlockerSrv", $ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      envv = [],
       spawnFlags = {glib.SpawnFlag.doNotReapChild},
       childSetup = nil,
       childSetupData = nil,
@@ -3028,38 +3029,30 @@ proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
+    if not processGameServer.running:
+      return
     sendMsg(processGameServer.processID, command)
   elif defined(linux):
+    if not gameServerPid > 0:
+      return
     termHostGameServer.feedChild(command)
 
 proc onHostBotSkillChanged(self: pointer) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_BOT_SKILL & " " & $round(sbtnHostBotSkill.value, 1) & "\r")
 
 proc onHostTicketRatioChanged(self: pointer) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_TICKET_RATIO & " " & $sbtnHostTicketRatio.value.int & "\r")
 
 proc onHostSpawnTimeChanged(self: pointer) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_SPAWN_TIME & " " & $sbtnHostSpawnTime.value.int & "\r")
 
 proc onHostRoundsPerMapChanged(self: pointer) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_ROUNDS_PER_MAP & " " & $sbtnHostRoundsPerMap.value.int & "\r")
 
 proc onHostPlayersNeededToStartChanged(self: pointer) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_PLAYERS_NEEDED_TO_START & " " & $sbtnHostPlayersNeededToStart.value.int & "\r")
 
 proc onHostFriendlyFireToggled(self: CheckButton00) {.signal.} =
-  if not processGameServer.running:
-    return
   var val: string = if chbtnHostFriendlyFire.active: "100" else: "0"
   execBF2142ServerCommand(SETTING_SOLDIER_FRIENDLY_FIRE & " " & val & "\r")
   execBF2142ServerCommand(SETTING_VEHICLE_FRIENDLY_FIRE & " " & val & "\r")
@@ -3067,8 +3060,6 @@ proc onHostFriendlyFireToggled(self: CheckButton00) {.signal.} =
   execBF2142ServerCommand(SETTING_VEHICLE_SPLASH_FRIENDLY_FIRE & " " & val & "\r")
 
 proc onHostAllowNoseCamToggled(self: CheckButton00) {.signal.} =
-  if not processGameServer.running:
-    return
   execBF2142ServerCommand(SETTING_ALLOW_NOSE_CAM & " " & $chbtnHostAllowNoseCam.active.int & "\r")
 #
 ## Unlocks
