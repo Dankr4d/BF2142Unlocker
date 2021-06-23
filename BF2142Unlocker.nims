@@ -336,6 +336,9 @@ proc prepare() =
 
   COMPILE_PARAMS &= fmt" --passC:-m{CPU_ARCH} --passL:-m{CPU_ARCH}"
 
+  if defined(windows) or defined(linux) and CROSS_COMPILE:
+    COMPILE_PARAMS &= " --passL:-Wl,--no-insert-timestamp"
+
 proc compile() =
   mode = Verbose
   rmDir(BUILD_DIR)
