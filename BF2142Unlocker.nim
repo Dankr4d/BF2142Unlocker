@@ -2143,6 +2143,7 @@ when defined(windows):
   channelGameServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
   channelLoginUnlockServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
 
+  var timerGameServerId: int
   proc timerGameServer(timerData: TimerDataGameServer): bool =
     # TODO: Always receive the last entry from channel, because
     #       data is the whole stdout of the game server
@@ -2159,22 +2160,28 @@ when defined(windows):
         gsdata = channelData.data.parseGsData()
       except ValueError:
         discard # Data couldn't be parsed
+    else:
+      timerGameServerId = 0
     if gsdata.status != lastGsStatus:
       timerData.treeView.update(gsdata)
       lastGsStatus = gsdata.status
     return channelData.running
 
+  var timerLoginUnlockServerId: int
   proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
     var (hasData, channelData) = channelLoginUnlockServer.tryRecv()
     if not hasData:
       return SOURCE_CONTINUE
     if not channelData.running:
+      timerLoginUnlockServerId = 0
       return SOURCE_REMOVE
     timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
     return SOURCE_CONTINUE
 
 proc killLoginServer() =
   when defined(windows):
+    if timerLoginUnlockServerId > 0:
+      discard remove(timerLoginUnlockServerId)
     if processLoginServer.running:
       processLoginServer.kill()
   else:
@@ -2184,8 +2191,10 @@ proc killLoginServer() =
 
 proc killGameServer() =
   when defined(windows):
+    if timerGameServerId > 0:
+      discard remove(timerGameServerId)
     if processGameServer.running:
-        processGameServer.kill()
+      processGameServer.kill()
   else:
     if gameServerPid > 0:
       # TODO: Show popupif it didn't work
@@ -2230,7 +2239,7 @@ when defined(windows):
     while channelData.running:
       if not process.running:
         channelData.running = false
-        channelData.data = "Login-/Unlockserver terminated (exit code: " & $process.peekExitCode() & ")"
+        channelData.data = ""
         channelLoginUnlockServer.send(channelData)
         return
       channelData.data = process.outputStream.readAll()
@@ -2277,7 +2286,7 @@ proc startBF2142Server() =
     )
 
     var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: termHostGameServer, treeView: trvHostSelectedMap)
-    discard timeoutAdd(250, timerGameServer, timerDataGameServer)
+    timerGameServerId = int(timeoutAdd(250, timerGameServer, timerDataGameServer))
     threadGameServer.createThread(threadGameServerProc, processGameServer)
 
 proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
@@ -2309,7 +2318,7 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
     )
 
     var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
-    discard timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer)
+    timerLoginUnlockServerId = int(timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer))
     threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, processLoginServer)
 ##
 
