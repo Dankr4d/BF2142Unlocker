@@ -317,6 +317,18 @@ const
   GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
+  STATS_ENDOFROUND_PY: string = staticRead("asset/stats/endofround.py")
+  STATS_MEDAL_DATA_PY: string = staticRead("asset/stats/medal_data.py")
+  STATS_MEDALS_PY: string = staticRead("asset/stats/medals.py")
+  STATS_RANK_PY: string = staticRead("asset/stats/rank.py")
+  STATS_STATS_PY: string = staticRead("asset/stats/stats.py")
+  STATS_UNLOCKS_PY: string = staticRead("asset/stats/unlocks.py")
+  # ORIGINAL_STATS_ENDOFROUND_PY: string = "22136ee9e363746157f0c09f669a5b7d"
+  # ORIGINAL_STATS_RANK_PY: string = "828d91e3aa280e8f80750041c7c073cc"
+  # ORIGINAL_STATS_STATS_PY: string = "484f214c2cb1e9f362f0afc59ab41f05"
+  # ORIGINAL_STATS_UNLOCKS_PY: string = "7d5fce78c3c56ab4bc43e2f671c060ce"
+
+const
   BLANK_BIK: string = staticRead("asset/blank.bik")
   BLANK_BIK_HASH: string = static: getMd5(BLANK_BIK)
 
@@ -730,6 +742,20 @@ proc fixBF2142CoopPyLogic(path: string) =
     discard copyFile(gameModePath / "gpm_coop.py", gameModePath / "gpm_coop.py.original")
   discard writeFile(gameModePath / "gpm_coop.py", lines.join("\n"))
   discard writeFile(gameModePath / GPM_COOP_FIX_PY_FILENAME, GPM_COOP_FIX_PY)
+
+proc fixMedalsAndPins(path: string) =
+  let statsPath: string = path / "python" / "bf2" / "stats"
+  if fileExists(statsPath / "medals.py"):
+    return
+  for fileName in ["endofround.py", "rank.py", "stats.py", "unlocks.py"]:
+    let fileSplit: tuple[dir, name, ext: string] = splitFile(fileName)
+    discard moveFile(statsPath / fileName, statsPath / fileSplit.name & FILE_BACKUP_SUFFIX)
+  discard writeFile(statsPath / "endofround.py", STATS_ENDOFROUND_PY)
+  discard writeFile(statsPath / "medal_data.py", STATS_MEDAL_DATA_PY)
+  discard writeFile(statsPath / "medals.py", STATS_MEDALS_PY)
+  discard writeFile(statsPath / "rank.py", STATS_RANK_PY)
+  discard writeFile(statsPath / "stats.py", STATS_STATS_PY)
+  discard writeFile(statsPath / "unlocks.py", STATS_UNLOCKS_PY)
 
 proc isAlphaNumeric(str: string): bool =
   for ch in str:
@@ -3283,9 +3309,11 @@ proc onApplicationActivate(application: Application) =
     cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
     cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
     fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
+    fixMedalsAndPins(bf2142UnlockerConfig.settings.bf2142ClientPath)
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
     fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
+    fixMedalsAndPins(bf2142UnlockerConfig.settings.bf2142ServerPath)
   loadJoinResolutions()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
   lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
