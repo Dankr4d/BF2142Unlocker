@@ -34,6 +34,7 @@ import client/gspy # Required to query each gamespy server for game server infor
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
+import page/download
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -3248,6 +3249,8 @@ proc onApplicationActivate(application: Application) =
   dlgSettingsBF2142ClientPathDetected = builder.getDialog("dlgSettingsBF2142ClientPathDetected")
   lblSettingsBF2142ClientPathDetected = builder.getLabel("lblSettingsBF2142ClientPathDetected")
 
+  download.init(builder)
+
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
   #
@@ -3339,6 +3342,9 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
+
+  # TODO: Remove
+  notebook.currentPage = 4
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

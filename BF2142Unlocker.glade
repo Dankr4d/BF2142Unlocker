@@ -3,7 +3,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 
+Copyright (c)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -436,6 +436,42 @@ Author: Dankr4d
       <column type="gchararray"/>
       <!-- column-name GSpyPort -->
       <column type="guint"/>
+    </columns>
+  </object>
+  <object class="GtkTreeStore" id="treeStoreMaps">
+    <columns>
+      <!-- column-name Game -->
+      <column type="gchararray"/>
+      <!-- column-name Mod -->
+      <column type="gchararray"/>
+      <!-- column-name Map -->
+      <column type="gchararray"/>
+      <!-- column-name Size -->
+      <column type="gchararray"/>
+      <!-- column-name Url -->
+      <column type="gchararray"/>
+      <!-- column-name Progress -->
+      <column type="gfloat"/>
+      <!-- column-name ProgressVisible -->
+      <column type="gboolean"/>
+      <!-- column-name MapHorizontalPadding -->
+      <column type="guint"/>
+      <!-- column-name IconName -->
+      <column type="gchararray"/>
+      <!-- column-name SpinnerPulse -->
+      <column type="guint"/>
+      <!-- column-name SpinnerVisible -->
+      <column type="gboolean"/>
+      <!-- column-name IconVisible -->
+      <column type="gboolean"/>
+      <!-- column-name SizeInBytes -->
+      <column type="guint"/>
+      <!-- column-name Status -->
+      <column type="gint"/>
+      <!-- column-name Download -->
+      <column type="gboolean"/>
+      <!-- column-name isRadioButton -->
+      <column type="gboolean"/>
     </columns>
   </object>
   <object class="GtkApplicationWindow" id="window">
@@ -2177,7 +2213,9 @@ Author: Dankr4d
                                             <property name="title" translatable="yes">Size</property>
                                             <property name="expand">True</property>
                                             <child>
-                                              <object class="GtkCellRendererText"/>
+                                              <object class="GtkCellRendererText">
+                                                <property name="xalign">1</property>
+                                              </object>
                                               <attributes>
                                                 <attribute name="text">2</attribute>
                                               </attributes>
@@ -2593,6 +2631,318 @@ Author: Dankr4d
               </packing>
             </child>
             <child>
+              <object class="GtkBox" id="vboxDownloads">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkNotebook">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="show-border">False</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">FILTER: GAMEMODE (COOP), DOWNLOADED, MISSING, MOD,
+SEARCH BY NAME ... ETC.</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkOverlay">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkScrolledWindow">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="shadow-type">in</property>
+                                <child>
+                                  <object class="GtkTreeView" id="trvDownloadsMaps">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON_RELEASE_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_STRUCTURE_MASK</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="model">treeStoreMaps</property>
+                                    <property name="search-column">2</property>
+                                    <property name="enable-tree-lines">True</property>
+                                    <signal name="button-release-event" handler="onTrvDownloadsMapsButtonReleaseEvent" swapped="no"/>
+                                    <signal name="leave-notify-event" handler="onTrvDownloadsMapsLeaveNotifyEvent" swapped="no"/>
+                                    <signal name="motion-notify-event" handler="onTrvDownloadsMapsMotionNotifyEvent" swapped="no"/>
+                                    <child internal-child="selection">
+                                      <object class="GtkTreeSelection">
+                                        <property name="mode">none</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <child>
+                                          <object class="GtkCellRendererToggle">
+                                            <signal name="toggled" handler="onTrvDownloadsMapsDownloadToggled" swapped="no"/>
+                                          </object>
+                                          <attributes>
+                                            <attribute name="active">14</attribute>
+                                            <attribute name="radio">15</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Game</property>
+                                        <property name="clickable">True</property>
+                                        <property name="sort-column-id">0</property>
+                                        <child>
+                                          <object class="GtkCellRendererText"/>
+                                          <attributes>
+                                            <attribute name="text">0</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Mod</property>
+                                        <property name="clickable">True</property>
+                                        <property name="sort-column-id">1</property>
+                                        <child>
+                                          <object class="GtkCellRendererText"/>
+                                          <attributes>
+                                            <attribute name="text">1</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="sizing">autosize</property>
+                                        <property name="title" translatable="yes">Map</property>
+                                        <property name="expand">True</property>
+                                        <property name="clickable">True</property>
+                                        <property name="sort-column-id">2</property>
+                                        <child>
+                                          <object class="GtkCellRendererText"/>
+                                          <attributes>
+                                            <attribute name="xpad">7</attribute>
+                                            <attribute name="text">2</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Size</property>
+                                        <property name="clickable">True</property>
+                                        <property name="sort-column-id">3</property>
+                                        <child>
+                                          <object class="GtkCellRendererText">
+                                            <property name="xalign">1</property>
+                                          </object>
+                                          <attributes>
+                                            <attribute name="text">3</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Progress</property>
+                                        <child>
+                                          <object class="GtkCellRendererProgress"/>
+                                          <attributes>
+                                            <attribute name="visible">6</attribute>
+                                            <attribute name="value">5</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn" id="download">
+                                        <child>
+                                          <object class="GtkCellRendererPixbuf"/>
+                                          <attributes>
+                                            <attribute name="visible">11</attribute>
+                                            <attribute name="icon-name">8</attribute>
+                                          </attributes>
+                                        </child>
+                                        <child>
+                                          <object class="GtkCellRendererSpinner">
+                                            <property name="active">True</property>
+                                          </object>
+                                          <attributes>
+                                            <attribute name="visible">10</attribute>
+                                            <attribute name="pulse">9</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Status</property>
+                                        <child>
+                                          <object class="GtkCellRendererText"/>
+                                          <attributes>
+                                            <attribute name="text">13</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="index">-1</property>
+                              </packing>
+                            </child>
+                            <child type="overlay">
+                              <object class="GtkSpinner" id="spinnerMapsMaps">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                              </object>
+                              <packing>
+                                <property name="pass-through">True</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                    <child type="tab">
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">TAB_DOWNLOADS_MAPS</property>
+                      </object>
+                      <packing>
+                        <property name="tab-fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkOverlay">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child type="tab">
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">TAB_DOWNLOADS_MODS</property>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                        <property name="tab-fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkOverlay">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child type="tab">
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">TAB_DOWNLOADS_BF2142UNLOCKER</property>
+                      </object>
+                      <packing>
+                        <property name="position">2</property>
+                        <property name="tab-fill">False</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Download</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Remove</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">TAB_DOWNLOADS</property>
+              </object>
+              <packing>
+                <property name="position">4</property>
+                <property name="tab-fill">False</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkBox" id="vboxSettings">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -2885,7 +3235,7 @@ Author: Dankr4d
                 </child>
               </object>
               <packing>
-                <property name="position">4</property>
+                <property name="position">5</property>
               </packing>
             </child>
             <child type="tab">
@@ -2896,7 +3246,7 @@ Author: Dankr4d
                 <property name="label" translatable="yes">TAB_SETTINGS</property>
               </object>
               <packing>
-                <property name="position">4</property>
+                <property name="position">5</property>
                 <property name="tab-fill">False</property>
               </packing>
             </child>

@@ -38,6 +38,8 @@ server/gpcm
 server/gpcm.exe
 server/stats
 server/stats.exe
+server/download
+server/download.exe
 
 module/localaddr
 module/localaddr.exe
@@ -69,6 +71,12 @@ patcher/bf2142
 patcher/bf2142.exe
 registry/bf2142
 registry/bf2142.exe
+
+page/download
+page/download.exe
+
+type/download
+type/download.exe
 
 config/config.ini
 config/login.ini
