@@ -391,6 +391,62 @@ msgstr "Да"
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Нет, выбрать другой .."
 
+# ##
+# ##### Settings
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr "Разрешение:"
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr "Земля:"
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr "Эффекты:"
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr "Геометрия:"
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr "Текстуры:"
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr "Освещение:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr "Динамические тени:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr "Динамический свет:"
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr "Сглаживание:"
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr "Фильтрация текстур:"
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr "Дальность видимости:"
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr "Улучшенное освещение:"
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr "Вернуть"
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr "Сохранить"
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr "Низкое"
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr "Среднее"
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr "Высокое"
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr "Выкл"
+
 msgid "TAB_QUICK"
 msgstr "Играть"
 
@@ -414,6 +470,15 @@ msgstr "Настройки"
 
 msgid "TAB_SETTINGS_TOOLTIP"
 msgstr "Основные настройки"
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr "Главное"
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr "Видео"
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr "Аудио"
 
 msgid "VERSION_TOOLTIP"
 msgstr "Текущая версия"

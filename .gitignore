@@ -59,6 +59,9 @@ module/windows/stdoutreader.exe
 module/windows/sendmsg
 module/windows/sendmsg.exe
 
+module/gintro/liststore
+module/gintro/liststore.exe
+
 gamesrv/parser
 gamesrv/parser.exe
 
@@ -67,8 +70,15 @@ macro/signal.exe
 
 patcher/bf2142
 patcher/bf2142.exe
+
 registry/bf2142
 registry/bf2142.exe
+
+profile/video
+profile/video.exe
+
+page/setting/video
+page/setting/video.exe
 
 config/config.ini
 config/login.ini

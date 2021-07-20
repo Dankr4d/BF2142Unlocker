@@ -34,6 +34,10 @@ import client/gspy # Required to query each gamespy server for game server infor
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
+import module/gintro/liststore
+
+import profile/video as profileVideo
+import page/setting/video as pageSettingVideo
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -110,6 +114,7 @@ type
 var bf2142UnlockerConfig: BF2142UnlockerConfig # TODO: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
 var documentsPath: string
 var bf2142ProfilePath: string
+var bf2142ProfileDefaultPath: string
 var bf2142Profile0001Path: string
 
 const RC {.intdefine.}: int = 0
@@ -309,11 +314,9 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 const
   PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
-  PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
   PROFILE_GENERAL_CON: string = staticRead("profile/General.con")
   PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
   PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
-  PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
   GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
@@ -513,6 +516,7 @@ var vboxUnlocks: Box
 var chbtnUnlocksUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
+var notebookSettings: Notebook
 var vboxSettings: Box
 var lblSettingsBF2142ClientPath: Label
 var txtSettingsBF2142ClientPath: Entry
@@ -767,10 +771,60 @@ proc validateSoldier(soldier: string): bool =
   let soldierRegex: regex.Regex = re"""^([[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{3}[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@\#\-+]{0,11}|[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{0,14})$"""
   return match(soldier, soldierRegex)
 
+proc checkBF2142ProfileFiles() =
+  if bf2142ProfilePath == "":
+    raise newException(ValueError, "checkBF2142ProfileFiles - bf2142ProfilePath == \"\"")
+  discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
+  discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
+  if not existsOrCreateDir(bf2142Profile0001Path).exists:
+    # Video.con
+    if fileExists(bf2142ProfileDefaultPath / "Video.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Video.con", bf2142Profile0001Path / "Video.con"):
+        return
+    else:
+      let video: Video = newVideo()
+      video.writeVideo(bf2142Profile0001Path / "Video.con")
+
+    # Audio.con
+    if fileExists(bf2142ProfileDefaultPath / "Audio.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Audio.con", bf2142Profile0001Path / "Audio.con"):
+        return
+    else:
+      if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
+        return
+
+    # Profile.con
+    if fileExists(bf2142ProfileDefaultPath / "Profile.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Profile.con", bf2142Profile0001Path / "Profile.con"):
+        return
+    else:
+      if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
+        return
+
+    # ServerSettings.con
+    if fileExists(bf2142ProfileDefaultPath / "ServerSettings.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "ServerSettings.con", bf2142Profile0001Path / "ServerSettings.con"):
+        return
+    else:
+      if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
+        return
+
+    # General.con
+    if not writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON):
+      return
+
+  if not fileExists(bf2142ProfilePath / "Global.con"):
+    if not writeFile(bf2142ProfilePath / "Global.con", GLOBAL_CON):
+      return
+
 proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
+  bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
-
+  pageSettingVideo.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  checkBF2142ProfileFiles()
+  when defined(linux):
+    notebookSettings.getNthPage(1).setSensitive(true)
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
   # TODO: Try'n catch because we parse booleans
@@ -832,9 +886,12 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     txtSettingsWinePrefix.text = config.settings.winePrefix
     if config.settings.winePrefix != "":
       documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
+      updateProfilePathes()
+    else:
+      notebookSettings.getNthPage(1).setSensitive(false)
   elif defined(windows):
     documentsPath = getDocumentsPath()
-  updateProfilePathes()
+    updateProfilePathes()
   when defined(linux):
     txtSettingsStartupQuery.text = config.settings.startupQuery
   chbtnSettingsSkipMovies.active = config.settings.skipMovies
@@ -898,14 +955,6 @@ proc restoreOpenSpyIfExists() =
         return
       else:
         sleep(500)
-
-proc typeTest(o: gobject.Object; s: string): bool =
-  let gt = g_type_from_name(s)
-  return g_type_check_instance_is_a(cast[ptr TypeInstance00](o.impl), gt).toBool
-
-proc listStore(o: gobject.Object): gtk.ListStore =
-  assert(typeTest(o, "GtkListStore"))
-  cast[gtk.ListStore](o)
 
 proc clear(list: TreeView) =
   ignoreEvents = true
@@ -1361,31 +1410,8 @@ proc loadMapList(): bool =
   fileTpl.file.close()
   return true
 
-proc checkBF2142ProfileFiles() =
-  if bf2142ProfilePath == "":
-    raise newException(ValueError, "checkBF2142ProfileFiles - bf2142ProfilePath == \"\"")
-  discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
-  discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
-  if not existsOrCreateDir(bf2142Profile0001Path).exists:
-    if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Video.con", PROFILE_VIDEO_CON):
-      return
-  if not fileExists(bf2142ProfilePath / "Global.con"):
-    if not writeFile(bf2142ProfilePath / "Global.con", GLOBAL_CON):
-      return
 
 proc saveBF2142Profile(username, profile: string) =
-  checkBF2142ProfileFiles()
-
   var profileConPath: string = bf2142Profile0001Path / "Profile.con"
   var serverSettingsConPath: string = bf2142Profile0001Path / "ServerSettings.con"
   var globalConPath: string = bf2142ProfilePath / "Global.con"
@@ -1724,7 +1750,7 @@ proc timerUpdatePlayerList(TODO: int): bool =
   return SOURCE_REMOVE
 
 proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: Port]) =
-  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 500)
+  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 1000)
   channelUpdatePlayerList.send((gspy, gspyIpPort.gspyIp, gspyIpPort.gspyPort))
 
 proc updatePlayerListAsync() =
@@ -1818,16 +1844,24 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
     # TODO2: Query master servers async like in `queryServers` proc
     try:
-      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
+      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 1000)
     except RangeDefect:
       break # TODO: Temprariy fixing issue #69 and #72
-    gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
+    gslist.add(filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
+        return false
+      if gs in gslist:
+        # INFO: PlayBF2142 master server also respond OpenSpy game server
+        # TODO: If the original master server isn't replying to us, but PlayBF2142 do,
+        #       then it's listed with the incorrect master server
+        # TODO: Also add a setting like "is_duplicating" to server.ini and sort them out (if true),
+        #       after all other master server who have is_duplicating set to false, responded.
+        #       Then the order in server.ini isn't required anymore.
         return false
       serverConfigsTbl[$gs.address & $gs.port] = serverConfigs[idx]
       return true
-    )
-    gslist.add(gslistTmp)
+    ))
+    # gslist.add(gslistTmp)
   let serversTmp = queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
   for server in serversTmp:
     servers.add((
@@ -3123,7 +3157,7 @@ proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
     newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
 
 proc onApplicationActivate(application: Application) =
-  let builder = newBuilder()
+  let builder: Builder = newBuilder()
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
@@ -3229,6 +3263,7 @@ proc onApplicationActivate(application: Application) =
   vboxUnlocks = builder.getBox("vboxUnlocks")
   chbtnUnlocksUnlockSquadGadgets = builder.getCheckButton("chbtnUnlocksUnlockSquadGadgets")
 
+  notebookSettings = builder.getNotebook("notebookSettings")
   vboxSettings = builder.getBox("vboxSettings")
   lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
   txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
@@ -3301,6 +3336,11 @@ proc onApplicationActivate(application: Application) =
     preferDarkTheme.setBoolean(true)
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
+
+  ## Pages
+  pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
+  #
+
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
   window.show()
@@ -3339,6 +3379,9 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
+
+  # notebook.currentPage = 4 # TODO: Remove
+  notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

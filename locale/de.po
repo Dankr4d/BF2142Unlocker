@@ -392,6 +392,62 @@ msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Nein, auswählen .."
 
 # ##
+# ##### Settings
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr "Auflösung:"
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr "Terrain:"
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr "Effekte:"
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr "Geometrie:"
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr "Texturen:"
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr "Beleuchtung:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr "Dynamische Schatten:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr "Dynamisches Licht:"
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr "Antialiasing:"
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr "Texturenfilter:"
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr "Sichtweite:"
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr "Verbesserte Beleuchtung:"
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr "Zurücksetzen"
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr "Speichern"
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr "Niedrig"
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr "Mittel"
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr "Hoch"
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr "Aus"
+
+# ##
 # ##### Tabs
 msgid "TAB_QUICK"
 msgstr "Spielen"
@@ -400,7 +456,7 @@ msgid "TAB_QUICK_TOOLTIP"
 msgstr "Hier kannst du im Singleplayer oder LAN spielen."
 
 msgid "TAB_HOST"
-msgstr "Bereitstellen"
+msgstr "Hosten"
 
 msgid "TAB_HOST_TOOLTIP"
 msgstr "Einstellungen zum hosten."
@@ -416,6 +472,15 @@ msgstr "Einstellungen"
 
 msgid "TAB_SETTINGS_TOOLTIP"
 msgstr "Allgemeine Einstellungen"
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr "Allgemein"
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr "Grafik"
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr "Ton"
 
 # ##
 # ##### Statusbar

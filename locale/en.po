@@ -396,6 +396,62 @@ msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "No, select .."
 
 # ##
+# ##### Settings
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr "Resolution:"
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr "Terrain:"
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr "Effects:"
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr "Geometry:"
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr "Texture:"
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr "Lighting:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr "Dynamic shadows:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr "Dynamic light:"
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr "Antialiasing:"
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr "Texture filtering:"
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr "View distance:"
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr "Enhanced lighting:"
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr "Revert"
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr "Save"
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr "Low"
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr "Medium"
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr "High"
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr "Off"
+
+# ##
 # ##### Tabs
 msgid "TAB_QUICK"
 msgstr "Play"
@@ -420,6 +476,15 @@ msgstr "Settings"
 
 msgid "TAB_SETTINGS_TOOLTIP"
 msgstr "General settings"
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr "General"
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr "Video"
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr "Audio"
 
 # ##
 # ##### Statusbar
