@@ -19,6 +19,11 @@ const
   SETTING_VIDEO_VIDEO_OPTION_SCHEME: string = "VideoSettings.setVideoOptionScheme"
 
 type
+  OffLowMediumHigh* {.pure.} = enum
+    Off = 0
+    Low = 1
+    Medium = 2
+    High = 3
   LowMediumHigh* {.pure.} = enum
     Low = 1
     Medium = 2
@@ -40,8 +45,8 @@ type
     terrainQuality*: LowMediumHigh
     geometryQuality*: LowMediumHigh
     lightingQuality*: LowMediumHigh
-    dynamicLightingQuality*: LowMediumHigh
-    dynamicShadowsQuality*: LowMediumHigh
+    dynamicLightingQuality*: OffLowMediumHigh
+    dynamicShadowsQuality*: OffLowMediumHigh
     effectsQuality*: LowMediumHigh
     textureQuality*: LowMediumHigh
     textureFilteringQuality*: LowMediumHigh
@@ -55,8 +60,8 @@ proc newVideo*(): Video =
   result.terrainQuality = LowMediumHigh.Low
   result.geometryQuality = LowMediumHigh.Low
   result.lightingQuality = LowMediumHigh.Low
-  result.dynamicLightingQuality = LowMediumHigh.Low
-  result.dynamicShadowsQuality = LowMediumHigh.Low
+  result.dynamicLightingQuality = OffLowMediumHigh.Off
+  result.dynamicShadowsQuality = OffLowMediumHigh.Off
   result.effectsQuality = LowMediumHigh.Low
   result.textureQuality = LowMediumHigh.Low
   result.textureFilteringQuality = LowMediumHigh.Low
@@ -88,9 +93,9 @@ proc readVideo*(path: string): Video =
       of SETTING_VIDEO_LIGHTING_QUALITY:
         result.lightingQuality = cast[LowMediumHigh](parseInt(value))
       of SETTING_VIDEO_DYNAMIC_LIGHTING_QUALITY:
-        result.dynamicLightingQuality = cast[LowMediumHigh](parseInt(value))
+        result.dynamicLightingQuality = cast[OffLowMediumHigh](parseInt(value))
       of SETTING_VIDEO_DYNAMIC_SHADOWS_QUALITY:
-        result.dynamicShadowsQuality = cast[LowMediumHigh](parseInt(value))
+        result.dynamicShadowsQuality = cast[OffLowMediumHigh](parseInt(value))
       of SETTING_VIDEO_EFFECTS_QUALITY:
         result.effectsQuality = cast[LowMediumHigh](parseInt(value))
       of SETTING_VIDEO_TEXTURE_QUALITY:

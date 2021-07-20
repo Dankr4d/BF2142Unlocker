@@ -62,6 +62,17 @@ proc translate(lowMediumHigh: LowMediumHigh): string =
     return dgettext("gui", "SETTINGS_VIDEO_HIGH")
 
 
+proc translate(offLowMediumHigh: OffLowMediumHigh): string =
+  case offLowMediumHigh:
+  of OffLowMediumHigh.Off:
+    return dgettext("gui", "SETTINGS_VIDEO_OFF")
+  of OffLowMediumHigh.Low:
+    return dgettext("gui", "SETTINGS_VIDEO_LOW")
+  of OffLowMediumHigh.Medium:
+    return dgettext("gui", "SETTINGS_VIDEO_MEDIUM")
+  of OffLowMediumHigh.High:
+    return dgettext("gui", "SETTINGS_VIDEO_HIGH")
+
 proc resolution(self: ComboBox): Resolution =
   var iter: TreeIter
   let store: ListStore = listStore(self.getModel())
@@ -191,13 +202,13 @@ proc onScaleSettingsVideoLightingValueChanged(self: ptr Scale00) {.signal.} =
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicShadowsValueChanged(self: ptr Scale00) {.signal.} =
-  videoDirty.dynamicShadowsQuality = cast[LowMediumHigh](scaleDynamicShadows.value.int)
-  lblDynamicShadows.text = translate(cast[LowMediumHigh](scaleDynamicShadows.value.int))
+  videoDirty.dynamicShadowsQuality = cast[OffLowMediumHigh](scaleDynamicShadows.value.int)
+  lblDynamicShadows.text = translate(cast[OffLowMediumHigh](scaleDynamicShadows.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicLightValueChanged(self: ptr Scale00) {.signal.} =
-  videoDirty.dynamicLightingQuality = cast[LowMediumHigh](scaleDynamicLight.value.int)
-  lblDynamicLight.text = translate(cast[LowMediumHigh](scaleDynamicLight.value.int))
+  videoDirty.dynamicLightingQuality = cast[OffLowMediumHigh](scaleDynamicLight.value.int)
+  lblDynamicLight.text = translate(cast[OffLowMediumHigh](scaleDynamicLight.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoAntialiasingValueChanged(self: ptr Scale00) {.signal.} =
