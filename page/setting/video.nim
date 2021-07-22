@@ -1,5 +1,6 @@
 import gintro/[gtk, gobject, glib]
 import "../../macro/signal"
+import ../../module/gintro/exceptiondialog
 import ../../module/gintro/liststore
 import ../../module/resolution
 import ../../profile/video as profileVideo
@@ -9,7 +10,10 @@ var windowShown: ptr bool
 var ignoreEvents: ptr bool
 
 var videoDirty, video: Video
-var pathVideoCon: string # Path to Video.con file
+var path0001VideoCon, pathDefaultVideoCon: string # Path to Video.con file
+var isVideoValid: bool
+var isResolutionAvailable: bool
+var resolutions: seq[Resolution]
 
 var cbxResolution: ComboBox
 var scaleTerrain: Scale
@@ -23,23 +27,13 @@ var scaleAntialiasing: Scale
 var scaleTextureFiltering: Scale
 var scaleViewDistanceScale: Scale
 var switchEnhancedLighting: Switch
-var lblTerrain: Label
-var lblEffects: Label
-var lblGeometry: Label
-var lblTexture: Label
-var lblLighting: Label
-var lblDynamicShadows: Label
-var lblDynamicLight: Label
-var lblAntialiasing: Label
-var lblTextureFiltering: Label
-var lblViewDistanceScale: Label
 var btnSave: Button
 var btnRevert: Button
 
 
 
-proc `$`(resolution: tuple[width, height: uint16, frequence: uint8]): string =
-  return $Resolution(width: resolution.width, height: resolution.height, frequence: resolution.frequence)
+# proc `$`(resolution: tuple[width, height: uint16, frequence: uint8]): string =
+#   return $Resolution(width: resolution.width, height: resolution.height, frequence: resolution.frequence)
 
 
 proc translate(antialiasing: Antialiasing): string =
@@ -50,6 +44,8 @@ proc translate(antialiasing: Antialiasing): string =
     return "4x"
   of Antialiasing.EightSamples:
     return "8x"
+  of Antialiasing.Invalid:
+    return
 
 
 proc translate(lowMediumHigh: LowMediumHigh): string =
@@ -60,7 +56,8 @@ proc translate(lowMediumHigh: LowMediumHigh): string =
     return dgettext("gui", "SETTINGS_VIDEO_MEDIUM")
   of LowMediumHigh.High:
     return dgettext("gui", "SETTINGS_VIDEO_HIGH")
-
+  of LowMediumHigh.Invalid:
+    return
 
 proc translate(offLowMediumHigh: OffLowMediumHigh): string =
   case offLowMediumHigh:
@@ -72,6 +69,8 @@ proc translate(offLowMediumHigh: OffLowMediumHigh): string =
     return dgettext("gui", "SETTINGS_VIDEO_MEDIUM")
   of OffLowMediumHigh.High:
     return dgettext("gui", "SETTINGS_VIDEO_HIGH")
+  of OffLowMediumHigh.Invalid:
+    return
 
 proc resolution(self: ComboBox): Resolution =
   var iter: TreeIter
@@ -88,12 +87,8 @@ proc resolution(self: ComboBox): Resolution =
   result.frequence = valFrequence.getUint().uint8
 
 
-proc `resolution=`(self: ComboBox, resolution: Resolution) =
-  if not self.setActiveId($resolution):
-    self.setActive(0)
 
-
-proc fillResolutions(self: ComboBox, resolutions: seq[tuple[width, height: uint16, frequence: uint8]]) =
+proc fillResolutions(self: ComboBox, resolutions: seq[Resolution]) =
   var valResolution: Value
   var valWidth: Value
   var valHeight: Value
@@ -105,7 +100,7 @@ proc fillResolutions(self: ComboBox, resolutions: seq[tuple[width, height: uint1
   var iter: TreeIter
   let store = listStore(cbxResolution.getModel())
   store.clear()
-  for resolution in getAvailableResolutions():
+  for resolution in resolutions:
     valResolution.setString($resolution)
     valWidth.setUint(cast[int](resolution.width))
     valHeight.setUint(cast[int](resolution.height))
@@ -117,60 +112,73 @@ proc fillResolutions(self: ComboBox, resolutions: seq[tuple[width, height: uint1
     store.setValue(iter, 3, valHeight)
     store.setValue(iter, 4, valFrequence)
 
-
 proc loadVideo(video: Video) =
   scaleTerrain.value = video.terrainQuality.float
-  lblTerrain.text = translate(video.terrainQuality)
-
   scaleGeometry.value = video.geometryQuality.float
-  lblGeometry.text = translate(video.geometryQuality)
-
   scaleLighting.value = video.lightingQuality.float
-  lblLighting.textWithMnemonic = $video.lightingQuality
-
   scaleDynamicLight.value = video.dynamicLightingQuality.float
-  lblDynamicLight.text = translate(video.dynamicLightingQuality)
-
   scaleDynamicShadows.value = video.dynamicShadowsQuality.float
-  lblDynamicShadows.text = translate(video.dynamicShadowsQuality)
-
   scaleEffects.value = video.effectsQuality.float
-  lblEffects.text = translate(video.effectsQuality)
-
   scaleTexture.value = video.textureQuality.float
-  lblTexture.text = translate(video.textureQuality)
-
   scaleTextureFiltering.value = video.textureFilteringQuality.float
-  lblTextureFiltering.text = translate(video.textureFilteringQuality)
-
-  cbxResolution.resolution = video.resolution
-
+  discard cbxResolution.setActiveId($video.resolution)
   scaleAntialiasing.value = video.antialiasing.float
-  lblAntialiasing.text = translate(video.antialiasing)
-
   scaleViewDistanceScale.value = video.viewDistanceScale
-  lblViewDistanceScale.text = $(int(video.viewDistanceScale * 100)) & "%" # TODO: Redundant
-
-  switchEnhancedLighting.active = video.useBloom
+  switchEnhancedLighting.active = video.useBloom.bool
 
 
 proc setDocumentsPath*(documentsPath: string) =
   # TODO: Only required because of linux
   #       Documents path is queried with wine prefix (which may not be set when init proc is called).
-  pathVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
-  video = readVideo(pathVideoCon)
-  video.videoOptionScheme = Presets.Custom
-  videoDirty = video
-  loadVideo(video)
+  path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
+  pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
 
+  video = readVideo(path0001VideoCon)
+  echo video
 
-# INFO: https://github.com/StefanSalewski/gintro/issues/161
-# proc onScaleSettingsVideoTerrainFormatValue(self: ptr Scale00, value: cdouble): cstring {.signal.} =
-#   return "HALLO"
+  isVideoValid = video.isValid()
+  isResolutionAvailable = video.resolution in resolutions # cbxResolution.hasId($video.resolution):
+
+  if isVideoValid and isResolutionAvailable:
+    video.videoOptionScheme = Presets.Custom
+    videoDirty = video
+    loadVideo(video)
+  else:
+    videoDirty = video
+    if not isVideoValid:
+      videoDirty.fixInvalid() # TODO: ASK TO FIX VIDEO SETTINGS
+    if not isResolutionAvailable:
+      videoDirty.resolution = resolutions[0] #cbxResolution.getResolutionAtIdx(0)
+    videoDirty.videoOptionScheme = Presets.Custom
+    if false: # TODO: Dialog which write fixes if accepted
+      videoDirty.writeVideo(path0001VideoCon)
+      videoDirty.writeVideo(pathDefaultVideoCon)
+      video = videoDirty
+      isVideoValid = true
+      isResolutionAvailable = true
+    else: # if not accepted
+      btnSave.sensitive = true
+    loadVideo(videoDirty)
+
+proc onScaleSettingsVideoLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
+  return g_strdup(translate(cast[LowMediumHigh](value.int)))
+
+proc onScaleSettingsVideoOffLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
+  return g_strdup(translate(cast[OffLowMediumHigh](value.int)))
+
+proc onScaleSettingsAntialiasingFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
+  return g_strdup(translate(cast[Antialiasing](value.int)))
+
+proc onScaleSettingsVideoViewDistanceScaleFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
+  return g_strdup($(int(scaleViewDistanceScale.value * 100)) & "%")
 
 proc updateServerRevertSensitivity() =
-  btnSave.sensitive = video != videoDirty
-  btnRevert.sensitive = btnSave.sensitive
+  if isVideoValid and isResolutionAvailable:
+    btnSave.sensitive = video != videoDirty
+    btnRevert.sensitive = btnSave.sensitive
+  else:
+    btnSave.sensitive = true
+    btnRevert.sensitive = false
 
 proc onCbxSettingsVideoResolutionChanged(self: ptr ComboBox00) {.signal.} =
   videoDirty.resolution = cbxResolution.resolution
@@ -178,61 +186,54 @@ proc onCbxSettingsVideoResolutionChanged(self: ptr ComboBox00) {.signal.} =
 
 proc onScaleSettingsVideoTerrainValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.terrainQuality = cast[LowMediumHigh](scaleTerrain.value.int)
-  lblTerrain.text = translate(cast[LowMediumHigh](scaleTerrain.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoEffectsValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.effectsQuality = cast[LowMediumHigh](scaleEffects.value.int)
-  lblEffects.text = translate(cast[LowMediumHigh](scaleEffects.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoGeometryValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.geometryQuality = cast[LowMediumHigh](scaleGeometry.value.int)
-  lblGeometry.text = translate(cast[LowMediumHigh](scaleGeometry.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoTextureValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.textureQuality = cast[LowMediumHigh](scaleTexture.value.int)
-  lblTexture.text = translate(cast[LowMediumHigh](scaleTexture.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoLightingValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.lightingQuality = cast[LowMediumHigh](scaleLighting.value.int)
-  lblLighting.text = translate(cast[LowMediumHigh](scaleLighting.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicShadowsValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.dynamicShadowsQuality = cast[OffLowMediumHigh](scaleDynamicShadows.value.int)
-  lblDynamicShadows.text = translate(cast[OffLowMediumHigh](scaleDynamicShadows.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicLightValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.dynamicLightingQuality = cast[OffLowMediumHigh](scaleDynamicLight.value.int)
-  lblDynamicLight.text = translate(cast[OffLowMediumHigh](scaleDynamicLight.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoAntialiasingValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.antialiasing = cast[Antialiasing](scaleAntialiasing.value.int)
-  lblAntialiasing.text = translate(cast[Antialiasing](scaleAntialiasing.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoTextureFilteringValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.textureFilteringQuality = cast[LowMediumHigh](scaleTextureFiltering.value.int)
-  lblTextureFiltering.text = translate(cast[LowMediumHigh](scaleTextureFiltering.value.int))
   updateServerRevertSensitivity()
 
 proc onScaleSettingsVideoViewDistanceScaleValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.viewDistanceScale = scaleViewDistanceScale.value.float * 2 - 1
-  lblViewDistanceScale.text = $(int(scaleViewDistanceScale.value * 100)) & "%" # TODO: Redundant
   updateServerRevertSensitivity()
 
 proc onSwitchSettingsVideoEnhancedLightingStateSet(self: ptr Switch00) {.signal.} =
-  videoDirty.useBloom = switchEnhancedLighting.active
+  videoDirty.useBloom = switchEnhancedLighting.active.int8
   updateServerRevertSensitivity()
 
 
 proc onBtnSettingsVideoSaveClicked(self: ptr Button00) {.signal.} =
-  videoDirty.writeVideo(pathVideoCon)
+  isVideoValid = true
+  isResolutionAvailable = true
+  videoDirty.writeVideo(path0001VideoCon)
+  videoDirty.writeVideo(pathDefaultVideoCon)
   video = videoDirty
   updateServerRevertSensitivity()
 
@@ -256,19 +257,11 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   scaleTextureFiltering = builder.getScale("scaleSettingsVideoTextureFiltering")
   scaleViewDistanceScale = builder.getScale("scaleSettingsVideoViewDistanceScale")
   switchEnhancedLighting = builder.getSwitch("switchSettingsVideoEnhancedLighting")
-  lblTerrain = builder.getLabel("lblSettingsVideoTerrain")
-  lblEffects = builder.getLabel("lblSettingsVideoEffects")
-  lblGeometry = builder.getLabel("lblSettingsVideoGeometry")
-  lblTexture = builder.getLabel("lblSettingsVideoTexture")
-  lblLighting = builder.getLabel("lblSettingsVideoLighting")
-  lblDynamicShadows = builder.getLabel("lblSettingsVideoDynamicShadows")
-  lblDynamicLight = builder.getLabel("lblSettingsVideoDynamicLight")
-  lblAntialiasing = builder.getLabel("lblSettingsVideoAntialiasing")
-  lblTextureFiltering = builder.getLabel("lblSettingsVideoTextureFiltering")
-  lblViewDistanceScale = builder.getLabel("lblSettingsVideoViewDistanceScale")
   btnSave = builder.getButton("btnSettingsVideoSave")
   btnRevert = builder.getButton("btnSettingsVideoRevert")
 
-  cbxResolution.fillResolutions(getAvailableResolutions())
+  for tpl in getAvailableResolutions():
+    resolutions.add(Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence))
+  cbxResolution.fillResolutions(resolutions)
   # video = readVideo(pathVideoCon)
   # loadVideo(video)

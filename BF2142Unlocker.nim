@@ -35,6 +35,8 @@ import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
 import module/gintro/liststore
+import module/gintro/infodialog
+import module/gintro/exceptiondialog
 
 import profile/video as profileVideo
 import page/setting/video as pageSettingVideo
@@ -776,13 +778,15 @@ proc checkBF2142ProfileFiles() =
     raise newException(ValueError, "checkBF2142ProfileFiles - bf2142ProfilePath == \"\"")
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
   discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
+  discard existsOrCreateDir(bf2142ProfileDefaultPath)
   if not existsOrCreateDir(bf2142Profile0001Path).exists:
     # Video.con
     if fileExists(bf2142ProfileDefaultPath / "Video.con"):
       if not copyFile(bf2142ProfileDefaultPath / "Video.con", bf2142Profile0001Path / "Video.con"):
         return
     else:
-      let video: Video = newVideo()
+      let video: Video = newVideoLow()
+      video.writeVideo(bf2142ProfileDefaultPath / "Video.con")
       video.writeVideo(bf2142Profile0001Path / "Video.con")
 
     # Audio.con
@@ -790,6 +794,8 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "Audio.con", bf2142Profile0001Path / "Audio.con"):
         return
     else:
+      if not writeFile(bf2142ProfileDefaultPath / "Audio.con", PROFILE_AUDIO_CON):
+        return
       if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
         return
 
@@ -798,6 +804,8 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "Profile.con", bf2142Profile0001Path / "Profile.con"):
         return
     else:
+      if not writeFile(bf2142ProfileDefaultPath / "Profile.con", PROFILE_PROFILE_CON):
+        return
       if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
         return
 
@@ -806,6 +814,8 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "ServerSettings.con", bf2142Profile0001Path / "ServerSettings.con"):
         return
     else:
+      if not writeFile(bf2142ProfileDefaultPath / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
+        return
       if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
         return
 
@@ -916,21 +926,6 @@ proc backupOpenSpyIfExists() =
     if not copyFile(originalRendDX9Path, openspyDllPath):
       return
 
-proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
-  var dialog: Dialog = newDialog()
-  dialog.title = title
-  var lblText: Label = newLabel(text)
-  dialog.contentArea.add(lblText)
-  var btnOk: Button = newButton("OK")
-  dialog.contentArea.add(btnOk)
-  btnOk.halign = Align.center
-  proc onBtnOkClicked(self: Button, dialog: Dialog) =
-    dialog.destroy()
-  btnOk.connect("clicked", onBtnOkClicked, dialog)
-  dialog.contentArea.showAll()
-  dialog.setPosition(WindowPosition.center)
-  discard dialog.run()
-  dialog.destroy()
 
 proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX

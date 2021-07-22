@@ -78,7 +78,9 @@ Author: Dankr4d
     <property name="page-increment">10</property>
   </object>
   <object class="GtkAdjustment" id="adjVideoAntialiasing">
-    <property name="upper">2</property>
+    <property name="lower">1</property>
+    <property name="upper">3</property>
+    <property name="value">1</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
@@ -2968,7 +2970,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <!-- n-columns=3 n-rows=13 -->
+                      <!-- n-columns=2 n-rows=13 -->
                       <object class="GtkGrid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -3130,24 +3132,11 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoTerrain</property>
                             <property name="round-digits">1</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoTerrainValueChanged" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoTerrain">
-                            <property name="width-request">100</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
                             <property name="top-attach">1</property>
                           </packing>
                         </child>
@@ -3158,7 +3147,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoEffects</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoEffectsValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3173,7 +3162,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoGeometry</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoGeometryValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3188,7 +3177,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoTexture</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoTextureValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3203,7 +3192,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoLighting</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoLightingValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3218,7 +3207,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoDynamicShadows</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoDynamicShadowsValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3233,7 +3222,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoAntialiasing</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsAntialiasingFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoAntialiasingValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3248,7 +3237,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoDynamicLight</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoDynamicLightValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3263,7 +3252,7 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoTextureFiltering</property>
                             <property name="round-digits">0</property>
                             <property name="digits">0</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoTextureFilteringValueChanged" swapped="no"/>
                           </object>
                           <packing>
@@ -3278,120 +3267,11 @@ Author: Dankr4d
                             <property name="adjustment">adjVideoViewDistanceScale</property>
                             <property name="round-digits">0</property>
                             <property name="digits">2</property>
-                            <property name="draw-value">False</property>
-                            <property name="value-pos">left</property>
+                            <signal name="format-value" handler="onScaleSettingsVideoViewDistanceScaleFormatValue" swapped="no"/>
                             <signal name="value-changed" handler="onScaleSettingsVideoViewDistanceScaleValueChanged" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
-                            <property name="top-attach">10</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoEffects">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoGeometry">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoTexture">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoLighting">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoDynamicShadows">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoDynamicLight">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoAntialiasing">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoTextureFiltering">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">9</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsVideoViewDistanceScale">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
                             <property name="top-attach">10</property>
                           </packing>
                         </child>
@@ -3425,7 +3305,6 @@ Author: Dankr4d
                           <packing>
                             <property name="left-attach">1</property>
                             <property name="top-attach">0</property>
-                            <property name="width">2</property>
                           </packing>
                         </child>
                         <child>
@@ -3439,7 +3318,7 @@ Author: Dankr4d
                             <signal name="clicked" handler="onBtnSettingsVideoSaveClicked" swapped="no"/>
                           </object>
                           <packing>
-                            <property name="left-attach">2</property>
+                            <property name="left-attach">1</property>
                             <property name="top-attach">12</property>
                           </packing>
                         </child>
@@ -3457,12 +3336,6 @@ Author: Dankr4d
                             <property name="left-attach">0</property>
                             <property name="top-attach">12</property>
                           </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                       </object>
                       <packing>

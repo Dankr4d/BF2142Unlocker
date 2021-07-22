@@ -62,6 +62,12 @@ module/windows/sendmsg.exe
 module/gintro/liststore
 module/gintro/liststore.exe
 
+module/gintro/infodialog
+module/gintro/infodialog.exe
+
+module/gintro/exceptiondialog
+module/gintro/exceptiondialog.exe
+
 gamesrv/parser
 gamesrv/parser.exe
 

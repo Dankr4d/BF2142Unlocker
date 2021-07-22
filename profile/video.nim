@@ -20,19 +20,23 @@ const
 
 type
   OffLowMediumHigh* {.pure.} = enum
+    Invalid = -1
     Off = 0
     Low = 1
     Medium = 2
     High = 3
   LowMediumHigh* {.pure.} = enum
+    Invalid = 0
     Low = 1
     Medium = 2
     High = 3
   Antialiasing* {.pure.} = enum
+    Invalid
     Off = "Off"
     FourSamples = "4Samples"
     EightSamples = "8Samples"
   Presets* {.pure.} = enum
+    Invalid = -1
     Low = 0
     Medium = 1
     High = 2
@@ -53,10 +57,12 @@ type
     resolution*: Resolution
     antialiasing*: Antialiasing
     viewDistanceScale*: float # 0.0 = 50%, 1.0 = 100%
-    useBloom*: bool
+    # useBloom*: bool
+    useBloom*: int8 # It's a bool, but set to int, to validate if parser couldn't parse this value (-1 = Invalid) # TODO: Maybe not the best solution? Maybe use Options?
     videoOptionScheme*: Presets
 
-proc newVideo*(): Video =
+
+proc newVideoLow*(): Video =
   result.terrainQuality = LowMediumHigh.Low
   result.geometryQuality = LowMediumHigh.Low
   result.lightingQuality = LowMediumHigh.Low
@@ -68,13 +74,33 @@ proc newVideo*(): Video =
   result.resolution = Resolution(width: 800, height: 600, frequence: 60)
   result.antialiasing = Antialiasing.Off
   result.viewDistanceScale = 1.0
-  result.useBloom = false
+  result.useBloom = 0
   result.videoOptionScheme = Presets.Custom
+
+
+proc newVideoInvalid*(): Video =
+  result.terrainQuality = LowMediumHigh.Invalid
+  result.geometryQuality = LowMediumHigh.Invalid
+  result.lightingQuality = LowMediumHigh.Invalid
+  result.dynamicLightingQuality = OffLowMediumHigh.Invalid
+  result.dynamicShadowsQuality = OffLowMediumHigh.Invalid
+  result.effectsQuality = LowMediumHigh.Invalid
+  result.textureQuality = LowMediumHigh.Invalid
+  result.textureFilteringQuality = LowMediumHigh.Invalid
+  result.resolution = Resolution(width: 0, height: 0, frequence: 0)
+  result.antialiasing = Antialiasing.Invalid
+  result.viewDistanceScale = -1.0
+  result.useBloom = -1
+  result.videoOptionScheme = Presets.Invalid
+
 
 proc `$`*(resolution: Resolution): string =
   return fmt"{resolution.width}x{resolution.height}@{resolution.frequence}Hz"
 
+
 proc readVideo*(path: string): Video =
+  result = newVideoInvalid()
+
   var file: File
   if open(file, path, fmRead, -1):
     let fileStream: FileStream = newFileStream(file)
@@ -83,43 +109,82 @@ proc readVideo*(path: string): Video =
       setting: string
       value: string
     while fileStream.readLine(line):
+      if not line.contains(Whitespace):
+        continue
       (setting, value) = line.splitWhitespace(maxsplit = 1)
 
       case setting:
       of SETTING_VIDEO_TERRAIN_QUALITY:
-        result.terrainQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.terrainQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_GEOMETRY_QUALITY:
-        result.geometryQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.geometryQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_LIGHTING_QUALITY:
-        result.lightingQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.lightingQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_DYNAMIC_LIGHTING_QUALITY:
-        result.dynamicLightingQuality = cast[OffLowMediumHigh](parseInt(value))
+        try:
+          result.dynamicLightingQuality = OffLowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_DYNAMIC_SHADOWS_QUALITY:
-        result.dynamicShadowsQuality = cast[OffLowMediumHigh](parseInt(value))
+        try:
+          result.dynamicShadowsQuality = OffLowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_EFFECTS_QUALITY:
-        result.effectsQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.effectsQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_TEXTURE_QUALITY:
-        result.textureQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.textureQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_TEXTURE_FILTERING_QUALITY:
-        result.textureFilteringQuality = cast[LowMediumHigh](parseInt(value))
+        try:
+          result.textureFilteringQuality = LowMediumHigh(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_RESOLUTION:
-        var posX: int = value.find("x")
-        var posAt: int = value.find("@")
-        result.resolution.width = parseUInt(value.substr(0, posX - 1)).uint16
-        result.resolution.height = parseUInt(value.substr(posX + 1, posAt - 1)).uint16
-        result.resolution.frequence = parseUInt(value.substr(posAt + 1, value.high - 2)).uint8
+        try:
+          var posX: int = value.find("x")
+          var posAt: int = value.find("@")
+          result.resolution.width = parseUInt(value.substr(0, posX - 1)).uint16
+          result.resolution.height = parseUInt(value.substr(posX + 1, posAt - 1)).uint16
+          result.resolution.frequence = parseUInt(value.substr(posAt + 1, value.high - 2)).uint8
+        except ValueError:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_ANTIALIASING:
-        result.antialiasing = parseEnum[Antialiasing](value)
+        result.antialiasing = parseEnum[Antialiasing](value, Antialiasing.Invalid)
       of SETTING_VIDEO_VIEW_DISTANCE_SCALE:
-        result.viewDistanceScale = parseFloat(value)
+        try:
+          result.viewDistanceScale = parseFloat(value)
+        except ValueError:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_USE_BLOOM:
-        result.useBloom = parseBool(value)
+        try:
+          result.useBloom = parseBool(value).int8
+        except ValueError:
+          discard # Value already set with newVideoInvalid
       of SETTING_VIDEO_VIDEO_OPTION_SCHEME:
-        result.videoOptionScheme = cast[Presets](parseInt(value))
+        try:
+          result.videoOptionScheme = Presets(parseInt(value))
+        except ValueError, RangeDefect:
+          discard # Value already set with newVideoInvalid
     fileStream.close()
   else:
     # TODO: Create a video file in application startup and throw an exception if running into this else case
-    return newVideo()
+    return newVideoLow()
+
 
 proc writeVideo*(video: Video, path: string) =
   let fileStream: FileStream = newFileStream(path, fmWrite)
@@ -140,7 +205,65 @@ proc writeVideo*(video: Video, path: string) =
     fileStream.writeLine(fmt"{SETTING_VIDEO_VIDEO_OPTION_SCHEME} {video.videoOptionScheme.int}")
     fileStream.close()
 
+
+proc isValid*(resolution: Resolution): bool =
+  return (
+    resolution.width > 0 and
+    resolution.height > 0 and
+    resolution.frequence > 0
+  )
+
+
+proc isValid*(video: Video): bool =
+  return (
+    video.terrainQuality != LowMediumHigh.Invalid and
+    video.geometryQuality != LowMediumHigh.Invalid and
+    video.lightingQuality != LowMediumHigh.Invalid and
+    video.dynamicLightingQuality != OffLowMediumHigh.Invalid and
+    video.dynamicShadowsQuality != OffLowMediumHigh.Invalid and
+    video.effectsQuality != LowMediumHigh.Invalid and
+    video.textureQuality != LowMediumHigh.Invalid and
+    video.textureFilteringQuality != LowMediumHigh.Invalid and
+    video.resolution.isValid() and
+    video.antialiasing != Antialiasing.Invalid and
+    video.viewDistanceScale >= 0.0 and video.viewDistanceScale <= 1.0 and
+    video.useBloom != -1 and
+    video.videoOptionScheme != Presets.Invalid
+  )
+
+
+proc fixInvalid*(video: var Video) =
+  if video.terrainQuality == LowMediumHigh.Invalid:
+    video.terrainQuality = LowMediumHigh.Low
+  if video.geometryQuality == LowMediumHigh.Invalid:
+    video.geometryQuality = LowMediumHigh.Low
+  if video.lightingQuality == LowMediumHigh.Invalid:
+    video.lightingQuality = LowMediumHigh.Low
+  if video.dynamicLightingQuality == OffLowMediumHigh.Invalid:
+    video.dynamicLightingQuality = OffLowMediumHigh.Off
+  if video.dynamicShadowsQuality == OffLowMediumHigh.Invalid:
+    video.dynamicShadowsQuality = OffLowMediumHigh.Off
+  if video.effectsQuality == LowMediumHigh.Invalid:
+    video.effectsQuality = LowMediumHigh.Low
+  if video.textureQuality == LowMediumHigh.Invalid:
+    video.textureQuality = LowMediumHigh.Low
+  if video.textureFilteringQuality == LowMediumHigh.Invalid:
+    video.textureFilteringQuality = LowMediumHigh.Low
+  if video.resolution.width == 0:
+    # TODO: Readout lowest resolution + frequency
+    video.resolution.width = 800
+    video.resolution.height = 600
+    video.resolution.frequence = 60
+  if video.antialiasing == Antialiasing.Invalid:
+    video.antialiasing = Antialiasing.Off
+  if video.viewDistanceScale == -1:
+    video.viewDistanceScale = 1.0
+  if video.useBloom == -1:
+    video.useBloom = 0
+  if video.videoOptionScheme == Presets.Invalid:
+    video.videoOptionScheme = Presets.Custom
+
 when isMainModule:
   let path: string = """/home/dankrad/Battlefield 2142/Profiles/0001/Video.con"""
   echo readVideo(path)
-  echo newVideo()
+  echo newVideoLow()
