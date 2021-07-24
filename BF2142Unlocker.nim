@@ -1,4 +1,4 @@
-import gintro/[gtk, glib, gobject, gdk]
+import gintro/[gtk, glib, gobject, gdk, gtksource]
 import gintro/gio except ListStore
 import os
 import net # Requierd for ip parsing and type
@@ -36,7 +36,6 @@ import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
 import module/gintro/liststore
 import module/gintro/infodialog
-import module/gintro/exceptiondialog
 
 import profile/video as profileVideo
 import page/setting/video as pageSettingVideo
@@ -316,6 +315,7 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 const
   PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
+  PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
   PROFILE_GENERAL_CON: string = staticRead("profile/General.con")
   PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
   PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
@@ -798,6 +798,10 @@ proc checkBF2142ProfileFiles() =
         return
       if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
         return
+
+    # Controls.con
+    if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
+      return
 
     # Profile.con
     if fileExists(bf2142ProfileDefaultPath / "Profile.con"):
@@ -3153,6 +3157,7 @@ proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
 
 proc onApplicationActivate(application: Application) =
   let builder: Builder = newBuilder()
+  discard newView() # TODO: https://github.com/StefanSalewski/gintro/issues/40
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
@@ -3332,6 +3337,10 @@ proc onApplicationActivate(application: Application) =
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
 
+  notebook.currentPage = 4 # TODO: Remove
+  notebookSettings.currentPage = 1 # TODO: Remove
+  notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
+
   ## Pages
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
   #
@@ -3375,8 +3384,6 @@ proc onApplicationActivate(application: Application) =
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
 
-  # notebook.currentPage = 4 # TODO: Remove
-  notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

@@ -1,6 +1,5 @@
-import gintro/[gtk, gobject, glib]
+import gintro/[gtk, gobject, glib, gtksource]
 import "../../macro/signal"
-import ../../module/gintro/exceptiondialog
 import ../../module/gintro/liststore
 import ../../module/resolution
 import ../../profile/video as profileVideo
@@ -29,6 +28,11 @@ var scaleViewDistanceScale: Scale
 var switchEnhancedLighting: Switch
 var btnSave: Button
 var btnRevert: Button
+var dlgConfigCorrupt: Dialog
+var lblConfigCorruptTitle: Label
+var viewConfigCorruptBody: View
+var btnConfigCorruptYes: Button
+var btnConfigCorruptNo: Button
 
 
 
@@ -133,11 +137,9 @@ proc setDocumentsPath*(documentsPath: string) =
   path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
   pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
 
-  video = readVideo(path0001VideoCon)
-  echo video
-
-  isVideoValid = video.isValid()
-  isResolutionAvailable = video.resolution in resolutions # cbxResolution.hasId($video.resolution):
+  var entries: ConEntries
+  isVideoValid = readVideo(path0001VideoCon, video, entries)
+  isResolutionAvailable = video.resolution in resolutions
 
   if isVideoValid and isResolutionAvailable:
     video.videoOptionScheme = Presets.Custom
@@ -146,11 +148,22 @@ proc setDocumentsPath*(documentsPath: string) =
   else:
     videoDirty = video
     if not isVideoValid:
-      videoDirty.fixInvalid() # TODO: ASK TO FIX VIDEO SETTINGS
+      videoDirty.fixInvalid()
     if not isResolutionAvailable:
       videoDirty.resolution = resolutions[0] #cbxResolution.getResolutionAtIdx(0)
     videoDirty.videoOptionScheme = Presets.Custom
-    if false: # TODO: Dialog which write fixes if accepted
+
+    lblConfigCorruptTitle.text = "SETTINGS_VIDEO_CONFIG_CORRUPT_TITLE\n\n"
+
+    var iter: TextIter
+    let markup: string = markup(entries)
+    viewConfigCorruptBody.buffer.getEndIter(iter)
+    viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
+
+    btnConfigCorruptYes.label = "Fix it!"
+    btnConfigCorruptNo.label = "Cancel"
+
+    if dlgConfigCorrupt.run() == ResponseType.yes.int:
       videoDirty.writeVideo(path0001VideoCon)
       videoDirty.writeVideo(pathDefaultVideoCon)
       video = videoDirty
@@ -158,6 +171,7 @@ proc setDocumentsPath*(documentsPath: string) =
       isResolutionAvailable = true
     else: # if not accepted
       btnSave.sensitive = true
+    dlgConfigCorrupt.hide()
     loadVideo(videoDirty)
 
 proc onScaleSettingsVideoLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
@@ -259,6 +273,13 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   switchEnhancedLighting = builder.getSwitch("switchSettingsVideoEnhancedLighting")
   btnSave = builder.getButton("btnSettingsVideoSave")
   btnRevert = builder.getButton("btnSettingsVideoRevert")
+
+  dlgConfigCorrupt = builder.getDialog("dlgConfigCorrupt")
+  lblConfigCorruptTitle = builder.getLabel("lblConfigCorruptTitle")
+  viewConfigCorruptBody = cast[View](getObject(builder, "viewConfigCorruptBody")) # TODO: https://github.com/StefanSalewski/gintro/issues/40
+  # viewConfigCorruptBody = builder.getView("viewConfigCorruptBody")
+  btnConfigCorruptYes = builder.getButton("btnConfigCorruptYes")
+  btnConfigCorruptNo = builder.getButton("btnConfigCorruptNo")
 
   for tpl in getAvailableResolutions():
     resolutions.add(Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence))

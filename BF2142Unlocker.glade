@@ -28,6 +28,7 @@ Author: Dankr4d
 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <requires lib="gtksourceview" version="4.0"/>
   <!-- interface-license-type mit -->
   <!-- interface-name BF2142Unlocker -->
   <!-- interface-authors Dankr4d -->
@@ -142,6 +143,95 @@ Author: Dankr4d
     <property name="value">0.5</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
+  </object>
+  <object class="GtkDialog" id="dlgConfigCorrupt">
+    <property name="can-focus">False</property>
+    <property name="default-width">700</property>
+    <property name="default-height">350</property>
+    <property name="type-hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="layout-style">expand</property>
+            <child>
+              <object class="GtkButton" id="btnConfigCorruptYes">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnConfigCorruptNo">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="lblConfigCorruptTitle">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="shadow-type">in</property>
+            <property name="overlay-scrolling">False</property>
+            <child>
+              <object class="GtkSourceView" id="viewConfigCorruptBody">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="editable">False</property>
+                <property name="left-margin">2</property>
+                <property name="right-margin">2</property>
+                <property name="cursor-visible">False</property>
+                <property name="monospace">True</property>
+                <property name="show-line-numbers">True</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-8">btnConfigCorruptYes</action-widget>
+      <action-widget response="-9">btnConfigCorruptNo</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkDialog" id="dlgQuickCheckServer">
     <property name="can-focus">False</property>
