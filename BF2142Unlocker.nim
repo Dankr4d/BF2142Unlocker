@@ -22,7 +22,7 @@ import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import module/checkpermission # Required to check write permission before patching client
 import math # Required for runtime configuration
-import gamesrv/parser # Required to parse data out of bf2142 game server
+import parser/gamesrv # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)

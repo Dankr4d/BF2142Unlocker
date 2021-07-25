@@ -68,17 +68,26 @@ module/gintro/infodialog.exe
 module/gintro/exceptiondialog
 module/gintro/exceptiondialog.exe
 
-gamesrv/parser
-gamesrv/parser.exe
-
 macro/signal
 macro/signal.exe
+
+macro/dot
+macro/dot.exe
 
 patcher/bf2142
 patcher/bf2142.exe
 
 registry/bf2142
 registry/bf2142.exe
+
+parser/gamesrv
+parser/gamesrv.exe
+
+parser/strtoobj
+parser/strtoobj.exe
+
+parser/con
+parser/con.exe
 
 profile/video
 profile/video.exe
