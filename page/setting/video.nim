@@ -48,8 +48,6 @@ proc translate(antialiasing: Antialiasing): string =
     return "4x"
   of Antialiasing.EightSamples:
     return "8x"
-  of Antialiasing.Invalid:
-    return
 
 
 proc translate(lowMediumHigh: LowMediumHigh): string =
@@ -60,8 +58,6 @@ proc translate(lowMediumHigh: LowMediumHigh): string =
     return dgettext("gui", "SETTINGS_VIDEO_MEDIUM")
   of LowMediumHigh.High:
     return dgettext("gui", "SETTINGS_VIDEO_HIGH")
-  of LowMediumHigh.Invalid:
-    return
 
 proc translate(offLowMediumHigh: OffLowMediumHigh): string =
   case offLowMediumHigh:
@@ -73,8 +69,6 @@ proc translate(offLowMediumHigh: OffLowMediumHigh): string =
     return dgettext("gui", "SETTINGS_VIDEO_MEDIUM")
   of OffLowMediumHigh.High:
     return dgettext("gui", "SETTINGS_VIDEO_HIGH")
-  of OffLowMediumHigh.Invalid:
-    return
 
 proc resolution(self: ComboBox): Resolution =
   var iter: TreeIter
@@ -137,8 +131,16 @@ proc setDocumentsPath*(documentsPath: string) =
   path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
   pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
 
-  var entries: ConEntries
-  isVideoValid = readVideo(path0001VideoCon, video, entries)
+  var video: Video
+  var lines: Lines
+  (video, lines) = readCon[Video](path0001VideoCon)
+
+  isVideoValid = true # TODO
+  for line in lines.invalidLines:
+    isVideoValid = false
+    break
+
+  # isVideoValid = readVideo(path0001VideoCon, video, entries)
   isResolutionAvailable = video.resolution in resolutions
 
   if isVideoValid and isResolutionAvailable:
@@ -156,7 +158,7 @@ proc setDocumentsPath*(documentsPath: string) =
     lblConfigCorruptTitle.text = "SETTINGS_VIDEO_CONFIG_CORRUPT_TITLE\n\n"
 
     var iter: TextIter
-    let markup: string = markup(entries)
+    let markup: string = markup(lines)
     viewConfigCorruptBody.buffer.getEndIter(iter)
     viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
 
@@ -164,8 +166,8 @@ proc setDocumentsPath*(documentsPath: string) =
     btnConfigCorruptNo.label = "Cancel"
 
     if dlgConfigCorrupt.run() == ResponseType.yes.int:
-      videoDirty.writeVideo(path0001VideoCon)
-      videoDirty.writeVideo(pathDefaultVideoCon)
+      videoDirty.writeCon(path0001VideoCon)
+      videoDirty.writeCon(pathDefaultVideoCon)
       video = videoDirty
       isVideoValid = true
       isResolutionAvailable = true
@@ -239,15 +241,15 @@ proc onScaleSettingsVideoViewDistanceScaleValueChanged(self: ptr Scale00) {.sign
   updateServerRevertSensitivity()
 
 proc onSwitchSettingsVideoEnhancedLightingStateSet(self: ptr Switch00) {.signal.} =
-  videoDirty.useBloom = switchEnhancedLighting.active.int8
+  videoDirty.useBloom = switchEnhancedLighting.active
   updateServerRevertSensitivity()
 
 
 proc onBtnSettingsVideoSaveClicked(self: ptr Button00) {.signal.} =
   isVideoValid = true
   isResolutionAvailable = true
-  videoDirty.writeVideo(path0001VideoCon)
-  videoDirty.writeVideo(pathDefaultVideoCon)
+  videoDirty.writeCon(path0001VideoCon)
+  videoDirty.writeCon(pathDefaultVideoCon)
   video = videoDirty
   updateServerRevertSensitivity()
 

@@ -4,23 +4,23 @@ import "../macro/dot"
 
 proc parse*[T](format, value: string): T =
   var tokenAttribute, tokenValue, tokenDelimiters: string
-  var pos: int = 0
-  var idxValue: int = 0
-  while pos < format.len:
-    # TODO: Add "InvalidFormat", "InvalidValue", review code (it's not thr best)
-    pos += format.parseUntil(tokenDelimiters, '[', pos) + 1
-    pos += format.parseUntil(tokenAttribute, ']', pos) + 1
+  var posFormat, posValue: int = 0
 
-    idxValue += tokenDelimiters.len # If delemiters found at start in format string, skip it
-    discard format.parseUntil(tokenDelimiters, '[', pos) + 1
-    pos += tokenDelimiters.len
+  # Skip delemitters at start of string
+  posFormat = format.skipUntil('[', 0) + 1
+  posValue = posFormat - 1
 
-    idxValue += value.parseUntil(tokenValue, tokenDelimiters, idxValue)
-    idxValue += tokenDelimiters.len
+  while posFormat < format.len:
+    # TODO: Add "InvalidFormat" and "InvalidValue" exceptions
+    posFormat += format.parseUntil(tokenAttribute, ']', posFormat) + 1
+    posFormat += format.parseUntil(tokenDelimiters, '[', posFormat) + 1
 
-    echo "delimiters: ", tokenDelimiters
-    echo tokenAttribute, ": ", tokenValue
-    echo "---"
+    posValue += value.parseUntil(tokenValue, tokenDelimiters, posValue)
+    posValue += tokenDelimiters.len
+
+    # echo "delimiters: ", tokenDelimiters
+    # echo tokenAttribute, ": ", tokenValue
+    # echo "---"
 
     for key, val in result.fieldPairs:
       if key == tokenAttribute:
@@ -30,6 +30,8 @@ proc parse*[T](format, value: string): T =
           result.dot(key) = type(result.dot(key))(parseUInt(tokenValue))
         elif type(result.dot(key)) is string:
           result.dot(key) = tokenValue
+        elif type(result.dot(key)) is bool:
+          result.dot(key) = parseBool(tokenValue)
         else:
           {.error: "Type '" & $type(result.dot(key)) & "' not implemented!".}
 
@@ -41,8 +43,9 @@ when isMainModule:
       height*: uint16
       frequence*: int
       mystr*: string
+      mybool*: bool
 
-  let format: string = "a[width]xx[height]@@[frequence]Hz[mystr]ab"
-  let value: string = "a800xx600@@60HzHALLOab"
+  let format: string = "a[width]xx[height]@@[frequence]Hz[mystr]ab[mybool]hallo"
+  let value: string = "a800xx600@@60HzHALLOab1hallo"
 
   echo parse[Resolution](format, value)

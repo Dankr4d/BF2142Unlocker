@@ -554,7 +554,7 @@ proc `$`(ex: ref Exception): string =
     result.add("\t" & line & "\n")
 
 proc log(ex: ref Exception) =
-  error($ex)
+  logging.error($ex)
 
 proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -786,8 +786,8 @@ proc checkBF2142ProfileFiles() =
         return
     else:
       let video: Video = newVideoLow()
-      video.writeVideo(bf2142ProfileDefaultPath / "Video.con")
-      video.writeVideo(bf2142Profile0001Path / "Video.con")
+      video.writeCon(bf2142ProfileDefaultPath / "Video.con")
+      video.writeCon(bf2142Profile0001Path / "Video.con")
 
     # Audio.con
     if fileExists(bf2142ProfileDefaultPath / "Audio.con"):
