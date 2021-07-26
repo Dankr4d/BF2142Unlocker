@@ -150,7 +150,8 @@ proc setDocumentsPath*(documentsPath: string) =
   else:
     videoDirty = video
     if not isVideoValid:
-      videoDirty.fixInvalid()
+      discard
+      # videoDirty.fixInvalid()
     if not isResolutionAvailable:
       videoDirty.resolution = resolutions[0] #cbxResolution.getResolutionAtIdx(0)
     videoDirty.videoOptionScheme = Presets.Custom

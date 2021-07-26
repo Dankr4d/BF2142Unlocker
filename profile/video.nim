@@ -36,9 +36,9 @@ type
     textureFilteringQuality* {.Setting: "setTextureFilteringQuality".}: LowMediumHigh
     resolution* {.Setting: "setResolution", Format: "[width]x[height]@[frequence]Hz".}: Resolution
     antialiasing* {.Setting: "setAntialiasing".}: Antialiasing
-    viewDistanceScale* {.Setting: "setViewDistanceScale", Range: (0.0, 1.0).}: float # 0.0 = 50%, 1.0 = 100%
+    viewDistanceScale* {.Setting: "setViewDistanceScale", Range: (0.0, 1.0), Default: 1.0}: float # 0.0 = 50%, 1.0 = 100%
     useBloom* {.Setting: "setUseBloom".}: bool
-    videoOptionScheme* {.Setting: "setVideoOptionScheme".}: Presets
+    videoOptionScheme* {.Setting: "setVideoOptionScheme", Default: Presets.Custom.}: Presets
 
 import gintro/glib
 proc markup*(lines: Lines): string = # TODO: Outsource to con parser (without glib)
@@ -128,9 +128,6 @@ proc newVideoLow*(): Video =
 
 proc `$`*(resolution: Resolution): string =
   return resolution.serialize(Video().resolution.getCustomPragmaVal(Format))
-
-proc fixInvalid*(video: var Video) = # TODO
-  discard
 
 when isMainModule:
   let path: string = """/home/dankrad/Battlefield 2142/Profiles/0001/Video.con"""

@@ -1,3 +1,9 @@
+#[
+  TODOS:
+    * Pragama to set which bool formats are valid. E.g. 0, 1 is valid, but true, false, on and off are not
+    * Pragama to allow floats starting with dot
+]#
+
 import streams
 import strutils
 import strtoobj
@@ -13,6 +19,7 @@ export strtoobj
 
 template Prefix*(val: string) {.pragma.}
 template Setting*(val: string) {.pragma.}
+template Default*(val: string | SomeFloat | enum) {.pragma.}
 template Format*(val: string) {.pragma.}
 template Range*(val: tuple[min, max: SomeFloat]) {.pragma.}
 
@@ -111,16 +118,18 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
                 when type(result.obj.dot(key)) is enum:
                   result.obj.dot(key) = parseEnum[type(result.obj.dot(key))](line.value)
                 elif type(result.obj.dot(key)) is SomeFloat:
-                  when result.obj.dot(key).hasCustomPragma(Range):
-                    var valFloat: SomeFloat = parseFloat(line.value)
-                    valFloat = parseFloat(line.value)
-                    let rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
-                    if valFloat >= rangeTpl.min and valFloat <= rangeTpl.max:
-                      result.obj.dot(key) = valFloat
-                    else:
-                      line.valid = false
+                  if line.value.startsWith('.'):
+                    line.valid = false
                   else:
-                    result.obj.dot(key) = parseFloat(line.value)
+                    when result.obj.dot(key).hasCustomPragma(Range):
+                      let valFloat: SomeFloat = parseFloat(line.value)
+                      const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
+                      if valFloat >= rangeTpl.min and valFloat <= rangeTpl.max:
+                        result.obj.dot(key) = valFloat
+                      else:
+                        line.valid = false
+                    else:
+                      result.obj.dot(key) = parseFloat(line.value)
                 elif type(result.obj.dot(key)) is bool:
                   result.obj.dot(key) = parseBool(line.value)
                 elif type(result.obj.dot(key)) is object:
@@ -132,6 +141,18 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
             else:
               # Setting found, but value is empty
               line.valid = false
+            if not line.valid:
+              when result.obj.dot(key).hasCustomPragma(Default):
+                when result.obj.dot(key) is SomeFloat:
+                  const valDefault: SomeFloat = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
+                  when result.obj.dot(key).hasCustomPragma(Range):
+                    const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
+                    when valDefault < rangeTpl.min or valDefault > rangeTpl.max:
+                      {.error: "Default value " & $valDefault & " is not in range (" & $rangeTpl.min & ", " & $rangeTpl.max & ").".}
+                    else:
+                      result.obj.dot(key) = valDefault
+                else:
+                  result.obj.dot(key) = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
             break # Setting found, break
       if not foundSetting:
         line.valid = false
@@ -156,7 +177,7 @@ proc writeCon*[T](t: T, path: string) =
         when type(t.dot(key)) is enum:
           fileStream.writeLine(conSettingName & " " & $t.dot(key))
         elif type(t.dot(key)) is SomeFloat:
-          fileStream.writeLine(conSettingName & " " & $round(t.dot(key), 6)) # TODO: Add MaxLen
+          fileStream.writeLine(conSettingName & " " & $round(t.dot(key), 6)) # TODO: Add Round pragma
         elif type(t.dot(key)) is bool:
           fileStream.writeLine(conSettingName & " " & $t.dot(key).int)
         elif type(t.dot(key)) is object:
