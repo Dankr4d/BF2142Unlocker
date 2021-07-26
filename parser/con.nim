@@ -9,8 +9,9 @@ import typeinfo
 
 export macros
 export typeinfo
+export strtoobj
 
-template Settings*(val: string) {.pragma.}
+template Prefix*(val: string) {.pragma.}
 template Setting*(val: string) {.pragma.}
 template Format*(val: string) {.pragma.}
 template Range*(val: tuple[min, max: SomeFloat]) {.pragma.}
@@ -37,7 +38,7 @@ export sequtils
 template validValues(attr: typed): seq[string] =
   var result: seq[string]
   when type(attr) is enum:
-    result = type(attr).toSeq().mapIt($ord(it))
+    result = type(attr).toSeq().mapIt($it)
   elif type(attr) is SomeFloat:
     when attr.hasCustomPragma(Range):
       let rangeTpl: tuple[min, max: SomeFloat] = attr.getCustomPragmaVal(Range)
@@ -62,9 +63,6 @@ iterator invalidLines*(lines: Lines): Line =
 
 
 proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
-  when not T.hasCustomPragma(Settings):
-    {.error: "Type T misses pragma 'Settings'.".}
-
   var file: File
   if file.open(path, fmRead, -1):
     let fileStream: FileStream = newFileStream(file)
@@ -98,9 +96,9 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
       var conSettingName: string
       var foundSetting: bool = false
       for key, val in result.obj.fieldPairs:
+        when T.hasCustomPragma(Prefix):
+          conSettingName = T.getCustomPragmaVal(Prefix)
         when result.obj.dot(key).hasCustomPragma(Setting):
-          when T.hasCustomPragma(Settings):
-            conSettingName = T.getCustomPragmaVal(Settings) & "."
           conSettingName &= result.obj.dot(key).getCustomPragmaVal(Setting)
 
           if conSettingName == line.setting:
@@ -111,20 +109,12 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
             if line.value.len > 0:
               try:
                 when type(result.obj.dot(key)) is enum:
-                  # TODO: Enum signed int, unsigned int, string
-                  # try:
-                    # Signed int enum
-                    result.obj.dot(key) = type(result.obj.dot(key))(parseInt(line.value))
-                  # try:
-                  #   result.obj.dot(key) = type(result.obj.dot(key))(parseInt(line.value))
-                  # except ValueError:
-                  #   result.obj.dot(key) = parseEnum[type(result.obj.dot(key))](line.value)
+                  result.obj.dot(key) = parseEnum[type(result.obj.dot(key))](line.value)
                 elif type(result.obj.dot(key)) is SomeFloat:
                   when result.obj.dot(key).hasCustomPragma(Range):
                     var valFloat: SomeFloat = parseFloat(line.value)
                     valFloat = parseFloat(line.value)
                     let rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
-                    # result = @[$rangeTpl.min, $rangeTpl.max]
                     if valFloat >= rangeTpl.min and valFloat <= rangeTpl.max:
                       result.obj.dot(key) = valFloat
                     else:
@@ -136,12 +126,13 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
                 elif type(result.obj.dot(key)) is object:
                   result.obj.dot(key) = parse[type(result.obj.dot(key))](result.obj.dot(key).getCustomPragmaVal(Format), line.value)
                 else:
-                  {.error: "Attribute type not implemented".}
-              except RangeDefect, ValueError:
+                  {.error: "Attribute type '" & type(result.obj.dot(key)) & "' not implemented.".}
+              except ValueError:
                 line.valid = false
             else:
               # Setting found, but value is empty
               line.valid = false
+            break # Setting found, break
       if not foundSetting:
         line.valid = false
       result.lines.add(line)
@@ -157,18 +148,19 @@ proc writeCon*[T](t: T, path: string) =
     var conSettingName: string
 
     for key, val in t.fieldPairs:
+      when T.hasCustomPragma(Prefix):
+        conSettingName = T.getCustomPragmaVal(Prefix)
       when t.dot(key).hasCustomPragma(Setting):
-        when T.hasCustomPragma(Settings):
-          conSettingName = T.getCustomPragmaVal(Settings) & "."
         conSettingName &= t.dot(key).getCustomPragmaVal(Setting)
 
-        when type(t.dot(key)) is enum or type(t.dot(key)) is bool:
-          fileStream.writeLine(conSettingName & " " & $t.dot(key).int)
+        when type(t.dot(key)) is enum:
+          fileStream.writeLine(conSettingName & " " & $t.dot(key))
         elif type(t.dot(key)) is SomeFloat:
           fileStream.writeLine(conSettingName & " " & $round(t.dot(key), 6)) # TODO: Add MaxLen
+        elif type(t.dot(key)) is bool:
+          fileStream.writeLine(conSettingName & " " & $t.dot(key).int)
         elif type(t.dot(key)) is object:
-          discard # TODO
-          # result.obj.dot(key) = parse[type(result.obj.dot(key))](result.obj.dot(key).getCustomPragmaVal(Format), line.value)
+          fileStream.writeLine(conSettingName & " " & t.dot(key).serialize(t.dot(key).getCustomPragmaVal(Format)))
         else:
           {.error: "Attribute type not implemented".}
 
@@ -178,47 +170,11 @@ proc writeCon*[T](t: T, path: string) =
 
 
 when isMainModule:
-  type
-    OffLowMediumHigh* {.pure.} = enum
-      Off = 0
-      Low = 1
-      Medium = 2
-      High = 3
-    LowMediumHigh* {.pure.} = enum
-      Low = 1
-      Medium = 2
-      High = 3
-    Antialiasing* {.pure.} = enum
-      Off = "Off"
-      FourSamples = "4Samples"
-      EightSamples = "8Samples"
-    Presets* {.pure.} = enum
-      Low = 0
-      Medium = 1
-      High = 2
-      Custom = 3
-    Resolution* = object
-      width*: uint16
-      height*: uint16
-      frequence*: uint8
-    Video* {.Settings: "VideoSettings".} = object
-      terrainQuality* {.Setting: "setTerrainQuality".}: LowMediumHigh
-      geometryQuality* {.Setting: "setGeometryQuality".}: LowMediumHigh
-      lightingQuality* {.Setting: "setLightingQuality".}: LowMediumHigh
-      dynamicLightingQuality* {.Setting: "setDynamicLightingQuality".}: OffLowMediumHigh
-      dynamicShadowsQuality* {.Setting: "setDynamicShadowsQuality".}: OffLowMediumHigh
-      effectsQuality* {.Setting: "setEffectsQuality".}: LowMediumHigh
-      textureQuality* {.Setting: "setTextureQuality".}: LowMediumHigh
-      textureFilteringQuality* {.Setting: "setTextureFilteringQuality".}: LowMediumHigh
-      resolution* {.Setting: "setResolution", Format: "[width]x[height]@[frequence]Hz".}: Resolution
-      antialiasing* {.Setting: "setAntialiasing".}: Antialiasing
-      viewDistanceScale* {.Setting: "setViewDistanceScale", Range: (0.0, 1.0).}: float # 0.0 = 50%, 1.0 = 100%
-      useBloom* {.Setting: "setUseBloom".}: bool # It's a bool, but set to int, to validate if parser couldn't parse this value (-1 = Invalid) # TODO: Maybe not the best solution? Maybe use Options?
-      videoOptionScheme* {.Setting: "setVideoOptionScheme".}: Presets
+  from ../profile/video import Video
 
   var (obj, lines) = readCon[Video]("""/home/dankrad/Battlefield 2142/Profiles/0001/Video.con""")
   echo "=== OBJ ==="
   echo obj
-  echo "=== LINES ==="
-  for line in lines.invalidLines:
-    echo line
+  # echo "=== LINES ==="
+  # for line in lines.invalidLines:
+  #   echo line

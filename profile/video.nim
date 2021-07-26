@@ -4,28 +4,28 @@ export con
 
 type
   OffLowMediumHigh* {.pure.} = enum
-    Off = 0
-    Low = 1
-    Medium = 2
-    High = 3
+    Off = "0"
+    Low = "1"
+    Medium = "2"
+    High = "3"
   LowMediumHigh* {.pure.} = enum
-    Low = 1
-    Medium = 2
-    High = 3
+    Low = "1"
+    Medium = "2"
+    High = "3"
   Antialiasing* {.pure.} = enum
     Off = "Off"
     FourSamples = "4Samples"
     EightSamples = "8Samples"
   Presets* {.pure.} = enum
-    Low = 0
-    Medium = 1
-    High = 2
-    Custom = 3
+    Low = "0"
+    Medium = "1"
+    High = "2"
+    Custom = "3"
   Resolution* = object of RootObj # When "of RootObj" kind == akTpl? .. optimization? dunno ....
     width*: uint16
     height*: uint16
     frequence*: uint8
-  Video* {.Settings: "VideoSettings".} = object
+  Video* {.Prefix: "VideoSettings.".} = object
     terrainQuality* {.Setting: "setTerrainQuality".}: LowMediumHigh
     geometryQuality* {.Setting: "setGeometryQuality".}: LowMediumHigh
     lightingQuality* {.Setting: "setLightingQuality".}: LowMediumHigh
@@ -126,8 +126,8 @@ proc newVideoLow*(): Video =
   result.videoOptionScheme = Presets.Custom
 
 
-# proc `$`*(resolution: Resolution): string = # TODO
-#   return fmt"{resolution.width}x{resolution.height}@{resolution.frequence}Hz"
+proc `$`*(resolution: Resolution): string =
+  return resolution.serialize(Video().resolution.getCustomPragmaVal(Format))
 
 proc fixInvalid*(video: var Video) = # TODO
   discard

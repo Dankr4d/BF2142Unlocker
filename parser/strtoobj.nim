@@ -2,6 +2,28 @@ import parseutils
 import strutils # TODO: parseutils also has a parseInt/Uint .. use it, instead of reparsing
 import "../macro/dot"
 
+
+proc serialize*[T](t: T, format: string): string =
+  var tokenAttribute, tokenDelimiters: string
+  var pos: int = 0
+
+  while pos < format.len:
+    pos += format.parseUntil(tokenDelimiters, '[', pos) + 1
+    pos += format.parseUntil(tokenAttribute, ']', pos) + 1
+
+    result &= tokenDelimiters
+    for key, val in t.fieldPairs:
+      if key == tokenAttribute:
+        when type(t.dot(key)) is SomeInteger:
+          result &= $t.dot(key)
+        elif type(t.dot(key)) is string:
+          result &= t.dot(key)
+        elif type(t.dot(key)) is bool:
+          result &= $t.dot(key).int
+        else:
+          {.error: "Type '" & $type(result.dot(key)) & "' not implemented!".}
+
+
 proc parse*[T](format, value: string): T =
   var tokenAttribute, tokenValue, tokenDelimiters: string
   var posFormat, posValue: int = 0
@@ -48,4 +70,8 @@ when isMainModule:
   let format: string = "a[width]xx[height]@@[frequence]Hz[mystr]ab[mybool]hallo"
   let value: string = "a800xx600@@60HzHALLOab1hallo"
 
-  echo parse[Resolution](format, value)
+  var res = parse[Resolution](format, value)
+  echo res
+  res.mybool = false
+  res.mystr = "MY MODIFIED STRING"
+  echo res.serialize(format)
