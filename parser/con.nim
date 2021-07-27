@@ -1,7 +1,7 @@
 #[
   TODOS:
     * Pragama to allow floats starting with dot
-    * 
+    *
     * Range check in write proc
     * ValidBools `true`, `false` seq len check in parse and write proc
 ]#
@@ -15,6 +15,7 @@ import macros
 import "../macro/dot"
 import typeinfo
 import sequtils
+import tables
 
 export macros
 export typeinfo
@@ -35,18 +36,25 @@ template ValidBools*(val: Bools) {.pragma.}
 
 
 type
-  Lines* = seq[Line] # TODO: Change to object and with valid flag to increase "invalidLines" iterator
-  Line* = object
+  ConReport* = object
+    lines*: seq[ConLine]
+    valid*: bool # true if all lines are valid, otherwise false
+    invalidLines: seq[uint] # Invalid lines for a faster lookup
+    multipleSettings: Table[uint, seq[uint]] # key = first line found, value = lines which same setting found afterwards
+    settingsNotFound*: seq[ConSettingNotFound] # Settings which hasn't been found
+  ConLine* = object
     valid*: bool
     setting*: string
     value*: string
     validValues*: seq[string] # TODO: query it when it's required and add something like "isSettingValid"
     raw*: string
-    lineIdx*: uint # Starts at 1
+    lineIdx*: uint # Starts at 0
     kind*: AnyKind
-
-    # notFound*: bool
-    # foundMultiple*: bool
+  ConSettingNotFound* = object
+    prefix*: string
+    setting*: string
+    validValues*: seq[string]
+    kind*: AnyKind
 
 
 template validValues(attr: typed): seq[string] =
@@ -73,106 +81,151 @@ template validValues(attr: typed): seq[string] =
   result
 
 
-iterator invalidLines*(lines: Lines): Line =
-  # if lines.valid: # TODO
-  #   return
-  for line in lines:
-    if not line.valid:
-      yield line
+iterator invalidLines*(report: ConReport): ConLine =
+  for lineIdx in report.invalidLines:
+    yield report.lines[lineIdx]
 
+iterator multipleSettings*(report: ConReport): ConLine =
+  # Currently only yields the "duplicate" files and not the first one, add also the first one?
+  for lineIdxFirst, lineIdxSeq in report.multipleSettings.pairs:
+    for lineIdx in lineIdxSeq:
+      yield report.lines[lineIdx]
 
-proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
+iterator multipleSettingsLineIdx*(report: ConReport): uint =
+  for lineIdxSeq in report.multipleSettings.values:
+    for lineIdx in lineIdxSeq:
+      yield lineIdx
+
+proc readCon*[T](path: string): tuple[obj: T, report: ConReport] =
   var file: File
-  if file.open(path, fmRead, -1):
-    let fileStream: FileStream = newFileStream(file)
-    var lineRaw: string
-    var lineIdx: uint = 0
 
-    while fileStream.readLine(lineRaw):
-      lineIdx.inc()
+  var tableFound: Table[string, uint] # table of first lineIdx setting was found
+  # for key, val in result.obj.fieldPairs:
+  #   tableFound:
+  #   createBool(key & "Found")
 
-      var line: Line = Line(
-        valid: true,
-        lineIdx: lineIdx,
-        raw: lineRaw
-      )
+  if not file.open(path, fmRead, -1):
+    raise newException(ValueError, "FILE COULD NOT BE OPENED!") # TODO
 
-      let pos: int = lineRaw.parseUntil(line.setting, Whitespace, 0) + 1
-      if pos < lineRaw.len:
-        discard lineRaw.parseUntil(line.value, Newlines, pos)
-        line.value = line.value.strip(leading = false) # TODO: Pass by parameter if multiple whitespaces are allowed as delemitter
+  let fileStream: FileStream = newFileStream(file)
+  var lineRaw: string
+  var lineIdx: uint = 0
 
-      var setting: string
-      var foundSetting: bool = false
-      for key, val in result.obj.fieldPairs:
-        when T.hasCustomPragma(Prefix):
-          setting = T.getCustomPragmaVal(Prefix)
-        when result.obj.dot(key).hasCustomPragma(Setting):
-          setting &= result.obj.dot(key).getCustomPragmaVal(Setting)
+  while fileStream.readLine(lineRaw): # TODO: Doesn't read last empty line (readAll does)
 
-          if setting == line.setting:
-            foundSetting = true
-            line.validValues = validValues(result.obj.dot(key))
-            line.kind = toAny(result.obj.dot(key)).kind
+    var line: ConLine = ConLine(
+      valid: true,
+      lineIdx: lineIdx,
+      raw: lineRaw
+    )
 
-            if line.value.len > 0:
-              try:
-                when type(result.obj.dot(key)) is enum:
-                  result.obj.dot(key) = parseEnum[type(result.obj.dot(key))](line.value)
-                elif type(result.obj.dot(key)) is SomeFloat:
-                  if line.value.startsWith('.'):
-                    line.valid = false
-                  else:
-                    when result.obj.dot(key).hasCustomPragma(Range):
-                      let valFloat: SomeFloat = parseFloat(line.value)
-                      const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
-                      if valFloat >= rangeTpl.min and valFloat <= rangeTpl.max:
-                        result.obj.dot(key) = valFloat
-                      else:
-                        line.valid = false
-                    else:
-                      result.obj.dot(key) = parseFloat(line.value)
-                elif type(result.obj.dot(key)) is bool:
-                  when result.obj.dot(key).hasCustomPragma(ValidBools):
-                    const validBools: Bools = result.obj.dot(key).getCustomPragmaVal(ValidBools)
-                    if line.value in validBools.`true`:
-                      result.obj.dot(key) = true
-                    elif line.value in validBools.`false`:
-                      discard # Not required since default of bool is false
+    let pos: int = lineRaw.parseUntil(line.setting, Whitespace, 0) + 1
+    if pos < lineRaw.len:
+      discard lineRaw.parseUntil(line.value, Newlines, pos)
+      line.value = line.value.strip(leading = false) # TODO: Pass by parameter if multiple whitespaces are allowed as delemitter
+
+    var setting: string
+    var foundSetting: bool = false
+    for key, val in result.obj.fieldPairs:
+      when T.hasCustomPragma(Prefix):
+        setting = T.getCustomPragmaVal(Prefix)
+      when result.obj.dot(key).hasCustomPragma(Setting):
+        setting &= result.obj.dot(key).getCustomPragmaVal(Setting)
+
+        if setting == line.setting:
+          foundSetting = true
+
+          # Check if already found and add to duplicates of first found line
+          if tableFound.hasKey(setting):
+            line.valid = false
+
+            let lineIdxFirst: uint = tableFound[setting]
+            if not result.report.multipleSettings.hasKey(lineIdxFirst):
+              result.report.multipleSettings[lineIdxFirst]= @[lineIdx]
+            else:
+              result.report.multipleSettings[lineIdxFirst].add(lineIdx)
+          else:
+            tableFound[setting] = lineIdx
+
+          line.validValues = validValues(result.obj.dot(key))
+          line.kind = toAny(result.obj.dot(key)).kind
+
+          if line.value.len > 0:
+            try:
+              when type(result.obj.dot(key)) is enum:
+                result.obj.dot(key) = parseEnum[type(result.obj.dot(key))](line.value)
+              elif type(result.obj.dot(key)) is SomeFloat:
+                if line.value.startsWith('.'):
+                  line.valid = false
+                else:
+                  when result.obj.dot(key).hasCustomPragma(Range):
+                    let valFloat: SomeFloat = parseFloat(line.value)
+                    const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
+                    if valFloat >= rangeTpl.min and valFloat <= rangeTpl.max:
+                      result.obj.dot(key) = valFloat
                     else:
                       line.valid = false
                   else:
-                    result.obj.dot(key) = parseBool(line.value)
-                elif type(result.obj.dot(key)) is object:
-                  result.obj.dot(key) = parse[type(result.obj.dot(key))](result.obj.dot(key).getCustomPragmaVal(Format), line.value)
-                else:
-                  {.error: "Attribute type '" & type(result.obj.dot(key)) & "' not implemented.".}
-              except ValueError:
-                line.valid = false
-            else:
-              # Setting found, but value is empty
-              line.valid = false
-            if not line.valid:
-              when result.obj.dot(key).hasCustomPragma(Default):
-                when result.obj.dot(key) is SomeFloat:
-                  const valDefault: SomeFloat = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
-                  when result.obj.dot(key).hasCustomPragma(Range):
-                    const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
-                    when valDefault < rangeTpl.min or valDefault > rangeTpl.max:
-                      {.error: "Default value " & $valDefault & " is not in range (" & $rangeTpl.min & ", " & $rangeTpl.max & ").".}
-                    else:
-                      result.obj.dot(key) = valDefault
+                    result.obj.dot(key) = parseFloat(line.value)
+              elif type(result.obj.dot(key)) is bool:
+                when result.obj.dot(key).hasCustomPragma(ValidBools):
+                  const validBools: Bools = result.obj.dot(key).getCustomPragmaVal(ValidBools)
+                  if line.value in validBools.`true`:
+                    result.obj.dot(key) = true
+                  elif line.value in validBools.`false`:
+                    discard # Not required since default of bool is false
                   else:
-                      result.obj.dot(key) = valDefault
+                    line.valid = false
                 else:
-                  result.obj.dot(key) = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
-            break # Setting found, break
-      if not foundSetting:
-        line.valid = false
-      result.lines.add(line)
-  else:
-    raise newException(ValueError, "FILE COULD NOT BE OPENED!") # TODO
+                  result.obj.dot(key) = parseBool(line.value)
+              elif type(result.obj.dot(key)) is object:
+                result.obj.dot(key) = parse[type(result.obj.dot(key))](result.obj.dot(key).getCustomPragmaVal(Format), line.value)
+              else:
+                {.error: "Attribute type '" & type(result.obj.dot(key)) & "' not implemented.".}
+            except ValueError:
+              line.valid = false
+          else:
+            # Setting found, but value is empty
+            line.valid = false
+          if not line.valid:
+            when result.obj.dot(key).hasCustomPragma(Default):
+              when result.obj.dot(key) is SomeFloat:
+                const valDefault: SomeFloat = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
+                when result.obj.dot(key).hasCustomPragma(Range):
+                  const rangeTpl: tuple[min, max: SomeFloat] = result.obj.dot(key).getCustomPragmaVal(Range)
+                  when valDefault < rangeTpl.min or valDefault > rangeTpl.max:
+                    {.error: "Default value " & $valDefault & " is not in range (" & $rangeTpl.min & ", " & $rangeTpl.max & ").".}
+                  else:
+                    result.obj.dot(key) = valDefault
+                else:
+                    result.obj.dot(key) = valDefault
+              else:
+                result.obj.dot(key) = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
+          break # Setting found, break
+    if not foundSetting:
+      line.valid = false
+    if not line.valid:
+      result.report.valid = false
+      result.report.invalidLines.add(lineIdx)
+    result.report.lines.add(line)
+    lineIdx.inc()
 
+  # Check for missing settings and add them to report
+  when T.hasCustomPragma(Prefix):
+    const prefix: string = T.getCustomPragmaVal(Prefix)
+  else:
+    const prefix: string = ""
+  for key, val in result.obj.fieldPairs:
+    when result.obj.dot(key).hasCustomPragma(Setting):
+      const setting: string = result.obj.dot(key).getCustomPragmaVal(Setting)
+      if not tableFound.hasKey(prefix & setting):
+        # TODO: Set default value to result.obj.dot(key)
+        result.report.settingsNotFound.add(ConSettingNotFound(
+          prefix: prefix,
+          setting: setting,
+          validValues: validValues(result.obj.dot(key)),
+          kind: toAny(result.obj.dot(key)).kind
+        ))
 
 
 proc writeCon*[T](t: T, path: string) =
@@ -214,9 +267,10 @@ proc writeCon*[T](t: T, path: string) =
 when isMainModule:
   from ../profile/video import Video
 
-  var (obj, lines) = readCon[Video]("""/home/dankrad/Battlefield 2142/Profiles/0001/Video.con""")
+  var (obj, report) = readCon[Video]("""/home/dankrad/Battlefield 2142/Profiles/0001/Video.con""")
   echo "=== OBJ ==="
   echo obj
-  # echo "=== LINES ==="
-  # for line in lines.invalidLines:
-  #   echo line
+  echo "=== LINES ==="
+  # for line in report.invalidLines:
+  for line in multipleSettings(report):
+    echo line

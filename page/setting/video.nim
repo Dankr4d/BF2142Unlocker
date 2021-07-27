@@ -132,15 +132,11 @@ proc setDocumentsPath*(documentsPath: string) =
   pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
 
   var video: Video
-  var lines: Lines
-  (video, lines) = readCon[Video](path0001VideoCon)
+  var report: ConReport
+  (video, report) = readCon[Video](path0001VideoCon)
 
-  isVideoValid = true # TODO
-  for line in lines.invalidLines:
-    isVideoValid = false
-    break
+  isVideoValid = report.valid
 
-  # isVideoValid = readVideo(path0001VideoCon, video, entries)
   isResolutionAvailable = video.resolution in resolutions
 
   if isVideoValid and isResolutionAvailable:
@@ -159,7 +155,7 @@ proc setDocumentsPath*(documentsPath: string) =
     lblConfigCorruptTitle.text = "SETTINGS_VIDEO_CONFIG_CORRUPT_TITLE\n\n"
 
     var iter: TextIter
-    let markup: string = markup(lines)
+    let markup: string = markup(report)
     viewConfigCorruptBody.buffer.getEndIter(iter)
     viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
 

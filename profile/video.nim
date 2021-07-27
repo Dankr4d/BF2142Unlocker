@@ -41,30 +41,23 @@ type
     videoOptionScheme* {.Setting: "setVideoOptionScheme", Default: Presets.Custom.}: Presets
 
 import gintro/glib
-proc markup*(lines: Lines): string = # TODO: Outsource to con parser (without glib)
-  for line in lines:
+import tables
+proc markup*(report: ConReport): string = # TODO: Outsource to con parser (without glib)
+  var multipleSettings: seq[uint] = toSeq(report.multipleSettingsLineIdx)
+  for line in report.lines:
+    # multipleSettings.add(line.multiple)
     if line.valid:
       result &= "<span foreground=\"#DCDCDC\">"
       result &= markupEscapeText(line.raw, line.raw.len)
       result &= "</span>"
     else:
-      # if line.notFound:
-      #   result &= "<b>"
-      #   result &= "<span foreground=\"#8B4513\">"
-      #   result &= markupEscapeText(line.setting, line.setting.len)
-      #   result &= "</span> "
-      #   var validValuesStr: string = line.validValues.join(", ")
-      #   result &= "<span foreground=\"#ADFF2F\">"
-      #   result &= "[" & markupEscapeText(validValuesStr, validValuesStr.len) & "]"
-      #   result &= "</span>"
-      #   result &= "</b>"
-      # elif line.foundMultiple:
-      #   result &= "<b>"
-      #   result &= "<span foreground=\"#FFA500\" strikethrough=\"true\">"
-      #   result &= markupEscapeText(line.raw, line.raw.len)
-      #   result &= "</span>"
-      #   result &= "</b>"
-      # else:
+      if line.lineIdx in multipleSettings:
+        result &= "<b>"
+        result &= "<span foreground=\"#FFA500\" strikethrough=\"true\">"
+        result &= markupEscapeText(line.raw, line.raw.len)
+        result &= "</span>"
+        result &= "</b>"
+      else:
         if line.validValues.len == 0:
           if line.setting.len == 0 and line.value.len == 0:
             discard # Empty line
@@ -108,6 +101,19 @@ proc markup*(lines: Lines): string = # TODO: Outsource to con parser (without gl
           result &= "</span>"
           result &= "</b>"
     result &= "\n"
+
+  for notFound in report.settingsNotFound:
+    result &= "<b>"
+    result &= "<span foreground=\"#8B4513\">"
+    result &= markupEscapeText(notFound.prefix & notFound.setting, notFound.prefix.len + notFound.setting.len)
+    result &= "</span> "
+    var validValuesStr: string = notFound.validValues.join(", ")
+    result &= "<span foreground=\"#ADFF2F\">"
+    result &= "[" & markupEscapeText(validValuesStr, validValuesStr.len) & "]"
+    result &= "</span>"
+    result &= "</b>"
+    result &= "\n"
+
 ##
 
 
