@@ -37,7 +37,7 @@ type
     resolution* {.Setting: "setResolution", Format: "[width]x[height]@[frequence]Hz".}: Resolution
     antialiasing* {.Setting: "setAntialiasing".}: Antialiasing
     viewDistanceScale* {.Setting: "setViewDistanceScale", Range: (0.0, 1.0), Default: 1.0}: float # 0.0 = 50%, 1.0 = 100%
-    useBloom* {.Setting: "setUseBloom".}: bool
+    useBloom* {.Setting: "setUseBloom", ValidBools: Bools(`true`: @["1"], `false`: @["0"]).}: bool
     videoOptionScheme* {.Setting: "setVideoOptionScheme", Default: Presets.Custom.}: Presets
 
 import gintro/glib
@@ -66,7 +66,7 @@ proc markup*(lines: Lines): string = # TODO: Outsource to con parser (without gl
       #   result &= "</b>"
       # else:
         if line.validValues.len == 0:
-          if line.raw.len == 0:
+          if line.setting.len == 0 and line.value.len == 0:
             discard # Empty line
           else:
             # Setting unknown
@@ -85,6 +85,7 @@ proc markup*(lines: Lines): string = # TODO: Outsource to con parser (without gl
             result &= "[MISSING]"
             result &= "</span>"
           else:
+            # Value not valid
             result &= "<span foreground=\"#FF6347\">"
             result &= markupEscapeText(line.value, line.value.len)
             result &= "</span>"

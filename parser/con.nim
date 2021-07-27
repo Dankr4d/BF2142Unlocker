@@ -1,7 +1,9 @@
 #[
   TODOS:
-    * Pragama to set which bool formats are valid. E.g. 0, 1 is valid, but true, false, on and off are not
     * Pragama to allow floats starting with dot
+    * 
+    * Range check in write proc
+    * ValidBools `true`, `false` seq len check in parse and write proc
 ]#
 
 import streams
@@ -12,23 +14,30 @@ import math
 import macros
 import "../macro/dot"
 import typeinfo
+import sequtils
 
 export macros
 export typeinfo
 export strtoobj
+export sequtils
+
+type
+  Bools* = object
+    `true`*: seq[string]
+    `false`*: seq[string]
 
 template Prefix*(val: string) {.pragma.}
 template Setting*(val: string) {.pragma.}
-template Default*(val: string | SomeFloat | enum) {.pragma.}
+template Default*(val: string | SomeFloat | enum | bool) {.pragma.}
 template Format*(val: string) {.pragma.}
-template Range*(val: tuple[min, max: SomeFloat]) {.pragma.}
+template Range*(val: tuple[min, max: SomeFloat]) {.pragma.} # TODO: Use range
+template ValidBools*(val: Bools) {.pragma.}
 
 
 type
   Lines* = seq[Line] # TODO: Change to object and with valid flag to increase "invalidLines" iterator
   Line* = object
     valid*: bool
-    emptyLine*: bool # TODO: Remove and check against setting and value == empty?
     setting*: string
     value*: string
     validValues*: seq[string] # TODO: query it when it's required and add something like "isSettingValid"
@@ -39,8 +48,6 @@ type
     # notFound*: bool
     # foundMultiple*: bool
 
-import sequtils
-export sequtils
 
 template validValues(attr: typed): seq[string] =
   var result: seq[string]
@@ -53,7 +60,12 @@ template validValues(attr: typed): seq[string] =
     else:
       result = @["TODO to TODO"]
   elif type(attr) is bool:
-    result = @["0", "1"]
+    when attr.hasCustomPragma(ValidBools):
+      const validBoolsTpl: Bools = attr.getCustomPragmaVal(ValidBools)
+      result.add(validBoolsTpl.`true`)
+      result.add(validBoolsTpl.`false`)
+    else:
+      result = @["1", "0", "true", "false", "yes", "no", "y", "n", "on", "off"]
   elif type(attr) is object:
     result = @[attr.getCustomPragmaVal(Format)]
   else:
@@ -73,42 +85,32 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
   var file: File
   if file.open(path, fmRead, -1):
     let fileStream: FileStream = newFileStream(file)
-    var lineRaw, lineStr: string # stripped
-
+    var lineRaw: string
     var lineIdx: uint = 0
-    var line: Line
 
     while fileStream.readLine(lineRaw):
       lineIdx.inc()
-      lineStr = lineRaw.strip()
 
-      line = Line(
+      var line: Line = Line(
         valid: true,
-        lineIdx: lineIdx
+        lineIdx: lineIdx,
+        raw: lineRaw
       )
 
-      if lineRaw.len == 0:
-        line.emptyLine = true
-        result.lines.add(line)
-        continue
+      let pos: int = lineRaw.parseUntil(line.setting, Whitespace, 0) + 1
+      if pos < lineRaw.len:
+        discard lineRaw.parseUntil(line.value, Newlines, pos)
+        line.value = line.value.strip(leading = false) # TODO: Pass by parameter if multiple whitespaces are allowed as delemitter
 
-      line.raw = lineRaw
-
-      try:
-        (line.setting, line.value) = lineStr.splitWhitespace(maxsplit = 1)
-      except IndexDefect:  # Whitespace is missing, value is empty
-        line.setting = lineStr
-        line.value = ""
-
-      var conSettingName: string
+      var setting: string
       var foundSetting: bool = false
       for key, val in result.obj.fieldPairs:
         when T.hasCustomPragma(Prefix):
-          conSettingName = T.getCustomPragmaVal(Prefix)
+          setting = T.getCustomPragmaVal(Prefix)
         when result.obj.dot(key).hasCustomPragma(Setting):
-          conSettingName &= result.obj.dot(key).getCustomPragmaVal(Setting)
+          setting &= result.obj.dot(key).getCustomPragmaVal(Setting)
 
-          if conSettingName == line.setting:
+          if setting == line.setting:
             foundSetting = true
             line.validValues = validValues(result.obj.dot(key))
             line.kind = toAny(result.obj.dot(key)).kind
@@ -131,7 +133,16 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
                     else:
                       result.obj.dot(key) = parseFloat(line.value)
                 elif type(result.obj.dot(key)) is bool:
-                  result.obj.dot(key) = parseBool(line.value)
+                  when result.obj.dot(key).hasCustomPragma(ValidBools):
+                    const validBools: Bools = result.obj.dot(key).getCustomPragmaVal(ValidBools)
+                    if line.value in validBools.`true`:
+                      result.obj.dot(key) = true
+                    elif line.value in validBools.`false`:
+                      discard # Not required since default of bool is false
+                    else:
+                      line.valid = false
+                  else:
+                    result.obj.dot(key) = parseBool(line.value)
                 elif type(result.obj.dot(key)) is object:
                   result.obj.dot(key) = parse[type(result.obj.dot(key))](result.obj.dot(key).getCustomPragmaVal(Format), line.value)
                 else:
@@ -151,6 +162,8 @@ proc readCon*[T](path: string): tuple[obj: T, lines: Lines] =
                       {.error: "Default value " & $valDefault & " is not in range (" & $rangeTpl.min & ", " & $rangeTpl.max & ").".}
                     else:
                       result.obj.dot(key) = valDefault
+                  else:
+                      result.obj.dot(key) = valDefault
                 else:
                   result.obj.dot(key) = result.obj.dot(key).getCustomPragmaVal(Default)[0] # TODO: Why the fuck do I get a tuple?!?
             break # Setting found, break
@@ -166,24 +179,32 @@ proc writeCon*[T](t: T, path: string) =
   let fileStream: FileStream = newFileStream(path, fmWrite)
 
   if not isNil(fileStream):
-    var conSettingName: string
+    var setting: string
 
     for key, val in t.fieldPairs:
       when T.hasCustomPragma(Prefix):
-        conSettingName = T.getCustomPragmaVal(Prefix)
+        setting = T.getCustomPragmaVal(Prefix)
       when t.dot(key).hasCustomPragma(Setting):
-        conSettingName &= t.dot(key).getCustomPragmaVal(Setting)
+        setting &= t.dot(key).getCustomPragmaVal(Setting)
 
         when type(t.dot(key)) is enum:
-          fileStream.writeLine(conSettingName & " " & $t.dot(key))
+          fileStream.writeLine(setting & " " & $t.dot(key))
         elif type(t.dot(key)) is SomeFloat:
-          fileStream.writeLine(conSettingName & " " & $round(t.dot(key), 6)) # TODO: Add Round pragma
+          fileStream.writeLine(setting & " " & $round(t.dot(key), 6)) # TODO: Add Round pragma
         elif type(t.dot(key)) is bool:
-          fileStream.writeLine(conSettingName & " " & $t.dot(key).int)
+          when t.dot(key).hasCustomPragma(ValidBools):
+            const validBools: Bools = t.dot(key).getCustomPragmaVal(ValidBools)
+            # fileStream.writeLine(setting & " " & validBools.dot($t.dot(key))[0])
+            if t.dot(key):
+              fileStream.writeLine(setting & " " & validBools.`true`[0])
+            else:
+              fileStream.writeLine(setting & " " & validBools.`false`[0])
+          else:
+            fileStream.writeLine(setting & " " & $t.dot(key))
         elif type(t.dot(key)) is object:
-          fileStream.writeLine(conSettingName & " " & t.dot(key).serialize(t.dot(key).getCustomPragmaVal(Format)))
+          fileStream.writeLine(setting & " " & t.dot(key).serialize(t.dot(key).getCustomPragmaVal(Format)))
         else:
-          {.error: "Attribute type not implemented".}
+          {.error: "Attribute type '" & type(t.dot(key)) & "' not implemented.".}
 
     fileStream.close()
 
