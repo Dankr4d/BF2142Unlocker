@@ -1,6 +1,5 @@
-import strutils
-import ../parser/con
-export con
+import conparser
+export conparser
 
 type
   OffLowMediumHigh* {.pure.} = enum
@@ -25,113 +24,29 @@ type
     width*: uint16
     height*: uint16
     frequence*: uint8
+
+import ../module/resolution
+proc getHighestResolution(): Resolution =
+  for tpl in getAvailableResolutions():
+    # resolutions.add(Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence))
+    return Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence)
+
+type
   Video* {.Prefix: "VideoSettings.".} = object
-    terrainQuality* {.Setting: "setTerrainQuality".}: LowMediumHigh
-    geometryQuality* {.Setting: "setGeometryQuality".}: LowMediumHigh
-    lightingQuality* {.Setting: "setLightingQuality".}: LowMediumHigh
-    dynamicLightingQuality* {.Setting: "setDynamicLightingQuality".}: OffLowMediumHigh
-    dynamicShadowsQuality* {.Setting: "setDynamicShadowsQuality".}: OffLowMediumHigh
-    effectsQuality* {.Setting: "setEffectsQuality".}: LowMediumHigh
-    textureQuality* {.Setting: "setTextureQuality".}: LowMediumHigh
-    textureFilteringQuality* {.Setting: "setTextureFilteringQuality".}: LowMediumHigh
-    resolution* {.Setting: "setResolution", Format: "[width]x[height]@[frequence]Hz".}: Resolution
-    antialiasing* {.Setting: "setAntialiasing".}: Antialiasing
-    viewDistanceScale* {.Setting: "setViewDistanceScale", Range: (0.0, 1.0), Default: 1.0}: float # 0.0 = 50%, 1.0 = 100%
-    useBloom* {.Setting: "setUseBloom", ValidBools: Bools(`true`: @["1"], `false`: @["0"]).}: bool
+    terrainQuality* {.Setting: "setTerrainQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    geometryQuality* {.Setting: "setGeometryQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    lightingQuality* {.Setting: "setLightingQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    dynamicLightingQuality* {.Setting: "setDynamicLightingQuality", Default: OffLowMediumHigh.Off.}: OffLowMediumHigh
+    dynamicShadowsQuality* {.Setting: "setDynamicShadowsQuality", Default: OffLowMediumHigh.Off.}: OffLowMediumHigh
+    effectsQuality* {.Setting: "setEffectsQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    textureQuality* {.Setting: "setTextureQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    textureFilteringQuality* {.Setting: "setTextureFilteringQuality", Default: LowMediumHigh.Low.}: LowMediumHigh
+    resolution* {.Setting: "setResolution", Format: "[width]x[height]@[frequence]Hz", Default: Resolution(width: 800, height: 600, frequence: 60).}: Resolution
+    antialiasing* {.Setting: "setAntialiasing", Default: Antialiasing.Off.}: Antialiasing
+    viewDistanceScale* {.Setting: "setViewDistanceScale", Default: 1.0f}: range[0.0f .. 1.0f] # 0.0 = 50%, 1.0 = 100%
+    useBloom* {.Setting: "setUseBloom", Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false.}: bool
     videoOptionScheme* {.Setting: "setVideoOptionScheme", Default: Presets.Custom.}: Presets
-
-import gintro/glib
-import tables
-proc markup*(report: ConReport): string = # TODO: Outsource to con parser (without glib)
-  var multipleSettings: seq[uint] = toSeq(report.multipleSettingsLineIdx)
-  for line in report.lines:
-    # multipleSettings.add(line.multiple)
-    if line.valid:
-      result &= "<span foreground=\"#DCDCDC\">"
-      result &= markupEscapeText(line.raw, line.raw.len)
-      result &= "</span>"
-    else:
-      if line.lineIdx in multipleSettings:
-        result &= "<b>"
-        result &= "<span foreground=\"#FFA500\" strikethrough=\"true\">"
-        result &= markupEscapeText(line.raw, line.raw.len)
-        result &= "</span>"
-        result &= "</b>"
-      else:
-        if line.validValues.len == 0:
-          if line.setting.len == 0 and line.value.len == 0:
-            discard # Empty line
-          else:
-            # Setting unknown
-            result &= "<b>"
-            result &= "<span foreground=\"#FF6347\" strikethrough=\"true\">"
-            result &= markupEscapeText(line.raw, line.raw.len)
-            result &= "</span>"
-            result &= "</b>"
-        else:
-          result &= "<b>"
-          result &= line.setting
-          result &= " "
-          if line.value.len == 0:
-            # Value missing
-            result &= "<span foreground=\"#8B4513\">"
-            result &= "[MISSING]"
-            result &= "</span>"
-          else:
-            # Value not valid
-            result &= "<span foreground=\"#FF6347\">"
-            result &= markupEscapeText(line.value, line.value.len)
-            result &= "</span>"
-          result &= " "
-
-          result &= "<span foreground=\"#ADFF2F\">"
-          case line.kind:
-          of akObject:
-            result &= markupEscapeText(line.validValues[0], line.validValues[0].len)
-          of akFloat, akFloat32, akFloat64, akFloat128:
-            var validValuesStr: string = line.validValues.join(" .. ")
-            result &= "[" & markupEscapeText(validValuesStr, validValuesStr.len) & "]"
-          of akEnum, akBool:
-            var validValuesStr: string = line.validValues.join(", ")
-            result &= "[" & markupEscapeText(validValuesStr, validValuesStr.len) & "]"
-          else:
-            discard
-            # raise newException(ValueError, $line.kind & " not implemented!")
-            # {.error: "Not implemented!".}
-          result &= "</span>"
-          result &= "</b>"
-    result &= "\n"
-
-  for notFound in report.settingsNotFound:
-    result &= "<b>"
-    result &= "<span foreground=\"#8B4513\">"
-    result &= markupEscapeText(notFound.prefix & notFound.setting, notFound.prefix.len + notFound.setting.len)
-    result &= "</span> "
-    var validValuesStr: string = notFound.validValues.join(", ")
-    result &= "<span foreground=\"#ADFF2F\">"
-    result &= "[" & markupEscapeText(validValuesStr, validValuesStr.len) & "]"
-    result &= "</span>"
-    result &= "</b>"
-    result &= "\n"
-
 ##
-
-
-proc newVideoLow*(): Video =
-  result.terrainQuality = LowMediumHigh.Low
-  result.geometryQuality = LowMediumHigh.Low
-  result.lightingQuality = LowMediumHigh.Low
-  result.dynamicLightingQuality = OffLowMediumHigh.Off
-  result.dynamicShadowsQuality = OffLowMediumHigh.Off
-  result.effectsQuality = LowMediumHigh.Low
-  result.textureQuality = LowMediumHigh.Low
-  result.textureFilteringQuality = LowMediumHigh.Low
-  result.resolution = Resolution(width: 800, height: 600, frequence: 60)
-  result.antialiasing = Antialiasing.Off
-  result.viewDistanceScale = 1.0
-  result.useBloom = false
-  result.videoOptionScheme = Presets.Custom
-
 
 proc `$`*(resolution: Resolution): string =
   return resolution.serialize(Video().resolution.getCustomPragmaVal(Format))
@@ -139,6 +54,7 @@ proc `$`*(resolution: Resolution): string =
 when isMainModule:
   let path: string = """/home/dankrad/Battlefield 2142/Profiles/0001/Video.con"""
   var video: Video
-  var lines: Lines
-  (video, lines) = readCon[Video](path)
-  echo "lines: ", lines
+  var report: ConReport
+  (video, report) = readCon[Video](path)
+  for line in report.lines:
+    echo line

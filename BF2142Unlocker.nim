@@ -37,8 +37,11 @@ import tables # Required to store ServerConfig temporary for faster server list 
 import module/gintro/liststore
 import module/gintro/infodialog
 
+from conparser import newDefault
 import profile/video as profileVideo
 import page/setting/video as pageSettingVideo
+import profile/audio as profileAudio
+import page/setting/audio as pageSettingAudio
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -314,7 +317,6 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 
 const
-  PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
   PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
   PROFILE_GENERAL_CON: string = staticRead("profile/General.con")
   PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
@@ -785,7 +787,7 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "Video.con", bf2142Profile0001Path / "Video.con"):
         return
     else:
-      let video: Video = newVideoLow()
+      let video: Video = newDefault[Video]()
       video.writeCon(bf2142ProfileDefaultPath / "Video.con")
       video.writeCon(bf2142Profile0001Path / "Video.con")
 
@@ -794,10 +796,9 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "Audio.con", bf2142Profile0001Path / "Audio.con"):
         return
     else:
-      if not writeFile(bf2142ProfileDefaultPath / "Audio.con", PROFILE_AUDIO_CON):
-        return
-      if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
-        return
+      let audio: Audio = newDefault[Audio]()
+      audio.writeCon(bf2142ProfileDefaultPath / "Audio.con")
+      audio.writeCon(bf2142Profile0001Path / "Audio.con")
 
     # Controls.con
     if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
@@ -836,9 +837,11 @@ proc updateProfilePathes() =
   bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
   pageSettingVideo.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   checkBF2142ProfileFiles()
   when defined(linux):
     notebookSettings.getNthPage(1).setSensitive(true)
+    notebookSettings.getNthPage(2).setSensitive(true)
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
   # TODO: Try'n catch because we parse booleans
@@ -903,6 +906,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
       updateProfilePathes()
     else:
       notebookSettings.getNthPage(1).setSensitive(false)
+      notebookSettings.getNthPage(2).setSensitive(false)
   elif defined(windows):
     documentsPath = getDocumentsPath()
     updateProfilePathes()
@@ -3338,11 +3342,12 @@ proc onApplicationActivate(application: Application) =
   #
 
   notebook.currentPage = 4 # TODO: Remove
-  notebookSettings.currentPage = 1 # TODO: Remove
-  notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
+  notebookSettings.currentPage = 2 # TODO: Remove
+  # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
   ## Pages
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
+  pageSettingAudio.init(builder, addr windowShown, addr ignoreEvents)
   #
 
   window.setApplication(application)

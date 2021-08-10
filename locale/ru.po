@@ -447,6 +447,74 @@ msgstr "Высокое"
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Выкл"
 
+# ##
+# ##### Settings/Audio
+msgid "SETTINGS_AUDIO_RENDERER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SOUND_QUALITY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SAVE"
+msgstr "Сохранить"
+
+msgid "SETTINGS_AUDIO_REVERT"
+msgstr "Вернуть"
+
+msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_ENABLED"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOICE_OVER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_MUSIC"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_EFFECTS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENABLE_EAX"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_LOW"
+msgstr "Низкое"
+
+msgid "SETTINGS_AUDIO_MEDIUM"
+msgstr "Среднее"
+
+msgid "SETTINGS_AUDIO_HIGH"
+msgstr "Высокое"
+
+msgid "SETTINGS_AUDIO_SOFTWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_HARDWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_GAME_VOLUME"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP"
+msgstr ""
+
 msgid "TAB_QUICK"
 msgstr "Играть"
 

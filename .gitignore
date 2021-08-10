@@ -71,9 +71,6 @@ module/gintro/exceptiondialog.exe
 macro/signal
 macro/signal.exe
 
-macro/dot
-macro/dot.exe
-
 patcher/bf2142
 patcher/bf2142.exe
 
@@ -83,17 +80,17 @@ registry/bf2142.exe
 parser/gamesrv
 parser/gamesrv.exe
 
-parser/strtoobj
-parser/strtoobj.exe
-
-parser/con
-parser/con.exe
-
 profile/video
 profile/video.exe
 
+profile/audio
+profile/audio.exe
+
 page/setting/video
 page/setting/video.exe
+
+page/setting/audio
+page/setting/audio.exe
 
 config/config.ini
 config/login.ini

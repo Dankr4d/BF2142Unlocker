@@ -36,8 +36,11 @@ var btnConfigCorruptNo: Button
 
 
 
-# proc `$`(resolution: tuple[width, height: uint16, frequence: uint8]): string =
-#   return $Resolution(width: resolution.width, height: resolution.height, frequence: resolution.frequence)
+import conparser/exports/markup
+proc markupEscapeProc(str: string): string =
+  markupEscapeText(str, str.len)
+proc markup(report: ConReport): string =
+  markup(report, markupEscapeProc)
 
 
 proc translate(antialiasing: Antialiasing): string =
@@ -122,7 +125,7 @@ proc loadVideo(video: Video) =
   discard cbxResolution.setActiveId($video.resolution)
   scaleAntialiasing.value = video.antialiasing.float
   scaleViewDistanceScale.value = video.viewDistanceScale
-  switchEnhancedLighting.active = video.useBloom.bool
+  switchEnhancedLighting.active = video.useBloom
 
 
 proc setDocumentsPath*(documentsPath: string) =
@@ -131,12 +134,10 @@ proc setDocumentsPath*(documentsPath: string) =
   path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
   pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
 
-  var video: Video
   var report: ConReport
   (video, report) = readCon[Video](path0001VideoCon)
 
   isVideoValid = report.valid
-
   isResolutionAvailable = video.resolution in resolutions
 
   if isVideoValid and isResolutionAvailable:
@@ -183,9 +184,9 @@ proc onScaleSettingsAntialiasingFormatValue(self: ptr Scale00, value: float): cs
   return g_strdup(translate(cast[Antialiasing](value.int)))
 
 proc onScaleSettingsVideoViewDistanceScaleFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup($(int(scaleViewDistanceScale.value * 100)) & "%")
+  return g_strdup($(int(value * 100)) & "%")
 
-proc updateServerRevertSensitivity() =
+proc updateSaveRevertSensitivity() =
   if isVideoValid and isResolutionAvailable:
     btnSave.sensitive = video != videoDirty
     btnRevert.sensitive = btnSave.sensitive
@@ -195,51 +196,51 @@ proc updateServerRevertSensitivity() =
 
 proc onCbxSettingsVideoResolutionChanged(self: ptr ComboBox00) {.signal.} =
   videoDirty.resolution = cbxResolution.resolution
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoTerrainValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.terrainQuality = cast[LowMediumHigh](scaleTerrain.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoEffectsValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.effectsQuality = cast[LowMediumHigh](scaleEffects.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoGeometryValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.geometryQuality = cast[LowMediumHigh](scaleGeometry.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoTextureValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.textureQuality = cast[LowMediumHigh](scaleTexture.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoLightingValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.lightingQuality = cast[LowMediumHigh](scaleLighting.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicShadowsValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.dynamicShadowsQuality = cast[OffLowMediumHigh](scaleDynamicShadows.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoDynamicLightValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.dynamicLightingQuality = cast[OffLowMediumHigh](scaleDynamicLight.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoAntialiasingValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.antialiasing = cast[Antialiasing](scaleAntialiasing.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoTextureFilteringValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.textureFilteringQuality = cast[LowMediumHigh](scaleTextureFiltering.value.int)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onScaleSettingsVideoViewDistanceScaleValueChanged(self: ptr Scale00) {.signal.} =
   videoDirty.viewDistanceScale = scaleViewDistanceScale.value.float * 2 - 1
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onSwitchSettingsVideoEnhancedLightingStateSet(self: ptr Switch00) {.signal.} =
   videoDirty.useBloom = switchEnhancedLighting.active
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 
 proc onBtnSettingsVideoSaveClicked(self: ptr Button00) {.signal.} =
@@ -248,12 +249,12 @@ proc onBtnSettingsVideoSaveClicked(self: ptr Button00) {.signal.} =
   videoDirty.writeCon(path0001VideoCon)
   videoDirty.writeCon(pathDefaultVideoCon)
   video = videoDirty
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 proc onBtnSettingsVideoRevertClicked(self: ptr Button00) {.signal.} =
   videoDirty = video
   loadVideo(video)
-  updateServerRevertSensitivity()
+  updateSaveRevertSensitivity()
 
 
 proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =

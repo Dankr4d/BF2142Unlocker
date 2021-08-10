@@ -448,6 +448,74 @@ msgid "SETTINGS_VIDEO_OFF"
 msgstr "Aus"
 
 # ##
+# ##### Settings/Audio
+msgid "SETTINGS_AUDIO_RENDERER"
+msgstr "Soundmodi:"
+
+msgid "SETTINGS_AUDIO_SOUND_QUALITY"
+msgstr "Sound Qualität:"
+
+msgid "SETTINGS_AUDIO_SAVE"
+msgstr "Speichern"
+
+msgid "SETTINGS_AUDIO_REVERT"
+msgstr "Zurücksetzen"
+
+msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
+msgstr "Schwellenwert test des Mikrofons:"
+
+msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
+msgstr "Microfonleistung verstärken:"
+
+msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
+msgstr "Empfangen:"
+
+msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
+msgstr "Senden:"
+
+msgid "SETTINGS_AUDIO_VOIP_ENABLED"
+msgstr "Aktiviert:"
+
+msgid "SETTINGS_AUDIO_VOICE_OVER"
+msgstr "Sprachausgabe:"
+
+msgid "SETTINGS_AUDIO_MUSIC"
+msgstr "Musik:"
+
+msgid "SETTINGS_AUDIO_EFFECTS"
+msgstr "Effekte:"
+
+msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
+msgstr "Nur deutsche Sprachausgabe:"
+
+msgid "SETTINGS_AUDIO_ENABLE_EAX"
+msgstr "Eax aktivieren:"
+
+msgid "SETTINGS_AUDIO_LOW"
+msgstr "Niedrig"
+
+msgid "SETTINGS_AUDIO_MEDIUM"
+msgstr "Mittel"
+
+msgid "SETTINGS_AUDIO_HIGH"
+msgstr "Hoch"
+
+msgid "SETTINGS_AUDIO_SOFTWARE"
+msgstr "Software"
+
+msgid "SETTINGS_AUDIO_HARDWARE"
+msgstr "Hardware"
+
+msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
+msgstr "Sound Einstellungen"
+
+msgid "SETTINGS_AUDIO_GAME_VOLUME"
+msgstr "Lautstärke"
+
+msgid "SETTINGS_AUDIO_VOIP"
+msgstr "Voice over IP"
+
+# ##
 # ##### Tabs
 msgid "TAB_QUICK"
 msgstr "Spielen"
