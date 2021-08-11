@@ -59,6 +59,9 @@ module/windows/stdoutreader.exe
 module/windows/sendmsg
 module/windows/sendmsg.exe
 
+module/linux/registry
+module/linux/registry.exe
+
 module/gintro/liststore
 module/gintro/liststore.exe
 
@@ -74,8 +77,14 @@ macro/signal.exe
 patcher/bf2142
 patcher/bf2142.exe
 
-registry/bf2142
-registry/bf2142.exe
+registry/bf2142/cdkey
+registry/bf2142/cdkey.exe
+
+registry/bf2142/clientpath
+registry/bf2142/clientpath.exe
+
+registry/bf2142/clientlang
+registry/bf2142/clientlang.exe
 
 parser/gamesrv
 parser/gamesrv.exe

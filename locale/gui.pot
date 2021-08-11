@@ -321,11 +321,6 @@ msgstr ""
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr ""
 
-msgid "SETTINGS_RESOLUTION"
-msgstr ""
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr ""
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr ""
 
@@ -462,6 +457,12 @@ msgid "SETTINGS_AUDIO_GAME_VOLUME"
 msgstr ""
 
 msgid "SETTINGS_AUDIO_VOIP"
+msgstr ""
+###
+
+
+###### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
 msgstr ""
 ###
 

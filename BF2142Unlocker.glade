@@ -220,6 +220,11 @@ Author: Dankr4d
           <object class="GtkLabel" id="lblConfigCorruptTitle">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">6</property>
+            <property name="margin-bottom">4</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -618,6 +623,12 @@ Author: Dankr4d
       <column type="gchararray"/>
       <!-- column-name GSpyPort -->
       <column type="guint"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="listStoreSettingsGeneralGameLanguage">
+    <columns>
+      <!-- column-name Language -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkListStore" id="listStoreSettingsVideoResolution">
@@ -2801,277 +2812,343 @@ Author: Dankr4d
                     <property name="tab-pos">left</property>
                     <property name="show-border">False</property>
                     <child>
-                      <!-- n-columns=3 n-rows=9 -->
-                      <object class="GtkGrid">
+                      <object class="GtkBox">
+                        <property name="width-request">800</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="halign">center</property>
                         <property name="margin-start">12</property>
                         <property name="margin-end">6</property>
-                        <property name="margin-top">6</property>
+                        <property name="margin-top">30</property>
                         <property name="margin-bottom">6</property>
-                        <property name="row-spacing">3</property>
-                        <property name="column-spacing">3</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
                         <child>
-                          <object class="GtkLabel" id="lblSettingsBF2142ClientPath">
+                          <object class="GtkFrame">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
-                            <property name="label" translatable="yes">SETTINGS_BF2142_GAME_PATH</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsBF2142ServerPath">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
-                            <property name="label" translatable="yes">SETTINGS_BF2142_SERVER_PATH</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsWinePrefix">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
-                            <property name="label" translatable="yes">SETTINGS_WINEPREFIX</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsStartupQuery">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_STARTUP_QUERY</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="txtSettingsBF2142ClientPath">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
-                            <property name="hexpand">True</property>
-                            <signal name="focus-out-event" handler="onTxtSettingsBF2142ClientPathFocusOutEvent" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="txtSettingsBF2142ServerPath">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
-                            <property name="hexpand">True</property>
-                            <signal name="focus-out-event" handler="onTxtSettingsBF2142ServerPathFocusOutEvent" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="txtSettingsWinePrefix">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
-                            <property name="hexpand">True</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="txtSettingsStartupQuery">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="hexpand">True</property>
-                            <signal name="focus-out-event" handler="onTxtSettingsStartupQueryFocusOutEvent" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="btnSettingsBF2142ClientPath">
-                            <property name="label" translatable="yes">SETTINGS_SELECT</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
-                            <property name="halign">end</property>
-                            <signal name="clicked" handler="onBtnSettingsBF2142ClientPathClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="btnSettingsBF2142ServerPath">
-                            <property name="label" translatable="yes">SETTINGS_SELECT</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
-                            <property name="halign">end</property>
-                            <signal name="clicked" handler="onBtnSettingsBF2142ServerPathClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="btnSettingsWinePrefix">
-                            <property name="label" translatable="yes">SETTINGS_SELECT</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
-                            <property name="halign">end</property>
-                            <signal name="clicked" handler="onBtnSettingsWinePrefixClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
-                            <property name="label" translatable="yes">SETTINGS_SKIP_MOVIES</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="chbtnSettingsSkipMovies">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
-                            <property name="draw-indicator">True</property>
-                            <signal name="toggled" handler="onChbtnSettingsSkipMoviesToggled" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
-                            <property name="label" translatable="yes">SETTINGS_WINDOW_MODE</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="chbtnSettingsWindowMode">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
-                            <property name="draw-indicator">True</property>
-                            <signal name="toggled" handler="onChbtnSettingsWindowModeToggled" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSettingsResolution">
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
-                            <property name="label" translatable="yes">SETTINGS_RESOLUTION</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkComboBox" id="cbxSettingsResolution">
-                            <property name="can-focus">False</property>
-                            <property name="tooltip-text" translatable="yes">SETTINGS_RESOLUTION_TOOLTIP</property>
-                            <property name="model">listStoreResolutions</property>
-                            <property name="has-entry">True</property>
-                            <property name="entry-text-column">1</property>
-                            <property name="id-column">0</property>
-                            <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
-                            <child internal-child="entry">
-                              <object class="GtkEntry">
+                            <property name="label-xalign">0</property>
+                            <property name="shadow-type">in</property>
+                            <child>
+                              <!-- n-columns=3 n-rows=4 -->
+                              <object class="GtkGrid">
+                                <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="margin-start">6</property>
+                                <property name="margin-end">6</property>
+                                <property name="margin-top">3</property>
+                                <property name="margin-bottom">6</property>
+                                <property name="row-spacing">3</property>
+                                <property name="column-spacing">3</property>
+                                <child>
+                                  <object class="GtkLabel" id="lblSettingsBF2142ClientPath">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_BF2142_GAME_PATH</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="lblSettingsBF2142ServerPath">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_BF2142_SERVER_PATH</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="lblSettingsWinePrefix">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_WINEPREFIX</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="lblSettingsStartupQuery">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_STARTUP_QUERY</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="txtSettingsBF2142ClientPath">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
+                                    <property name="hexpand">True</property>
+                                    <signal name="focus-out-event" handler="onTxtSettingsBF2142ClientPathFocusOutEvent" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="txtSettingsBF2142ServerPath">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
+                                    <property name="hexpand">True</property>
+                                    <signal name="focus-out-event" handler="onTxtSettingsBF2142ServerPathFocusOutEvent" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="txtSettingsWinePrefix">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
+                                    <property name="hexpand">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="txtSettingsStartupQuery">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="hexpand">True</property>
+                                    <signal name="focus-out-event" handler="onTxtSettingsStartupQueryFocusOutEvent" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btnSettingsBF2142ClientPath">
+                                    <property name="label" translatable="yes">SETTINGS_SELECT</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_GAME_PATH_TOOLTIP</property>
+                                    <property name="halign">end</property>
+                                    <signal name="clicked" handler="onBtnSettingsBF2142ClientPathClicked" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">2</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btnSettingsBF2142ServerPath">
+                                    <property name="label" translatable="yes">SETTINGS_SELECT</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_BF2142_SERVER_PATH_TOOLTIP</property>
+                                    <property name="halign">end</property>
+                                    <signal name="clicked" handler="onBtnSettingsBF2142ServerPathClicked" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">2</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btnSettingsWinePrefix">
+                                    <property name="label" translatable="yes">SETTINGS_SELECT</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINEPREFIX_TOOLTIP</property>
+                                    <property name="halign">end</property>
+                                    <signal name="clicked" handler="onBtnSettingsWinePrefixClicked" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">2</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">SETTINGS_GENERAL_UNLOCKER</property>
                               </object>
                             </child>
                           </object>
                           <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">7</property>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
+                          <object class="GtkFrame">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label-xalign">0</property>
+                            <property name="shadow-type">in</property>
+                            <child>
+                              <!-- n-columns=3 n-rows=3 -->
+                              <object class="GtkGrid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-start">6</property>
+                                <property name="margin-end">6</property>
+                                <property name="margin-top">3</property>
+                                <property name="margin-bottom">6</property>
+                                <property name="row-spacing">3</property>
+                                <property name="column-spacing">3</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                                    <property name="label" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_WINDOW_MODE</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="chbtnSettingsWindowMode">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
+                                    <property name="draw-indicator">True</property>
+                                    <signal name="toggled" handler="onChbtnSettingsWindowModeToggled" swapped="no"/>
+                                    <child>
+                                      <object class="GtkComboBox" id="cbxSettingsResolution">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="model">listStoreResolutions</property>
+                                        <property name="has-entry">True</property>
+                                        <property name="entry-text-column">1</property>
+                                        <property name="id-column">0</property>
+                                        <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
+                                        <child internal-child="entry">
+                                          <object class="GtkEntry">
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="chbtnSettingsSkipMovies">
+                                    <property name="label" translatable="yes"> </property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                                    <property name="draw-indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_GAME_LANGUAGE</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBox" id="cbxSettingsGameLanguage">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="model">listStoreSettingsGeneralGameLanguage</property>
+                                    <property name="has-entry">True</property>
+                                    <property name="entry-text-column">0</property>
+                                    <property name="id-column">0</property>
+                                    <signal name="changed" handler="onCbxSettingsGameLanguageChanged" swapped="no"/>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can-focus">False</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">SETTINGS_GENERAL_GAME</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
                         </child>
                       </object>
                     </child>
@@ -3086,371 +3163,412 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <!-- n-columns=2 n-rows=13 -->
-                      <object class="GtkGrid">
+                      <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">center</property>
+                        <property name="valign">start</property>
                         <property name="margin-start">12</property>
                         <property name="margin-end">6</property>
                         <property name="margin-top">30</property>
                         <property name="margin-bottom">6</property>
-                        <property name="column-spacing">6</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkFrame">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_RESOLUTION</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_TERRAIN</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_EFFECTS</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_GEOMETRY</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_LIGHTING</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_LIGHT</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_SHADOWS</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_ANTIALIASING</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE_FILTERING</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">9</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_VIEW_DISTANCE</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">10</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_ENHANCED_LIGHTING</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">11</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoTerrain">
-                            <property name="width-request">250</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoTerrain</property>
-                            <property name="round-digits">1</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoTerrainValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoEffects">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoEffects</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoEffectsValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoGeometry">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoGeometry</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoGeometryValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoTexture">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoTexture</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoTextureValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoLighting">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoLighting</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoLightingValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoDynamicShadows">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoDynamicShadows</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoDynamicShadowsValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoAntialiasing">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoAntialiasing</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsAntialiasingFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoAntialiasingValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoDynamicLight">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoDynamicLight</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoDynamicLightValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoTextureFiltering">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoTextureFiltering</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">0</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoTextureFilteringValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">9</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScale" id="scaleSettingsVideoViewDistanceScale">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="adjustment">adjVideoViewDistanceScale</property>
-                            <property name="round-digits">0</property>
-                            <property name="digits">2</property>
-                            <signal name="format-value" handler="onScaleSettingsVideoViewDistanceScaleFormatValue" swapped="no"/>
-                            <signal name="value-changed" handler="onScaleSettingsVideoViewDistanceScaleValueChanged" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">10</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSwitch" id="switchSettingsVideoEnhancedLighting">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="halign">start</property>
-                            <signal name="state-set" handler="onSwitchSettingsVideoEnhancedLightingStateSet" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">11</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkComboBox" id="cbxSettingsVideoResolution">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="model">listStoreSettingsVideoResolution</property>
-                            <property name="has-entry">True</property>
-                            <property name="entry-text-column">1</property>
-                            <property name="id-column">0</property>
-                            <signal name="changed" handler="onCbxSettingsVideoResolutionChanged" swapped="no"/>
-                            <child internal-child="entry">
-                              <object class="GtkEntry">
+                            <property name="label-xalign">0</property>
+                            <property name="shadow-type">in</property>
+                            <child>
+                              <!-- n-columns=2 n-rows=12 -->
+                              <object class="GtkGrid">
+                                <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="margin-start">6</property>
+                                <property name="margin-end">6</property>
+                                <property name="margin-top">3</property>
+                                <property name="margin-bottom">6</property>
+                                <property name="column-spacing">6</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_RESOLUTION</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_TERRAIN</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_EFFECTS</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_GEOMETRY</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_LIGHTING</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_LIGHT</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">7</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_SHADOWS</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">6</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_ANTIALIASING</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">8</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE_FILTERING</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">9</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_VIEW_DISTANCE</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">10</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_ENHANCED_LIGHTING</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">11</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoTerrain">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoTerrain</property>
+                                    <property name="round-digits">1</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoTerrainValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoEffects">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoEffects</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoEffectsValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoGeometry">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoGeometry</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoGeometryValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoTexture">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoTexture</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoTextureValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoLighting">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoLighting</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoLightingValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoDynamicShadows">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoDynamicShadows</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoDynamicShadowsValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">6</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoAntialiasing">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoAntialiasing</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsAntialiasingFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoAntialiasingValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">8</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoDynamicLight">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoDynamicLight</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoOffLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoDynamicLightValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">7</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoTextureFiltering">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoTextureFiltering</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">0</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoLowMediumHighFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoTextureFilteringValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">9</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="scaleSettingsVideoViewDistanceScale">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="adjustment">adjVideoViewDistanceScale</property>
+                                    <property name="round-digits">0</property>
+                                    <property name="digits">2</property>
+                                    <signal name="format-value" handler="onScaleSettingsVideoViewDistanceScaleFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsVideoViewDistanceScaleValueChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">10</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsVideoEnhancedLighting">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsVideoEnhancedLightingStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">11</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBox" id="cbxSettingsVideoResolution">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="model">listStoreSettingsVideoResolution</property>
+                                    <property name="has-entry">True</property>
+                                    <property name="entry-text-column">1</property>
+                                    <property name="id-column">0</property>
+                                    <signal name="changed" handler="onCbxSettingsVideoResolutionChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">TAB_SETTINGS_VIDEO</property>
                               </object>
                             </child>
                           </object>
                           <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">0</property>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btnSettingsVideoSave">
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_SAVE</property>
+                          <object class="GtkBox">
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="halign">end</property>
-                            <signal name="clicked" handler="onBtnSettingsVideoSaveClicked" swapped="no"/>
+                            <property name="can-focus">False</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkButton" id="btnSettingsVideoRevert">
+                                <property name="label" translatable="yes">SETTINGS_VIDEO_REVERT</property>
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">start</property>
+                                <signal name="clicked" handler="onBtnSettingsVideoRevertClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btnSettingsVideoSave">
+                                <property name="label" translatable="yes">SETTINGS_VIDEO_SAVE</property>
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <signal name="clicked" handler="onBtnSettingsVideoSaveClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">12</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="btnSettingsVideoRevert">
-                            <property name="label" translatable="yes">SETTINGS_VIDEO_REVERT</property>
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <property name="halign">start</property>
-                            <signal name="clicked" handler="onBtnSettingsVideoRevertClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">12</property>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
@@ -3895,6 +4013,7 @@ Author: Dankr4d
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkButton" id="btnSettingsAudioRevert">
                                 <property name="label" translatable="yes">SETTINGS_AUDIO_REVERT</property>
@@ -3924,7 +4043,6 @@ Author: Dankr4d
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
-                                <property name="pack-type">end</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>

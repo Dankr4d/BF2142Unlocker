@@ -2,6 +2,7 @@ import gintro/[gtk, gobject, glib, gtksource]
 import "../../macro/signal"
 import ../../profile/audio as profileAudio
 import os
+import strutils
 
 var windowShown: ptr bool
 var ignoreEvents: ptr bool
@@ -161,18 +162,13 @@ proc setDocumentsPath*(documentsPath: string) =
 
   isAudioValid = report.valid
 
-  echo "isAudioValid: ", isAudioValid
-  for line in report.invalidLines:
-    echo line
-
   if isAudioValid:
     audioDirty = audio
     loadAudio(audio)
   else:
     audioDirty = audio
 
-    lblConfigCorruptTitle.text = "SETTINGS_AUDIO_CONFIG_CORRUPT_TITLE\n\n"
-
+    lblConfigCorruptTitle.text = dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Audio", "Audio.con"]
     var iter: TextIter
     let markup: string = markup(report)
     viewConfigCorruptBody.buffer.getEndIter(iter)

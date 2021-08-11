@@ -13,7 +13,9 @@ elif defined(windows):
   import winim
   import module/windows/docpath # Required to read out My Documents path
   import module/windows/sendmsg # Required to send messages bf2142 game server
-  import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
+  import registry/bf2142/cdkey # Required to set an empty cd key if cd key not exists.
+  import registry/bf2142/clientpath # Required to get the current game path (if installed the usual way).
+import registry/bf2142/clientlang # Required to read and write the client language
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import module/localaddr # Required to get all local adresses
@@ -535,8 +537,8 @@ var lblSettingsStartupQuery: Label
 var txtSettingsStartupQuery: Entry
 var chbtnSettingsSkipMovies: CheckButton
 var chbtnSettingsWindowMode: CheckButton
-var lblSettingsResolution: Label
 var cbxSettingsResolution: ComboBox
+var cbxSettingsGameLanguage: ComboBox
 var dlgSettingsBF2142ClientPathDetected: Dialog
 var lblSettingsBF2142ClientPathDetected: Label
 ##
@@ -840,8 +842,11 @@ proc updateProfilePathes() =
   pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   checkBF2142ProfileFiles()
   when defined(linux):
+    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
     notebookSettings.getNthPage(1).setSensitive(true)
     notebookSettings.getNthPage(2).setSensitive(true)
+  else:
+    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage())
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
   # TODO: Try'n catch because we parse booleans
@@ -1508,6 +1513,17 @@ proc getSelectedResolution(): tuple[width, height: uint16] =
   store.getValue(iter, 2, valWidth)
   store.getValue(iter, 3, valHeight)
   return (cast[uint16](valWidth.getUint()), cast[uint16](valHeight.getUint()))
+
+proc loadGameLanguages() =
+  var valLanguage: Value
+  discard valLanguage.init(g_string_get_type())
+  var iter: TreeIter
+  let store = listStore(cbxSettingsGameLanguage.getModel())
+  store.clear()
+  for lang in clientlang.Language:
+    valLanguage.setString($lang)
+    store.append(iter)
+    store.setValue(iter, 0, valLanguage)
 
 proc applyHostRunningSensitivity(running: bool) =
   btnHostGameServer.visible = not running
@@ -3092,12 +3108,16 @@ proc onChbtnSettingsWindowModeToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnSettingsWindowMode.active)
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
-  lblSettingsResolution.visible = chbtnSettingsWindowMode.active
-  cbxSettingsResolution.visible = chbtnSettingsWindowMode.active
 
 proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
+
+proc onCbxSettingsGameLanguageChanged(self: ptr ComboBox00) {.signal.} =
+  when defined(windows):
+    setGameLanguage(parseEnum[clientlang.Language](cbxSettingsGameLanguage.activeId))
+  else:
+    setGameLanguage(parseEnum[clientlang.Language](cbxSettingsGameLanguage.activeId), bf2142UnlockerConfig.settings.winePrefix)
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
@@ -3282,8 +3302,8 @@ proc onApplicationActivate(application: Application) =
   txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
   chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
   chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
-  lblSettingsResolution = builder.getLabel("lblSettingsResolution")
   cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
+  cbxSettingsGameLanguage = builder.getComboBox("cbxSettingsGameLanguage")
   dlgSettingsBF2142ClientPathDetected = builder.getDialog("dlgSettingsBF2142ClientPathDetected")
   lblSettingsBF2142ClientPathDetected = builder.getLabel("lblSettingsBF2142ClientPathDetected")
 
@@ -3342,7 +3362,7 @@ proc onApplicationActivate(application: Application) =
   #
 
   notebook.currentPage = 4 # TODO: Remove
-  notebookSettings.currentPage = 2 # TODO: Remove
+  # notebookSettings.currentPage = 2 # TODO: Remove
   # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
   ## Pages
@@ -3364,9 +3384,8 @@ proc onApplicationActivate(application: Application) =
     fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
     fixMedalsAndPins(bf2142UnlockerConfig.settings.bf2142ServerPath)
   loadJoinResolutions()
+  loadGameLanguages()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
-  lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
-  cbxSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     updatePathes()
     loadSelectableMapList()

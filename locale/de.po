@@ -373,12 +373,6 @@ msgstr "Fenstermodus:"
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Startet das Spiel im Fenstermodus."
 
-msgid "SETTINGS_RESOLUTION"
-msgstr "Auflösung:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "Die Auflösung in der das Spiel im Fenstermodus gestartet wird."
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr "Ein Battlefield 2142 Installationspfad wurde gefunden"
 
@@ -514,6 +508,11 @@ msgstr "Lautstärke"
 
 msgid "SETTINGS_AUDIO_VOIP"
 msgstr "Voice over IP"
+
+# ##
+# ##### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
+msgstr "$# config ($#) ist nicht valide. Fehler beheben?"
 
 # ##
 # ##### Tabs

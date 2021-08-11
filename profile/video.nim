@@ -25,12 +25,6 @@ type
     height*: uint16
     frequence*: uint8
 
-import ../module/resolution
-proc getHighestResolution(): Resolution =
-  for tpl in getAvailableResolutions():
-    # resolutions.add(Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence))
-    return Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence)
-
 type
   Video* {.Prefix: "VideoSettings.".} = object
     terrainQuality* {.Setting: "setTerrainQuality", Default: LowMediumHigh.Low.}: LowMediumHigh

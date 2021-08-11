@@ -373,12 +373,6 @@ msgstr "Оконный режим:"
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Запуск игры в оконном режиме."
 
-msgid "SETTINGS_RESOLUTION"
-msgstr "Разрешение:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "Разрешение экрана в оконном режиме"
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr "Найден путь установки Battlefield 2142"
 
@@ -513,6 +507,11 @@ msgid "SETTINGS_AUDIO_GAME_VOLUME"
 msgstr ""
 
 msgid "SETTINGS_AUDIO_VOIP"
+msgstr ""
+
+# ##
+# ##### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
 msgstr ""
 
 msgid "TAB_QUICK"

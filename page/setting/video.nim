@@ -4,6 +4,7 @@ import ../../module/gintro/liststore
 import ../../module/resolution
 import ../../profile/video as profileVideo
 import os
+import strutils
 
 var windowShown: ptr bool
 var ignoreEvents: ptr bool
@@ -153,7 +154,7 @@ proc setDocumentsPath*(documentsPath: string) =
       videoDirty.resolution = resolutions[0] #cbxResolution.getResolutionAtIdx(0)
     videoDirty.videoOptionScheme = Presets.Custom
 
-    lblConfigCorruptTitle.text = "SETTINGS_VIDEO_CONFIG_CORRUPT_TITLE\n\n"
+    lblConfigCorruptTitle.text = dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Video", "Video.con"]
 
     var iter: TextIter
     let markup: string = markup(report)

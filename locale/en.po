@@ -377,12 +377,6 @@ msgstr "Window mode:"
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Starts the game in windowed mode."
 
-msgid "SETTINGS_RESOLUTION"
-msgstr "Resolution:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "The resolution the game get started in windowed mode."
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr "A Battlefield 2142 installation path has been found"
 
@@ -518,6 +512,11 @@ msgstr "Game volume"
 
 msgid "SETTINGS_AUDIO_VOIP"
 msgstr "Voice over IP"
+
+# ##
+# ##### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
+msgstr "$# config ($#) ist not valid. Fix it?"
 
 # ##
 # ##### Tabs
