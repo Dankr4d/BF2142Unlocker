@@ -95,11 +95,17 @@ profile/video.exe
 profile/audio
 profile/audio.exe
 
+profile/general
+profile/general.exe
+
 page/setting/video
 page/setting/video.exe
 
 page/setting/audio
 page/setting/audio.exe
+
+page/setting/hud
+page/setting/hud.exe
 
 config/config.ini
 config/login.ini

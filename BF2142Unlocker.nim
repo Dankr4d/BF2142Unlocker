@@ -41,9 +41,11 @@ import module/gintro/infodialog
 
 from conparser import newDefault
 import profile/video as profileVideo
-import page/setting/video as pageSettingVideo
 import profile/audio as profileAudio
+import profile/general as profileGeneral
+import page/setting/video as pageSettingVideo
 import page/setting/audio as pageSettingAudio
+import page/setting/hud as pageSettingHud
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -118,10 +120,10 @@ type
     settings: BF2142UnlockerConfigSettings
 
 var bf2142UnlockerConfig: BF2142UnlockerConfig # TODO: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
-var documentsPath: string
-var bf2142ProfilePath: string
-var bf2142ProfileDefaultPath: string
-var bf2142Profile0001Path: string
+var documentsPath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142ProfilePath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142ProfileDefaultPath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142Profile0001Path: string # TODO: Add to BF2142UnlockerConfig?
 
 const RC {.intdefine.}: int = 0
 const VERSION: string = static:
@@ -838,8 +840,9 @@ proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
   bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
-  pageSettingVideo.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath) # TODO: Only required because of linux (have a look in the function)
   pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   checkBF2142ProfileFiles()
   when defined(linux):
     discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
@@ -3362,12 +3365,13 @@ proc onApplicationActivate(application: Application) =
   #
 
   notebook.currentPage = 4 # TODO: Remove
-  # notebookSettings.currentPage = 2 # TODO: Remove
+  notebookSettings.currentPage = 3 # TODO: Remove
   # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
   ## Pages
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
   pageSettingAudio.init(builder, addr windowShown, addr ignoreEvents)
+  pageSettingHud.init(builder, addr windowShown, addr ignoreEvents)
   #
 
   window.setApplication(application)

@@ -332,6 +332,15 @@ msgstr ""
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr ""
+
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr ""
 ###
 
 
@@ -388,6 +397,12 @@ msgid "SETTINGS_VIDEO_HIGH"
 msgstr ""
 
 msgid "SETTINGS_VIDEO_OFF"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
 msgstr ""
 ###
 
@@ -497,6 +512,8 @@ msgstr ""
 msgid "TAB_SETTINGS_AUDIO"
 msgstr ""
 
+msgid "TAB_SETTINGS_HUD"
+msgstr ""
 ###
 
 ###### Statusbar

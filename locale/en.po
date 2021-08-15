@@ -389,6 +389,15 @@ msgstr "Yes"
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "No, select .."
 
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr "Game language:"
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr "BF2142Unlocker"
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr "Game"
+
 # ##
 # ##### Settings
 msgid "SETTINGS_VIDEO_RESOLUTION"
@@ -444,6 +453,12 @@ msgstr "High"
 
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Off"
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr "Draw fps:"
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
+msgstr "Unlock fps:"
 
 # ##
 # ##### Settings/Audio
@@ -552,6 +567,9 @@ msgstr "Video"
 
 msgid "TAB_SETTINGS_AUDIO"
 msgstr "Audio"
+
+msgid "TAB_SETTINGS_HUD"
+msgstr "HUD"
 
 # ##
 # ##### Statusbar

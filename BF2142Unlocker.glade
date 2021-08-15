@@ -105,6 +105,21 @@ Author: Dankr4d
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjSettingsHud">
+    <property name="upper">255</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjSettingsIcons">
+    <property name="upper">255</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjSettingsMinimap">
+    <property name="upper">255</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="adjSpawnTime">
     <property name="upper">60</property>
     <property name="value">15</property>
@@ -3181,7 +3196,7 @@ Author: Dankr4d
                             <property name="label-xalign">0</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <!-- n-columns=2 n-rows=12 -->
+                              <!-- n-columns=2 n-rows=14 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -3196,6 +3211,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_RESOLUTION</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3208,6 +3224,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_TERRAIN</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3220,6 +3237,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_EFFECTS</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3232,6 +3250,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_GEOMETRY</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3244,6 +3263,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_LIGHTING</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3256,6 +3276,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3268,6 +3289,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_LIGHT</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3280,6 +3302,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_DYNAMIC_SHADOWS</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3292,6 +3315,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_ANTIALIASING</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3304,6 +3328,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_TEXTURE_FILTERING</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3316,6 +3341,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_VIEW_DISTANCE</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3328,6 +3354,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_VIDEO_ENHANCED_LIGHTING</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3505,10 +3532,65 @@ Author: Dankr4d
                                     <property name="entry-text-column">1</property>
                                     <property name="id-column">0</property>
                                     <signal name="changed" handler="onCbxSettingsVideoResolutionChanged" swapped="no"/>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can-focus">False</property>
+                                      </object>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
                                     <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_DRAW_FPS</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">12</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_VIDEO_UNLOCK_FPS</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">13</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsVideoDrawFps">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsVideoDrawFpsStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">12</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsVideoLockFps">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsVideoLockFpsStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">13</property>
                                   </packing>
                                 </child>
                               </object>
@@ -3622,6 +3704,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_RENDERER</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3650,6 +3733,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_SOUND_QUALITY</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3677,6 +3761,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_ENABLE_EAX</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3701,6 +3786,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_ENGLISH_VO_ONLY</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3757,6 +3843,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_EFFECTS</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3785,6 +3872,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_MUSIC</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3812,6 +3900,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_VOICE_OVER</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3871,6 +3960,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_VOIP_ENABLED</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3895,6 +3985,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_VOIP_TRANSMIT</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3923,6 +4014,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_VOIP_RECEIVE</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3950,6 +4042,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -3974,6 +4067,7 @@ Author: Dankr4d
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST</property>
                                     <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -4066,7 +4160,7 @@ Author: Dankr4d
                         </child>
                       </object>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
                       </packing>
                     </child>
                     <child type="tab">
@@ -4076,7 +4170,549 @@ Author: Dankr4d
                         <property name="label" translatable="yes">TAB_SETTINGS_AUDIO</property>
                       </object>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
+                        <property name="tab-fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">center</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkFrame">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label-xalign">0</property>
+                            <property name="shadow-type">in</property>
+                            <child>
+                              <object class="GtkDrawingArea" id="daSettingsGeneralCrosshair">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-start">6</property>
+                                <property name="margin-end">6</property>
+                                <property name="margin-top">3</property>
+                                <property name="margin-bottom">6</property>
+                                <signal name="draw" handler="onDaSettingsGeneralCrosshairDraw" swapped="no"/>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Preview:</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="spacing">6</property>
+                            <child>
+                              <object class="GtkFrame">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label-xalign">0</property>
+                                <property name="shadow-type">in</property>
+                                <child>
+                                  <object class="GtkColorChooserWidget" id="ccSettingsGeneralCrosshair">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="rgba">rgb(0,0,0)</property>
+                                    <property name="show-editor">True</property>
+                                    <signal name="notify::rgba" handler="onCcSettingsGeneralCrosshairRgbaNotify" swapped="no"/>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">Crosshair:</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">6</property>
+                                <child>
+                                  <object class="GtkFrame">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label-xalign">0</property>
+                                    <property name="shadow-type">in</property>
+                                    <child>
+                                      <!-- n-columns=2 n-rows=3 -->
+                                      <object class="GtkGrid">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="margin-start">6</property>
+                                        <property name="margin-end">6</property>
+                                        <property name="margin-top">3</property>
+                                        <property name="margin-bottom">6</property>
+                                        <property name="column-spacing">6</property>
+                                        <child>
+                                          <object class="GtkScale" id="scaleSettingsGeneralHudTransparency">
+                                            <property name="width-request">300</property>
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <property name="adjustment">adjSettingsHud</property>
+                                            <property name="round-digits">1</property>
+                                            <property name="digits">0</property>
+                                            <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
+                                            <signal name="value-changed" handler="onScaleSettingsGeneralHudTransparencyValueChanged" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScale" id="scaleSettingsGeneralMinimapTransparency">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <property name="adjustment">adjSettingsMinimap</property>
+                                            <property name="round-digits">1</property>
+                                            <property name="digits">0</property>
+                                            <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
+                                            <signal name="value-changed" handler="onScaleSettingsGeneralMinimapTransparencyValueChanged" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">1</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScale" id="scaleSettingsGeneralIconsTransparency">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <property name="adjustment">adjSettingsIcons</property>
+                                            <property name="round-digits">1</property>
+                                            <property name="digits">0</property>
+                                            <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
+                                            <signal name="value-changed" handler="onScaleSettingsGeneralIconsTransparencyValueChanged" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">2</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Hud:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Minimap:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">1</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Icons:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">2</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child type="label">
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">Transparency:</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkFrame">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label-xalign">0</property>
+                                    <property name="shadow-type">in</property>
+                                    <child>
+                                      <!-- n-columns=2 n-rows=10 -->
+                                      <object class="GtkGrid">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="margin-start">6</property>
+                                        <property name="margin-end">6</property>
+                                        <property name="margin-top">3</property>
+                                        <property name="margin-bottom">6</property>
+                                        <property name="column-spacing">6</property>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Help popups:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Camera shake:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">1</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Rotate minimap:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">2</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralHelpPopups">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralHelpPopupsStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralCameraShake">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralCameraShakeStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">1</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralRotateMinimap">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralRotateMinimapStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">2</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Opt out of voting:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">3</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Reverse mousewheel selection:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">4</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Auto reload weapons:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">5</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Ignore buddy requests:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">6</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralOptOutOfVoting">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralOptOutOfVotingStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">3</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralReverseMousewheelSelection">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralReverseMousewheelSelectionStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">4</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralAutoReloadWeapons">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralAutoReloadWeaponsStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">5</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralIgnoreBuddyRequests">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralIgnoreBuddyRequestsStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">6</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Show kill messages:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">7</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Show radio messages:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">8</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                            <property name="label" translatable="yes">Show chat messages:</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0.75</property>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">0</property>
+                                            <property name="top-attach">9</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralShowKillMessages">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralShowKillMessagesStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">7</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralShowRadioMessages">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralShowRadioMessagesStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">8</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSwitch" id="switchSettingsGeneralShowChatMessages">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">True</property>
+                                            <signal name="state-set" handler="onSwitchSettingsGeneralShowChatMessagesStateSet" swapped="no"/>
+                                          </object>
+                                          <packing>
+                                            <property name="left-attach">1</property>
+                                            <property name="top-attach">9</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child type="label">
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">Other:</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkButton" id="btnSettingsGeneralRevert">
+                                <property name="label" translatable="yes">Revert</property>
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">start</property>
+                                <signal name="clicked" handler="onBtnSettingsGeneralRevertClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btnSettingsGeneralSave">
+                                <property name="label" translatable="yes">Save</property>
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <signal name="clicked" handler="onBtnSettingsGeneralSaveClicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child type="tab">
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">TAB_SETTINGS_HUD</property>
+                      </object>
+                      <packing>
+                        <property name="position">3</property>
                         <property name="tab-fill">False</property>
                       </packing>
                     </child>

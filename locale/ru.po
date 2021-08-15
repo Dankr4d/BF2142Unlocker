@@ -385,6 +385,15 @@ msgstr "Да"
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Нет, выбрать другой .."
 
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr ""
+
 # ##
 # ##### Settings
 msgid "SETTINGS_VIDEO_RESOLUTION"
@@ -440,6 +449,12 @@ msgstr "Высокое"
 
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Выкл"
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
+msgstr ""
 
 # ##
 # ##### Settings/Audio
@@ -546,6 +561,9 @@ msgstr "Видео"
 
 msgid "TAB_SETTINGS_AUDIO"
 msgstr "Аудио"
+
+msgid "TAB_SETTINGS_HUD"
+msgstr ""
 
 msgid "VERSION_TOOLTIP"
 msgstr "Текущая версия"
