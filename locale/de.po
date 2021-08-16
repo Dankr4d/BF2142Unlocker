@@ -525,6 +525,65 @@ msgid "SETTINGS_AUDIO_VOIP"
 msgstr "Voice over IP"
 
 # ##
+# ##### Settings/HUD
+msgid "SETTINGS_HUD_PREVIEW"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERT"
+msgstr ""
+
+msgid "SETTINGS_HUD_SAVE"
+msgstr ""
+
+msgid "SETTINGS_HUD_HUD"
+msgstr ""
+
+msgid "SETTINGS_HUD_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_ICONS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CROSSHAIR"
+msgstr ""
+
+msgid "SETTINGS_HUD_HELP_POPUPS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CAMERA_SHAKE"
+msgstr ""
+
+msgid "SETTINGS_HUD_ROTATE_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
+msgstr ""
+
+msgid "SETTINGS_HUD_AUTO_RELOAD"
+msgstr ""
+
+msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_PREVIEWABLE"
+msgstr ""
+
+msgid "SETTINGS_HUD_OTHER"
+msgstr ""
+
+# ##
 # ##### Settings/Additionals
 msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
 msgstr "$# config ($#) ist nicht valide. Fehler beheben?"

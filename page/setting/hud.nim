@@ -20,6 +20,11 @@ var sfHud: Surface
 var sfMinimap: Surface
 var sfIcons: Surface
 var sfCrosshair: Surface
+var sfHelpPopup: Surface
+var sfVoting: Surface
+var sfKillMessages: Surface
+var sfRadioMessages: Surface
+var sfChatMessages: Surface
 
 # General
 var scaleHudTransparency: Scale
@@ -110,6 +115,7 @@ proc onCcSettingsGeneralCrosshairRgbaNotify(self: ptr ColorSelection00) {.signal
 proc onSwitchSettingsGeneralHelpPopupsStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.helpPopups = switchHelpPopups.active
   updateSaveRevertSensitivity()
+  daCrosshair.queueDraw()
 
 proc onSwitchSettingsGeneralCameraShakeStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.cameraShake = switchCameraShake.active
@@ -122,6 +128,7 @@ proc onSwitchSettingsGeneralRotateMinimapStateSet(self: ptr Switch00) {.signal.}
 proc onSwitchSettingsGeneralOptOutOfVotingStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.outOfVoting = switchOptOutOfVoting.active
   updateSaveRevertSensitivity()
+  daCrosshair.queueDraw()
 
 proc onSwitchSettingsGeneralReverseMousewheelSelectionStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.reverseMousewheelSelection = switchReverseMousewheelSelection.active
@@ -138,14 +145,17 @@ proc onSwitchSettingsGeneralIgnoreBuddyRequestsStateSet(self: ptr Switch00) {.si
 proc onSwitchSettingsGeneralShowKillMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.killMessagesFilter = switchShowKillMessages.active
   updateSaveRevertSensitivity()
+  daCrosshair.queueDraw()
 
 proc onSwitchSettingsGeneralShowRadioMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.radioMessagesFilter = switchShowRadioMessages.active
   updateSaveRevertSensitivity()
+  daCrosshair.queueDraw()
 
 proc onSwitchSettingsGeneralShowChatMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.chatMessagesFilter = switchShowChatMessages.active
   updateSaveRevertSensitivity()
+  daCrosshair.queueDraw()
 
 proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.signal.} =
   var ctx: Context = new Context
@@ -199,6 +209,46 @@ proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Contex
     setSource(rgba.red, rgba.green, rgba.blue, rgba.alpha)
     maskSurface(sfCrosshair, offsetX, 0)
     restore()
+
+  # Help popups
+  if switchHelpPopups.active:
+    with ctx:
+      save()
+      setSourceSurface(sfHelpPopup, offsetX, 0)
+      maskSurface(sfHelpPopup, offsetX, 0)
+      restore()
+
+  # Voting
+  if not switchOptOutOfVoting.active:
+    with ctx:
+      save()
+      setSourceSurface(sfVoting, offsetX, 0)
+      maskSurface(sfVoting, offsetX, 0)
+      restore()
+
+  # Kill messages
+  if switchShowKillMessages.active:
+    with ctx:
+      save()
+      setSourceSurface(sfKillMessages, offsetX, 0)
+      maskSurface(sfKillMessages, offsetX, 0)
+      restore()
+
+  # Radio messages
+  if switchShowRadioMessages.active:
+    with ctx:
+      save()
+      setSourceSurface(sfRadioMessages, offsetX, 0)
+      maskSurface(sfRadioMessages, offsetX, 0)
+      restore()
+
+  # Chat messages
+  if switchShowChatMessages.active:
+    with ctx:
+      save()
+      setSourceSurface(sfChatMessages, offsetX, 0)
+      maskSurface(sfChatMessages, offsetX, 0)
+      restore()
 
   ctx.restore()
 
@@ -267,6 +317,11 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   sfMinimap = imageSurfaceCreateFromPng("asset" / "hud" / "minimap_edited.png")
   sfIcons = imageSurfaceCreateFromPng("asset" / "hud" / "icons_edited.png")
   sfCrosshair = imageSurfaceCreateFromPng("asset" / "hud" / "crosshair_edited.png")
+  sfHelpPopup = imageSurfaceCreateFromPng("asset" / "hud" / "helppopup_edited.png")
+  sfVoting = imageSurfaceCreateFromPng("asset" / "hud" / "voting_edited.png")
+  sfKillMessages = imageSurfaceCreateFromPng("asset" / "hud" / "killmessages_edited.png")
+  sfRadioMessages = imageSurfaceCreateFromPng("asset" / "hud" / "radiomessages_edited.png")
+  sfChatMessages = imageSurfaceCreateFromPng("asset" / "hud" / "chatmessages_edited.png")
 
   scaleHudTransparency = builder.getScale("scaleSettingsGeneralHudTransparency")
   scaleMinimapTransparency = builder.getScale("scaleSettingsGeneralMinimapTransparency")

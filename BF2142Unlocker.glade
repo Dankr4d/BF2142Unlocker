@@ -4192,7 +4192,7 @@ Author: Dankr4d
                             <property name="label-xalign">0</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <!-- n-columns=2 n-rows=4 -->
+                              <!-- n-columns=2 n-rows=9 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -4251,7 +4251,7 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Hud:</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_HUD</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0.75</property>
                                   </object>
@@ -4264,7 +4264,7 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Minimap:</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_MINIMAP</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0.75</property>
                                   </object>
@@ -4277,7 +4277,7 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Icons:</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_ICONS</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0.75</property>
                                   </object>
@@ -4304,7 +4304,7 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Crosshair:</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_CROSSHAIR</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0.75</property>
                                   </object>
@@ -4313,13 +4313,138 @@ Author: Dankr4d
                                     <property name="top-attach">3</property>
                                   </packing>
                                 </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_HELP_POPUPS</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsGeneralHelpPopups">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsGeneralHelpPopupsStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_OPT_OUT_OF_VOTING</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsGeneralOptOutOfVoting">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsGeneralOptOutOfVotingStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_SHOW_KILL_MESSAGES</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">6</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_SHOW_RADIO_MESSAGES</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">7</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_SHOW_CHAT_MESSAGES</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">8</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsGeneralShowKillMessages">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowKillMessagesStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">6</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsGeneralShowRadioMessages">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowRadioMessagesStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">7</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="switchSettingsGeneralShowChatMessages">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="halign">start</property>
+                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowChatMessagesStateSet" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">8</property>
+                                  </packing>
+                                </child>
                               </object>
                             </child>
                             <child type="label">
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Transparency:</property>
+                                <property name="label" translatable="yes">SETTINGS_HUD_PREVIEWABLE</property>
                               </object>
                             </child>
                           </object>
@@ -4335,7 +4460,7 @@ Author: Dankr4d
                             <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkButton" id="btnSettingsGeneralRevert">
-                                <property name="label" translatable="yes">Revert</property>
+                                <property name="label" translatable="yes">SETTINGS_HUD_REVERT</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
@@ -4351,7 +4476,7 @@ Author: Dankr4d
                             </child>
                             <child>
                               <object class="GtkButton" id="btnSettingsGeneralSave">
-                                <property name="label" translatable="yes">Save</property>
+                                <property name="label" translatable="yes">SETTINGS_HUD_SAVE</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
@@ -4395,7 +4520,7 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Preview:</property>
+                                <property name="label" translatable="yes">SETTINGS_HUD_PREVIEW</property>
                               </object>
                             </child>
                           </object>
@@ -4413,7 +4538,7 @@ Author: Dankr4d
                             <property name="label-xalign">0</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <!-- n-columns=2 n-rows=10 -->
+                              <!-- n-columns=2 n-rows=5 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -4426,49 +4551,12 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Help popups:</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_CAMERA_SHAKE</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0.75</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
-                                    <property name="top-attach">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Camera shake:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Rotate minimap:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralHelpPopups">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralHelpPopupsStateSet" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
                                     <property name="top-attach">0</property>
                                   </packing>
                                 </child>
@@ -4480,6 +4568,19 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_ROTATE_MINIMAP</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
                                     <property name="top-attach">1</property>
                                   </packing>
                                 </child>
@@ -4491,70 +4592,20 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
                                     <property name="top-attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Opt out of voting:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Reverse mousewheel selection:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">4</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Auto reload weapons:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">5</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Ignore buddy requests:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">6</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralOptOutOfVoting">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralOptOutOfVotingStateSet" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4565,7 +4616,20 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
-                                    <property name="top-attach">4</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_AUTO_RELOAD</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4576,7 +4640,20 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
-                                    <property name="top-attach">5</property>
+                                    <property name="top-attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SETTINGS_HUD_IGNORE_BUDDY_REQUESTS</property>
+                                    <property name="xalign">0</property>
+                                    <property name="yalign">0.75</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4587,79 +4664,7 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
-                                    <property name="top-attach">6</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Show kill messages:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">7</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Show radio messages:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">8</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Show chat messages:</property>
-                                    <property name="xalign">0</property>
-                                    <property name="yalign">0.75</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">0</property>
-                                    <property name="top-attach">9</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowKillMessages">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowKillMessagesStateSet" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">7</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowRadioMessages">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowRadioMessagesStateSet" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">8</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowChatMessages">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowChatMessagesStateSet" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="left-attach">1</property>
-                                    <property name="top-attach">9</property>
+                                    <property name="top-attach">4</property>
                                   </packing>
                                 </child>
                               </object>

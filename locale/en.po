@@ -529,6 +529,65 @@ msgid "SETTINGS_AUDIO_VOIP"
 msgstr "Voice over IP"
 
 # ##
+# ##### Settings/HUD
+msgid "SETTINGS_HUD_PREVIEW"
+msgstr "Preview"
+
+msgid "SETTINGS_HUD_REVERT"
+msgstr "Revert"
+
+msgid "SETTINGS_HUD_SAVE"
+msgstr "Save"
+
+msgid "SETTINGS_HUD_HUD"
+msgstr "HUD:"
+
+msgid "SETTINGS_HUD_MINIMAP"
+msgstr "Minimap:"
+
+msgid "SETTINGS_HUD_ICONS"
+msgstr "Icons:"
+
+msgid "SETTINGS_HUD_CROSSHAIR"
+msgstr "Crosshair:"
+
+msgid "SETTINGS_HUD_HELP_POPUPS"
+msgstr "Help popups:"
+
+msgid "SETTINGS_HUD_CAMERA_SHAKE"
+msgstr "Camera shake:"
+
+msgid "SETTINGS_HUD_ROTATE_MINIMAP"
+msgstr "Rotate minimap:"
+
+msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
+msgstr "Opt out of voting:"
+
+msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
+msgstr "Reverse mousewheel selection:"
+
+msgid "SETTINGS_HUD_AUTO_RELOAD"
+msgstr "Auto reload:"
+
+msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
+msgstr "Ignore buddy requests:"
+
+msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
+msgstr "Show kill messages:"
+
+msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
+msgstr "Show radio messages:"
+
+msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
+msgstr "Show chat messages:"
+
+msgid "SETTINGS_HUD_PREVIEWABLE"
+msgstr "Previewable"
+
+msgid "SETTINGS_HUD_OTHER"
+msgstr "Other"
+
+# ##
 # ##### Settings/Additionals
 msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
 msgstr "$# config ($#) ist not valid. Fix it?"
