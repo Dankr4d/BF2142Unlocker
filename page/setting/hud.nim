@@ -13,7 +13,7 @@ var generalDirty, general: General
 var path0001GeneralCon, pathDefaultGeneralCon: string # Path to General.con file
 var isGeneralValid: bool
 
-var ccCrosshair: ColorChooserWidget
+var cbtnCrosshair: ColorButton
 var daCrosshair: DrawingArea
 var sfBackground: Surface
 var sfHud: Surface
@@ -52,7 +52,7 @@ proc markup(report: ConReport): string =
   markup(report, markupEscapeProc)
 
 proc loadGeneral(general: General) =
-  ccCrosshair.setRgba(gdk.RGBA(
+  cbtnCrosshair.setRgba(gdk.RGBA(
     red: general.crosshairColor.r.float / 255,
     green: general.crosshairColor.g.float / 255,
     blue: general.crosshairColor.b.float / 255,
@@ -99,7 +99,7 @@ proc onScaleSettingsGeneralIconsTransparencyValueChanged(self: ptr Scale00) {.si
   daCrosshair.queueDraw()
 
 proc onCcSettingsGeneralCrosshairRgbaNotify(self: ptr ColorSelection00) {.signal.} =
-  let rgba: gdk.RGBA = ccCrosshair.getRgba()
+  let rgba: gdk.RGBA = cbtnCrosshair.getRgba()
   generalDirty.crosshairColor.r = uint8(rgba.red * 255)
   generalDirty.crosshairColor.g = uint8(rgba.green * 255)
   generalDirty.crosshairColor.b = uint8(rgba.blue * 255)
@@ -154,6 +154,11 @@ proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Contex
 
   var scale: float = daCrosshair.getAllocatedWidth() / sfBackground.imageSurfaceGetWidth
   scale = min(scale, daCrosshair.getAllocatedHeight() / sfBackground.imageSurfaceGetHeight)
+  var offsetX: float = daCrosshair.getAllocatedWidth().float - sfBackground.imageSurfaceGetWidth.float * scale
+  if offsetX > 0:
+    offsetX /= scale * 2
+  else:
+    offsetX = 0
 
   ctx.save()
   ctx.scale(scale, scale)
@@ -161,38 +166,38 @@ proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Contex
   # Background
   with ctx:
     save()
-    setSourceSurface(sfBackground, 0, 0)
+    setSourceSurface(sfBackground, offsetX, 0)
     paint()
     restore()
 
   # Hud
   with ctx:
     save()
-    setSourceSurface(sfHud, 0, 0)
+    setSourceSurface(sfHud, offsetX, 0)
     paintWithAlpha(1.0 - (scaleHudTransparency.value / 255))
     restore()
 
   # Minimap
   with ctx:
     save()
-    setSourceSurface(sfMinimap, 0, 0)
+    setSourceSurface(sfMinimap, offsetX, 0)
     paintWithAlpha(1.0 - (scaleMinimapTransparency.value / 255))
     restore()
 
   # Icons
   with ctx:
     save()
-    setSourceSurface(sfIcons, 0, 0)
+    setSourceSurface(sfIcons, offsetX, 0)
     paintWithAlpha(1.0 - (scaleIconsTransparency.value / 255))
     restore()
 
   # Crosshair
-  let rgba: gdk.RGBA = ccCrosshair.getRgba()
+  let rgba: gdk.RGBA = cbtnCrosshair.getRgba()
   with ctx:
     save()
     setSourceSurface(sfCrosshair, 0, 0)
     setSource(rgba.red, rgba.green, rgba.blue, rgba.alpha)
-    maskSurface(sfCrosshair, 0, 0)
+    maskSurface(sfCrosshair, offsetX, 0)
     restore()
 
   ctx.restore()
@@ -255,7 +260,7 @@ proc setDocumentsPath*(documentsPath: string) =
 proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   windowShown = windowShownPtr; ignoreEvents = ignoreEventsPtr
 
-  ccCrosshair = builder.getColorChooserWidget("ccSettingsGeneralCrosshair")
+  cbtnCrosshair = builder.getColorButton("cbtnSettingsGeneralCrosshair")
   daCrosshair = builder.getDrawingArea("daSettingsGeneralCrosshair")
   sfBackground = imageSurfaceCreateFromPng("asset" / "hud" / "background.png")
   sfHud = imageSurfaceCreateFromPng("asset" / "hud" / "hud_edited.png")
