@@ -4202,15 +4202,15 @@ Author: Dankr4d
                                 <property name="margin-bottom">6</property>
                                 <property name="column-spacing">6</property>
                                 <child>
-                                  <object class="GtkScale" id="scaleSettingsGeneralHudTransparency">
+                                  <object class="GtkScale" id="scaleSettingsHudHudTransparency">
                                     <property name="width-request">300</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="adjustment">adjSettingsHud</property>
                                     <property name="round-digits">0</property>
                                     <property name="digits">0</property>
-                                    <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
-                                    <signal name="value-changed" handler="onScaleSettingsGeneralHudTransparencyValueChanged" swapped="no"/>
+                                    <signal name="format-value" handler="scaleSettingsHudTransparencyFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsHudHudTransparencyValueChanged" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4218,14 +4218,14 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkScale" id="scaleSettingsGeneralMinimapTransparency">
+                                  <object class="GtkScale" id="scaleSettingsHudMinimapTransparency">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="adjustment">adjSettingsMinimap</property>
                                     <property name="round-digits">0</property>
                                     <property name="digits">0</property>
-                                    <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
-                                    <signal name="value-changed" handler="onScaleSettingsGeneralMinimapTransparencyValueChanged" swapped="no"/>
+                                    <signal name="format-value" handler="scaleSettingsHudTransparencyFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsHudMinimapTransparencyValueChanged" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4233,14 +4233,14 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkScale" id="scaleSettingsGeneralIconsTransparency">
+                                  <object class="GtkScale" id="scaleSettingsHudIconsTransparency">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="adjustment">adjSettingsIcons</property>
                                     <property name="round-digits">0</property>
                                     <property name="digits">0</property>
-                                    <signal name="format-value" handler="scaleSettingsGeneralTransparencyFormatValue" swapped="no"/>
-                                    <signal name="value-changed" handler="onScaleSettingsGeneralIconsTransparencyValueChanged" swapped="no"/>
+                                    <signal name="format-value" handler="scaleSettingsHudTransparencyFormatValue" swapped="no"/>
+                                    <signal name="value-changed" handler="onScaleSettingsHudIconsTransparencyValueChanged" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4287,13 +4287,13 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkColorButton" id="cbtnSettingsGeneralCrosshair">
+                                  <object class="GtkColorButton" id="cbtnSettingsHudCrosshair">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="use-alpha">True</property>
                                     <property name="show-editor">True</property>
-                                    <signal name="notify::rgba" handler="onCcSettingsGeneralCrosshairRgbaNotify" swapped="no"/>
+                                    <signal name="color-set" handler="onCbtnSettingsHudCrosshairColorSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4327,11 +4327,11 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralHelpPopups">
+                                  <object class="GtkSwitch" id="switchSettingsHudHelpPopups">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="halign">start</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralHelpPopupsStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudHelpPopupsStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4352,11 +4352,11 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralOptOutOfVoting">
+                                  <object class="GtkSwitch" id="switchSettingsHudOptOutOfVoting">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="halign">start</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralOptOutOfVotingStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudOptOutOfVotingStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4403,11 +4403,11 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowKillMessages">
+                                  <object class="GtkSwitch" id="switchSettingsHudShowKillMessages">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="halign">start</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowKillMessagesStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudShowKillMessagesStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4415,11 +4415,11 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowRadioMessages">
+                                  <object class="GtkSwitch" id="switchSettingsHudShowRadioMessages">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="halign">start</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowRadioMessagesStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudShowRadioMessagesStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4427,11 +4427,11 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralShowChatMessages">
+                                  <object class="GtkSwitch" id="switchSettingsHudShowChatMessages">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="halign">start</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralShowChatMessagesStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudShowChatMessagesStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4459,14 +4459,14 @@ Author: Dankr4d
                             <property name="can-focus">False</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <object class="GtkButton" id="btnSettingsGeneralRevert">
+                              <object class="GtkButton" id="btnSettingsHudRevert">
                                 <property name="label" translatable="yes">SETTINGS_HUD_REVERT</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
-                                <signal name="clicked" handler="onBtnSettingsGeneralRevertClicked" swapped="no"/>
+                                <signal name="clicked" handler="onBtnSettingsHudRevertClicked" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -4475,14 +4475,14 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkButton" id="btnSettingsGeneralSave">
+                              <object class="GtkButton" id="btnSettingsHudSave">
                                 <property name="label" translatable="yes">SETTINGS_HUD_SAVE</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="halign">end</property>
-                                <signal name="clicked" handler="onBtnSettingsGeneralSaveClicked" swapped="no"/>
+                                <signal name="clicked" handler="onBtnSettingsHudSaveClicked" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -4506,14 +4506,14 @@ Author: Dankr4d
                             <property name="label-xalign">0</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <object class="GtkDrawingArea" id="daSettingsGeneralCrosshair">
+                              <object class="GtkDrawingArea" id="daSettingsHudHud">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="margin-start">6</property>
                                 <property name="margin-end">6</property>
                                 <property name="margin-top">3</property>
                                 <property name="margin-bottom">6</property>
-                                <signal name="draw" handler="onDaSettingsGeneralCrosshairDraw" swapped="no"/>
+                                <signal name="draw" handler="onDaSettingsHudHudDraw" swapped="no"/>
                               </object>
                             </child>
                             <child type="label">
@@ -4561,10 +4561,10 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralCameraShake">
+                                  <object class="GtkSwitch" id="switchSettingsHudCameraShake">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralCameraShakeStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudCameraShakeStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4585,10 +4585,10 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralRotateMinimap">
+                                  <object class="GtkSwitch" id="switchSettingsHudRotateMinimap">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralRotateMinimapStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudRotateMinimapStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4609,10 +4609,10 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralReverseMousewheelSelection">
+                                  <object class="GtkSwitch" id="switchSettingsHudReverseMousewheelSelection">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralReverseMousewheelSelectionStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudReverseMousewheelSelectionStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4633,10 +4633,10 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralAutoReloadWeapons">
+                                  <object class="GtkSwitch" id="switchSettingsHudAutoReloadWeapons">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralAutoReloadWeaponsStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudAutoReloadWeaponsStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -4657,10 +4657,10 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSwitch" id="switchSettingsGeneralIgnoreBuddyRequests">
+                                  <object class="GtkSwitch" id="switchSettingsHudIgnoreBuddyRequests">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <signal name="state-set" handler="onSwitchSettingsGeneralIgnoreBuddyRequestsStateSet" swapped="no"/>
+                                    <signal name="state-set" handler="onSwitchSettingsHudIgnoreBuddyRequestsStateSet" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>

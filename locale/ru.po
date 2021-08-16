@@ -389,7 +389,7 @@ msgid "SETTINGS_GAME_LANGUAGE"
 msgstr ""
 
 msgid "SETTINGS_GENERAL_UNLOCKER"
-msgstr ""
+msgstr "BF2142Unlocker"
 
 msgid "SETTINGS_GENERAL_GAME"
 msgstr ""

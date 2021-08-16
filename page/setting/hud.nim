@@ -14,7 +14,7 @@ var path0001GeneralCon, pathDefaultGeneralCon: string # Path to General.con file
 var isGeneralValid: bool
 
 var cbtnCrosshair: ColorButton
-var daCrosshair: DrawingArea
+var daHud: DrawingArea
 var sfBackground: Surface
 var sfHud: Surface
 var sfMinimap: Surface
@@ -85,86 +85,86 @@ proc updateSaveRevertSensitivity() =
     btnSave.sensitive = true
     btnRevert.sensitive = false
 
-proc scaleSettingsGeneralTransparencyFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
+proc scaleSettingsHudTransparencyFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
   return g_strdup($int((value / 255) * 100) & "%")
 
-proc onScaleSettingsGeneralHudTransparencyValueChanged(self: ptr Scale00) {.signal.} =
+proc onScaleSettingsHudHudTransparencyValueChanged(self: ptr Scale00) {.signal.} =
   generalDirty.hudTransparency = 255 - scaleHudTransparency.value.uint8
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onScaleSettingsGeneralMinimapTransparencyValueChanged(self: ptr Scale00) {.signal.} =
+proc onScaleSettingsHudMinimapTransparencyValueChanged(self: ptr Scale00) {.signal.} =
   generalDirty.minimapTransparency = 255 - scaleMinimapTransparency.value.uint8
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onScaleSettingsGeneralIconsTransparencyValueChanged(self: ptr Scale00) {.signal.} =
+proc onScaleSettingsHudIconsTransparencyValueChanged(self: ptr Scale00) {.signal.} =
   generalDirty.mapIconAlphaTransparency = 255 - scaleIconsTransparency.value.uint8
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onCcSettingsGeneralCrosshairRgbaNotify(self: ptr ColorSelection00) {.signal.} =
+proc onCbtnSettingsHudCrosshairColorSet(self: ptr ColorSelection00) {.signal.} =
   let rgba: gdk.RGBA = cbtnCrosshair.getRgba()
   generalDirty.crosshairColor.r = uint8(rgba.red * 255)
   generalDirty.crosshairColor.g = uint8(rgba.green * 255)
   generalDirty.crosshairColor.b = uint8(rgba.blue * 255)
   generalDirty.crosshairColor.a = uint8(rgba.alpha * 255)
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onSwitchSettingsGeneralHelpPopupsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudHelpPopupsStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.helpPopups = switchHelpPopups.active
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onSwitchSettingsGeneralCameraShakeStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudCameraShakeStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.cameraShake = switchCameraShake.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsGeneralRotateMinimapStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudRotateMinimapStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.minimapRotate = switchRotateMinimap.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsGeneralOptOutOfVotingStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudOptOutOfVotingStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.outOfVoting = switchOptOutOfVoting.active
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onSwitchSettingsGeneralReverseMousewheelSelectionStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudReverseMousewheelSelectionStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.reverseMousewheelSelection = switchReverseMousewheelSelection.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsGeneralAutoReloadWeaponsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudAutoReloadWeaponsStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.autoReload = switchAutoReloadWeapons.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsGeneralIgnoreBuddyRequestsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudIgnoreBuddyRequestsStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.ignoreBuddyRequests = switchIgnoreBuddyRequests.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsGeneralShowKillMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowKillMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.killMessagesFilter = switchShowKillMessages.active
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onSwitchSettingsGeneralShowRadioMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowRadioMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.radioMessagesFilter = switchShowRadioMessages.active
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onSwitchSettingsGeneralShowChatMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowChatMessagesStateSet(self: ptr Switch00) {.signal.} =
   generalDirty.chatMessagesFilter = switchShowChatMessages.active
   updateSaveRevertSensitivity()
-  daCrosshair.queueDraw()
+  daHud.queueDraw()
 
-proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.signal.} =
+proc onDaSettingsHudHudDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.signal.} =
   var ctx: Context = new Context
   ctx.impl = ctx00
   ctx.ignoreFinalizer = true
 
-  var scale: float = daCrosshair.getAllocatedWidth() / sfBackground.imageSurfaceGetWidth
-  scale = min(scale, daCrosshair.getAllocatedHeight() / sfBackground.imageSurfaceGetHeight)
-  var offsetX: float = daCrosshair.getAllocatedWidth().float - sfBackground.imageSurfaceGetWidth.float * scale
+  var scale: float = daHud.getAllocatedWidth() / sfBackground.imageSurfaceGetWidth
+  scale = min(scale, daHud.getAllocatedHeight() / sfBackground.imageSurfaceGetHeight)
+  var offsetX: float = daHud.getAllocatedWidth().float - sfBackground.imageSurfaceGetWidth.float * scale
   if offsetX > 0:
     offsetX /= scale * 2
   else:
@@ -252,14 +252,14 @@ proc onDaSettingsGeneralCrosshairDraw(self: ptr DrawingArea00, ctx00: ptr Contex
 
   ctx.restore()
 
-proc onBtnSettingsGeneralSaveClicked(self: ptr Switch00) {.signal.} =
+proc onBtnSettingsHudSaveClicked(self: ptr Switch00) {.signal.} =
   isGeneralValid = true
   generalDirty.writeCon(path0001GeneralCon)
   generalDirty.writeCon(pathDefaultGeneralCon)
   general = generalDirty
   updateSaveRevertSensitivity()
 
-proc onBtnSettingsGeneralRevertClicked(self: ptr Switch00) {.signal.} =
+proc onBtnSettingsHudRevertClicked(self: ptr Switch00) {.signal.} =
   generalDirty = general
   loadGeneral(general)
   updateSaveRevertSensitivity()
@@ -310,8 +310,8 @@ proc setDocumentsPath*(documentsPath: string) =
 proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   windowShown = windowShownPtr; ignoreEvents = ignoreEventsPtr
 
-  cbtnCrosshair = builder.getColorButton("cbtnSettingsGeneralCrosshair")
-  daCrosshair = builder.getDrawingArea("daSettingsGeneralCrosshair")
+  cbtnCrosshair = builder.getColorButton("cbtnSettingsHudCrosshair")
+  daHud = builder.getDrawingArea("daSettingsHudHud")
   sfBackground = imageSurfaceCreateFromPng("asset" / "hud" / "background.png")
   sfHud = imageSurfaceCreateFromPng("asset" / "hud" / "hud.png")
   sfMinimap = imageSurfaceCreateFromPng("asset" / "hud" / "minimap.png")
@@ -323,22 +323,22 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   sfRadioMessages = imageSurfaceCreateFromPng("asset" / "hud" / "radiomessages.png")
   sfChatMessages = imageSurfaceCreateFromPng("asset" / "hud" / "chatmessages.png")
 
-  scaleHudTransparency = builder.getScale("scaleSettingsGeneralHudTransparency")
-  scaleMinimapTransparency = builder.getScale("scaleSettingsGeneralMinimapTransparency")
-  scaleIconsTransparency = builder.getScale("scaleSettingsGeneralIconsTransparency")
-  switchHelpPopups = builder.getSwitch("switchSettingsGeneralHelpPopups")
-  switchCameraShake = builder.getSwitch("switchSettingsGeneralCameraShake")
-  switchRotateMinimap = builder.getSwitch("switchSettingsGeneralRotateMinimap")
-  switchOptOutOfVoting = builder.getSwitch("switchSettingsGeneralOptOutOfVoting")
-  switchReverseMousewheelSelection = builder.getSwitch("switchSettingsGeneralReverseMousewheelSelection")
-  switchAutoReloadWeapons = builder.getSwitch("switchSettingsGeneralAutoReloadWeapons")
-  switchIgnoreBuddyRequests = builder.getSwitch("switchSettingsGeneralIgnoreBuddyRequests")
-  switchShowKillMessages = builder.getSwitch("switchSettingsGeneralShowKillMessages")
-  switchShowRadioMessages = builder.getSwitch("switchSettingsGeneralShowRadioMessages")
-  switchShowChatMessages = builder.getSwitch("switchSettingsGeneralShowChatMessages")
+  scaleHudTransparency = builder.getScale("scaleSettingsHudHudTransparency")
+  scaleMinimapTransparency = builder.getScale("scaleSettingsHudMinimapTransparency")
+  scaleIconsTransparency = builder.getScale("scaleSettingsHudIconsTransparency")
+  switchHelpPopups = builder.getSwitch("switchSettingsHudHelpPopups")
+  switchCameraShake = builder.getSwitch("switchSettingsHudCameraShake")
+  switchRotateMinimap = builder.getSwitch("switchSettingsHudRotateMinimap")
+  switchOptOutOfVoting = builder.getSwitch("switchSettingsHudOptOutOfVoting")
+  switchReverseMousewheelSelection = builder.getSwitch("switchSettingsHudReverseMousewheelSelection")
+  switchAutoReloadWeapons = builder.getSwitch("switchSettingsHudAutoReloadWeapons")
+  switchIgnoreBuddyRequests = builder.getSwitch("switchSettingsHudIgnoreBuddyRequests")
+  switchShowKillMessages = builder.getSwitch("switchSettingsHudShowKillMessages")
+  switchShowRadioMessages = builder.getSwitch("switchSettingsHudShowRadioMessages")
+  switchShowChatMessages = builder.getSwitch("switchSettingsHudShowChatMessages")
 
-  btnRevert = builder.getButton("btnSettingsGeneralRevert")
-  btnSave = builder.getButton("btnSettingsGeneralSave")
+  btnRevert = builder.getButton("btnSettingsHudRevert")
+  btnSave = builder.getButton("btnSettingsHudSave")
   dlgConfigCorrupt = builder.getDialog("dlgConfigCorrupt")
   lblConfigCorruptTitle = builder.getLabel("lblConfigCorruptTitle")
   viewConfigCorruptBody = cast[View](getObject(builder, "viewConfigCorruptBody")) # TODO: https://github.com/StefanSalewski/gintro/issues/40
