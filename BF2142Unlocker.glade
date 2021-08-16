@@ -4673,7 +4673,7 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Other:</property>
+                                <property name="label" translatable="yes">SETTINGS_HUD_OTHER</property>
                               </object>
                             </child>
                           </object>

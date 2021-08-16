@@ -386,13 +386,13 @@ msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Nein, auswählen .."
 
 msgid "SETTINGS_GAME_LANGUAGE"
-msgstr ""
+msgstr "Spielsprache:"
 
 msgid "SETTINGS_GENERAL_UNLOCKER"
-msgstr ""
+msgstr "BF2142Unlocker"
 
 msgid "SETTINGS_GENERAL_GAME"
-msgstr ""
+msgstr "Spiel"
 
 # ##
 # ##### Settings
@@ -451,10 +451,10 @@ msgid "SETTINGS_VIDEO_OFF"
 msgstr "Aus"
 
 msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr ""
+msgstr "FPS anzeigen:"
 
 msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr ""
+msgstr "FPS entsperren:"
 
 # ##
 # ##### Settings/Audio
@@ -527,61 +527,61 @@ msgstr "Voice over IP"
 # ##
 # ##### Settings/HUD
 msgid "SETTINGS_HUD_PREVIEW"
-msgstr ""
+msgstr "Vorschau"
 
 msgid "SETTINGS_HUD_REVERT"
-msgstr ""
+msgstr "Zurücksetzen"
 
 msgid "SETTINGS_HUD_SAVE"
-msgstr ""
+msgstr "Speichern"
 
 msgid "SETTINGS_HUD_HUD"
-msgstr ""
+msgstr "HUD:"
 
 msgid "SETTINGS_HUD_MINIMAP"
-msgstr ""
+msgstr "Minikarte:"
 
 msgid "SETTINGS_HUD_ICONS"
-msgstr ""
+msgstr "Symbole:"
 
 msgid "SETTINGS_HUD_CROSSHAIR"
-msgstr ""
+msgstr "Fadenkreuz:"
 
 msgid "SETTINGS_HUD_HELP_POPUPS"
-msgstr ""
+msgstr "Popup Hilfe:"
 
 msgid "SETTINGS_HUD_CAMERA_SHAKE"
-msgstr ""
+msgstr "Kameraschütterung:"
 
 msgid "SETTINGS_HUD_ROTATE_MINIMAP"
-msgstr ""
+msgstr "Rotierende Karte:"
 
 msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
-msgstr ""
+msgstr "Keine teilnahme an Abstimmungen:"
 
 msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
-msgstr ""
+msgstr "Mausradauswahl umkehren:"
 
 msgid "SETTINGS_HUD_AUTO_RELOAD"
-msgstr ""
+msgstr "Automatisch nachladen:"
 
 msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
-msgstr ""
+msgstr "Freundschaftsanfragen ignorieren:"
 
 msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
-msgstr ""
+msgstr "Nachrichten getöteter anzeigen:"
 
 msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
-msgstr ""
+msgstr "Funksprüche anzeigen:"
 
 msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
-msgstr ""
+msgstr "Chatnachrichten anzeigen:"
 
 msgid "SETTINGS_HUD_PREVIEWABLE"
-msgstr ""
+msgstr "Vorschaubar"
 
 msgid "SETTINGS_HUD_OTHER"
-msgstr ""
+msgstr "Andere"
 
 # ##
 # ##### Settings/Additionals
@@ -624,7 +624,7 @@ msgid "TAB_SETTINGS_AUDIO"
 msgstr "Ton"
 
 msgid "TAB_SETTINGS_HUD"
-msgstr ""
+msgstr "HUD"
 
 # ##
 # ##### Statusbar

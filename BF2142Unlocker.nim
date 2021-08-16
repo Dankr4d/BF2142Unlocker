@@ -840,10 +840,10 @@ proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
   bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
+  checkBF2142ProfileFiles()
   pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath) # TODO: Only required because of linux (have a look in the function)
   pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
-  checkBF2142ProfileFiles()
   when defined(linux):
     discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
     notebookSettings.getNthPage(1).setSensitive(true)
