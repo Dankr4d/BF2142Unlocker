@@ -5,6 +5,8 @@ import ../../module/resolution
 import ../../profile/video as profileVideo
 import os
 import strutils
+import system/io
+import streams
 
 var windowShown: ptr bool
 var ignoreEvents: ptr bool
@@ -96,8 +98,6 @@ proc resolution(self: ComboBox): Resolution =
   result.height = valHeight.getUint().uint16
   result.frequence = valFrequence.getUint().uint8
 
-
-
 proc fillResolutions(self: ComboBox, resolutions: seq[Resolution]) =
   var valResolution: Value
   var valWidth: Value
@@ -140,15 +140,59 @@ proc loadCustom(custom: Custom) =
   switchDrawFps.active = custom.drawFps
   switchLockFps.active = not custom.lockFps
 
+proc isGameLogicInitPatched(path: string): bool =
+  var file: io.File
+  if not file.open(path, fmRead, -1):
+    raise newException(ValueError, "FILE COULD NOT BE OPENED!") # TODO
+  let stream: FileStream = newFileStream(file)
+
+  var line: string
+  while stream.readLine(line):
+    if line.strip() == "run ../../Settings/BF2142Unlocker.con":
+      result = true
+      break
+  stream.close()
+
+proc patchGameLogicInit(path: string) =
+  let stream: FileStream = newFileStream(path, fmAppend)
+  stream.writeLine("\nrun ../../Settings/BF2142Unlocker.con")
+  stream.close()
+
+iterator gameLogicInitFiles(path: string): string =
+  var fileFound: bool
+  var filePath: string
+
+  for kindMod, pathMod in walkDir(path, true):
+    fileFound = false
+    filePath = ""
+
+    when defined(windows):
+      if fileExists(path / pathMod / "GameLogicInit.con"):
+        yield path / pathMod / "GameLogicInit.con"
+    else:
+      if kindMod != pcDir:
+        continue
+      for kindFile, pathFile in walkDir(path / pathMod, true):
+        if kindFile != pcFile:
+          continue
+        if pathFile.toLower() == "gamelogicinit.con":
+          fileFound = true
+          filePath = path / pathMod / pathFile
+      if fileFound:
+        yield filePath
+
+proc checkAndPatch() =
+  for filePath in gameLogicInitFiles(pathBf2142Client / "mods"):
+    if not isGameLogicInitPatched(filePath):
+      patchGameLogicInit(filePath)
 
 proc setDocumentsPath*(bf2142ClientPath, documentsPath: string) =
   # TODO: Only required because of linux
   #       Documents path is queried with wine prefix (which may not be set when init proc is called).
-  path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
-  pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
-  pathBf2142Client = bf2142ClientPath
-
   block VIDEO_CON:
+    path0001VideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "0001" / "Video.con"
+    pathDefaultVideoCon = documentsPath / "Battlefield 2142" / "Profiles" / "Default" / "Video.con"
+
     var report: ConReport
     (video, report) = readCon[Video](path0001VideoCon)
 
@@ -190,6 +234,11 @@ proc setDocumentsPath*(bf2142ClientPath, documentsPath: string) =
       loadVideo(videoDirty)
 
   block CUSTOM_CON:
+    pathBf2142Client = bf2142ClientPath
+
+    if not fileExists(pathBf2142Client / "Settings" / "BF2142Unlocker.con"):
+      newDefault[Custom]().writeCon(pathBf2142Client / "Settings" / "BF2142Unlocker.con")
+
     var report: ConReport
     (custom, report) = readCon[Custom](pathBf2142Client / "Settings" / "BF2142Unlocker.con")
 
@@ -218,6 +267,7 @@ proc setDocumentsPath*(bf2142ClientPath, documentsPath: string) =
         btnSave.sensitive = true
       dlgConfigCorrupt.hide()
       loadCustom(customDirty)
+    checkAndPatch()
 
 proc onScaleSettingsVideoLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
   return g_strdup(translate(cast[LowMediumHigh](value.int)))
@@ -339,12 +389,9 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   dlgConfigCorrupt = builder.getDialog("dlgConfigCorrupt")
   lblConfigCorruptTitle = builder.getLabel("lblConfigCorruptTitle")
   viewConfigCorruptBody = cast[View](getObject(builder, "viewConfigCorruptBody")) # TODO: https://github.com/StefanSalewski/gintro/issues/40
-  # viewConfigCorruptBody = builder.getView("viewConfigCorruptBody")
   btnConfigCorruptYes = builder.getButton("btnConfigCorruptYes")
   btnConfigCorruptNo = builder.getButton("btnConfigCorruptNo")
 
   for tpl in getAvailableResolutions():
     resolutions.add(Resolution(width: tpl.width, height: tpl.height, frequence: tpl.frequence))
   cbxResolution.fillResolutions(resolutions)
-  # video = readVideo(pathVideoCon)
-  # loadVideo(video)
