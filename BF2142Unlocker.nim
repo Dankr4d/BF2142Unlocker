@@ -43,6 +43,8 @@ from conparser import newDefault
 import profile/video as profileVideo
 import profile/audio as profileAudio
 import profile/general as profileGeneral
+import profile/global as profileGlobal
+import profile/serversettings as profileServerSettings
 import page/setting/video as pageSettingVideo
 import page/setting/audio as pageSettingAudio
 import page/setting/hud as pageSettingHud
@@ -322,10 +324,7 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 const
   PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
-  PROFILE_GENERAL_CON: string = staticRead("profile/General.con")
   PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
-  PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
-  GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
   STATS_ENDOFROUND_PY: string = staticRead("asset/stats/endofround.py")
@@ -823,18 +822,15 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "ServerSettings.con", bf2142Profile0001Path / "ServerSettings.con"):
         return
     else:
-      if not writeFile(bf2142ProfileDefaultPath / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
-        return
-      if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
-        return
+      let serverSettings: ServerSettings = newDefault[ServerSettings]()
+      serverSettings.writeCon(bf2142ProfileDefaultPath / "ServerSettings.con")
+      serverSettings.writeCon(bf2142Profile0001Path / "ServerSettings.con")
 
     # General.con
-    if not writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON):
-      return
+    newDefault[General]().writeCon(bf2142Profile0001Path / "General.con")
 
   if not fileExists(bf2142ProfilePath / "Global.con"):
-    if not writeFile(bf2142ProfilePath / "Global.con", GLOBAL_CON):
-      return
+    newDefault[Global]().writeCon(bf2142ProfilePath / "Global.con")
 
 proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"

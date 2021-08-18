@@ -98,6 +98,12 @@ profile/audio.exe
 profile/general
 profile/general.exe
 
+profile/global
+profile/global.exe
+
+profile/serversettings
+profile/serversettings.exe
+
 page/setting/video
 page/setting/video.exe
 

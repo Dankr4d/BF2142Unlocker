@@ -8,13 +8,25 @@ const REG_PATH: string = """Software\Wow6432Node\Electronic Arts\EA GAMES\Battle
 const REG_KEY: string = "Language"
 
 type
+  # English Chinese_Simplified Chinese_Traditional Czech Danish Dutch Finnish French German Italian Japanese Korean Polish Russian Spanish Swedish Thai
   Language* {.pure.} = enum
+    ChineseSimplified = "Chinese_Simplified"
+    ChineseTraditional = "Chinese_Traditional"
+    Czech
+    Danish
+    Dutch
     English
+    Finnish
     French
     German
     Italian
+    Japanese
+    Korean
+    Polish
     Russian
     Spanish
+    Swedish
+    Thai
 
 when defined(windows):
   proc setGameLanguage*(lang: Language) =
