@@ -44,6 +44,7 @@ import profile/video as profileVideo
 import profile/audio as profileAudio
 import profile/general as profileGeneral
 import profile/global as profileGlobal
+import profile/profile as profileProfile
 import profile/serversettings as profileServerSettings
 import page/setting/video as pageSettingVideo
 import page/setting/audio as pageSettingAudio
@@ -324,7 +325,6 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 const
   PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
-  PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
 
 const
   STATS_ENDOFROUND_PY: string = staticRead("asset/stats/endofround.py")
@@ -812,10 +812,9 @@ proc checkBF2142ProfileFiles() =
       if not copyFile(bf2142ProfileDefaultPath / "Profile.con", bf2142Profile0001Path / "Profile.con"):
         return
     else:
-      if not writeFile(bf2142ProfileDefaultPath / "Profile.con", PROFILE_PROFILE_CON):
-        return
-      if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
-        return
+      let profile: Profile = newDefault[Profile]()
+      profile.writeCon(bf2142ProfileDefaultPath / "Profile.con")
+      profile.writeCon(bf2142Profile0001Path / "Profile.con")
 
     # ServerSettings.con
     if fileExists(bf2142ProfileDefaultPath / "ServerSettings.con"):
