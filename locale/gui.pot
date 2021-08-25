@@ -321,11 +321,6 @@ msgstr ""
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr ""
 
-msgid "SETTINGS_RESOLUTION"
-msgstr ""
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr ""
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr ""
 
@@ -338,6 +333,212 @@ msgstr ""
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr ""
 
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr ""
+###
+
+
+###### Settings/Video
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
+msgstr ""
+###
+
+
+###### Settings/Audio
+msgid "SETTINGS_AUDIO_RENDERER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SOUND_QUALITY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SAVE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_REVERT"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_ENABLED"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOICE_OVER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_MUSIC"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_EFFECTS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENABLE_EAX"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_LOW"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_MEDIUM"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_HIGH"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SOFTWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_HARDWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_GAME_VOLUME"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP"
+msgstr ""
+###
+
+
+###### Settings/HUD
+msgid "SETTINGS_HUD_PREVIEW"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERT"
+msgstr ""
+
+msgid "SETTINGS_HUD_SAVE"
+msgstr ""
+
+msgid "SETTINGS_HUD_HUD"
+msgstr ""
+
+msgid "SETTINGS_HUD_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_ICONS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CROSSHAIR"
+msgstr ""
+
+msgid "SETTINGS_HUD_HELP_POPUPS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CAMERA_SHAKE"
+msgstr ""
+
+msgid "SETTINGS_HUD_ROTATE_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
+msgstr ""
+
+msgid "SETTINGS_HUD_AUTO_RELOAD"
+msgstr ""
+
+msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_PREVIEWABLE"
+msgstr ""
+
+msgid "SETTINGS_HUD_OTHER"
+msgstr ""
+###
+
+
+###### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
+msgstr ""
 ###
 
 
@@ -360,6 +561,18 @@ msgstr ""
 msgid "TAB_SETTINGS"
 msgstr ""
 msgid "TAB_SETTINGS_TOOLTIP"
+msgstr ""
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr ""
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr ""
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr ""
+
+msgid "TAB_SETTINGS_HUD"
 msgstr ""
 ###
 

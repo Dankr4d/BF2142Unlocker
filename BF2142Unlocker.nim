@@ -1,4 +1,4 @@
-import gintro/[gtk, glib, gobject, gdk]
+import gintro/[gtk, glib, gobject, gdk, gtksource]
 import gintro/gio except ListStore
 import os
 import net # Requierd for ip parsing and type
@@ -13,7 +13,9 @@ elif defined(windows):
   import winim
   import module/windows/docpath # Required to read out My Documents path
   import module/windows/sendmsg # Required to send messages bf2142 game server
-  import registry/bf2142 as registryBf2142 # Required to set an empty cd key if cd key not exists.
+  import registry/bf2142/cdkey # Required to set an empty cd key if cd key not exists.
+  import registry/bf2142/clientpath # Required to get the current game path (if installed the usual way).
+import registry/bf2142/clientlang # Required to read and write the client language
 import parsecfg # Config
 import md5 # Requierd to check if the current BF2142.exe is the original BF2142.exe
 import module/localaddr # Required to get all local adresses
@@ -22,7 +24,7 @@ import module/resolution # Required to read out all possible resolutions
 import patcher/bf2142 as patcherBf2142 # Required to patch BF2142 with the login/unlock server address. Also required to patch the game server
 import module/checkpermission # Required to check write permission before patching client
 import math # Required for runtime configuration
-import gamesrv/parser # Required to parse data out of bf2142 game server
+import parser/gamesrv # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
@@ -34,7 +36,20 @@ import client/gspy # Required to query each gamespy server for game server infor
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
-import page/download
+import module/gintro/liststore
+import module/gintro/infodialog
+
+from conparser import newDefault
+import profile/video as profileVideo
+import profile/audio as profileAudio
+import profile/general as profileGeneral
+import profile/global as profileGlobal
+import profile/profile as profileProfile
+import profile/serversettings as profileServerSettings
+import page/setting/video as pageSettingVideo
+import page/setting/audio as pageSettingAudio
+import page/setting/hud as pageSettingHud
+import page/download as pageDownload
 
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
@@ -109,9 +124,10 @@ type
     settings: BF2142UnlockerConfigSettings
 
 var bf2142UnlockerConfig: BF2142UnlockerConfig # TODO: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
-var documentsPath: string
-var bf2142ProfilePath: string
-var bf2142Profile0001Path: string
+var documentsPath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142ProfilePath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142ProfileDefaultPath: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142Profile0001Path: string # TODO: Add to BF2142UnlockerConfig?
 
 const RC {.intdefine.}: int = 0
 const VERSION: string = static:
@@ -309,13 +325,7 @@ var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe re
 
 
 const
-  PROFILE_AUDIO_CON: string = staticRead("profile/Audio.con")
   PROFILE_CONTROLS_CON: string = staticRead("profile/Controls.con")
-  PROFILE_GENERAL_CON: string = staticRead("profile/General.con")
-  PROFILE_PROFILE_CON: string = staticRead("profile/Profile.con")
-  PROFILE_SERVER_SETTINGS_CON: string = staticRead("profile/ServerSettings.con")
-  PROFILE_VIDEO_CON: string = staticRead("profile/Video.con")
-  GLOBAL_CON: string = staticRead("profile/Global.con")
 
 const
   STATS_ENDOFROUND_PY: string = staticRead("asset/stats/endofround.py")
@@ -514,6 +524,7 @@ var vboxUnlocks: Box
 var chbtnUnlocksUnlockSquadGadgets: CheckButton
 ##
 ### Settings controls
+var notebookSettings: Notebook
 var vboxSettings: Box
 var lblSettingsBF2142ClientPath: Label
 var txtSettingsBF2142ClientPath: Entry
@@ -528,8 +539,8 @@ var lblSettingsStartupQuery: Label
 var txtSettingsStartupQuery: Entry
 var chbtnSettingsSkipMovies: CheckButton
 var chbtnSettingsWindowMode: CheckButton
-var lblSettingsResolution: Label
 var cbxSettingsResolution: ComboBox
+var cbxSettingsGameLanguage: ComboBox
 var dlgSettingsBF2142ClientPathDetected: Dialog
 var lblSettingsBF2142ClientPathDetected: Label
 ##
@@ -549,7 +560,7 @@ proc `$`(ex: ref Exception): string =
     result.add("\t" & line & "\n")
 
 proc log(ex: ref Exception) =
-  error($ex)
+  logging.error($ex)
 
 proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
@@ -768,10 +779,73 @@ proc validateSoldier(soldier: string): bool =
   let soldierRegex: regex.Regex = re"""^([[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{3}[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@\#\-+]{0,11}|[[:alnum:]\^\$%&/\(\)\{\}\[\]=\?<>_\.@]{0,14})$"""
   return match(soldier, soldierRegex)
 
+proc checkBF2142ProfileFiles() =
+  if bf2142ProfilePath == "":
+    raise newException(ValueError, "checkBF2142ProfileFiles - bf2142ProfilePath == \"\"")
+  discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
+  discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
+  discard existsOrCreateDir(bf2142ProfileDefaultPath)
+  if not existsOrCreateDir(bf2142Profile0001Path).exists:
+    # Video.con
+    if fileExists(bf2142ProfileDefaultPath / "Video.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Video.con", bf2142Profile0001Path / "Video.con"):
+        return
+    else:
+      let video: Video = newDefault[Video]()
+      video.writeCon(bf2142ProfileDefaultPath / "Video.con")
+      video.writeCon(bf2142Profile0001Path / "Video.con")
+
+    # Audio.con
+    if fileExists(bf2142ProfileDefaultPath / "Audio.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Audio.con", bf2142Profile0001Path / "Audio.con"):
+        return
+    else:
+      let audio: Audio = newDefault[Audio]()
+      audio.writeCon(bf2142ProfileDefaultPath / "Audio.con")
+      audio.writeCon(bf2142Profile0001Path / "Audio.con")
+
+    # Controls.con
+    if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
+      return
+
+    # Profile.con
+    if fileExists(bf2142ProfileDefaultPath / "Profile.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "Profile.con", bf2142Profile0001Path / "Profile.con"):
+        return
+    else:
+      let profile: Profile = newDefault[Profile]()
+      profile.writeCon(bf2142ProfileDefaultPath / "Profile.con")
+      profile.writeCon(bf2142Profile0001Path / "Profile.con")
+
+    # ServerSettings.con
+    if fileExists(bf2142ProfileDefaultPath / "ServerSettings.con"):
+      if not copyFile(bf2142ProfileDefaultPath / "ServerSettings.con", bf2142Profile0001Path / "ServerSettings.con"):
+        return
+    else:
+      let serverSettings: ServerSettings = newDefault[ServerSettings]()
+      serverSettings.writeCon(bf2142ProfileDefaultPath / "ServerSettings.con")
+      serverSettings.writeCon(bf2142Profile0001Path / "ServerSettings.con")
+
+    # General.con
+    newDefault[General]().writeCon(bf2142Profile0001Path / "General.con")
+
+  if not fileExists(bf2142ProfilePath / "Global.con"):
+    newDefault[Global]().writeCon(bf2142ProfilePath / "Global.con")
+
 proc updateProfilePathes() =
   bf2142ProfilePath = documentsPath / "Battlefield 2142" / "Profiles"
+  bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
-
+  checkBF2142ProfileFiles()
+  pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  when defined(linux):
+    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
+    notebookSettings.getNthPage(1).setSensitive(true)
+    notebookSettings.getNthPage(2).setSensitive(true)
+  else:
+    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage())
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
   # TODO: Try'n catch because we parse booleans
@@ -833,9 +907,13 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     txtSettingsWinePrefix.text = config.settings.winePrefix
     if config.settings.winePrefix != "":
       documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
+      updateProfilePathes()
+    else:
+      notebookSettings.getNthPage(1).setSensitive(false)
+      notebookSettings.getNthPage(2).setSensitive(false)
   elif defined(windows):
     documentsPath = getDocumentsPath()
-  updateProfilePathes()
+    updateProfilePathes()
   when defined(linux):
     txtSettingsStartupQuery.text = config.settings.startupQuery
   chbtnSettingsSkipMovies.active = config.settings.skipMovies
@@ -860,21 +938,6 @@ proc backupOpenSpyIfExists() =
     if not copyFile(originalRendDX9Path, openspyDllPath):
       return
 
-proc newInfoDialog(title, text: string) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
-  var dialog: Dialog = newDialog()
-  dialog.title = title
-  var lblText: Label = newLabel(text)
-  dialog.contentArea.add(lblText)
-  var btnOk: Button = newButton("OK")
-  dialog.contentArea.add(btnOk)
-  btnOk.halign = Align.center
-  proc onBtnOkClicked(self: Button, dialog: Dialog) =
-    dialog.destroy()
-  btnOk.connect("clicked", onBtnOkClicked, dialog)
-  dialog.contentArea.showAll()
-  dialog.setPosition(WindowPosition.center)
-  discard dialog.run()
-  dialog.destroy()
 
 proc restoreOpenSpyIfExists() =
   let openspyDllBackupPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME & FILE_BACKUP_SUFFIX
@@ -899,14 +962,6 @@ proc restoreOpenSpyIfExists() =
         return
       else:
         sleep(500)
-
-proc typeTest(o: gobject.Object; s: string): bool =
-  let gt = g_type_from_name(s)
-  return g_type_check_instance_is_a(cast[ptr TypeInstance00](o.impl), gt).toBool
-
-proc listStore(o: gobject.Object): gtk.ListStore =
-  assert(typeTest(o, "GtkListStore"))
-  cast[gtk.ListStore](o)
 
 proc clear(list: TreeView) =
   ignoreEvents = true
@@ -1362,31 +1417,8 @@ proc loadMapList(): bool =
   fileTpl.file.close()
   return true
 
-proc checkBF2142ProfileFiles() =
-  if bf2142ProfilePath == "":
-    raise newException(ValueError, "checkBF2142ProfileFiles - bf2142ProfilePath == \"\"")
-  discard existsOrCreateDir(documentsPath  / "Battlefield 2142")
-  discard existsOrCreateDir(documentsPath  / "Battlefield 2142" / "Profiles")
-  if not existsOrCreateDir(bf2142Profile0001Path).exists:
-    if not writeFile(bf2142Profile0001Path / "Audio.con", PROFILE_AUDIO_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Controls.con", PROFILE_CONTROLS_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "General.con", PROFILE_GENERAL_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Profile.con", PROFILE_PROFILE_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "ServerSettings.con", PROFILE_SERVER_SETTINGS_CON):
-      return
-    if not writeFile(bf2142Profile0001Path / "Video.con", PROFILE_VIDEO_CON):
-      return
-  if not fileExists(bf2142ProfilePath / "Global.con"):
-    if not writeFile(bf2142ProfilePath / "Global.con", GLOBAL_CON):
-      return
 
 proc saveBF2142Profile(username, profile: string) =
-  checkBF2142ProfileFiles()
-
   var profileConPath: string = bf2142Profile0001Path / "Profile.con"
   var serverSettingsConPath: string = bf2142Profile0001Path / "ServerSettings.con"
   var globalConPath: string = bf2142ProfilePath / "Global.con"
@@ -1480,6 +1512,17 @@ proc getSelectedResolution(): tuple[width, height: uint16] =
   store.getValue(iter, 2, valWidth)
   store.getValue(iter, 3, valHeight)
   return (cast[uint16](valWidth.getUint()), cast[uint16](valHeight.getUint()))
+
+proc loadGameLanguages() =
+  var valLanguage: Value
+  discard valLanguage.init(g_string_get_type())
+  var iter: TreeIter
+  let store = listStore(cbxSettingsGameLanguage.getModel())
+  store.clear()
+  for lang in clientlang.Language:
+    valLanguage.setString($lang)
+    store.append(iter)
+    store.setValue(iter, 0, valLanguage)
 
 proc applyHostRunningSensitivity(running: bool) =
   btnHostGameServer.visible = not running
@@ -1612,7 +1655,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   var command: string
   when defined(linux):
     when defined(debug):
-      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
+      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # Removes some nasty fixme's and errors for development
     if txtSettingsWinePrefix.text != "":
       command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
   # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
@@ -1725,7 +1768,7 @@ proc timerUpdatePlayerList(TODO: int): bool =
   return SOURCE_REMOVE
 
 proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: Port]) =
-  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 500)
+  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 1000)
   channelUpdatePlayerList.send((gspy, gspyIpPort.gspyIp, gspyIpPort.gspyPort))
 
 proc updatePlayerListAsync() =
@@ -1819,16 +1862,24 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
     # TODO2: Query master servers async like in `queryServers` proc
     try:
-      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 500)
+      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 1000)
     except RangeDefect:
       break # TODO: Temprariy fixing issue #69 and #72
-    gslistTmp = filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
+    gslist.add(filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
+        return false
+      if gs in gslist:
+        # INFO: PlayBF2142 master server also respond OpenSpy game server
+        # TODO: If the original master server isn't replying to us, but PlayBF2142 do,
+        #       then it's listed with the incorrect master server
+        # TODO: Also add a setting like "is_duplicating" to server.ini and sort them out (if true),
+        #       after all other master server who have is_duplicating set to false, responded.
+        #       Then the order in server.ini isn't required anymore.
         return false
       serverConfigsTbl[$gs.address & $gs.port] = serverConfigs[idx]
       return true
-    )
-    gslist.add(gslistTmp)
+    ))
+    # gslist.add(gslistTmp)
   let serversTmp = queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
   for server in serversTmp:
     servers.add((
@@ -3056,12 +3107,16 @@ proc onChbtnSettingsWindowModeToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnSettingsWindowMode.active)
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
-  lblSettingsResolution.visible = chbtnSettingsWindowMode.active
-  cbxSettingsResolution.visible = chbtnSettingsWindowMode.active
 
 proc onCbxSettingsResolutionChanged(self: ComboBox00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
+
+proc onCbxSettingsGameLanguageChanged(self: ptr ComboBox00) {.signal.} =
+  when defined(windows):
+    setGameLanguage(parseEnum[clientlang.Language](cbxSettingsGameLanguage.activeId))
+  else:
+    setGameLanguage(parseEnum[clientlang.Language](cbxSettingsGameLanguage.activeId), bf2142UnlockerConfig.settings.winePrefix)
 
 proc execBF2142ServerCommand(command: string) =
   when defined(windows):
@@ -3124,7 +3179,8 @@ proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
     newInfoDialog("Info: Restart BF2142Unlocker", "To apply language changes, you need to restart BF2142Unlocker.")
 
 proc onApplicationActivate(application: Application) =
-  let builder = newBuilder()
+  let builder: Builder = newBuilder()
+  discard newView() # TODO: https://github.com/StefanSalewski/gintro/issues/40
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
@@ -3230,6 +3286,7 @@ proc onApplicationActivate(application: Application) =
   vboxUnlocks = builder.getBox("vboxUnlocks")
   chbtnUnlocksUnlockSquadGadgets = builder.getCheckButton("chbtnUnlocksUnlockSquadGadgets")
 
+  notebookSettings = builder.getNotebook("notebookSettings")
   vboxSettings = builder.getBox("vboxSettings")
   lblSettingsBF2142ClientPath = builder.getLabel("lblSettingsBF2142ClientPath")
   txtSettingsBF2142ClientPath = builder.getEntry("txtSettingsBF2142ClientPath")
@@ -3244,12 +3301,12 @@ proc onApplicationActivate(application: Application) =
   txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
   chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
   chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
-  lblSettingsResolution = builder.getLabel("lblSettingsResolution")
   cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
+  cbxSettingsGameLanguage = builder.getComboBox("cbxSettingsGameLanguage")
   dlgSettingsBF2142ClientPathDetected = builder.getDialog("dlgSettingsBF2142ClientPathDetected")
   lblSettingsBF2142ClientPathDetected = builder.getLabel("lblSettingsBF2142ClientPathDetected")
 
-  download.init(builder)
+  pageDownload.init(builder)
 
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
@@ -3304,6 +3361,17 @@ proc onApplicationActivate(application: Application) =
     preferDarkTheme.setBoolean(true)
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
+
+  notebook.currentPage = 4 # TODO: Remove
+  notebookSettings.currentPage = 3 # TODO: Remove
+  # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
+
+  ## Pages
+  pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
+  pageSettingAudio.init(builder, addr windowShown, addr ignoreEvents)
+  pageSettingHud.init(builder, addr windowShown, addr ignoreEvents)
+  #
+
   window.setApplication(application)
   builder.connectSignals(cast[pointer](nil))
   window.show()
@@ -3318,9 +3386,8 @@ proc onApplicationActivate(application: Application) =
     fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
     fixMedalsAndPins(bf2142UnlockerConfig.settings.bf2142ServerPath)
   loadJoinResolutions()
+  loadGameLanguages()
   applyBF2142UnlockerConfig(bf2142UnlockerConfig)
-  lblSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
-  cbxSettingsResolution.visible = bf2142UnlockerConfig.settings.windowMode
   if bf2142UnlockerConfig.settings.bf2142ServerPath != "":
     updatePathes()
     loadSelectableMapList()
@@ -3342,9 +3409,6 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
-
-  # TODO: Remove
-  notebook.currentPage = 4
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

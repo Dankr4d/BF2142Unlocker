@@ -373,12 +373,6 @@ msgstr "Fenstermodus:"
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Startet das Spiel im Fenstermodus."
 
-msgid "SETTINGS_RESOLUTION"
-msgstr "Auflösung:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "Die Auflösung in der das Spiel im Fenstermodus gestartet wird."
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr "Ein Battlefield 2142 Installationspfad wurde gefunden"
 
@@ -391,6 +385,209 @@ msgstr "Ja"
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Nein, auswählen .."
 
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr "Spielsprache:"
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr "BF2142Unlocker"
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr "Spiel"
+
+# ##
+# ##### Settings
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr "Auflösung:"
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr "Terrain:"
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr "Effekte:"
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr "Geometrie:"
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr "Texturen:"
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr "Beleuchtung:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr "Dynamische Schatten:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr "Dynamisches Licht:"
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr "Antialiasing:"
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr "Texturenfilter:"
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr "Sichtweite:"
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr "Verbesserte Beleuchtung:"
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr "Zurücksetzen"
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr "Speichern"
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr "Niedrig"
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr "Mittel"
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr "Hoch"
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr "Aus"
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr "FPS anzeigen:"
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
+msgstr "FPS entsperren:"
+
+# ##
+# ##### Settings/Audio
+msgid "SETTINGS_AUDIO_RENDERER"
+msgstr "Soundmodi:"
+
+msgid "SETTINGS_AUDIO_SOUND_QUALITY"
+msgstr "Sound Qualität:"
+
+msgid "SETTINGS_AUDIO_SAVE"
+msgstr "Speichern"
+
+msgid "SETTINGS_AUDIO_REVERT"
+msgstr "Zurücksetzen"
+
+msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
+msgstr "Schwellenwert test des Mikrofons:"
+
+msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
+msgstr "Microfonleistung verstärken:"
+
+msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
+msgstr "Empfangen:"
+
+msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
+msgstr "Senden:"
+
+msgid "SETTINGS_AUDIO_VOIP_ENABLED"
+msgstr "Aktiviert:"
+
+msgid "SETTINGS_AUDIO_VOICE_OVER"
+msgstr "Sprachausgabe:"
+
+msgid "SETTINGS_AUDIO_MUSIC"
+msgstr "Musik:"
+
+msgid "SETTINGS_AUDIO_EFFECTS"
+msgstr "Effekte:"
+
+msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
+msgstr "Nur deutsche Sprachausgabe:"
+
+msgid "SETTINGS_AUDIO_ENABLE_EAX"
+msgstr "Eax aktivieren:"
+
+msgid "SETTINGS_AUDIO_LOW"
+msgstr "Niedrig"
+
+msgid "SETTINGS_AUDIO_MEDIUM"
+msgstr "Mittel"
+
+msgid "SETTINGS_AUDIO_HIGH"
+msgstr "Hoch"
+
+msgid "SETTINGS_AUDIO_SOFTWARE"
+msgstr "Software"
+
+msgid "SETTINGS_AUDIO_HARDWARE"
+msgstr "Hardware"
+
+msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
+msgstr "Sound Einstellungen"
+
+msgid "SETTINGS_AUDIO_GAME_VOLUME"
+msgstr "Lautstärke"
+
+msgid "SETTINGS_AUDIO_VOIP"
+msgstr "Voice over IP"
+
+# ##
+# ##### Settings/HUD
+msgid "SETTINGS_HUD_PREVIEW"
+msgstr "Vorschau"
+
+msgid "SETTINGS_HUD_REVERT"
+msgstr "Zurücksetzen"
+
+msgid "SETTINGS_HUD_SAVE"
+msgstr "Speichern"
+
+msgid "SETTINGS_HUD_HUD"
+msgstr "HUD:"
+
+msgid "SETTINGS_HUD_MINIMAP"
+msgstr "Minikarte:"
+
+msgid "SETTINGS_HUD_ICONS"
+msgstr "Symbole:"
+
+msgid "SETTINGS_HUD_CROSSHAIR"
+msgstr "Fadenkreuz:"
+
+msgid "SETTINGS_HUD_HELP_POPUPS"
+msgstr "Popup Hilfe:"
+
+msgid "SETTINGS_HUD_CAMERA_SHAKE"
+msgstr "Kameraschütterung:"
+
+msgid "SETTINGS_HUD_ROTATE_MINIMAP"
+msgstr "Rotierende Karte:"
+
+msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
+msgstr "Keine teilnahme an Abstimmungen:"
+
+msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
+msgstr "Mausradauswahl umkehren:"
+
+msgid "SETTINGS_HUD_AUTO_RELOAD"
+msgstr "Automatisch nachladen:"
+
+msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
+msgstr "Freundschaftsanfragen ignorieren:"
+
+msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
+msgstr "Nachrichten getöteter anzeigen:"
+
+msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
+msgstr "Funksprüche anzeigen:"
+
+msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
+msgstr "Chatnachrichten anzeigen:"
+
+msgid "SETTINGS_HUD_PREVIEWABLE"
+msgstr "Vorschaubar"
+
+msgid "SETTINGS_HUD_OTHER"
+msgstr "Andere"
+
+# ##
+# ##### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
+msgstr "$# config ($#) ist nicht valide. Fehler beheben?"
+
 # ##
 # ##### Tabs
 msgid "TAB_QUICK"
@@ -400,7 +597,7 @@ msgid "TAB_QUICK_TOOLTIP"
 msgstr "Hier kannst du im Singleplayer oder LAN spielen."
 
 msgid "TAB_HOST"
-msgstr "Bereitstellen"
+msgstr "Hosten"
 
 msgid "TAB_HOST_TOOLTIP"
 msgstr "Einstellungen zum hosten."
@@ -416,6 +613,18 @@ msgstr "Einstellungen"
 
 msgid "TAB_SETTINGS_TOOLTIP"
 msgstr "Allgemeine Einstellungen"
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr "Allgemein"
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr "Grafik"
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr "Ton"
+
+msgid "TAB_SETTINGS_HUD"
+msgstr "HUD"
 
 # ##
 # ##### Statusbar

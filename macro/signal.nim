@@ -18,29 +18,97 @@ macro signal*(eventProc: untyped): untyped =
     newIdentNode("cdecl"),
     newIdentNode("dynlib"),
   )
-  # if not windowShown: return
+  # when windowShown is ptr bool:
+  #   if not windowShown[]: return
+  # else:
+  #   if not windowShown: return
   let windowShownStatement: NimNode = nnkStmtList.newTree(
-    nnkIfStmt.newTree(
+    nnkWhenStmt.newTree(
       nnkElifBranch.newTree(
-        nnkPrefix.newTree(
-          newIdentNode("not"),
-          newIdentNode("windowShown")
+        nnkInfix.newTree(
+          newIdentNode("is"),
+          newIdentNode("windowShown"),
+          nnkPtrTy.newTree(
+            newIdentNode("bool")
+          )
         ),
         nnkStmtList.newTree(
-          nnkReturnStmt.newTree(
-            newEmptyNode()
+          nnkIfStmt.newTree(
+            nnkElifBranch.newTree(
+              nnkPrefix.newTree(
+                newIdentNode("not"),
+                nnkBracketExpr.newTree(
+                  newIdentNode("windowShown")
+                )
+              ),
+              nnkStmtList.newTree(
+                nnkReturnStmt.newTree(
+                  newEmptyNode()
+                )
+              )
+            )
+          )
+        )
+      ),
+      nnkElse.newTree(
+        nnkStmtList.newTree(
+          nnkIfStmt.newTree(
+            nnkElifBranch.newTree(
+              nnkPrefix.newTree(
+                newIdentNode("not"),
+                newIdentNode("windowShown")
+              ),
+              nnkStmtList.newTree(
+                nnkReturnStmt.newTree(
+                  newEmptyNode()
+                )
+              )
+            )
           )
         )
       )
     )
   )
-  let ignoreEventsStatement: NimNode =nnkStmtList.newTree(
-    nnkIfStmt.newTree(
+  # when ignoreEvents is ptr bool:
+  #   if ignoreEvents[]: return
+  # else:
+  #   if ignoreEvents: return
+  let ignoreEventsStatement: NimNode = nnkStmtList.newTree(
+    nnkWhenStmt.newTree(
       nnkElifBranch.newTree(
-        newIdentNode("ignoreEvents"),
+        nnkInfix.newTree(
+          newIdentNode("is"),
+          newIdentNode("ignoreEvents"),
+          nnkPtrTy.newTree(
+            newIdentNode("bool")
+          )
+        ),
         nnkStmtList.newTree(
-          nnkReturnStmt.newTree(
-            newEmptyNode()
+          nnkIfStmt.newTree(
+            nnkElifBranch.newTree(
+              nnkBracketExpr.newTree(
+                newIdentNode("ignoreEvents")
+              ),
+              nnkStmtList.newTree(
+                nnkReturnStmt.newTree(
+                  newEmptyNode()
+                )
+              )
+            )
+          )
+        )
+      ),
+      nnkElse.newTree(
+        nnkStmtList.newTree(
+          nnkIfStmt.newTree(
+            nnkElifBranch.newTree(
+              newIdentNode("ignoreEvents"),
+              nnkStmtList.newTree(
+                nnkReturnStmt.newTree(
+                  newEmptyNode()
+                )
+              )
+            )
           )
         )
       )

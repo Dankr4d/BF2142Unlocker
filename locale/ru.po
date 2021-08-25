@@ -373,12 +373,6 @@ msgstr "Оконный режим:"
 msgid "SETTINGS_WINDOW_MODE_TOOLTIP"
 msgstr "Запуск игры в оконном режиме."
 
-msgid "SETTINGS_RESOLUTION"
-msgstr "Разрешение:"
-
-msgid "SETTINGS_RESOLUTION_TOOLTIP"
-msgstr "Разрешение экрана в оконном режиме"
-
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_TITLE"
 msgstr "Найден путь установки Battlefield 2142"
 
@@ -390,6 +384,209 @@ msgstr "Да"
 
 msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Нет, выбрать другой .."
+
+msgid "SETTINGS_GAME_LANGUAGE"
+msgstr ""
+
+msgid "SETTINGS_GENERAL_UNLOCKER"
+msgstr "BF2142Unlocker"
+
+msgid "SETTINGS_GENERAL_GAME"
+msgstr ""
+
+# ##
+# ##### Settings
+msgid "SETTINGS_VIDEO_RESOLUTION"
+msgstr "Разрешение:"
+
+msgid "SETTINGS_VIDEO_TERRAIN"
+msgstr "Земля:"
+
+msgid "SETTINGS_VIDEO_EFFECTS"
+msgstr "Эффекты:"
+
+msgid "SETTINGS_VIDEO_GEOMETRY"
+msgstr "Геометрия:"
+
+msgid "SETTINGS_VIDEO_TEXTURE"
+msgstr "Текстуры:"
+
+msgid "SETTINGS_VIDEO_LIGHTING"
+msgstr "Освещение:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_SHADOWS"
+msgstr "Динамические тени:"
+
+msgid "SETTINGS_VIDEO_DYNAMIC_LIGHT"
+msgstr "Динамический свет:"
+
+msgid "SETTINGS_VIDEO_ANTIALIASING"
+msgstr "Сглаживание:"
+
+msgid "SETTINGS_VIDEO_TEXTURE_FILTERING"
+msgstr "Фильтрация текстур:"
+
+msgid "SETTINGS_VIDEO_VIEW_DISTANCE"
+msgstr "Дальность видимости:"
+
+msgid "SETTINGS_VIDEO_ENHANCED_LIGHTING"
+msgstr "Улучшенное освещение:"
+
+msgid "SETTINGS_VIDEO_REVERT"
+msgstr "Вернуть"
+
+msgid "SETTINGS_VIDEO_SAVE"
+msgstr "Сохранить"
+
+msgid "SETTINGS_VIDEO_LOW"
+msgstr "Низкое"
+
+msgid "SETTINGS_VIDEO_MEDIUM"
+msgstr "Среднее"
+
+msgid "SETTINGS_VIDEO_HIGH"
+msgstr "Высокое"
+
+msgid "SETTINGS_VIDEO_OFF"
+msgstr "Выкл"
+
+msgid "SETTINGS_VIDEO_DRAW_FPS"
+msgstr ""
+
+msgid "SETTINGS_VIDEO_UNLOCK_FPS"
+msgstr ""
+
+# ##
+# ##### Settings/Audio
+msgid "SETTINGS_AUDIO_RENDERER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SOUND_QUALITY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_SAVE"
+msgstr "Сохранить"
+
+msgid "SETTINGS_AUDIO_REVERT"
+msgstr "Вернуть"
+
+msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP_ENABLED"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOICE_OVER"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_MUSIC"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_EFFECTS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_ENABLE_EAX"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_LOW"
+msgstr "Низкое"
+
+msgid "SETTINGS_AUDIO_MEDIUM"
+msgstr "Среднее"
+
+msgid "SETTINGS_AUDIO_HIGH"
+msgstr "Высокое"
+
+msgid "SETTINGS_AUDIO_SOFTWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_HARDWARE"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_GAME_VOLUME"
+msgstr ""
+
+msgid "SETTINGS_AUDIO_VOIP"
+msgstr ""
+
+# ##
+# ##### Settings/HUD
+msgid "SETTINGS_HUD_PREVIEW"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERT"
+msgstr ""
+
+msgid "SETTINGS_HUD_SAVE"
+msgstr ""
+
+msgid "SETTINGS_HUD_HUD"
+msgstr ""
+
+msgid "SETTINGS_HUD_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_ICONS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CROSSHAIR"
+msgstr ""
+
+msgid "SETTINGS_HUD_HELP_POPUPS"
+msgstr ""
+
+msgid "SETTINGS_HUD_CAMERA_SHAKE"
+msgstr ""
+
+msgid "SETTINGS_HUD_ROTATE_MINIMAP"
+msgstr ""
+
+msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
+msgstr ""
+
+msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
+msgstr ""
+
+msgid "SETTINGS_HUD_AUTO_RELOAD"
+msgstr ""
+
+msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
+msgstr ""
+
+msgid "SETTINGS_HUD_PREVIEWABLE"
+msgstr ""
+
+msgid "SETTINGS_HUD_OTHER"
+msgstr ""
+
+# ##
+# ##### Settings/Additionals
+msgid "SETTINGS_CONFIG_CORRUPT_TITLE"
+msgstr ""
 
 msgid "TAB_QUICK"
 msgstr "Играть"
@@ -414,6 +611,18 @@ msgstr "Настройки"
 
 msgid "TAB_SETTINGS_TOOLTIP"
 msgstr "Основные настройки"
+
+msgid "TAB_SETTINGS_GENERAL"
+msgstr "Главное"
+
+msgid "TAB_SETTINGS_VIDEO"
+msgstr "Видео"
+
+msgid "TAB_SETTINGS_AUDIO"
+msgstr "Аудио"
+
+msgid "TAB_SETTINGS_HUD"
+msgstr ""
 
 msgid "VERSION_TOOLTIP"
 msgstr "Текущая версия"
