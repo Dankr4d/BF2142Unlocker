@@ -6,7 +6,7 @@ type
   Armor* = object of RootObj
     team*: range[0u8 .. 1u8]
     kit*: range[0u8 .. 3u8]
-    val* {.Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false.}: bool
+    val* {.Valid: Bools01, Default: false.}: bool
   # Kits* = seq[Kit]
   Kit* = object of RootObj
     team*: range[0u8 .. 1u8]

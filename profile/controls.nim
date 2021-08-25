@@ -351,36 +351,36 @@ type
     device*: Device # IDFKeyboard, IDFMouse
     key1*: Key # IDKey_D, ...
     key2*: Key # IDKey_A, ...
-    secondary {.Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false}: bool
+    secondary {.Valid: Bools01, Default: false}: bool
   ButtonToTrigger*[T] = object of RootObj
     action*: T # c_PIYaw, c_PIThrottle, c_PIFire, ...
     device*: Device
     mouse*: Mouse
     num*: uint
-    secondary {.Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false}: bool
+    secondary {.Valid: Bools01, Default: false}: bool
   AxisToAxis*[T] = object of ButtonToTrigger[T]
   KeyToTrigger*[T] = object of RootObj
     action*: T # c_PIYaw, c_PIThrottle, c_PIFire, ...
     device*: Device
     key*: Key
     num*: uint
-    secondary {.Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false}: bool
+    secondary {.Valid: Bools01, Default: false}: bool
   AxisToTrigger*[T] = object of RootObj
     action1*: T # c_GIMouseWheelUp, -1 <-- Action or -1
     action2*: T #  # -1, c_GIMouseWheelDown <-- Action or -1
     device*: Device
     mouse*: Mouse
-    secondary {.Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false}: bool
+    secondary {.Valid: Bools01, Default: false}: bool
   BaseControls*[T] {.Prefix: "ControlMap.".} = object of RootObj
     keysToAxis* {.Setting: "addKeysToAxisMapping", Format: "[action] [device] [key1] [key2] [secondary]".}: seq[KeysToAxis[T]]
     buttonToTrigger* {.Setting: "addButtonToTriggerMapping", Format: "[action] [device] [mouse] [num] [secondary]".}: seq[ButtonToTrigger[T]]
     keyToTrigger* {.Setting: "addKeyToTriggerMapping", Format: "[action] [device] [key] [num] [secondary]".}: seq[KeyToTrigger[T]]
     axisToAxis {.Setting: "addAxisToAxisMapping", Format: "[action] [device] [mouse] [num] [secondary]".}: seq[AxisToAxis[T]]
     axisToTrigger {.Setting: "addAxisToTriggerMapping", Format: "[action1] [action2] [device] [mouse] [secondary]".}: seq[AxisToTrigger[T]]
-    invertMouse* {.Setting: "invertMouse", Valid: Bools(`true`: @["1"], `false`: @["0"]), Default: false.}: bool # 0
-    yawFactor* {.Setting: "setYawFactor", Default: 1u8.}: range[1u8 .. 10u8] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
-    pitchFactor* {.Setting: "setPitchFactor", Default: 1u8.}: range[1u8 .. 10u8] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
-    mouseSensitivity* {.Setting: "mouseSensitivity", Default: 1f.}: range[0f .. 10f] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
+    invertMouse* {.Setting: "invertMouse", Valid: Bools01, Default: false, IgnoreWhenDefault.}: bool # 0
+    yawFactor* {.Setting: "setYawFactor", Default: 1u8, IgnoreWhenDefault.}: range[1u8 .. 10u8] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
+    pitchFactor* {.Setting: "setPitchFactor", Default: 1u8, IgnoreWhenDefault.}: range[1u8 .. 10u8] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
+    mouseSensitivity* {.Setting: "mouseSensitivity", Default: 1f, IgnoreWhenDefault.}: range[0f .. 10f] # 1 # TODO: Add IgnoreWriteWhenDefault pragma and don't write this attribute if value is equal Default
   ControlsInfantry* = object of BaseControls[PAction]
   ControlsLand* = object of BaseControls[PAction]
   ControlsAir* = object of BaseControls[PAction]
@@ -676,7 +676,8 @@ type
 when isMainModule:
   let path: string = """/home/dankrad/Battlefield 2142/Profiles/0001/Controls.con"""
   var controls: Controls = newDefault[Controls]()
-  controls.writeCon("/home/dankrad/Desktop/controls.con")
+  validate(Controls)
+  # controls.writeCon("/home/dankrad/Desktop/controls.con")
   # echo controls
 
   # var report: ConReport
