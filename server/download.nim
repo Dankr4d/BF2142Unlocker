@@ -57,15 +57,27 @@ proc main {.async.} =
               continue
             games[gameTpl.path].maps[modTpl.path] = @[]
             for mapTpl in walkDir(ROOT_PATH / gameTpl.path / "maps" / modTpl.path, true):
-              if mapTpl.kind != pcFile:
+              if mapTpl.kind != pcDir:
                 continue
+
               var map: Map
               map.name = splitFile(mapTpl.path).name
-              map.size = getFileSize(ROOT_PATH / gameTpl.path / "maps" / modTpl.path / mapTpl.path)
-              map.locations = @[
-                $(parseUri("http://127.0.0.1:8080/") / gameTpl.path / "maps" / modTpl.path / mapTpl.path),
-                $(parseUri("http://192.168.1.107:8080/") / gameTpl.path / "maps" / modTpl.path / mapTpl.path)
-              ]
+              for versionTpl in walkDir(ROOT_PATH / gameTpl.path / "maps" / modTpl.path / mapTpl.path, true):
+                # map.size = getFileSize(ROOT_PATH / gameTpl.path / "maps" / modTpl.path / mapTpl.path / versionTpl.path)
+                # echo "BEFOER: ", gameTpl.path / "maps" / modTpl.path / mapTpl.path / versionTpl.path
+                var version: Version
+                version.version = parseFloat(versionTpl.path)
+                for filePath in walkDirRec(ROOT_PATH / gameTpl.path / "maps" / modTpl.path / mapTpl.path / versionTpl.path):
+                  echo filePath
+                  version.size += getFileSize(filePath)
+                # echo "AFTER"
+                # map.size = getFileSize
+                version.locations = @[
+                  $(parseUri("http://127.0.0.1:8080/") / gameTpl.path / "maps" / modTpl.path / mapTpl.path / versionTpl.path),
+                  $(parseUri("http://192.168.1.107:8080/") / gameTpl.path / "maps" / modTpl.path / mapTpl.path / versionTpl.path)
+                ]
+
+                map.versions.add(version)
               games[gameTpl.path].maps[modTpl.path].add(map)
 
       # await req.respond(Http200, $(%*games), headers.newHttpHeaders())

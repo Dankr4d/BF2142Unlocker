@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2
+<!-- Generated with glade 3.38.2 
 
 The MIT License (MIT)
 
@@ -640,6 +640,26 @@ Author: Dankr4d
       <column type="guint"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="listStoreSettingsGeneralGameLanguage">
+    <columns>
+      <!-- column-name Language -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="listStoreSettingsVideoResolution">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Resolution -->
+      <column type="gchararray"/>
+      <!-- column-name Width -->
+      <column type="guint"/>
+      <!-- column-name Height -->
+      <column type="guint"/>
+      <!-- column-name Frequence -->
+      <column type="guint"/>
+    </columns>
+  </object>
   <object class="GtkTreeStore" id="treeStoreMaps">
     <columns>
       <!-- column-name Game -->
@@ -674,26 +694,8 @@ Author: Dankr4d
       <column type="gboolean"/>
       <!-- column-name isRadioButton -->
       <column type="gboolean"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="listStoreSettingsGeneralGameLanguage">
-    <columns>
-      <!-- column-name Language -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="listStoreSettingsVideoResolution">
-    <columns>
-      <!-- column-name ID -->
-      <column type="gchararray"/>
-      <!-- column-name Resolution -->
-      <column type="gchararray"/>
-      <!-- column-name Width -->
-      <column type="guint"/>
-      <!-- column-name Height -->
-      <column type="guint"/>
-      <!-- column-name Frequence -->
-      <column type="guint"/>
+      <!-- column-name version -->
+      <column type="gfloat"/>
     </columns>
   </object>
   <object class="GtkApplicationWindow" id="window">
@@ -3016,6 +3018,17 @@ SEARCH BY NAME ... ETC.</property>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
                                             <attribute name="text">13</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">Version</property>
+                                        <child>
+                                          <object class="GtkCellRendererText"/>
+                                          <attributes>
+                                            <attribute name="text">16</attribute>
                                           </attributes>
                                         </child>
                                       </object>

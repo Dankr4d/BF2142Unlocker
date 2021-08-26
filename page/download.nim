@@ -33,6 +33,7 @@ const
   COLUMN_STATUS: int = 13
   COLUMN_DOWNLOAD: int = 14
   COLUMN_ISRADIOBUTTON: int = 15
+  COLUMN_VERSION: int = 16
 
 type
   Status = enum
@@ -253,58 +254,67 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
   return EVENT_PROPAGATE
 
 
-proc onTrvDownloadsMapsDownloadToggled(cellRenderer00: ptr CellRendererToggle00, path: cstring) {.signal.} =
-  var treePath: TreePath = newTreePathFromString(path)
+proc handleDownloadCheckButtons(pIndices: seq[int32], pIndicesCur: seq[int32] = @[pIndices[0]], pDownload: bool = true) =
+  var depthClicked: int = pIndices.len
+  var depthCur: int = pIndicesCur.len
+  var indicesCur: seq[int32] = pIndicesCur
+  var indices: seq[int32] = pIndices
+  indices.setLen(3)
+  var indicesSameLen: seq[int32] = pIndices
+  indicesSameLen.setLen(indicesCur.len)
 
   var iter: TreeIter
   let store: TreeStore = treeStore(trvDownloadsMaps.getModel())
-  discard store.getIter(iter, treePath)
+  var treePath: TreePath
 
+  if indicesCur.len == 1:
+    var valDownload: Value
+    var valIsRadioButton: Value
+    treePath = newTreePathFromIndices(pIndices)
+    discard store.getIter(iter, treePath)
+    store.getValue(iter, COLUMN_DOWNLOAD, valDownload)
+    store.getValue(iter, COLUMN_ISRADIOBUTTON, valIsRadioButton)
+    if valDownload.getBoolean() and valIsRadioButton.getBoolean():
+      # Clicked on a radio button which is already set/true -> nothing to do
+      return
+
+  treePath = newTreePathFromIndices(indicesCur)
+  var whileCond: bool = store.getIter(iter, treePath)
+
+  while whileCond:
+    var valDownload: Value
+    var valIsRadioButton: Value
+
+    var download: bool = indicesSameLen == indicesCur and pDownload
+
+    store.getValue(iter, COLUMN_ISRADIOBUTTON, valIsRadioButton)
+
+    if depthClicked == depthCur and not valIsRadioButton.getBoolean():
+      store.getValue(iter, COLUMN_DOWNLOAD, valDownload)
+      download = not valDownload.getBoolean()
+    else:
+      discard valDownload.init(g_boolean_get_type())
+
+    valDownload.setBoolean(download)
+    store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
+
+    var indicesNext: seq[int32] = indicesCur
+    indicesNext.setLen(indicesNext.len + 1)
+
+    handleDownloadCheckButtons(indices, indicesNext, download)
+
+    if valIsRadioButton.getBoolean():
+      whileCond = store.iterNext(iter)
+    else:
+      whileCond = false # Checkbox, no need to iterate
+    indicesCur[^1].inc()
+
+
+proc onTrvDownloadsMapsDownloadToggled(cellRenderer00: ptr CellRendererToggle00, path: cstring) {.signal.} =
+  let treePath: TreePath = newTreePathFromString(path)
   var depth: int = treePath.getDepth()
   let indices: seq[int32] = treePath.getIndices(depth)
-
-  var valDownload: Value
-
-  if depth == 1:
-    store.getValue(iter, COLUMN_DOWNLOAD, valDownload)
-    var download: bool = not valDownload.getBoolean()
-    valDownload.setBoolean(download)
-    # valDownload.setBoolean(not valDownload.getBoolean()) # TODO: Not working .. WTF?!?
-    store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
-
-    var iterChildren: TreeIter
-    var whileCond: bool = store.iterChildren(iterChildren, iter)
-    var idx: int = 0
-    while whileCond:
-      if download:
-        valDownload.setBoolean(idx == 0)
-      else:
-        valDownload.setBoolean(false)
-      store.setValue(iterChildren, COLUMN_DOWNLOAD, valDownload)
-      idx.inc()
-
-      whileCond = store.iterNext(iterChildren)
-  elif depth == 2:
-    discard valDownload.init(g_boolean_get_type())
-    valDownload.setBoolean(true)
-    store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
-
-    var iterParent: TreeIter
-    discard store.iterParent(iterParent, iter)
-    # valDownload.setBoolean(true)
-    store.setValue(iterParent, COLUMN_DOWNLOAD, valDownload)
-
-    var whileCond: bool = store.iterChildren(iter, iterParent)
-    var idx: int = 0
-    while whileCond:
-      if indices[1] != idx:
-        valDownload.setBoolean(false)
-        store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
-      idx.inc()
-
-      whileCond = store.iterNext(iter)
-
-
+  handleDownloadCheckButtons(indices)
 
 
 proc queryMaps(): Games =
@@ -314,12 +324,19 @@ proc queryMaps(): Games =
   return to(jsonNode, Games)
 
 
+import algorithm
+proc cmpVersion(v1, v2: Version): int =
+  if v1.version == v2.version: return 0
+  if v1.version < v2.version: return -1
+  return 1
+
 proc fillMaps(games: Games) =
   var
     valGame, valMod, valMap, valSize, valUrl, valProgress: Value
     valProgressVisible, valMapHorizontalPadding, valIconName, valSpinnerPulse: Value
     valSpinnerVisible, valIconVisible: Value
     valSizeInBytes, valStatus, valDownload, valIsRadioButton: Value
+    valVersion: Value
     iter: TreeIter
   let store: TreeStore = treeStore(trvDownloadsMaps.getModel())
   discard valGame.init(g_string_get_type())
@@ -338,16 +355,17 @@ proc fillMaps(games: Games) =
   discard valStatus.init(g_int_get_type())
   discard valDownload.init(g_boolean_get_type())
   discard valIsRadioButton.init(g_boolean_get_type())
+  discard valVersion.init(g_float_get_type())
 
   for gameName, game in games.pairs():
     for modName, maps in game.maps:
       for map in maps:
         valGame.setString(gameName)
         valMod.setString(modName)
-        valMap.setString(map.name)
-        valSize.setString(formatFloat(map.size.int / 1024 / 1024, ffDecimal, 2) & " MiB")
+        valMap.setString(map.name & " (version: " & $map.versions[^1].version & ")")
+        valSize.setString(formatFloat(map.versions[^1].size.int / 1024 / 1024, ffDecimal, 2) & " MiB")
         # valUrl.setString("")
-        valUrl.setString(map.locations[0]) # TODO: Test
+        valUrl.setString(map.versions[^1].locations[0]) # TODO: Test
         valProgress.setFloat(10.0)
         valProgressVisible.setBoolean(true)
         valMapHorizontalPadding.setUint(0)
@@ -355,10 +373,11 @@ proc fillMaps(games: Games) =
         valSpinnerPulse.setUint(0)
         valSpinnerVisible.setBoolean(false)
         valIconVisible.setBoolean(true)
-        valSizeInBytes.setUint(map.size.int)
+        valSizeInBytes.setUint(map.versions[^1].size.int)
         valStatus.setInt(Status.Missing.int)
         valDownload.setBoolean(false)
         valIsRadioButton.setBoolean(false)
+        valVersion.setFloat(map.versions[^1].version)
         store.append(iter)
         store.setValue(iter, COLUMN_GAME, valGame)
         store.setValue(iter, COLUMN_MOD, valMod)
@@ -376,13 +395,17 @@ proc fillMaps(games: Games) =
         store.setValue(iter, COLUMN_STATUS, valStatus)
         store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
         store.setValue(iter, COLUMN_ISRADIOBUTTON, valIsRadioButton)
-        let iterParent: TreeIter = iter
-        for url in map.locations:
-          valMap.setString("➥  " & url)
+        store.setValue(iter, COLUMN_VERSION, valVersion)
+
+        var iterParent: TreeIter = iter
+        for version in map.versions.sorted(cmpVersion, Descending):
+        # for url in map.locations:
+          # valMap.setString("➥  " & url)
+          valMap.setString(map.name & " (version: " & $version.version & ")")
           valMod.setString("")
           valGame.setString("")
           valSize.setString("")
-          valUrl.setString(url)
+          # valUrl.setString(url)
           valProgress.setFloat(0.0)
           valProgressVisible.setBoolean(false)
           valMapHorizontalPadding.setUint(10)
@@ -390,10 +413,11 @@ proc fillMaps(games: Games) =
           valSpinnerPulse.setUint(0)
           valSpinnerVisible.setBoolean(false)
           valIconVisible.setBoolean(true)
-          valSizeInBytes.setUint(map.size.int)
+          valSizeInBytes.setUint(version.size.int)
           valStatus.setInt(Status.Missing.int)
           valDownload.setBoolean(false)
           valIsRadioButton.setBoolean(true)
+          valVersion.setFloat(version.version)
           store.append(iter, iterParent)
           store.setValue(iter, COLUMN_GAME, valGame)
           store.setValue(iter, COLUMN_MOD, valMod)
@@ -411,6 +435,49 @@ proc fillMaps(games: Games) =
           store.setValue(iter, COLUMN_STATUS, valStatus)
           store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
           store.setValue(iter, COLUMN_ISRADIOBUTTON, valIsRadioButton)
+          store.setValue(iter, COLUMN_VERSION, valVersion)
+
+          var iterParentBefore: TreeIter = iterParent
+          iterParent = iter
+          for location in version.locations:
+            valMap.setString("    ➥  " & location)
+            valMod.setString("")
+            valGame.setString("")
+            valSize.setString("")
+            valUrl.setString(location)
+            valProgress.setFloat(0.0)
+            valProgressVisible.setBoolean(false)
+            valMapHorizontalPadding.setUint(10)
+            valIconName.setString("document-save")
+            valSpinnerPulse.setUint(0)
+            valSpinnerVisible.setBoolean(false)
+            valIconVisible.setBoolean(true)
+            valSizeInBytes.setUint(version.size.int)
+            valStatus.setInt(Status.Missing.int)
+            valDownload.setBoolean(false)
+            valIsRadioButton.setBoolean(true)
+            valVersion.setFloat(version.version)
+            store.append(iter, iterParent)
+            store.setValue(iter, COLUMN_GAME, valGame)
+            store.setValue(iter, COLUMN_MOD, valMod)
+            store.setValue(iter, COLUMN_MAP, valMap)
+            store.setValue(iter, COLUMN_SIZE, valSize)
+            store.setValue(iter, COLUMN_URL, valUrl)
+            store.setValue(iter, COLUMN_PROGRESS, valProgress)
+            store.setValue(iter, COLUMN_PROGRESSVISIBLE, valProgressVisible)
+            store.setValue(iter, COLUMN_MAPHORIZONTALPADDING, valMapHorizontalPadding)
+            store.setValue(iter, COLUMN_ICONNAME, valIconName)
+            store.setValue(iter, COLUMN_SPINNERPULSE, valSpinnerPulse)
+            store.setValue(iter, COLUMN_SPINNERVISIBLE, valSpinnerVisible)
+            store.setValue(iter, COLUMN_ICONVISIBLE, valIconVisible)
+            store.setValue(iter, COLUMN_SIZEINBYTES, valSizeInBytes)
+            store.setValue(iter, COLUMN_STATUS, valStatus)
+            store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
+            store.setValue(iter, COLUMN_ISRADIOBUTTON, valIsRadioButton)
+            store.setValue(iter, COLUMN_VERSION, valVersion)
+          iterParent = iterParentBefore
+
+
 
 proc spinTest(TODO: int): bool =
   var maps: tables.Table[string, ChannelMapData] = initTable[string, ChannelMapData]()
@@ -474,3 +541,4 @@ proc init*(builder: Builder) =
   let TODO: int = 0
   discard timeoutAdd(80, spinTest, TODO)
   fillMaps(queryMaps())
+  trvDownloadsMaps.expandAll() # TODO: Remove
