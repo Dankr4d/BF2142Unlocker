@@ -128,7 +128,7 @@ proc onTrvDownloadsMapsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Even
   if not trvDownloadsMaps.getPathAtPos(x.int, y.int, treePath, column, cellX, cellY):
     return
 
-  var depth: int
+  var depth: int = treePath.getDepth()
   var indices: seq[int32] = treePath.getIndices(depth)
 
   var valXOffset: Value
@@ -203,7 +203,7 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
   var cellX, cellY: int
   if not trvDownloadsMaps.getPathAtPos(x.int, y.int, treePath, column, cellX, cellY):
     return
-  var depth: int
+  var depth: int = treePath.getDepth()
   var indices: seq[int32] = treePath.getIndices(depth)
 
   var valXOffset: Value
