@@ -840,6 +840,7 @@ proc updateProfilePathes() =
   pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath) # TODO: Only required because of linux (have a look in the function)
   pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  pageDownload.setBF2142ClientPath(bf2142UnlockerConfig.settings.bf2142ClientPath)
   when defined(linux):
     discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
     notebookSettings.getNthPage(1).setSensitive(true)

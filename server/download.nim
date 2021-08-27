@@ -30,62 +30,8 @@ import ../type/download
 
 const ROOT_PATH: string = "/home/dankrad/Desktop/bfmapsmods"
 
-proc getGames(): Games =
-  for gameTpl in walkDir(ROOT_PATH, true):
-    var game: Game
-    game.name = gameTpl.path
-
-    for modTpl in walkDir(ROOT_PATH / gameTpl.path, true):
-      if modTpl.path in ["patches"]:
-        continue
-
-      var `mod`: Mod
-      `mod`.name = modTpl.path
-
-      for modVersionTpl in walkDir(ROOT_PATH / gameTpl.path / modTpl.path, true):
-        var version: Version
-        version.version = parseFloat(modVersionTpl.path) # TODO: Replace with real version (major, minior, patch)
-
-        if dirExists(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "files"):
-          for filePath in walkDirRec(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "files", relative = true):
-            version.files.add(PathHash(
-              path: filePath,
-              hash32: toHex(streamedXXH32(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / filePath, 1024)),
-              hash64: toHex(streamedXXH64(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / filePath, 1024))
-            ))
-            version.size += getFileSize(
-              ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / filePath
-            )
-            version.locations = @[] # TODO
-        `mod`.versions.add(version)
-
-        if dirExists(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels"):
-          for levelTpl in walkDir(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels", true):
-            var level: Level
-            level.name = levelTpl.path
-            for levelVersionTpl in walkDir(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path, true):
-              var version: Version
-              version.version = parseFloat(levelVersionTpl.path) # TODO: Replace with real version (major, minior, patch)
-
-              for filePath in walkDirRec(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path, relative = true):
-                version.files.add(PathHash(
-                  path: filePath,
-                  hash32: toHex(streamedXXH32(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path / filePath, 1024)),
-                  hash64: toHex(streamedXXH64(ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path / filePath, 1024))
-                ))
-                version.size += getFileSize(
-                  ROOT_PATH / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path / filePath
-                )
-              version.locations = @[ # TODO
-                $(parseUri("http://127.0.0.1:8080/") / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path),
-                $(parseUri("http://192.168.1.107:8080/") / gameTpl.path / modTpl.path / modVersionTpl.path / "levels" / levelTpl.path / levelVersionTpl.path)
-              ]
-              level.versions.add(version)
-            `mod`.levels.add(level)
-      game.mods.add(`mod`)
-    result.add(game)
-
-let games: Games = getGames()
+# let games: Games = getGamesClient("/home/dankrad/.wine_bf2142/drive_c/Program Files (x86)/Electronic Arts/Battlefield 2142")
+let games: Games = getGamesServer(ROOT_PATH)
 echo games
 
 proc cb(req: Request) {.async.} =
@@ -95,7 +41,8 @@ proc cb(req: Request) {.async.} =
   if req.url.path == "/":
     let headers = {"Content-Type": "application/json; charset=utf-8"}
 
-    let games: Games = getGames()
+    # let games: Games = getGamesClient("/home/dankrad/.wine_bf2142/drive_c/Program Files (x86)/Electronic Arts/Battlefield 2142")
+    let games: Games = getGamesServer(ROOT_PATH)
 
     when defined(release):
       await req.respond(Http200, $(%*games), headers.newHttpHeaders())

@@ -464,6 +464,30 @@ Author: Dankr4d
     <property name="pixel-size">24</property>
     <property name="icon-name">view-refresh</property>
   </object>
+  <object class="GtkListStore" id="listDownloadsMapsGame">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Game -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="listDownloadsMapsMod">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Mod -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="listDownloadsMapsStatus">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name Status -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="listStoreHostMode">
     <columns>
       <!-- column-name ID -->
@@ -696,7 +720,20 @@ Author: Dankr4d
       <column type="gboolean"/>
       <!-- column-name version -->
       <column type="gfloat"/>
+      <!-- column-name BackgroundColor -->
+      <column type="gchararray"/>
+      <!-- column-name SizeInBytesNet -->
+      <column type="guint"/>
+      <!-- column-name SizeNet -->
+      <column type="gchararray"/>
+      <!-- column-name MapFormatted -->
+      <column type="gchararray"/>
+      <!-- column-name isCheckButtonSensitive -->
+      <column type="gboolean"/>
     </columns>
+  </object>
+  <object class="GtkTreeModelFilter" id="treeFilterMaps">
+    <property name="child-model">treeStoreMaps</property>
   </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="can-focus">False</property>
@@ -2870,11 +2907,156 @@ Author: Dankr4d
                         <property name="can-focus">False</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">FILTER: GAMEMODE (COOP), DOWNLOADED, MISSING, MOD,
-SEARCH BY NAME ... ETC.</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkFrame">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label-xalign">0</property>
+                                <property name="shadow-type">in</property>
+                                <child>
+                                  <!-- n-columns=2 n-rows=3 -->
+                                  <object class="GtkGrid">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <child>
+                                      <object class="GtkComboBox" id="cbxDownloadsLevelsMod">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="model">listDownloadsMapsMod</property>
+                                        <property name="has-entry">True</property>
+                                        <property name="entry-text-column">1</property>
+                                        <property name="id-column">0</property>
+                                        <signal name="changed" handler="onCbxDownloadsLevelsModChanged" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">1</property>
+                                        <property name="top-attach">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">MOD:</property>
+                                        <property name="xalign">0</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">0</property>
+                                        <property name="top-attach">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="cbxDownloadsLevelsGame">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="model">listDownloadsMapsGame</property>
+                                        <property name="has-entry">True</property>
+                                        <property name="entry-text-column">1</property>
+                                        <property name="id-column">0</property>
+                                        <signal name="changed" handler="onCbxDownloadsLevelsGameChanged" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">1</property>
+                                        <property name="top-attach">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">GAME:</property>
+                                        <property name="xalign">0</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">0</property>
+                                        <property name="top-attach">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="cbxDownloadsLevelsStatus">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="model">listDownloadsMapsStatus</property>
+                                        <property name="has-entry">True</property>
+                                        <property name="entry-text-column">1</property>
+                                        <property name="id-column">0</property>
+                                        <signal name="changed" handler="onCbxDownloadsLevelsStatusChanged" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">1</property>
+                                        <property name="top-attach">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">STATUS:</property>
+                                        <property name="xalign">0</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">0</property>
+                                        <property name="top-attach">0</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">FILTER</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">SEARCH: </property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSearchEntry" id="stxtDownloadsLevelsLevel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="primary-icon-name">edit-find-symbolic</property>
+                                    <property name="primary-icon-activatable">False</property>
+                                    <property name="primary-icon-sensitive">False</property>
+                                    <signal name="search-changed" handler="onStxtDownloadsLevelsLevelSearchChanged" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -2916,6 +3098,8 @@ SEARCH BY NAME ... ETC.</property>
                                             <signal name="toggled" handler="onTrvDownloadsMapsDownloadToggled" swapped="no"/>
                                           </object>
                                           <attributes>
+                                            <attribute name="cell-background">17</attribute>
+                                            <attribute name="sensitive">21</attribute>
                                             <attribute name="active">14</attribute>
                                             <attribute name="radio">15</attribute>
                                           </attributes>
@@ -2959,7 +3143,7 @@ SEARCH BY NAME ... ETC.</property>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
                                             <attribute name="xpad">7</attribute>
-                                            <attribute name="text">2</attribute>
+                                            <attribute name="markup">20</attribute>
                                           </attributes>
                                         </child>
                                       </object>
@@ -2975,6 +3159,19 @@ SEARCH BY NAME ... ETC.</property>
                                           </object>
                                           <attributes>
                                             <attribute name="text">3</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkTreeViewColumn">
+                                        <property name="title" translatable="yes">SizeNet</property>
+                                        <child>
+                                          <object class="GtkCellRendererText">
+                                            <property name="foreground">green</property>
+                                          </object>
+                                          <attributes>
+                                            <attribute name="text">19</attribute>
                                           </attributes>
                                         </child>
                                       </object>

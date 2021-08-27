@@ -129,6 +129,7 @@ type/download.exe
 
 config/config.ini
 config/login.ini
+config/download.json
 
 log/
 !log/.gitkeep
