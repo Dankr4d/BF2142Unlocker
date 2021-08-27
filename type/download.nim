@@ -1,14 +1,4 @@
-import tables
-
 type
-  Games* = Table[string, Game]
-  Game* = object
-    mods*: seq[string]
-    maps*: Maps
-  Maps* = Table[string, seq[Map]]
-  Map* = object
-    name*: string
-    versions*: seq[Version]
   PathHash* = object
     path*, hash32*, hash64*: string
   Version* = object
@@ -16,6 +6,18 @@ type
     size*: int64
     files*: seq[PathHash]
     locations*: seq[string]
+
+  Games* = seq[Game] # TODO: Remove?
+  Game* = object
+    name*: string
+    mods*: seq[Mod]
+  Mod* = object
+    name*: string
+    versions*: seq[Version]
+    levels*: seq[Level]
+  Level* = object
+    name*: string
+    versions*: seq[Version]
 
 
 import xxhash, streams # Required for streamed hashing

@@ -1,5 +1,4 @@
-import gintro/[gtk, glib, gobject]
-
+import gintro/[gtk, glib, gobject, gdk]
 import json
 import httpclient
 import tables
@@ -8,13 +7,9 @@ import strutils
 import httpclient
 import streams
 import times
-
 import ../type/download
-
-import gintro/gdk
 import "../macro/signal" # Required to use the custom signal pragma (checks windowShown flag and returns if false)
-var windowShown: bool = true # TODO
-var ignoreEvents: bool = false
+import ../module/gintro/liststore
 
 const
   COLUMN_GAME: int = 0
@@ -54,23 +49,19 @@ type
 
 const URL: uri.Uri = parseUri("http://127.0.0.1:8080/")
 
+var windowShown: ptr bool
+var ignoreEvents: ptr bool
+
 var trvDownloadsMaps: TreeView
 var trvcDownloads: TreeViewColumn
+
+var pathBf2142Client: string
 
 
 # var thread: system.Thread[ThreadMapData]
 var threads: seq[system.Thread[ThreadMapData]]
 var channel: Channel[ChannelMapData]
 channel.open()
-
-
-proc typeTest(o: gobject.Object; s: string): bool =
-  let gt = g_type_from_name(s)
-  return g_type_check_instance_is_a(cast[ptr TypeInstance00](o.impl), gt).toBool
-proc treeStore(o: gobject.Object): TreeStore =
-  assert(typeTest(o, "GtkTreeStore"))
-  cast[TreeStore](o)
-
 
 proc threadProc(data: ThreadMapData) {.thread.} =
   var client = newHttpClient()
@@ -357,15 +348,18 @@ proc fillMaps(games: Games) =
   discard valIsRadioButton.init(g_boolean_get_type())
   discard valVersion.init(g_float_get_type())
 
-  for gameName, game in games.pairs():
-    for modName, maps in game.maps:
-      for map in maps:
-        valGame.setString(gameName)
-        valMod.setString(modName)
-        valMap.setString(map.name & " (version: " & $map.versions[^1].version & ")")
-        valSize.setString(formatFloat(map.versions[^1].size.int / 1024 / 1024, ffDecimal, 2) & " MiB")
+  for game in games:
+    for `mod` in game.mods:
+      for level in `mod`.levels:
+        if level.versions.len == 0:
+          continue
+
+        valGame.setString(game.name)
+        valMod.setString(`mod`.name)
+        valMap.setString(level.name & " (version: " & $level.versions[^1].version & ")")
+        valSize.setString(formatFloat(level.versions[^1].size.int / 1024 / 1024, ffDecimal, 2) & " MiB")
         # valUrl.setString("")
-        valUrl.setString(map.versions[^1].locations[0]) # TODO: Test
+        valUrl.setString(level.versions[^1].locations[0]) # TODO: Test
         valProgress.setFloat(10.0)
         valProgressVisible.setBoolean(true)
         valMapHorizontalPadding.setUint(0)
@@ -373,11 +367,11 @@ proc fillMaps(games: Games) =
         valSpinnerPulse.setUint(0)
         valSpinnerVisible.setBoolean(false)
         valIconVisible.setBoolean(true)
-        valSizeInBytes.setUint(map.versions[^1].size.int)
+        valSizeInBytes.setUint(level.versions[^1].size.int)
         valStatus.setInt(Status.Missing.int)
         valDownload.setBoolean(false)
         valIsRadioButton.setBoolean(false)
-        valVersion.setFloat(map.versions[^1].version)
+        valVersion.setFloat(level.versions[^1].version)
         store.append(iter)
         store.setValue(iter, COLUMN_GAME, valGame)
         store.setValue(iter, COLUMN_MOD, valMod)
@@ -398,10 +392,10 @@ proc fillMaps(games: Games) =
         store.setValue(iter, COLUMN_VERSION, valVersion)
 
         var iterParent: TreeIter = iter
-        for version in map.versions.sorted(cmpVersion, Descending):
-        # for url in map.locations:
+        for version in level.versions.sorted(cmpVersion, Descending):
+        # for url in level.locations:
           # valMap.setString("➥  " & url)
-          valMap.setString(map.name & " (version: " & $version.version & ")")
+          valMap.setString(level.name & " (version: " & $version.version & ")")
           valMod.setString("")
           valGame.setString("")
           valSize.setString("")
@@ -535,7 +529,14 @@ proc spinTest(TODO: int): bool =
   return SOURCE_CONTINUE
 
 
-proc init*(builder: Builder) =
+
+proc setBF2142ClientPath*(bf2142ClientPath: string) =
+  pathBf2142Client = bf2142ClientPath
+  discard # If maps not hashed, or new map added, hash it and store it in config file
+  discard # Check if new versions are available
+
+proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
+  windowShown = windowShownPtr; ignoreEvents = ignoreEventsPtr
   trvDownloadsMaps = builder.getTreeView("trvDownloadsMaps")
   trvcDownloads = builder.getTreeViewColumn("download")
   let TODO: int = 0

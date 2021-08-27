@@ -3306,8 +3306,6 @@ proc onApplicationActivate(application: Application) =
   dlgSettingsBF2142ClientPathDetected = builder.getDialog("dlgSettingsBF2142ClientPathDetected")
   lblSettingsBF2142ClientPathDetected = builder.getLabel("lblSettingsBF2142ClientPathDetected")
 
-  pageDownload.init(builder)
-
   ## Set version (statically) read out from nimble file
   lblVersion.label = VERSION
   #
@@ -3370,6 +3368,7 @@ proc onApplicationActivate(application: Application) =
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
   pageSettingAudio.init(builder, addr windowShown, addr ignoreEvents)
   pageSettingHud.init(builder, addr windowShown, addr ignoreEvents)
+  pageDownload.init(builder, addr windowShown, addr ignoreEvents)
   #
 
   window.setApplication(application)
