@@ -488,6 +488,14 @@ Author: Dankr4d
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="listDownloadsMapsStatusDownload">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name StatusDownload -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="listStoreHostMode">
     <columns>
       <!-- column-name ID -->
@@ -729,6 +737,12 @@ Author: Dankr4d
       <!-- column-name MapFormatted -->
       <column type="gchararray"/>
       <!-- column-name isCheckButtonSensitive -->
+      <column type="gboolean"/>
+      <!-- column-name StatusDownload -->
+      <column type="gint"/>
+      <!-- column-name GameVisible -->
+      <column type="gboolean"/>
+      <!-- column-name ModVisible -->
       <column type="gboolean"/>
     </columns>
   </object>
@@ -2918,7 +2932,7 @@ Author: Dankr4d
                                 <property name="label-xalign">0</property>
                                 <property name="shadow-type">in</property>
                                 <child>
-                                  <!-- n-columns=2 n-rows=3 -->
+                                  <!-- n-columns=2 n-rows=4 -->
                                   <object class="GtkGrid">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -2934,7 +2948,7 @@ Author: Dankr4d
                                       </object>
                                       <packing>
                                         <property name="left-attach">1</property>
-                                        <property name="top-attach">2</property>
+                                        <property name="top-attach">3</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2946,7 +2960,7 @@ Author: Dankr4d
                                       </object>
                                       <packing>
                                         <property name="left-attach">0</property>
-                                        <property name="top-attach">2</property>
+                                        <property name="top-attach">3</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2961,7 +2975,7 @@ Author: Dankr4d
                                       </object>
                                       <packing>
                                         <property name="left-attach">1</property>
-                                        <property name="top-attach">1</property>
+                                        <property name="top-attach">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2973,7 +2987,7 @@ Author: Dankr4d
                                       </object>
                                       <packing>
                                         <property name="left-attach">0</property>
-                                        <property name="top-attach">1</property>
+                                        <property name="top-attach">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -3001,6 +3015,38 @@ Author: Dankr4d
                                       <packing>
                                         <property name="left-attach">0</property>
                                         <property name="top-attach">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">STATUS DOWNLOAD:</property>
+                                        <property name="xalign">0</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">0</property>
+                                        <property name="top-attach">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="cbxDownloadsLevelsStatusDownload">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="model">listDownloadsMapsStatusDownload</property>
+                                        <property name="has-entry">True</property>
+                                        <property name="entry-text-column">1</property>
+                                        <property name="id-column">0</property>
+                                        <signal name="changed" handler="onCbxDownloadsLevelsStatusDownloadChanged" swapped="no"/>
+                                        <child internal-child="entry">
+                                          <object class="GtkEntry">
+                                            <property name="can-focus">True</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="left-attach">1</property>
+                                        <property name="top-attach">1</property>
                                       </packing>
                                     </child>
                                   </object>
@@ -3114,6 +3160,7 @@ Author: Dankr4d
                                         <child>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
+                                            <attribute name="visible">23</attribute>
                                             <attribute name="text">0</attribute>
                                           </attributes>
                                         </child>
@@ -3127,6 +3174,7 @@ Author: Dankr4d
                                         <child>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
+                                            <attribute name="visible">24</attribute>
                                             <attribute name="text">1</attribute>
                                           </attributes>
                                         </child>
@@ -3204,28 +3252,6 @@ Author: Dankr4d
                                           <attributes>
                                             <attribute name="visible">10</attribute>
                                             <attribute name="pulse">9</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Status</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">13</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkTreeViewColumn">
-                                        <property name="title" translatable="yes">Version</property>
-                                        <child>
-                                          <object class="GtkCellRendererText"/>
-                                          <attributes>
-                                            <attribute name="text">16</attribute>
                                           </attributes>
                                         </child>
                                       </object>

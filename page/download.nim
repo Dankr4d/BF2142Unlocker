@@ -36,16 +36,22 @@ const
   COLUMN_SIZE_NET: int = 19
   COLUMN_MAP_FORMATTED: int = 20
   COLUMN_IS_CHECKBUTTON_SENSITIVE: int = 21
+  COLUMN_STATUS_DOWNLOAD: int = 22
+  COLUMN_GAME_VISIBLE: int = 23
+  COLUMN_MOD_VISIBLE: int = 24
 
 type
-  Status = enum
-    Missing
+  Status {.pure.} = enum
+    None # up to date (already downloaded)
+    MissingGame
+    MissingMod
+    MissingLevel
+    Update # update available
+  StatusDownload {.pure.} = enum
+    None
     Downloading
     Downloaded
     Aborted
-    UpdateAvailable
-    GameMissing
-    ModMissing
 
 type
   ThreadMapData = object of RootObj
@@ -69,6 +75,7 @@ var ignoreEvents: ptr bool
 var trvDownloadsMaps: TreeView
 var trvcDownloads: TreeViewColumn
 var cbxStatus: ComboBox
+var cbxStatusDownload: ComboBox
 var cbxGame: ComboBox
 var cbxMod: ComboBox
 var stxtLevel: SearchEntry
@@ -100,11 +107,11 @@ proc threadDownloadProc(data: ThreadMapData) {.thread.} =
     createDir("/home/dankrad/Desktop/downloadtest/" / data.mapName / file.path.split("/")[0..^2].join($os.DirSep))
 
     # Downloading files
-    echo "Read from: ", data.source & "/" & file.path
+    # echo "Read from: ", data.source & "/" & file.path
     var response = client.get(data.source & "/" & file.path)
     # TODO: CRITICAL: Prevent changeing dir ("../" or "..\\" is not allowed)
     let path: string = "/home/dankrad/Desktop/downloadtest/" / data.mapName / file.path
-    echo "Write to: ", path
+    # echo "Write to: ", path
     var strm = newFileStream(path, fmWrite)
 
     while not response.bodyStream.atEnd():
@@ -137,19 +144,14 @@ proc threadDownloadProc(data: ThreadMapData) {.thread.} =
 
 proc getIconName(status: Status): string =
   case status:
-  of Missing:
-    # return "document-save"
-    return "media-floppy"
-  of Downloading:
-    return ""
-  of Downloaded:
+  of Status.None:
     return "gtk-apply"
-  of Aborted:
-    discard
-  of UpdateAvailable:
-    return "software-update-available"
-  of GameMissing, ModMissing:
+  of Status.MissingGame, Status.MissingMod:
     return "dialog-error"
+  of Status.MissingLevel:
+    return "media-floppy"
+  of Status.Update:
+    return "software-update-available"
 
 var isLastIterValid: bool = false
 var lastIter: TreeIter
@@ -169,8 +171,8 @@ proc onTrvDownloadsMapsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Even
     return
   treePath = treeFilterMaps.convertPathToChildPath(treePath)
 
-  var depth: int = treePath.getDepth()
-  var indices: seq[int32] = treePath.getIndices(depth)
+  # var depth: int = treePath.getDepth()
+  # var indices: seq[int32] = treePath.getIndices(depth)
 
   var valXOffset: Value
   var valWidth: Value
@@ -191,14 +193,14 @@ proc onTrvDownloadsMapsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Even
     store.getValue(lastIter, COLUMN_STATUS, valStatusLastIter)
     statusLastIter = cast[Status](valStatusLastIter.getInt())
 
-  if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt() and status in {Missing, UpdateAvailable, Downloaded}:
-    if status == Downloaded:
+  if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt() and status in {Status.MissingLevel, Status.Update, Status.None}:
+    if status == Status.None:
       valIconName.setString("user-trash") # Alternatives: edit-delete, user-trash-full
     else:
       valIconName.setString("emblem-downloads")
     store.setValue(iter, COLUMN_ICON_NAME, valIconName)
 
-    if isLastIterValid and iter != lastIter and statusLastIter in {Missing, UpdateAvailable, Downloaded}:
+    if isLastIterValid and iter != lastIter and statusLastIter in {Status.MissingLevel, Status.Update, Status.None}:
       valIconName.setString(getIconName(statusLastIter))
       store.setValue(lastIter, COLUMN_ICON_NAME, valIconName)
 
@@ -207,7 +209,7 @@ proc onTrvDownloadsMapsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Even
 
     trvDownloadsMaps.getWindow().cursor = newCursorForDisplay(trvDownloadsMaps.getDisplay(), CursorType.hand2)
   else:
-    if isLastIterValid and statusLastIter in {Missing, UpdateAvailable, Downloaded}:
+    if isLastIterValid and statusLastIter in {Status.MissingLevel, Status.Update, Status.None}:
       valIconName.setString(getIconName(statusLastIter)) #"document-save")
       store.setValue(lastIter, COLUMN_ICON_NAME, valIconName)
 
@@ -252,8 +254,8 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
     return
   treePath = treeFilterMaps.convertPathToChildPath(treePath)
 
-  var depth: int = treePath.getDepth()
-  var indices: seq[int32] = treePath.getIndices(depth)
+  # var depth: int = treePath.getDepth()
+  # var indices: seq[int32] = treePath.getIndices(depth)
 
   var valXOffset: Value
   var valWidth: Value
@@ -266,24 +268,26 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
   var valIconName: Value
   discard valIconName.init(g_string_get_type())
 
-  var valStatus, valStatusLastIter: Value
+  # var valStatus, valStatusLastIter: Value
+  var valStatus: Value
   store.getValue(iter, COLUMN_STATUS, valStatus)
   let status: Status = cast[Status](valStatus.getInt())
-  if not (status in {Missing, Aborted, UpdateAvailable}):
+  # if not (status in {Status.MissingLevel, Status.Aborted, Status.Update}):
+  if not (status in {Status.MissingLevel, Status.Update}):
     return
 
   if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt():
     var valSpinnerVisible, valIconVisible: Value
-    var valStatus: Value
+    var valStatusDownload: Value
     discard valSpinnerVisible.init(g_boolean_get_type())
     discard valIconVisible.init(g_boolean_get_type())
-    discard valStatus.init(g_int_get_type())
+    discard valStatusDownload.init(g_int_get_type())
     valSpinnerVisible.setBoolean(true)
     valIconVisible.setBoolean(false)
-    valStatus.setInt(Downloading.int)
+    valStatusDownload.setInt(StatusDownload.Downloading.int)
     store.setValue(iter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
     store.setValue(iter, COLUMN_ICON_VISIBLE, valIconVisible)
-    store.setValue(iter, COLUMN_STATUS, valStatus)
+    store.setValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
 
     var valGame, valMod, valMap, valUrl, valVersion: Value
     store.getValue(iter, COLUMN_GAME, valGame)
@@ -357,16 +361,17 @@ proc onCbxDownloadsLevelsStatusChanged(self: ptr ComboBox00) {.signal.} =
   treeFilterMaps.refilter()
   trvDownloadsMaps.expandAll() # TODO: Remove
 
+proc onCbxDownloadsLevelsStatusDownloadChanged(self: ptr ComboBox00) {.signal.} =
+  treeFilterMaps.refilter()
+  trvDownloadsMaps.expandAll() # TODO: Remove
 
 proc onCbxDownloadsLevelsGameChanged(self: ptr ComboBox00) {.signal.} =
   treeFilterMaps.refilter()
   trvDownloadsMaps.expandAll() # TODO: Remove
 
-
 proc onCbxDownloadsLevelsModChanged(self: ptr ComboBox00) {.signal.} =
   treeFilterMaps.refilter()
   trvDownloadsMaps.expandAll() # TODO: Remove
-
 
 proc onStxtDownloadsLevelsLevelSearchChanged(self: ptr SearchEntry00) {.signal.} =
   treeFilterMaps.refilter()
@@ -462,16 +467,14 @@ proc names*(mods: seq[Mod]): seq[string] =
 
 proc getBackgroundColor(status: Status): string =
   case status:
-  of Downloaded:
+  of Status.None:
     return "green"
-  of UpdateAvailable:
-    return "yellow"
-  of Missing:
-    return "orange"
-  of GameMissing, ModMissing:
+  of Status.MissingGame, Status.MissingMod:
     return "red"
-  of Downloading, Aborted:
-    discard # TODO
+  of Status.MissingLevel:
+    return "orange"
+  of Status.Update:
+    return "yellow"
 
 
 proc getSizeNet(versionServer, versionClient: Version): uint =
@@ -485,7 +488,7 @@ proc getSizeNet(versionServer, versionClient: Version): uint =
         break
 
 
-proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClient: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter)) =
+proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClientOpt: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter)) =
   var
     valGame, valMod, valMap, valSize, valUrl, valProgress: Value
     valProgressVisible, valMapHorizontalPadding, valIconName, valSpinnerPulse: Value
@@ -493,7 +496,8 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
     valSizeInBytes, valStatus, valDownload, valIsRadioButton: Value
     valVersion, valBackgroundColor: Value
     valSizeInBytesNet, valSizeNet, valMapFormatted: Value
-    valIsCheckButtonSensitive: Value
+    valIsCheckButtonSensitive, valStatusDownload: Value
+    valGameVisible, valModVisible: Value
   discard valGame.init(g_string_get_type())
   discard valMod.init(g_string_get_type())
   discard valMap.init(g_string_get_type())
@@ -516,6 +520,9 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   discard valSizeNet.init(g_string_get_type())
   discard valMapFormatted.init(g_string_get_type())
   discard valIsCheckButtonSensitive.init(g_boolean_get_type())
+  discard valStatusDownload.init(g_int_get_type())
+  discard valGameVisible.init(g_boolean_get_type())
+  discard valModVisible.init(g_boolean_get_type())
 
   var size: string
   var url: string
@@ -535,35 +542,42 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   var sizeNet: string
   var mapFormatted: string
   var isCheckButtonSensitive: bool
+  var statusDownload: int
+  var gameVisible: bool
+  var modVisible: bool
 
   if depth == 2:
     mapFormatted = "➥  "
 
   mapFormatted &= "<span weight=\"bold\" foreground=\"#008080\">" & map & "</span>" &
     " <span weight=\"bold\" foreground=\"#55ff55\">" & $versionServer.version & "</span>"
-  if status == UpdateAvailable:
-    sizeInBytesNet = getSizeNet(versionServer, get(versionClient))
-    progress = (versionServer.size.float - sizeInBytesNet.float).float / versionServer.size.float * 100f
-    if depth == 1:
-      mapFormatted &= " <span weight=\"bold\" foreground=\"#55ffff\">[installed: " & $get(versionClient).version & "]</span>"
-    progressVisible = true
-    download = true
-    isCheckButtonSensitive = true
-  elif status == Downloaded:
+  if status == Status.None:
     sizeInBytesNet = 0u
     progress = 0f
     if depth == 1:
       mapFormatted &= " <span weight=\"bold\" foreground=\"#55ffff\">[installed]</span>"
     elif depth == 2:
-      mapFormatted &= " <span weight=\"bold\" foreground=\"#55ffff\">(current)</span>"
+      if get(versionClientOpt).version == versionServer.version: # TODO: Rename versionServer to version
+        mapFormatted &= " <span weight=\"bold\" foreground=\"#55ffff\">(current)</span>"
     progressVisible = false
     download = false
     isCheckButtonSensitive = true
+  elif status == Status.Update:
+    sizeInBytesNet = getSizeNet(versionServer, get(versionClientOpt))
+    progress = (versionServer.size.float - sizeInBytesNet.float).float / versionServer.size.float * 100f
+    if depth == 1:
+      mapFormatted &= " <span weight=\"bold\" foreground=\"#55ffff\">[installed: " & $get(versionClientOpt).version & "]</span>"
+    progressVisible = true
+    download = true
+    isCheckButtonSensitive = true
   else:
-    sizeInBytesNet = versionServer.size.uint
+    if status == Status.MissingLevel and get(versionClientOpt).version > versionServer.version: # TODO: Rename versionServer to version
+      sizeInBytesNet = getSizeNet(versionServer, get(versionClientOpt))
+    else:
+      sizeInBytesNet = versionServer.size.uint
     progress = 0f
     download = false
-    if status in {GameMissing, ModMissing}:
+    if status in {Status.MissingGame, Status.MissingMod}:
       isCheckButtonSensitive = false
       progressVisible = false
     else:
@@ -572,10 +586,6 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
 
   size = formatFloat(versionServer.size.int / 1024 / 1024, ffDecimal, 2) & " MiB"
   url = versionServer.locations[0]
-  if depth == 2:
-    mapHorizontalPadding = 10u
-  else:
-    mapHorizontalPadding = 0u
   iconName = getIconName(status)
   spinnerPulse = 0u
   spinnerVisible = false
@@ -583,11 +593,18 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   sizeInBytes = versionServer.size.uint
   if depth == 1:
     isRadioButton = false
+    gameVisible = true
+    modVisible = true
+    mapHorizontalPadding = 0u
   elif depth == 2:
     isRadioButton = true
+    gameVisible = false
+    modVisible = false
+    mapHorizontalPadding = 10u
   version = versionServer.version
   backgroundColor = getBackgroundColor(status)
   sizeNet = formatFloat(sizeInBytesNet.int / 1024 / 1024, ffDecimal, 2) & " MiB"
+  statusDownload = StatusDownload.None.int
 
   valGame.setString(game)
   valMod.setString(`mod`)
@@ -612,6 +629,9 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   valIconName.setString(iconName)
   valDownload.setBoolean(download)
   valIsCheckButtonSensitive.setBoolean(isCheckButtonSensitive)
+  valStatusDownload.setInt(statusDownload)
+  valGameVisible.setBoolean(gameVisible)
+  valModVisible.setBoolean(modVisible)
 
   if isSome(iterParentOpt):
     store.append(iter, get(iterParentOpt))
@@ -640,6 +660,9 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   store.setValue(iter, COLUMN_SIZE_NET, valSizeNet)
   store.setValue(iter, COLUMN_MAP_FORMATTED, valMapFormatted)
   store.setValue(iter, COLUMN_IS_CHECKBUTTON_SENSITIVE, valIsCheckButtonSensitive)
+  store.setValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
+  store.setValue(iter, COLUMN_GAME_VISIBLE, valGameVisible)
+  store.setValue(iter, COLUMN_MOD_VISIBLE, valModVisible)
 
 
 proc fillStatus(self: ComboBox) =
@@ -647,7 +670,7 @@ proc fillStatus(self: ComboBox) =
   discard valId.init(g_string_get_type())
   discard valStatus.init(g_string_get_type())
   var iter: TreeIter
-  let store = listStore(self.getModel())
+  let store = listStore(self.model)
   store.clear()
 
   valId.setString("")
@@ -664,12 +687,34 @@ proc fillStatus(self: ComboBox) =
     store.setValue(iter, 1, valStatus)
 
 
+proc fillStatusDownload(self: ComboBox) =
+  var valId, valStatusDownload: Value
+  discard valId.init(g_string_get_type())
+  discard valStatusDownload.init(g_string_get_type())
+  var iter: TreeIter
+  let store = listStore(self.model)
+  store.clear()
+
+  valId.setString("")
+  valStatusDownload.setString("ALL")
+  store.append(iter)
+  store.setValue(iter, 0, valId)
+  store.setValue(iter, 1, valStatusDownload)
+
+  for statusDownload in StatusDownload:
+    valId.setString($statusDownload.int)
+    valStatusDownload.setString($statusDownload)
+    store.append(iter)
+    store.setValue(iter, 0, valId)
+    store.setValue(iter, 1, valStatusDownload)
+
+
 proc fillGames(self: ComboBox, games: seq[string]) =
   var valId, valGame: Value
   discard valId.init(g_string_get_type())
   discard valGame.init(g_string_get_type())
   var iter: TreeIter
-  let store = listStore(self.getModel())
+  let store = listStore(self.model)
   store.clear()
   var idx: int = 0
   for game in @["ALL"] & games:
@@ -688,7 +733,7 @@ proc fillMods(self: ComboBox, mods: seq[string]) = # TODO: REDUNDANT
   discard valId.init(g_string_get_type())
   discard valMod.init(g_string_get_type())
   var iter: TreeIter
-  let store = listStore(self.getModel())
+  let store = listStore(self.model)
   store.clear()
   var idx: int = 0
   for `mod` in @["ALL"] & mods:
@@ -709,7 +754,7 @@ proc fillMaps() =
   var games, mods: seq[string]
 
   for gameServer in gamesServer:
-    var status: Status = Missing
+    var status: Status = MissingLevel
     var gameClientOpt: Option[Game]
 
     games.add(gameServer.name)
@@ -719,25 +764,25 @@ proc fillMaps() =
         gameClientOpt = some(game)
 
     if isNone(gameClientOpt):
-      status = GameMissing  # Game not set in path or not installed
+      status = MissingGame  # Game not set in path or not installed
 
     for modServer in gameServer.mods:
       var modClientOpt: Option[Mod]
 
       mods.add(modServer.name)
 
-      if status != GameMissing:
+      if status != MissingGame:
       # if isSome(gameClientOpt):
         for `mod` in get(gameClientOpt).mods:
           if `mod`.name == modServer.name:
             modClientOpt = some(`mod`)
-            if `mod`.versions[^1].version != modServer.versions[^1].version:
-              status = UpdateAvailable
+            if `mod`.versions[0].version != modServer.versions[^1].version:
+              status = Update
 
       if isNone(modClientOpt):
-        if status != GameMissing:
+        if status != MissingGame:
           # status = Install
-          status = ModMissing
+          status = MissingMod
 
       for levelServer in modServer.levels:
         var levelClientOpt: Option[Level]
@@ -752,15 +797,15 @@ proc fillMaps() =
 
           if isSome(levelClientOpt):
             if get(levelClientOpt).versions[0].version == 0.0:
-              discard # Check level version
               for version in levelServer.versions:
                 if version.files == get(levelClientOpt).versions[0].files:
                   get(levelClientOpt).versions[0].version = version.version
-                  status = Downloaded
-            if get(levelClientOpt).versions[0].version < levelServer.versions[^1].version:
-              status = UpdateAvailable
+            if get(levelClientOpt).versions[0].version == levelServer.versions[^1].version:
+              status = Status.None
+            else:
+              status = Status.Update
           else:
-            status = Missing
+            status = Status.MissingLevel
 
         ########################################################################
 
@@ -775,7 +820,9 @@ proc fillMaps() =
         for version in levelServer.versions.sorted(cmpVersion, Descending):
           if isSome(levelClientOpt):
             if get(levelClientOpt).versions[0].version == version.version:
-              status = Downloaded
+              status = Status.None
+            else:
+              status = Status.MissingLevel
           # store.addMap(iter, status, "", "", levelServer.name, version, versionClientOpt, 2, some(iterParent))
           store.addMap(iter, status, gameServer.name, modServer.name, levelServer.name, version, versionClientOpt, 2, some(iterParent))
 
@@ -783,6 +830,86 @@ proc fillMaps() =
   cbxGame.active = 0
   cbxMod.fillMods(mods)
   cbxMod.active = 0
+
+
+proc getLevelVersionServer(iter: var TreeIter): Version =
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`, level: string
+  var version: float
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  store.getValue(iter, COLUMN_VERSION, valVersion)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+  level = valLevel.getString()
+  version = valVersion.getFloat()
+
+  for gameServer in gamesServer:
+    if gameServer.name != game:
+      continue
+    for modServer in gameServer.mods:
+      if modServer.name != `mod`:
+        continue
+      for levelServer in modServer.levels:
+        if levelServer.name != level:
+          continue
+        for versionServer in levelServer.versions:
+          if versionServer.version != version:
+            continue
+          return versionServer
+
+proc updateLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`, level: string
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+  level = valLevel.getString()
+
+  for gameClient in gamesClient.mitems:
+    if gameClient.name != game:
+      continue
+    for modClient in gameClient.mods.mitems:
+      if modClient.name != `mod`:
+        continue
+      for levelClient in modClient.levels.mitems:
+        if levelClient.name != level:
+          continue
+        levelClient.versions[0] = version
+        return
+
+proc addLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`: string
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+
+  for gameClient in gamesClient.mitems:
+    if gameClient.name != game:
+      continue
+    for modClient in gameClient.mods.mitems:
+      if modClient.name != `mod`:
+        continue
+      var level: Level
+      level.name = valLevel.getString()
+      level.versions.add(version)
+      modClient.levels.add(level)
+
+
+proc saveGamesClient() =
+  writeFile("config" / "download.json",  $(%*gamesClient))
 
 
 proc spinTest(TODO: int): bool =
@@ -810,24 +937,37 @@ proc spinTest(TODO: int): bool =
         map.`mod` == valMod.getString() and
         map.mapName == valMap.getString()
       ):
-        echo "map.bytesSkipped: ", map.bytesSkipped
         valProgress.setFloat((map.bytesSkipped + map.bytesDownloaded).float / valSizeInBytes.getUint().float * 100f)
         store.setValue(iter, COLUMN_PROGRESS, valProgress)
         if valProgress.getFloat() == 100.0:
           var valSpinnerVisible, valIconVisible: Value
-          var valIconName, valStatus: Value
+          var valIconName, valStatus, valStatusDownload, valProgressVisible: Value
           discard valSpinnerVisible.init(g_boolean_get_type())
           discard valIconVisible.init(g_boolean_get_type())
           discard valIconName.init(g_string_get_type())
-          discard valStatus.init(g_int_get_type())
+          # discard valStatus.init(g_int_get_type())
+          discard valStatusDownload.init(g_int_get_type())
+          discard valProgressVisible.init(g_boolean_get_type())
+
+          store.getValue(iter, COLUMN_STATUS, valStatus)
+          if Status(valStatus.getInt()) == Status.MissingLevel:
+            iter.addLevelClient(iter.getLevelVersionServer())
+          else: # Status.Update
+            iter.updateLevelClient(iter.getLevelVersionServer())
+          saveGamesClient()
+
           valSpinnerVisible.setBoolean(false)
           valIconVisible.setBoolean(true)
-          valStatus.setInt(Downloaded.int)
-          valIconName.setString(getIconName(Downloaded))
+          valStatus.setInt(Status.None.int)
+          valStatusDownload.setInt(StatusDownload.Downloaded.int)
+          valIconName.setString(getIconName(Status.None))
+          valProgressVisible.setBoolean(false)
           store.setValue(iter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
           store.setValue(iter, COLUMN_ICON_VISIBLE, valIconVisible)
           store.setValue(iter, COLUMN_ICON_NAME, valIconName)
           store.setValue(iter, COLUMN_STATUS, valStatus)
+          store.setValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
+          store.setValue(iter, COLUMN_PROGRESS_VISIBLE, valProgressVisible)
 
     var valSpinnerPulse, valSpinnerVisible: Value
     store.getValue(iter, COLUMN_SPINNER_PULSE, valSpinnerPulse)
@@ -847,25 +987,32 @@ proc setBF2142ClientPath*(bf2142ClientPath: string) =
     gamesClient = to(parseFile("config" / "download.json"), Games)
   else:
     gamesClient = getGamesClient(bf2142ClientPath)
-    writeFile("config" / "download.json",  $(%*gamesClient))
+    saveGamesClient()
   pathBf2142Client = bf2142ClientPath
   gamesServer = queryMaps()
   fillMaps()
   cbxStatus.fillStatus()
   cbxStatus.active = 0
+  cbxStatusDownload.fillStatusDownload()
+  cbxStatusDownload.active = 0
   trvDownloadsMaps.expandAll() # TODO: Remove
 
 proc trvLevelsFilter(model: ptr TreeModel00; iter: TreeIter; data: pointer): gboolean {.cdecl.} =
   let store: TreeStore = treeStore(treeFilterMaps.model)
   let depth: int = store.getPath(iter).getDepth()
-  var valStatus, valGame, valMod, valLevel: Value
+  var valStatus, valStatusDownload, valGame, valMod, valLevel: Value
   store.getValue(iter, COLUMN_STATUS, valStatus)
+  store.getValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
   store.getValue(iter, COLUMN_GAME, valGame)
   store.getValue(iter, COLUMN_MOD, valMod)
   store.getValue(iter, COLUMN_MAP, valLevel)
 
   if cbxStatus.activeId != "":
     if Status(valStatus.getInt()) != Status(parseInt(cbxStatus.activeId)):
+      return false.gboolean
+
+  if cbxStatusDownload.activeId != "":
+    if Status(valStatusDownload.getInt()) != Status(parseInt(cbxStatusDownload.activeId)):
       return false.gboolean
 
   if cbxGame.activeId != "":
@@ -888,6 +1035,7 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   trvDownloadsMaps = builder.getTreeView("trvDownloadsMaps")
   trvcDownloads = builder.getTreeViewColumn("download")
   cbxStatus = builder.getComboBox("cbxDownloadsLevelsStatus")
+  cbxStatusDownload = builder.getComboBox("cbxDownloadsLevelsStatusDownload")
   cbxGame = builder.getComboBox("cbxDownloadsLevelsGame")
   cbxMod = builder.getComboBox("cbxDownloadsLevelsMod")
   stxtLevel = builder.getSearchEntry("stxtDownloadsLevelsLevel")
