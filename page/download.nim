@@ -47,6 +47,7 @@ type
     MissingMod
     MissingLevel
     Update # update available
+    # TODO: Downgrade
   StatusDownload {.pure.} = enum
     None
     Downloading
@@ -54,16 +55,16 @@ type
     Aborted
 
 type
-  ThreadMapData = object of RootObj
-    game: string
-    `mod`: string
-    mapName: string
+  ThreadData = object of RootObj
+    gameName: string
+    modName: string
+    levelName: string
     source: string
     files: seq[PathHashSize]
     bytesSkipped: int64 # Size of files which aren't downloaded (already exists on client)
     # TODO: Remove sizeSkipped and add a column with (bytesToDownload)
     size: int64
-  ChannelMapData = object of ThreadMapData
+  ChannelData = object of ThreadData
     bytesDownloaded: int64
 
 
@@ -86,12 +87,11 @@ var gamesServer: Games
 
 var pathBf2142Client: string
 
-# var thread: system.Thread[ThreadMapData]
-var threads: seq[system.Thread[ThreadMapData]]
-var channel: Channel[ChannelMapData]
+var threads: seq[system.Thread[ThreadData]]
+var channel: Channel[ChannelData]
 channel.open()
 
-proc threadDownloadProc(data: ThreadMapData) {.thread.} =
+proc threadDownloadProc(data: ThreadData) {.thread.} =
   var client = newHttpClient()
   let len: uint = 32 #1024 #* 1024
   var buffer: string = newString(len)
@@ -100,18 +100,16 @@ proc threadDownloadProc(data: ThreadMapData) {.thread.} =
   var lastEpochTime, currentEpochTime: float = epochTime()
 
   # Creating levle dir, just in case if info is not in download/files list
-  discard existsOrCreateDir("/home/dankrad/Desktop/downloadtest/" / data.mapName)
+  discard existsOrCreateDir("/home/dankrad/Desktop/downloadtest/" / data.levelName)
 
   for file in data.files:
     # Creating sub dirs
-    createDir("/home/dankrad/Desktop/downloadtest/" / data.mapName / file.path.split("/")[0..^2].join($os.DirSep))
+    createDir("/home/dankrad/Desktop/downloadtest/" / data.levelName / file.path.split("/")[0..^2].join($os.DirSep))
 
     # Downloading files
-    # echo "Read from: ", data.source & "/" & file.path
     var response = client.get(data.source & "/" & file.path)
     # TODO: CRITICAL: Prevent changeing dir ("../" or "..\\" is not allowed)
-    let path: string = "/home/dankrad/Desktop/downloadtest/" / data.mapName / file.path
-    # echo "Write to: ", path
+    let path: string = "/home/dankrad/Desktop/downloadtest/" / data.levelName / file.path
     var strm = newFileStream(path, fmWrite)
 
     while not response.bodyStream.atEnd():
@@ -130,14 +128,14 @@ proc threadDownloadProc(data: ThreadMapData) {.thread.} =
         response.bodyStream.atEnd()
       ):
         lastEpochTime = currentEpochTime
-        var threadData: ChannelMapData
-        threadData.game = data.game
-        threadData.`mod` = data.`mod`
-        threadData.mapName = data.mapName
-        threadData.source = data.source
-        threadData.bytesDownloaded = totalReceived
-        threadData.bytesSkipped = data.bytesSkipped
-        channel.send(threadData)
+        var channelData: ChannelData
+        channelData.gameName = data.gameName
+        channelData.modName = data.modName
+        channelData.levelName = data.levelName
+        channelData.source = data.source
+        channelData.bytesDownloaded = totalReceived
+        channelData.bytesSkipped = data.bytesSkipped
+        channel.send(channelData)
     if not isNil(strm):
       strm.close()
 
@@ -152,6 +150,119 @@ proc getIconName(status: Status): string =
     return "media-floppy"
   of Status.Update:
     return "software-update-available"
+
+
+
+proc getLevelVersionServer(iter: var TreeIter): Version =
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`, level: string
+  var version: float
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  store.getValue(iter, COLUMN_VERSION, valVersion)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+  level = valLevel.getString()
+  version = valVersion.getFloat()
+
+  for gameServer in gamesServer:
+    if gameServer.name != game:
+      continue
+    for modServer in gameServer.mods:
+      if modServer.name != `mod`:
+        continue
+      for levelServer in modServer.levels:
+        if levelServer.name != level:
+          continue
+        for versionServer in levelServer.versions:
+          if versionServer.version != version:
+            continue
+          return versionServer
+
+proc getLevelVersionServer(gameName, modName, levelName: string, versionFl: float): Version =
+  for game in gamesServer:
+    if game.name != gameName:
+      continue
+    for `mod` in game.mods:
+      if `mod`.name != modName:
+        continue
+      for level in `mod`.levels:
+        if level.name != levelName:
+          continue
+        for version in level.versions:
+          if version.version != versionFl:
+            continue
+          return version
+
+proc getLevelVersionClient(game, `mod`, level: string): Option[Version] =
+  for gameClient in gamesClient:
+    if gameClient.name != game:
+      continue
+    for modClient in gameClient.mods:
+      if modClient.name != `mod`:
+        continue
+      for levelClient in modClient.levels:
+        if levelClient.name != level:
+          continue
+        return some(levelClient.versions[0])
+  return none(Version)
+
+
+proc updateLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`, level: string
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+  level = valLevel.getString()
+
+  for gameClient in gamesClient.mitems:
+    if gameClient.name != game:
+      continue
+    for modClient in gameClient.mods.mitems:
+      if modClient.name != `mod`:
+        continue
+      for levelClient in modClient.levels.mitems:
+        if levelClient.name != level:
+          continue
+        levelClient.versions[0] = version
+        return
+
+proc addLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
+  let store: TreeStore = treeStore(treeFilterMaps.model)
+  var valGame, valMod, valLevel, valVersion: Value
+  var game, `mod`: string
+
+  store.getValue(iter, COLUMN_GAME, valGame)
+  store.getValue(iter, COLUMN_MOD, valMod)
+  store.getValue(iter, COLUMN_MAP, valLevel)
+  game = valGame.getString()
+  `mod` = valMod.getString()
+
+  for gameClient in gamesClient.mitems:
+    if gameClient.name != game:
+      continue
+    for modClient in gameClient.mods.mitems:
+      if modClient.name != `mod`:
+        continue
+      var level: Level
+      level.name = valLevel.getString()
+      level.versions.add(version)
+      modClient.levels.add(level)
+
+
+proc saveGamesClient() =
+  writeFile("config" / "download.json",  $(%*gamesClient))
+
+
+################################ EVENTS
 
 var isLastIterValid: bool = false
 var lastIter: TreeIter
@@ -268,17 +379,18 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
   var valIconName: Value
   discard valIconName.init(g_string_get_type())
 
-  # var valStatus, valStatusLastIter: Value
-  var valStatus: Value
+  var valStatus, valStatusDownload: Value
   store.getValue(iter, COLUMN_STATUS, valStatus)
+  store.getValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
   let status: Status = cast[Status](valStatus.getInt())
-  # if not (status in {Status.MissingLevel, Status.Aborted, Status.Update}):
+  let statusDownload: StatusDownload = cast[StatusDownload](valStatusDownload.getInt())
   if not (status in {Status.MissingLevel, Status.Update}):
+    return
+  if statusDownload == Downloading:
     return
 
   if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt():
-    var valSpinnerVisible, valIconVisible: Value
-    var valStatusDownload: Value
+    var valSpinnerVisible, valIconVisible, valStatusDownload: Value
     discard valSpinnerVisible.init(g_boolean_get_type())
     discard valIconVisible.init(g_boolean_get_type())
     discard valStatusDownload.init(g_int_get_type())
@@ -296,43 +408,14 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
     store.getValue(iter, COLUMN_URL, valUrl)
     store.getValue(iter, COLUMN_VERSION, valVersion)
 
-    var data: ThreadMapData
-    data.game = valGame.getString()
-    data.`mod` = valMod.getString()
-    data.mapName = valMap.getString()
+    var data: ThreadData
+    data.gameName = valGame.getString()
+    data.modName = valMod.getString()
+    data.levelName = valMap.getString()
     data.source = valUrl.getString()
-    # data.version
-    # var level: Level
-    var versionServer: Version
-    for game in gamesServer:
-      if game.name != data.game:
-        continue
-      for `mod` in game.mods:
-        if `mod`.name != data.`mod`:
-          continue
-        for level in `mod`.levels:
-          if level.name != data.mapName:
-            continue
-          for version in level.versions:
-            if version.version != valVersion.getFloat():
-              continue
-            versionServer = version
-      #       break
-      #     break
-      #   break
-      # break
 
-    var versionClientOpt: Option[Version]
-    for game in gamesClient:
-      if game.name != data.game:
-        continue
-      for `mod` in game.mods:
-        if `mod`.name != data.`mod`:
-          continue
-        for level in `mod`.levels:
-          if level.name != data.mapName:
-            continue
-          versionClientOpt = some(level.versions[0])
+    let versionServer: Version = getLevelVersionServer(data.gameName, data.modName, data.levelName, valVersion.getFloat())
+    var versionClientOpt: Option[Version] = getLevelVersionClient(data.gameName, data.modName, data.levelName)
 
     for fileServer in versionServer.files:
       var hasSameFileHash: bool = false
@@ -348,9 +431,8 @@ proc onTrvDownloadsMapsButtonReleaseEvent(self: ptr TreeView00, event00: ptr Eve
         data.files.add(fileServer)
       else:
         data.bytesSkipped += fileServer.size
-        discard # TODO: Write to log output
-        echo "SAME FILE HASH, SKIPPING!"
-    var thread: system.Thread[ThreadMapData]
+
+    var thread: system.Thread[ThreadData]
     threads.add(thread)
     threads[threads.high].createThread(threadDownloadProc, data)
     return EVENT_STOP
@@ -488,7 +570,7 @@ proc getSizeNet(versionServer, versionClient: Version): uint =
         break
 
 
-proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClientOpt: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter)) =
+proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClientOpt: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter), update: bool = false) =
   var
     valGame, valMod, valMap, valSize, valUrl, valProgress: Value
     valProgressVisible, valMapHorizontalPadding, valIconName, valSpinnerPulse: Value
@@ -571,7 +653,7 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
     download = true
     isCheckButtonSensitive = true
   else:
-    if status == Status.MissingLevel and get(versionClientOpt).version > versionServer.version: # TODO: Rename versionServer to version
+    if status == Status.MissingLevel and  isSome(versionClientOpt) and get(versionClientOpt).version > versionServer.version: # TODO: Rename versionServer to version
       sizeInBytesNet = getSizeNet(versionServer, get(versionClientOpt))
     else:
       sizeInBytesNet = versionServer.size.uint
@@ -633,10 +715,11 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   valGameVisible.setBoolean(gameVisible)
   valModVisible.setBoolean(modVisible)
 
-  if isSome(iterParentOpt):
-    store.append(iter, get(iterParentOpt))
-  else:
-    store.append(iter)
+  if not update:
+    if isSome(iterParentOpt):
+      store.append(iter, get(iterParentOpt))
+    else:
+      store.append(iter)
 
   store.setValue(iter, COLUMN_GAME, valGame)
   store.setValue(iter, COLUMN_MOD, valMod)
@@ -663,6 +746,12 @@ proc addMap(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, m
   store.setValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
   store.setValue(iter, COLUMN_GAME_VISIBLE, valGameVisible)
   store.setValue(iter, COLUMN_MOD_VISIBLE, valModVisible)
+
+proc addLevel(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClientOpt: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter)) =
+  addUpdateLevel(store, iter, status, game, `mod`, map, versionServer, versionClientOpt, depth, iterParentOpt, false)
+
+proc updateLevel(store: TreeStore, iter: var TreeIter, status: Status, game, `mod`, map: string, versionServer: Version, versionClientOpt: Option[Version], depth: int, iterParentOpt: Option[TreeIter] = none(TreeIter)) =
+  addUpdateLevel(store, iter, status, game, `mod`, map, versionServer, versionClientOpt, depth, iterParentOpt, true)
 
 
 proc fillStatus(self: ComboBox) =
@@ -813,7 +902,7 @@ proc fillMaps() =
         var versionClientOpt: Option[Version]
         if isSome(levelClientOpt):
           versionClientOpt = some(get(levelClientOpt).versions[0])
-        store.addMap(iter, status, gameServer.name, modServer.name, levelServer.name, levelServer.versions[^1], versionClientOpt, 1)
+        store.addLevel(iter, status, gameServer.name, modServer.name, levelServer.name, levelServer.versions[^1], versionClientOpt, 1)
 
         # Available versions (tree depth 2)
         var iterParent: TreeIter = iter
@@ -821,10 +910,12 @@ proc fillMaps() =
           if isSome(levelClientOpt):
             if get(levelClientOpt).versions[0].version == version.version:
               status = Status.None
+            elif get(levelClientOpt).versions[0].version < version.version:
+              status = Status.Update
             else:
               status = Status.MissingLevel
-          # store.addMap(iter, status, "", "", levelServer.name, version, versionClientOpt, 2, some(iterParent))
-          store.addMap(iter, status, gameServer.name, modServer.name, levelServer.name, version, versionClientOpt, 2, some(iterParent))
+          # store.addLevel(iter, status, "", "", levelServer.name, version, versionClientOpt, 2, some(iterParent))
+          store.addLevel(iter, status, gameServer.name, modServer.name, levelServer.name, version, versionClientOpt, 2, some(iterParent))
 
   cbxGame.fillGames(games)
   cbxGame.active = 0
@@ -832,96 +923,19 @@ proc fillMaps() =
   cbxMod.active = 0
 
 
-proc getLevelVersionServer(iter: var TreeIter): Version =
-  let store: TreeStore = treeStore(treeFilterMaps.model)
-  var valGame, valMod, valLevel, valVersion: Value
-  var game, `mod`, level: string
-  var version: float
-
-  store.getValue(iter, COLUMN_GAME, valGame)
-  store.getValue(iter, COLUMN_MOD, valMod)
-  store.getValue(iter, COLUMN_MAP, valLevel)
-  store.getValue(iter, COLUMN_VERSION, valVersion)
-  game = valGame.getString()
-  `mod` = valMod.getString()
-  level = valLevel.getString()
-  version = valVersion.getFloat()
-
-  for gameServer in gamesServer:
-    if gameServer.name != game:
-      continue
-    for modServer in gameServer.mods:
-      if modServer.name != `mod`:
-        continue
-      for levelServer in modServer.levels:
-        if levelServer.name != level:
-          continue
-        for versionServer in levelServer.versions:
-          if versionServer.version != version:
-            continue
-          return versionServer
-
-proc updateLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
-  let store: TreeStore = treeStore(treeFilterMaps.model)
-  var valGame, valMod, valLevel, valVersion: Value
-  var game, `mod`, level: string
-
-  store.getValue(iter, COLUMN_GAME, valGame)
-  store.getValue(iter, COLUMN_MOD, valMod)
-  store.getValue(iter, COLUMN_MAP, valLevel)
-  game = valGame.getString()
-  `mod` = valMod.getString()
-  level = valLevel.getString()
-
-  for gameClient in gamesClient.mitems:
-    if gameClient.name != game:
-      continue
-    for modClient in gameClient.mods.mitems:
-      if modClient.name != `mod`:
-        continue
-      for levelClient in modClient.levels.mitems:
-        if levelClient.name != level:
-          continue
-        levelClient.versions[0] = version
-        return
-
-proc addLevelClient(iter: var TreeIter, version: Version) = # TODO: Pass game, mod, level?
-  let store: TreeStore = treeStore(treeFilterMaps.model)
-  var valGame, valMod, valLevel, valVersion: Value
-  var game, `mod`: string
-
-  store.getValue(iter, COLUMN_GAME, valGame)
-  store.getValue(iter, COLUMN_MOD, valMod)
-  store.getValue(iter, COLUMN_MAP, valLevel)
-  game = valGame.getString()
-  `mod` = valMod.getString()
-
-  for gameClient in gamesClient.mitems:
-    if gameClient.name != game:
-      continue
-    for modClient in gameClient.mods.mitems:
-      if modClient.name != `mod`:
-        continue
-      var level: Level
-      level.name = valLevel.getString()
-      level.versions.add(version)
-      modClient.levels.add(level)
-
-
-proc saveGamesClient() =
-  writeFile("config" / "download.json",  $(%*gamesClient))
-
-
-proc spinTest(TODO: int): bool =
-  var maps: tables.Table[string, ChannelMapData] = initTable[string, ChannelMapData]()
+proc spinTest(TODO: int): bool = # TODO: start timeout only when downloading something and remove when finished
+  var channelDataTbl: tables.Table[string, ChannelData] = initTable[string, ChannelData]()
   while channel.peek() > 0:
-    let channelData: ChannelMapData = channel.recv()
-    maps[channelData.game & channelData.`mod` & channelData.mapName] = channelData
+    let channelData: ChannelData = channel.recv()
+    channelDataTbl[channelData.gameName & channelData.modName & channelData.levelName] = channelData
 
   let store: TreeStore = treeStore(treeFilterMaps.model)
   var iter: TreeIter
+
   var whileCond: bool = store.getIterFirst(iter)
   while whileCond:
+    var path: TreePath = store.getPath(iter)
+    var depth: int = path.getDepth()
     var valGame, valMod, valMap, valUrl, valProgress: Value
     var valSizeInBytes: Value
     store.getValue(iter, COLUMN_GAME, valGame)
@@ -931,43 +945,43 @@ proc spinTest(TODO: int): bool =
     store.getValue(iter, COLUMN_PROGRESS, valProgress)
     store.getValue(iter, COLUMN_SIZE_IN_BYTES, valSizeInBytes)
 
-    for map in maps.values():
+    for data in channelDataTbl.values():
       if (
-        map.game == valGame.getString() and
-        map.`mod` == valMod.getString() and
-        map.mapName == valMap.getString()
+        data.gameName == valGame.getString() and
+        data.modName == valMod.getString() and
+        data.levelName == valMap.getString()
       ):
-        valProgress.setFloat((map.bytesSkipped + map.bytesDownloaded).float / valSizeInBytes.getUint().float * 100f)
+        valProgress.setFloat((data.bytesSkipped + data.bytesDownloaded).float / valSizeInBytes.getUint().float * 100f)
         store.setValue(iter, COLUMN_PROGRESS, valProgress)
         if valProgress.getFloat() == 100.0:
-          var valSpinnerVisible, valIconVisible: Value
-          var valIconName, valStatus, valStatusDownload, valProgressVisible: Value
-          discard valSpinnerVisible.init(g_boolean_get_type())
-          discard valIconVisible.init(g_boolean_get_type())
-          discard valIconName.init(g_string_get_type())
-          # discard valStatus.init(g_int_get_type())
-          discard valStatusDownload.init(g_int_get_type())
-          discard valProgressVisible.init(g_boolean_get_type())
+          var valStatus: Value
 
+          var versionServer: Version = iter.getLevelVersionServer()
           store.getValue(iter, COLUMN_STATUS, valStatus)
           if Status(valStatus.getInt()) == Status.MissingLevel:
-            iter.addLevelClient(iter.getLevelVersionServer())
+            iter.addLevelClient(versionServer)
           else: # Status.Update
-            iter.updateLevelClient(iter.getLevelVersionServer())
+            iter.updateLevelClient(versionServer)
           saveGamesClient()
 
-          valSpinnerVisible.setBoolean(false)
-          valIconVisible.setBoolean(true)
-          valStatus.setInt(Status.None.int)
-          valStatusDownload.setInt(StatusDownload.Downloaded.int)
-          valIconName.setString(getIconName(Status.None))
-          valProgressVisible.setBoolean(false)
-          store.setValue(iter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
-          store.setValue(iter, COLUMN_ICON_VISIBLE, valIconVisible)
-          store.setValue(iter, COLUMN_ICON_NAME, valIconName)
-          store.setValue(iter, COLUMN_STATUS, valStatus)
-          store.setValue(iter, COLUMN_STATUS_DOWNLOAD, valStatusDownload)
-          store.setValue(iter, COLUMN_PROGRESS_VISIBLE, valProgressVisible)
+          store.updateLevel(iter, Status.None, data.gameName, data.modName, data.levelName, versionServer, some(versionServer), 1, none(TreeIter))
+
+          var childIter: TreeIter
+          if depth == 1:
+            echo "IN DEPTH 1"
+            var whileCond: bool = store.iterChildren(childIter, iter)
+            while whileCond:
+              var versionServer: Version = childIter.getLevelVersionServer()
+              var versionClient: Version = get(getLevelVersionClient(data.gameName, data.modName, data.levelName))
+              var status: Status
+              if versionServer.version == versionClient.version:
+                status = Status.None
+              else:
+                status = Status.MissingLevel
+              store.updateLevel(childIter, status, data.gameName, data.modName, data.levelName, versionServer, some(versionClient), 2, none(TreeIter))
+              whileCond = store.iterNext(childIter)
+          elif depth == 2:
+            discard # ITER PARENT
 
     var valSpinnerPulse, valSpinnerVisible: Value
     store.getValue(iter, COLUMN_SPINNER_PULSE, valSpinnerPulse)
