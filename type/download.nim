@@ -129,6 +129,7 @@ proc getGamesClient*(path: string): Games =
 
     var levelDirName: string = "Levels"
     when defined(linux):
+      # TODO: Check if levelDirName exists, before itering
       for modDirTpl in walkDir(path / "mods" / modTpl.path, true):
         if modDirTpl.kind != pcDir:
           continue

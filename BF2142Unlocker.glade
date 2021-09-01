@@ -488,11 +488,11 @@ Author: Dankr4d
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="listDownloadsMapsStatusDownload">
+  <object class="GtkListStore" id="listDownloadsMapsStatusAction">
     <columns>
       <!-- column-name ID -->
       <column type="gchararray"/>
-      <!-- column-name StatusDownload -->
+      <!-- column-name StatusAction -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -738,7 +738,7 @@ Author: Dankr4d
       <column type="gchararray"/>
       <!-- column-name isCheckButtonSensitive -->
       <column type="gboolean"/>
-      <!-- column-name StatusDownload -->
+      <!-- column-name StatusAction -->
       <column type="gint"/>
       <!-- column-name GameVisible -->
       <column type="gboolean"/>
@@ -2945,6 +2945,11 @@ Author: Dankr4d
                                         <property name="entry-text-column">1</property>
                                         <property name="id-column">0</property>
                                         <signal name="changed" handler="onCbxDownloadsLevelsModChanged" swapped="no"/>
+                                        <child internal-child="entry">
+                                          <object class="GtkEntry">
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="left-attach">1</property>
@@ -2972,6 +2977,11 @@ Author: Dankr4d
                                         <property name="entry-text-column">1</property>
                                         <property name="id-column">0</property>
                                         <signal name="changed" handler="onCbxDownloadsLevelsGameChanged" swapped="no"/>
+                                        <child internal-child="entry">
+                                          <object class="GtkEntry">
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="left-attach">1</property>
@@ -2999,6 +3009,11 @@ Author: Dankr4d
                                         <property name="entry-text-column">1</property>
                                         <property name="id-column">0</property>
                                         <signal name="changed" handler="onCbxDownloadsLevelsStatusChanged" swapped="no"/>
+                                        <child internal-child="entry">
+                                          <object class="GtkEntry">
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="left-attach">1</property>
@@ -3021,7 +3036,7 @@ Author: Dankr4d
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">STATUS DOWNLOAD:</property>
+                                        <property name="label" translatable="yes">STATUS ACTION:</property>
                                         <property name="xalign">0</property>
                                       </object>
                                       <packing>
@@ -3030,14 +3045,14 @@ Author: Dankr4d
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkComboBox" id="cbxDownloadsLevelsStatusDownload">
+                                      <object class="GtkComboBox" id="cbxDownloadsLevelsStatusAction">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="model">listDownloadsMapsStatusDownload</property>
+                                        <property name="model">listDownloadsMapsStatusAction</property>
                                         <property name="has-entry">True</property>
                                         <property name="entry-text-column">1</property>
                                         <property name="id-column">0</property>
-                                        <signal name="changed" handler="onCbxDownloadsLevelsStatusDownloadChanged" swapped="no"/>
+                                        <signal name="changed" handler="onCbxDownloadsLevelsStatusActionChanged" swapped="no"/>
                                         <child internal-child="entry">
                                           <object class="GtkEntry">
                                             <property name="can-focus">True</property>

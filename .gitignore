@@ -67,6 +67,9 @@ module/linux/registry.exe
 module/gintro/liststore
 module/gintro/liststore.exe
 
+module/gintro/treestore
+module/gintro/treestore.exe
+
 module/gintro/infodialog
 module/gintro/infodialog.exe
 
