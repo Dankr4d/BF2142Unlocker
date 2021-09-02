@@ -419,7 +419,7 @@ proc onTrvDownloadsLevelsLeaveNotifyEvent(self: ptr TreeView00, event00: ptr Eve
     store.setValue(lastIter, COLUMN_ICON_NAME, valIconName)
   return EVENT_PROPAGATE
 
-proc setStatusAction(store: TreeStore, iter: var TreeIter, statusAction: StatusAction) =
+proc setStatusAction(store: TreeStore, iter: TreeIter, statusAction: StatusAction) =
   var valSpinnerVisible, valIconVisible, valStatusAction: Value
   discard valSpinnerVisible.init(g_boolean_get_type())
   discard valIconVisible.init(g_boolean_get_type())
@@ -447,30 +447,30 @@ proc setStatusAction(store: TreeStore, iter: var TreeIter, statusAction: StatusA
   levelName = valLevel.getString()
   versionFl = valVersion.getFloat()
 
-  var depth: int = store.getPath(iter).getDepth()
+  let depth: int = store.getPath(iter).getDepth()
 
+  var iterTmp: TreeIter
   if depth == 1:
-    var childIter: TreeIter
-    var whileCond: bool = store.iterChildren(childIter, iter)
-    while whileCond:
-      var valGame, valMod, valLevel, valVersion: Value
-      store.getValue(childIter, COLUMN_GAME, valGame)
-      store.getValue(childIter, COLUMN_MOD, valMod)
-      store.getValue(childIter, COLUMN_LEVEL, valLevel)
-      store.getValue(childIter, COLUMN_VERSION, valVersion)
-      if gameName != valGame.getString() or modName != valMod.getString() or levelName != valLevel.getString() or versionFl != valVersion.getFloat():
-        whileCond = store.iterNext(childIter)
-        continue
-      store.setValue(childIter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
-      store.setValue(childIter, COLUMN_ICON_VISIBLE, valIconVisible)
-      store.setValue(childIter, COLUMN_STATUS_ACTION, valStatusAction)
-      whileCond = store.iterNext(childIter)
+    iterTmp = iter
   elif depth == 2:
-    var parentIter: TreeIter
-    if store.iterParent(parentIter, iter):
-      store.setValue(parentIter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
-      store.setValue(parentIter, COLUMN_ICON_VISIBLE, valIconVisible)
-      store.setValue(parentIter, COLUMN_STATUS_ACTION, valStatusAction)
+    var iterParent: TreeIter
+    discard store.iterParent(iterTmp, iter)
+
+  for iter in store.iterRec(iterTmp):
+    let depth: int = store.getPath(iter).getDepth()
+
+    var valGame, valMod, valLevel, valVersion: Value
+    store.getValue(iter, COLUMN_GAME, valGame)
+    store.getValue(iter, COLUMN_MOD, valMod)
+    store.getValue(iter, COLUMN_LEVEL, valLevel)
+    store.getValue(iter, COLUMN_VERSION, valVersion)
+    if gameName != valGame.getString() or modName != valMod.getString() or levelName != valLevel.getString():
+      continue
+    if depth == 2 and versionFl != valVersion.getFloat():
+      continue
+    store.setValue(iter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
+    store.setValue(iter, COLUMN_ICON_VISIBLE, valIconVisible)
+    store.setValue(iter, COLUMN_STATUS_ACTION, valStatusAction)
 
 
 proc onTrvDownloadsLevelsButtonReleaseEvent(self: ptr TreeView00, event00: ptr EventButton00): bool {.signal.} =
@@ -509,7 +509,10 @@ proc onTrvDownloadsLevelsButtonReleaseEvent(self: ptr TreeView00, event00: ptr E
   store.getValue(iter, COLUMN_STATUS, valStatus)
   store.getValue(iter, COLUMN_STATUS_ACTION, valStatusAction)
   let status: Status = cast[Status](valStatus.getInt())
+  let statusAction: StatusAction = cast[StatusAction](valStatusAction.getInt())
   if not (status in {Status.None, Status.MissingLevel, Status.Update}):
+    return
+  if statusAction != StatusAction.None:
     return
 
   if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt():
