@@ -464,6 +464,14 @@ Author: Dankr4d
     <property name="pixel-size">24</property>
     <property name="icon-name">view-refresh</property>
   </object>
+  <object class="GtkListStore" id="listDownloadsLevelsStatusAction">
+    <columns>
+      <!-- column-name ID -->
+      <column type="gchararray"/>
+      <!-- column-name StatusAction -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="listDownloadsMapsGame">
     <columns>
       <!-- column-name ID -->
@@ -485,14 +493,6 @@ Author: Dankr4d
       <!-- column-name ID -->
       <column type="gchararray"/>
       <!-- column-name Status -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="listDownloadsMapsStatusAction">
-    <columns>
-      <!-- column-name ID -->
-      <column type="gchararray"/>
-      <!-- column-name StatusAction -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -692,13 +692,13 @@ Author: Dankr4d
       <column type="guint"/>
     </columns>
   </object>
-  <object class="GtkTreeStore" id="treeStoreMaps">
+  <object class="GtkTreeStore" id="treeStoreDownloadsLevels">
     <columns>
       <!-- column-name Game -->
       <column type="gchararray"/>
       <!-- column-name Mod -->
       <column type="gchararray"/>
-      <!-- column-name Map -->
+      <!-- column-name Level -->
       <column type="gchararray"/>
       <!-- column-name Size -->
       <column type="gchararray"/>
@@ -708,7 +708,7 @@ Author: Dankr4d
       <column type="gfloat"/>
       <!-- column-name ProgressVisible -->
       <column type="gboolean"/>
-      <!-- column-name MapHorizontalPadding -->
+      <!-- column-name LevelHorizontalPadding -->
       <column type="guint"/>
       <!-- column-name IconName -->
       <column type="gchararray"/>
@@ -734,7 +734,7 @@ Author: Dankr4d
       <column type="guint"/>
       <!-- column-name SizeNet -->
       <column type="gchararray"/>
-      <!-- column-name MapFormatted -->
+      <!-- column-name LevelFormatted -->
       <column type="gchararray"/>
       <!-- column-name isCheckButtonSensitive -->
       <column type="gboolean"/>
@@ -745,9 +745,6 @@ Author: Dankr4d
       <!-- column-name ModVisible -->
       <column type="gboolean"/>
     </columns>
-  </object>
-  <object class="GtkTreeModelFilter" id="treeFilterMaps">
-    <property name="child-model">treeStoreMaps</property>
   </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="can-focus">False</property>
@@ -3048,7 +3045,7 @@ Author: Dankr4d
                                       <object class="GtkComboBox" id="cbxDownloadsLevelsStatusAction">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="model">listDownloadsMapsStatusAction</property>
+                                        <property name="model">listDownloadsLevelsStatusAction</property>
                                         <property name="has-entry">True</property>
                                         <property name="entry-text-column">1</property>
                                         <property name="id-column">0</property>
@@ -3135,18 +3132,18 @@ Author: Dankr4d
                                 <property name="can-focus">True</property>
                                 <property name="shadow-type">in</property>
                                 <child>
-                                  <object class="GtkTreeView" id="trvDownloadsMaps">
+                                  <object class="GtkTreeView" id="trvDownloadsLevels">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON_RELEASE_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_STRUCTURE_MASK</property>
                                     <property name="hexpand">True</property>
                                     <property name="vexpand">True</property>
-                                    <property name="model">treeStoreMaps</property>
+                                    <property name="model">treeStoreDownloadsLevels</property>
                                     <property name="search-column">2</property>
                                     <property name="enable-tree-lines">True</property>
-                                    <signal name="button-release-event" handler="onTrvDownloadsMapsButtonReleaseEvent" swapped="no"/>
-                                    <signal name="leave-notify-event" handler="onTrvDownloadsMapsLeaveNotifyEvent" swapped="no"/>
-                                    <signal name="motion-notify-event" handler="onTrvDownloadsMapsMotionNotifyEvent" swapped="no"/>
+                                    <signal name="button-release-event" handler="onTrvDownloadsLevelsButtonReleaseEvent" swapped="no"/>
+                                    <signal name="leave-notify-event" handler="onTrvDownloadsLevelsLeaveNotifyEvent" swapped="no"/>
+                                    <signal name="motion-notify-event" handler="onTrvDownloadsLevelsMotionNotifyEvent" swapped="no"/>
                                     <child internal-child="selection">
                                       <object class="GtkTreeSelection">
                                         <property name="mode">none</property>
@@ -3156,7 +3153,7 @@ Author: Dankr4d
                                       <object class="GtkTreeViewColumn">
                                         <child>
                                           <object class="GtkCellRendererToggle">
-                                            <signal name="toggled" handler="onTrvDownloadsMapsDownloadToggled" swapped="no"/>
+                                            <signal name="toggled" handler="onTrvDownloadsLevelsDownloadToggled" swapped="no"/>
                                           </object>
                                           <attributes>
                                             <attribute name="cell-background">17</attribute>
@@ -3198,7 +3195,7 @@ Author: Dankr4d
                                     <child>
                                       <object class="GtkTreeViewColumn">
                                         <property name="sizing">autosize</property>
-                                        <property name="title" translatable="yes">Map</property>
+                                        <property name="title" translatable="yes">Level</property>
                                         <property name="expand">True</property>
                                         <property name="clickable">True</property>
                                         <property name="sort-column-id">2</property>
@@ -3279,7 +3276,7 @@ Author: Dankr4d
                               </packing>
                             </child>
                             <child type="overlay">
-                              <object class="GtkSpinner" id="spinnerMapsMaps">
+                              <object class="GtkSpinner" id="spinnerDownloadsLevels">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                               </object>
@@ -3300,7 +3297,7 @@ Author: Dankr4d
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">TAB_DOWNLOADS_MAPS</property>
+                        <property name="label" translatable="yes">TAB_DOWNLOADS_LEVELS</property>
                       </object>
                       <packing>
                         <property name="tab-fill">False</property>
