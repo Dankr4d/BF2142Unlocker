@@ -728,8 +728,6 @@ Author: Dankr4d
       <column type="gboolean"/>
       <!-- column-name version -->
       <column type="gfloat"/>
-      <!-- column-name BackgroundColor -->
-      <column type="gchararray"/>
       <!-- column-name SizeInBytesNet -->
       <column type="guint"/>
       <!-- column-name SizeNet -->
@@ -2911,11 +2909,16 @@ Author: Dankr4d
                   <object class="GtkNotebook">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="tab-pos">left</property>
                     <property name="show-border">False</property>
                     <child>
                       <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="margin-start">6</property>
+                        <property name="margin-end">6</property>
+                        <property name="margin-top">6</property>
+                        <property name="margin-bottom">6</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkBox">
@@ -3156,8 +3159,7 @@ Author: Dankr4d
                                             <signal name="toggled" handler="onTrvDownloadsLevelsDownloadToggled" swapped="no"/>
                                           </object>
                                           <attributes>
-                                            <attribute name="cell-background">17</attribute>
-                                            <attribute name="sensitive">21</attribute>
+                                            <attribute name="sensitive">20</attribute>
                                             <attribute name="active">14</attribute>
                                             <attribute name="radio">15</attribute>
                                           </attributes>
@@ -3172,7 +3174,7 @@ Author: Dankr4d
                                         <child>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
-                                            <attribute name="visible">23</attribute>
+                                            <attribute name="visible">22</attribute>
                                             <attribute name="text">0</attribute>
                                           </attributes>
                                         </child>
@@ -3186,7 +3188,7 @@ Author: Dankr4d
                                         <child>
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
-                                            <attribute name="visible">24</attribute>
+                                            <attribute name="visible">23</attribute>
                                             <attribute name="text">1</attribute>
                                           </attributes>
                                         </child>
@@ -3203,7 +3205,7 @@ Author: Dankr4d
                                           <object class="GtkCellRendererText"/>
                                           <attributes>
                                             <attribute name="xpad">7</attribute>
-                                            <attribute name="markup">20</attribute>
+                                            <attribute name="markup">19</attribute>
                                           </attributes>
                                         </child>
                                       </object>
@@ -3228,10 +3230,11 @@ Author: Dankr4d
                                         <property name="title" translatable="yes">SizeNet</property>
                                         <child>
                                           <object class="GtkCellRendererText">
+                                            <property name="xalign">1</property>
                                             <property name="foreground">green</property>
                                           </object>
                                           <attributes>
-                                            <attribute name="text">19</attribute>
+                                            <attribute name="text">18</attribute>
                                           </attributes>
                                         </child>
                                       </object>
@@ -3298,6 +3301,7 @@ Author: Dankr4d
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="label" translatable="yes">TAB_DOWNLOADS_LEVELS</property>
+                        <property name="xalign">0.5</property>
                       </object>
                       <packing>
                         <property name="tab-fill">False</property>
@@ -3342,7 +3346,7 @@ Author: Dankr4d
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">TAB_DOWNLOADS_BF2142UNLOCKER</property>
+                        <property name="label" translatable="yes">TAB_DOWNLOADS_UNLOCKER</property>
                       </object>
                       <packing>
                         <property name="position">2</property>
@@ -3354,46 +3358,6 @@ Author: Dankr4d
                     <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Download</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Remove</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -4777,7 +4741,7 @@ Author: Dankr4d
                       <object class="GtkGrid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-start">12</property>
+                        <property name="margin-start">6</property>
                         <property name="margin-end">6</property>
                         <property name="margin-top">30</property>
                         <property name="margin-bottom">6</property>

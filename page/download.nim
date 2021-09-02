@@ -31,23 +31,21 @@ const
   COLUMN_DOWNLOAD: int = 14
   COLUMN_IS_RADIOBUTTON: int = 15
   COLUMN_VERSION: int = 16
-  COLUMN_BACKGROUND_COLOR: int = 17
-  COLUMN_SIZE_IN_BYTES_NET: int = 18
-  COLUMN_SIZE_NET: int = 19
-  COLUMN_LEVEL_FORMATTED: int = 20
-  COLUMN_IS_CHECKBUTTON_SENSITIVE: int = 21
-  COLUMN_STATUS_ACTION: int = 22
-  COLUMN_GAME_VISIBLE: int = 23
-  COLUMN_MOD_VISIBLE: int = 24
+  COLUMN_SIZE_IN_BYTES_NET: int = 17
+  COLUMN_SIZE_NET: int = 18
+  COLUMN_LEVEL_FORMATTED: int = 19
+  COLUMN_IS_CHECKBUTTON_SENSITIVE: int = 20
+  COLUMN_STATUS_ACTION: int = 21
+  COLUMN_GAME_VISIBLE: int = 22
+  COLUMN_MOD_VISIBLE: int = 23
 
 type
   Status {.pure.} = enum
-    None # up to date (already downloaded)
     MissingGame
     MissingMod
     MissingLevel
-    Update # update available
-    # TODO: Downgrade
+    Downloaded
+    UpdateAvailable
   StatusAction {.pure.} = enum
     None
     Download
@@ -99,20 +97,11 @@ proc threadDownloadProc(data: ThreadData) {.thread.} =
 
   var lastEpochTime, currentEpochTime: float = epochTime()
 
-  # Creating levle dir, just in case if info is not in download/files list
 
-  var path: string = data.pathBf2142Client / "mods" / data.modName #/ "LEVELS_TODO" / data.levelName
-  var levelDirName: string = "Levels"
-  when defined(linux):
-    # TODO: Check if levelDirName exists, before itering
-    for modDirTpl in walkDir(path, true):
-      if modDirTpl.kind != pcDir:
-        continue
-      if modDirTpl.path.toLower() == "levels":
-        levelDirName = modDirTpl.path
-        break
-  path = path / levelDirName / data.levelName
+  var path: string = data.pathBf2142Client / "mods" / data.modName
+  path = path / getLevelsDirName(path) / data.levelName
 
+  # Creating level dir
   discard existsOrCreateDir(path)
 
   var channelData: ChannelData
@@ -127,14 +116,12 @@ proc threadDownloadProc(data: ThreadData) {.thread.} =
   var totalReceived: int = 0
   for file in data.files:
     # Creating sub dirs
-    # createDir("/home/dankrad/Desktop/downloadtest/" / data.levelName / file.path.split("/")[0..^2].join($os.DirSep))
     createDir(path / file.path.split("/")[0..^2].join($os.DirSep))
 
     # Downloading files
-    var response = client.get(data.source & "/" & file.path)
+    let response: Response = client.get(data.source & "/" & file.path)
     # TODO: CRITICAL: Prevent changeing dir ("../" or "..\\" is not allowed)
-    # let path: string = "/home/dankrad/Desktop/downloadtest/" / data.levelName / file.path
-    var fstream: FileStream = newFileStream(path / file.path, fmWrite)
+    let fstream: FileStream = newFileStream(path / file.path, fmWrite)
 
     while not response.bodyStream.atEnd():
       buffer.setLen(len)
@@ -162,17 +149,8 @@ proc threadDownloadProc(data: ThreadData) {.thread.} =
 proc threadRemoveProc(data: ThreadData) {.thread.} =
   var lastEpochTime, currentEpochTime: float = epochTime()
 
-  var path: string = data.pathBf2142Client / "mods" / data.modName #/ "LEVELS_TODO" / data.levelName
-  var levelDirName: string = "Levels"
-  when defined(linux):
-    # TODO: Check if levelDirName exists, before itering
-    for modDirTpl in walkDir(path, true):
-      if modDirTpl.kind != pcDir:
-        continue
-      if modDirTpl.path.toLower() == "levels":
-        levelDirName = modDirTpl.path
-        break
-  path = path / levelDirName / data.levelName
+  var path: string = data.pathBf2142Client / "mods" / data.modName
+  path = path / getLevelsDirName(path) / data.levelName
 
   removeDir(path)
 
@@ -189,13 +167,13 @@ proc threadRemoveProc(data: ThreadData) {.thread.} =
 
 proc getIconName(status: Status): string =
   case status:
-  of Status.None:
+  of Status.Downloaded:
     return "gtk-apply"
   of Status.MissingGame, Status.MissingMod:
     return "dialog-error"
   of Status.MissingLevel:
     return "media-floppy"
-  of Status.Update:
+  of Status.UpdateAvailable:
     return "software-update-available"
 
 
@@ -377,14 +355,14 @@ proc onTrvDownloadsLevelsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Ev
     store.getValue(lastIter, COLUMN_STATUS, valStatusLastIter)
     statusLastIter = cast[Status](valStatusLastIter.getInt())
 
-  if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt() and status in {Status.MissingLevel, Status.Update, Status.None}:
-    if status == Status.None:
+  if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt() and status in {Status.MissingLevel, Status.UpdateAvailable, Status.Downloaded}:
+    if status == Status.Downloaded:
       valIconName.setString("user-trash") # Alternatives: edit-delete, user-trash-full
     else:
       valIconName.setString("emblem-downloads")
     store.setValue(iter, COLUMN_ICON_NAME, valIconName)
 
-    if isLastIterValid and iter != lastIter and statusLastIter in {Status.MissingLevel, Status.Update, Status.None}:
+    if isLastIterValid and iter != lastIter and statusLastIter in {Status.MissingLevel, Status.UpdateAvailable, Status.Downloaded}:
       valIconName.setString(getIconName(statusLastIter))
       store.setValue(lastIter, COLUMN_ICON_NAME, valIconName)
 
@@ -393,7 +371,7 @@ proc onTrvDownloadsLevelsMotionNotifyEvent(self: ptr TreeView00, event00: ptr Ev
 
     trvDownloadsLevels.getWindow().cursor = newCursorForDisplay(trvDownloadsLevels.getDisplay(), CursorType.hand2)
   else:
-    if isLastIterValid and statusLastIter in {Status.MissingLevel, Status.Update, Status.None}:
+    if isLastIterValid and statusLastIter in {Status.MissingLevel, Status.UpdateAvailable, Status.Downloaded}:
       valIconName.setString(getIconName(statusLastIter)) #"document-save")
       store.setValue(lastIter, COLUMN_ICON_NAME, valIconName)
 
@@ -510,14 +488,14 @@ proc onTrvDownloadsLevelsButtonReleaseEvent(self: ptr TreeView00, event00: ptr E
   store.getValue(iter, COLUMN_STATUS_ACTION, valStatusAction)
   let status: Status = cast[Status](valStatus.getInt())
   let statusAction: StatusAction = cast[StatusAction](valStatusAction.getInt())
-  if not (status in {Status.None, Status.MissingLevel, Status.Update}):
+  if not (status in {Status.Downloaded, Status.MissingLevel, Status.UpdateAvailable}):
     return
   if statusAction != StatusAction.None:
     return
 
   if x.int >= valXOffset.getInt() and x.int <= valXOffset.getInt() + valWidth.getInt():
     var statusAction: StatusAction
-    if status == Status.None:
+    if status == Status.Downloaded:
       statusAction = StatusAction.Remove
     else:
       statusAction = StatusAction.Download
@@ -677,17 +655,6 @@ proc names*(mods: seq[Mod]): seq[string] =
     result.add(`mod`.name)
 
 
-proc getBackgroundColor(status: Status): string =
-  case status:
-  of Status.None:
-    return "green"
-  of Status.MissingGame, Status.MissingMod:
-    return "red"
-  of Status.MissingLevel:
-    return "orange"
-  of Status.Update:
-    return "yellow"
-
 
 proc getSizeNet(versionServer, versionClient: Version): uint =
   result = versionServer.size.uint
@@ -706,7 +673,7 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
     valProgressVisible, valLevelHorizontalPadding, valIconName, valSpinnerPulse: Value
     valSpinnerVisible, valIconVisible: Value
     valSizeInBytes, valStatus, valDownload, valIsRadioButton: Value
-    valVersion, valBackgroundColor: Value
+    valVersion: Value
     valSizeInBytesNet, valSizeNet, valLevelFormatted: Value
     valIsCheckButtonSensitive, valStatusAction: Value
     valGameVisible, valModVisible: Value
@@ -727,7 +694,6 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
   discard valDownload.init(g_boolean_get_type())
   discard valIsRadioButton.init(g_boolean_get_type())
   discard valVersion.init(g_float_get_type())
-  discard valBackgroundColor.init(g_string_get_type())
   discard valSizeInBytesNet.init(g_uint_get_type())
   discard valSizeNet.init(g_string_get_type())
   discard valLevelFormatted.init(g_string_get_type())
@@ -749,7 +715,6 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
   var download: bool
   var isRadioButton: bool
   var versionFl: float
-  var backgroundColor: string
   var sizeInBytesNet: uint
   var sizeNet: string
   var levelFormatted: string
@@ -763,7 +728,7 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
 
   levelFormatted &= "<span weight=\"bold\" foreground=\"#008080\">" & levelName & "</span>" &
     " <span weight=\"bold\" foreground=\"#55ff55\">" & $version.version & "</span>"
-  if status == Status.None:
+  if status == Status.Downloaded:
     sizeInBytesNet = 0u
     progress = 0f
     if depth == 1:
@@ -774,7 +739,7 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
     progressVisible = false
     download = false
     isCheckButtonSensitive = true
-  elif status == Status.Update:
+  elif status == Status.UpdateAvailable:
     sizeInBytesNet = getSizeNet(version, get(versionClientOpt))
     progress = (version.size.float - sizeInBytesNet.float).float / version.size.float * 100f
     if depth == 1:
@@ -815,7 +780,6 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
     modVisible = false
     levelHorizontalPadding = 10u
   versionFl = version.version
-  backgroundColor = getBackgroundColor(status)
   sizeNet = formatFloat(sizeInBytesNet.int / 1024 / 1024, ffDecimal, 2) & " MiB"
   statusAction = StatusAction.None.int
 
@@ -833,7 +797,6 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
   valSizeInBytes.setUint(sizeInBytes.int)
   valIsRadioButton.setBoolean(isRadioButton)
   valVersion.setFloat(versionFl)
-  valBackgroundColor.setString(backgroundColor)
   valSizeInBytesNet.setUint(sizeInBytesNet.int)
   valLevelFormatted.setString(levelFormatted)
   valSizeNet.setString(sizeNet)
@@ -869,7 +832,6 @@ proc addUpdateLevel(store: TreeStore, iter: var TreeIter, status: Status, gameNa
   store.setValue(iter, COLUMN_DOWNLOAD, valDownload)
   store.setValue(iter, COLUMN_IS_RADIOBUTTON, valIsRadioButton)
   store.setValue(iter, COLUMN_VERSION, valVersion)
-  store.setValue(iter, COLUMN_BACKGROUND_COLOR, valBackgroundColor)
   store.setValue(iter, COLUMN_SIZE_IN_BYTES_NET, valSizeInBytesNet)
   store.setValue(iter, COLUMN_SIZE_NET, valSizeNet)
   store.setValue(iter, COLUMN_LEVEL_FORMATTED, valLevelFormatted)
@@ -975,7 +937,7 @@ proc fillLevels() =
   var games, mods: seq[string]
 
   for gameServer in gamesServer:
-    var status: Status = MissingLevel
+    var status: Status = Status.MissingLevel
     var gameClientOpt: Option[Game]
 
     games.add(gameServer.name)
@@ -985,25 +947,25 @@ proc fillLevels() =
         gameClientOpt = some(game)
 
     if isNone(gameClientOpt):
-      status = MissingGame  # Game not set in path or not installed
+      status = Status.MissingGame  # Game not set in path or not installed
 
     for modServer in gameServer.mods:
       var modClientOpt: Option[Mod]
 
       mods.add(modServer.name)
 
-      if status != MissingGame:
+      if status != Status.MissingGame:
       # if isSome(gameClientOpt):
         for `mod` in get(gameClientOpt).mods:
           if `mod`.name == modServer.name:
             modClientOpt = some(`mod`)
             if `mod`.versions[0].version != modServer.versions[^1].version:
-              status = Update
+              status = Status.UpdateAvailable
 
       if isNone(modClientOpt):
-        if status != MissingGame:
+        if status != Status.MissingGame:
           # status = Install
-          status = MissingMod
+          status = Status.MissingMod
 
       for levelServer in modServer.levels:
         var levelClientOpt: Option[Level]
@@ -1022,9 +984,9 @@ proc fillLevels() =
                 if version.files == get(levelClientOpt).versions[0].files:
                   get(levelClientOpt).versions[0].version = version.version
             if get(levelClientOpt).versions[0].version == levelServer.versions[^1].version:
-              status = Status.None
+              status = Status.Downloaded
             else:
-              status = Status.Update
+              status = Status.UpdateAvailable
           else:
             status = Status.MissingLevel
 
@@ -1041,9 +1003,9 @@ proc fillLevels() =
         for version in levelServer.versions.sorted(cmpVersion, Descending):
           if isSome(levelClientOpt):
             if get(levelClientOpt).versions[0].version == version.version:
-              status = Status.None
+              status = Status.Downloaded
             elif get(levelClientOpt).versions[0].version < version.version:
-              status = Status.Update
+              status = Status.UpdateAvailable
             else:
               status = Status.MissingLevel
           store.addLevel(iter, status, gameServer.name, modServer.name, levelServer.name, version, versionClientOpt, 2, some(iterParent))
@@ -1119,9 +1081,9 @@ proc spinTest(TODO: int): bool = # TODO: start timeout only when downloading som
 
                 if isSome(versionClientOpt):
                   if version.version == get(versionClientOpt).version:
-                    status = Status.None
+                    status = Status.Downloaded
                   elif version.version > get(versionClientOpt).version:
-                    status = Status.Update
+                    status = Status.UpdateAvailable
                   else:
                     status = Status.MissingLevel
                 else:

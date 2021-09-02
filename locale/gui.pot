@@ -283,6 +283,14 @@ msgid "UNLOCKS_SQUAD_GADGETS_INFO"
 msgstr ""
 ###
 
+
+###### Downloads
+###
+
+###### Downloads/Levels
+###
+
+
 ###### Settings
 msgid "SETTINGS_BF2142_GAME_PATH"
 msgstr ""
@@ -556,6 +564,18 @@ msgstr ""
 msgid "TAB_UNLOCKS"
 msgstr ""
 msgid "TAB_UNLOCKS_TOOLTIP"
+msgstr ""
+
+msgid "TAB_DOWNLOADS"
+msgstr ""
+
+msgid "TAB_DOWNLOADS_LEVELS"
+msgstr ""
+
+msgid "TAB_DOWNLOADS_MODS"
+msgstr ""
+
+msgid "TAB_DOWNLOADS_UNLOCKER"
 msgstr ""
 
 msgid "TAB_SETTINGS"

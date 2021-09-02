@@ -57,6 +57,17 @@ proc getModVersion(path: string): float =
   return node.child("version").innerText.strip().parseFloat()
 
 
+proc getLevelsDirName*(modPath: string): string =
+  result = "Levels"
+  when defined(linux):
+    if not dirExists(modPath / result):
+      for modDirTpl in walkDir(modPath, true):
+        if modDirTpl.kind != pcDir:
+          continue
+        if modDirTpl.path.toLower() == "levels":
+          result = modDirTpl.path
+          return
+
 proc getGamesServer*(path: string): Games =
   for gameTpl in walkDir(path, true):
     var game: Game
@@ -125,17 +136,7 @@ proc getGamesClient*(path: string): Games =
     # version.version = 0f # TODO: Read out of mod version file
     # `mod`.versions.add(version)
 
-    if modTpl.path != "bf2142": continue # TODO: REMOVE!!!
-
-    var levelDirName: string = "Levels"
-    when defined(linux):
-      # TODO: Check if levelDirName exists, before itering
-      for modDirTpl in walkDir(path / "mods" / modTpl.path, true):
-        if modDirTpl.kind != pcDir:
-          continue
-        if modDirTpl.path.toLower() == "levels":
-          levelDirName = modDirTpl.path
-          break
+    var levelDirName: string = getLevelsDirName(path / "mods" / modTpl.path)
 
     for filePath in walkDirRec(path / "mods" / modTpl.path, relative = true):
       if filePath.toLower().startsWith("levels"): # TODO: Split path, because someone could add a "levelsSUFFIX" folder

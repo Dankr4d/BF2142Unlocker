@@ -608,6 +608,18 @@ msgstr "Unlocks"
 msgid "TAB_UNLOCKS_TOOLTIP"
 msgstr "Einstellungen der freigeschalteten Waffen/Gadgets die ingame auswählbar sind."
 
+msgid "TAB_DOWNLOADS"
+msgstr "Downloads"
+
+msgid "TAB_DOWNLOADS_LEVELS"
+msgstr "Levels"
+
+msgid "TAB_DOWNLOADS_MODS"
+msgstr "Mods"
+
+msgid "TAB_DOWNLOADS_UNLOCKER"
+msgstr "Unlocker"
+
 msgid "TAB_SETTINGS"
 msgstr "Einstellungen"
 
