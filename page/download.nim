@@ -1083,6 +1083,11 @@ proc spinTest(TODO: int): bool = # TODO: start timeout only when downloading som
       if data.gameName == valGame.getString() and data.modName == valMod.getString() and data.levelName == valLevel.getString():
 
         var version: Version = iter.getLevelVersion()
+
+        if depth == 1:
+          valProgress.setFloat((data.bytesSkipped + data.bytesDownloaded).float / valSizeInBytes.getUint().float * 100f)
+          store.setValue(iter, COLUMN_PROGRESS, valProgress)
+
         if data.versionFl == valVersion.getFloat():
           valProgress.setFloat((data.bytesSkipped + data.bytesDownloaded).float / valSizeInBytes.getUint().float * 100f)
           store.setValue(iter, COLUMN_PROGRESS, valProgress)
@@ -1119,7 +1124,6 @@ proc spinTest(TODO: int): bool = # TODO: start timeout only when downloading som
                 else:
                   status = Status.MissingLevel
                 store.updateLevel(iter, status, data.gameName, data.modName, data.levelName, version, versionClientOpt)
-
     var valSpinnerPulse, valSpinnerVisible: Value
     store.getValue(iter, COLUMN_SPINNER_PULSE, valSpinnerPulse)
     store.getValue(iter, COLUMN_SPINNER_VISIBLE, valSpinnerVisible)
