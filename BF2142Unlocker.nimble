@@ -9,7 +9,7 @@ license       = "MIT"
 requires "nim >= 1.2.6"
 requires "gintro >= 0.9.4"
 requires "regex >= 0.18.0" # Using this regex module because it doesn't depend to a shared library
-requires "https://github.com/Dankr4d/conparser >= 0.1.12"
+requires "https://github.com/Dankr4d/conparser >= 0.1.13"
 when defined(windows):
   requires "winim >= 3.4.0"
 when defined(linux):
