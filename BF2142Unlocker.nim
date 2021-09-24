@@ -2017,13 +2017,13 @@ proc threadFeslProc() {.thread.} =
       # No commands in channel (channelFeslThread) and connected to server,
       # so we're waiting for Ping packages and respond to them,
       # to not get disconnected.
-      var dataTbl: tables.Table[string, string]
+      var dataTbl: tables.OrderedTable[string, string]
       var data: string
       var id: uint8
       if not socket.recv(data, id, 500):
         continue # No package received, continue loop
       dataTbl = parseData(data)
-      if dataTbl["TXN"] == "Ping":
+      if dataTbl.hasKey("TXN") and dataTbl["TXN"] == "Ping":
         socket.send(newPing(), id)
         continue # Send Ping, continue loop
 
@@ -2047,20 +2047,20 @@ proc threadFeslProc() {.thread.} =
 
       case threadData.command:
       of FeslCommand.Create:
-        socket.createAccount(threadData.create.username, threadData.create.password)
-        socket.login(threadData.create.username, threadData.create.password)
+        socket.createAccount(threadData.create.username, threadData.create.password, 5000)
+        socket.login(threadData.create.username, threadData.create.password, 5000)
         channelFeslTimer.send(timerData)
       of FeslCommand.Login:
-        socket.login(threadData.login.username, threadData.login.password)
-        timerData.login.soldiers = socket.soldiers()
+        socket.login(threadData.login.username, threadData.login.password, 5000)
+        timerData.login.soldiers = socket.soldiers(5000)
         channelFeslTimer.send(timerData)
       of FeslCommand.AddSoldier:
-        socket.addSoldier(threadData.soldier.soldier)
-        timerData.soldier.soldiers = socket.soldiers()
+        socket.addSoldier(threadData.soldier.soldier, 5000)
+        timerData.soldier.soldiers = socket.soldiers(5000)
         channelFeslTimer.send(timerData)
       of FeslCommand.DelSoldier:
-        socket.delSoldier(threadData.soldier.soldier)
-        timerData.soldier.soldiers = socket.soldiers()
+        socket.delSoldier(threadData.soldier.soldier, 5000)
+        timerData.soldier.soldiers = socket.soldiers(5000)
         channelFeslTimer.send(timerData)
     except FeslException as ex:
       timerData.ex = some(ex)
@@ -3359,7 +3359,7 @@ proc onApplicationActivate(application: Application) =
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
 
-  notebook.currentPage = 4 # TODO: Remove
+  notebook.currentPage = 1 # TODO: Remove
   notebookSettings.currentPage = 3 # TODO: Remove
   # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
 
@@ -3407,6 +3407,7 @@ proc onApplicationActivate(application: Application) =
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
 
+  updateServerAsync() # TODO: Remove
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":

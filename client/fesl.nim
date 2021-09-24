@@ -30,8 +30,14 @@ proc connect*(client: Socket, domain: string, port: Port = Port(18300)) =
   net.connect(client, domain, port) # TODO: Handle OSError Exception
 
 
-proc randomStr(len: int = 30): string =
-  for idx in 1 .. len:
+proc randomEmail(): string =
+  for idx in 1 .. rand(5 .. 10):
+    result.add(CHARS_SEQ[rand(0 .. CHARS_SEQ.high)])
+  result.add("@")
+  for idx in 1 .. 5: #rand(5 .. 5):
+    result.add(CHARS_SEQ[rand(0 .. CHARS_SEQ.high)])
+  result.add(".")
+  for idx in 1 .. rand(2 .. 3):
     result.add(CHARS_SEQ[rand(0 .. CHARS_SEQ.high)])
 
 
@@ -60,36 +66,61 @@ proc raiseRecvFailed(exType: FeslExceptionType) =
 
 
 proc createAccount*(client: Socket, username, password: string, timeout: int = -1) =
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var data: string
   var id: uint8
 
-  client.send(newGetCountryListClient(), 3)
-  if not client.recv(data, id, timeout):
-    raiseRecvFailed(FeslExceptionType.GetCountryList)
-  parseCheckAndRaise()
+  # client.send(newHelloClient(), 1)
+  # if not client.recv(data, id, timeout):
+  #   raiseRecvFailed(FeslExceptionType.Unhandled)
+  # parseCheckAndRaise()
 
-  let countryCode: string = dataTbl["countryList.0.ISOCode"]
+  # if not client.recv(data, id, timeout):
+  #   raiseRecvFailed(FeslExceptionType.Unhandled)
+  # parseCheckAndRaise()
+  # client.send(newMemCheckClient(), 0)
 
-  client.send(newAddAccountClient(username, password, randomStr(), countryCode), 4)
+  # client.send(newGetTosClient(), 2)
+  # if not client.recv(data, id, timeout):
+  #   raiseRecvFailed(FeslExceptionType.Unhandled)
+  # parseCheckAndRaise()
+
+  # client.send(newGetCountryListClient(), 3)
+  # if not client.recv(data, id, timeout):
+  #   raiseRecvFailed(FeslExceptionType.GetCountryList)
+  # parseCheckAndRaise()
+
+  # var countryCode: string
+  # if dataTbl.hasKey("countryList.0.ISOCode"):
+  #   countryCode = dataTbl["countryList.0.ISOCode"]
+  # else:
+  #   # PlayBF2142 with the current version doesn't start with index 0, so we need
+  #   # to loop through and pick the first. # TODO: Remove this later when/if it's fixed.
+  #   for key, value in dataTbl.pairs:
+  #     if key.endsWith("ISOCode"):
+  #       countryCode = value
+  #       break
+
+  # client.send(newAddAccountClient(username, password, randomEmail(), countryCode), 4)
+  client.send(newAddAccountClient(username, password, randomEmail(), "EN"), 4)
   if not client.recv(data, id, timeout):
     raiseRecvFailed(FeslExceptionType.AddAccount)
   parseCheckAndRaise()
 
 
 proc login*(client: Socket, username, password: string, timeout: int = -1) =
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var data: string
   var id: uint8
 
-  client.send(newLoginClient(username, password), 2)
+  client.send(newLoginClient(username, password), 5)
   if not client.recv(data, id, timeout):
     raiseRecvFailed(FeslExceptionType.Login)
   parseCheckAndRaise()
 
 
 proc soldiers*(client: Socket, timeout: int = -1): seq[string] =
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var data: string
   var id: uint8
 
@@ -112,7 +143,7 @@ proc soldiers*(client: Socket, timeout: int = -1): seq[string] =
 
 
 proc addSoldier*(client: Socket, soldier: string, timeout: int = -1) =
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var data: string
   var id: uint8
 
@@ -123,7 +154,7 @@ proc addSoldier*(client: Socket, soldier: string, timeout: int = -1) =
 
 
 proc delSoldier*(client: Socket, soldier: string, timeout: int = -1) =
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var data: string
   var id: uint8
 

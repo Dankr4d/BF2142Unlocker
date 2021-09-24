@@ -6,7 +6,7 @@ type
     r*, g*, b* {.Default: 255u8.}: range[0u8 .. 255u8]
   RGBA* = object of RGB
     a* {.Default: 255u8.}: range[0u8 .. 255u8]
-  General* {.Prefix: "GeneralSettings.".} = object
+  General* {.Prefix: "GeneralSettings.", IgnoreSettings: @["addServerHistory"].} = object # TODO: Fix sequence in conparser!
     setSortOrder* {.Setting: "setSortOrder", Default: "0".}: string # TODO # 0
     setSortKey* {.Setting: "setSortKey", Default: "\"\"".}: string # TODO # ""
     setNumRoundsPlayed* {.Setting: "setNumRoundsPlayed", Default: "0".}: string # TODO # 0

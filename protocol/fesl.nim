@@ -24,7 +24,8 @@ type
     GetCountryListServer | GetCountryListClient |
     AddAccountServer | AddAccountClient |
     RegisterGameServer | RegisterGameClient |
-    UpdateAccountServer | UpdateAccountClient
+    UpdateAccountServer | UpdateAccountClient |
+    GetTosServer | GetTosClient
   SubsType* =
     GetEntitlementByBundleServer | GetEntitlementByBundleClient
   DobjType* =
@@ -158,6 +159,19 @@ type
     eaMailFlag*: int # bool (checkbox)
     thirdPartyMailFlag*: int # bool (checkbox)
   Ping* = object of EaMessage # Server and client
+  GetTosServer* = object of EaMessage
+    tos*: string
+  GetTosClient* = object of EaMessage
+
+
+
+proc newGetTosServer*(): GetTosServer =
+  result.TXN = "GetTos"
+  result.tos = ""
+
+proc newGetTosClient*(): GetTosClient =
+  result.TXN = "GetTos"
+
 
 proc newHelloServer*(): HelloServer =
   result.TXN = "Hello"
@@ -352,6 +366,44 @@ proc newUpdateAccountClient*(countryCode: string): UpdateAccountClient =
 proc newPing*(): Ping =
   result.TXN = "Ping"
 
+proc parseData*(data: string): OrderedTable[string, string] =
+  result = initOrderedTable[string, string]()
+  for line in data.split('\n'):
+    var keyVal: seq[string] = line.split("=", 1)
+    if keyVal.len == 1: break
+    result[$cstring(keyVal[0])] = $cstring(keyVal[1]) # Some server send a cstring
+  if result.hasKey("data"):
+    result = parseData(base64.decode(result["data"]))
+
+when not defined(release):
+  proc formatFesl(str: string): string =
+    result.add str[0..3]
+    result.add " 0x"
+    result.add toHex(byte(str[4]))
+    result.add toHex(byte(str[5]))
+    result.add toHex(byte(str[6]))
+    result.add toHex(byte(str[7]))
+    result.add " "
+
+    result.add "{"
+    var dataTbl: OrderedTable[string, string] = initOrderedTable[string, string]()
+    for line in str[MESSAGE_PREFIX_LEN..^1].split('\n'):
+      var keyVal: seq[string] = line.split("=", 1)
+      if keyVal.len == 1:
+        break
+      dataTbl[$cstring(keyVal[0])] = $cstring(keyVal[1]) # Some server send a cstring
+    if dataTbl.hasKey("data"):
+      dataTbl = parseData(base64.decode(dataTbl["data"]))
+
+    var idx: int = 0
+    for key, val in dataTbl.pairs:
+      result.add key & "=" & val
+      if idx < dataTbl.len - 1:
+        result.add ", "
+      idx.inc()
+    result.add "}"
+
+
 proc serialize*(obj: EaMessageType, id: uint8): string =
   if obj is FsysType:
     result = "fsys"
@@ -375,14 +427,8 @@ proc serialize*(obj: EaMessageType, id: uint8): string =
   result[MESSAGE_PREFIX_LEN - 2] = char(length shl 16 shr 24)
   result[MESSAGE_PREFIX_LEN - 1] = char(length shl 24 shr 24)
 
-proc parseData*(data: string): Table[string, string] =
-  result = initTable[string, string]()
-  for line in data.split('\n'):
-    var keyVal: seq[string] = line.split("=", 1)
-    if keyVal.len == 1: break
-    result[$cstring(keyVal[0])] = $cstring(keyVal[1]) # Some server send a cstring
-  if result.hasKey("data"):
-    result = parseData(base64.decode(result["data"]))
+  when not defined(release):
+    echo "->N res " & formatFesl(result)
 
 proc send*(client: Socket, data: EaMessageType, id: uint8) =
   # echo "SEND: ", repr data.serialize(id)
@@ -405,9 +451,11 @@ proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): 
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 3]) shl 16) or
             (cast[uint32](prefix[MESSAGE_PREFIX_LEN - 4]) shl 24)
   try:
-    if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN) == 0: # TODO: Can throw OSError
+    if socket.recv(data, int(length) - MESSAGE_PREFIX_LEN, timeout) == 0: # TODO: Can throw OSError
       return false
   except TimeoutError:
     return false
   # echo "RECV.DATA: ", repr data
+  when not defined(release):
+    echo "<-N res " & formatFesl(prefix & data)
   return true

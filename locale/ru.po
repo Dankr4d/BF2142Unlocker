@@ -386,13 +386,13 @@ msgid "SETTINGS_BF2142_CLIENT_PATH_DETECTED_SELECT"
 msgstr "Нет, выбрать другой .."
 
 msgid "SETTINGS_GAME_LANGUAGE"
-msgstr ""
+msgstr "Язык игры:"
 
 msgid "SETTINGS_GENERAL_UNLOCKER"
 msgstr "BF2142Unlocker"
 
 msgid "SETTINGS_GENERAL_GAME"
-msgstr ""
+msgstr "Игра"
 
 # ##
 # ##### Settings
@@ -451,18 +451,18 @@ msgid "SETTINGS_VIDEO_OFF"
 msgstr "Выкл"
 
 msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr ""
+msgstr "Показать FPS:"
 
 msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr ""
+msgstr "Разблокировать FPS:"
 
 # ##
 # ##### Settings/Audio
 msgid "SETTINGS_AUDIO_RENDERER"
-msgstr ""
+msgstr "Renderer:"
 
 msgid "SETTINGS_AUDIO_SOUND_QUALITY"
-msgstr ""
+msgstr "Качество звука:"
 
 msgid "SETTINGS_AUDIO_SAVE"
 msgstr "Сохранить"
@@ -471,34 +471,34 @@ msgid "SETTINGS_AUDIO_REVERT"
 msgstr "Вернуть"
 
 msgid "SETTINGS_AUDIO_MICROPHONE_TRESHOLD_TEST"
-msgstr ""
+msgstr "Тест громкости микрофона:"
 
 msgid "SETTINGS_AUDIO_VOIP_BOOST_MIC_GAIN"
-msgstr ""
+msgstr "Увеличить усиление микрофона:"
 
 msgid "SETTINGS_AUDIO_VOIP_RECEIVE"
-msgstr ""
+msgstr "Принять:"
 
 msgid "SETTINGS_AUDIO_VOIP_TRANSMIT"
-msgstr ""
+msgstr "Отправить:"
 
 msgid "SETTINGS_AUDIO_VOIP_ENABLED"
-msgstr ""
+msgstr "Включено:"
 
 msgid "SETTINGS_AUDIO_VOICE_OVER"
-msgstr ""
+msgstr "Голос поверх:"
 
 msgid "SETTINGS_AUDIO_MUSIC"
-msgstr ""
+msgstr "Музыка:"
 
 msgid "SETTINGS_AUDIO_EFFECTS"
-msgstr ""
+msgstr "Эффекты:"
 
 msgid "SETTINGS_AUDIO_ENGLISH_VO_ONLY"
-msgstr ""
+msgstr "Только Английский голос:"
 
 msgid "SETTINGS_AUDIO_ENABLE_EAX"
-msgstr ""
+msgstr "Включить EAX:"
 
 msgid "SETTINGS_AUDIO_LOW"
 msgstr "Низкое"
@@ -510,78 +510,78 @@ msgid "SETTINGS_AUDIO_HIGH"
 msgstr "Высокое"
 
 msgid "SETTINGS_AUDIO_SOFTWARE"
-msgstr ""
+msgstr "Программно"
 
 msgid "SETTINGS_AUDIO_HARDWARE"
-msgstr ""
+msgstr "Аппаратно"
 
 msgid "SETTINGS_AUDIO_AUDIO_SETTINGS"
-msgstr ""
+msgstr "Опции звука"
 
 msgid "SETTINGS_AUDIO_GAME_VOLUME"
-msgstr ""
+msgstr "Громкость игры"
 
 msgid "SETTINGS_AUDIO_VOIP"
-msgstr ""
+msgstr "VOIP"
 
 # ##
 # ##### Settings/HUD
 msgid "SETTINGS_HUD_PREVIEW"
-msgstr ""
+msgstr "Просмотр"
 
 msgid "SETTINGS_HUD_REVERT"
-msgstr ""
+msgstr "Сбросить"
 
 msgid "SETTINGS_HUD_SAVE"
-msgstr ""
+msgstr "Сохранить"
 
 msgid "SETTINGS_HUD_HUD"
-msgstr ""
+msgstr "HUD:"
 
 msgid "SETTINGS_HUD_MINIMAP"
-msgstr ""
+msgstr "Миникарта:"
 
 msgid "SETTINGS_HUD_ICONS"
-msgstr ""
+msgstr "Иконки:"
 
 msgid "SETTINGS_HUD_CROSSHAIR"
-msgstr ""
+msgstr "Прицел:"
 
 msgid "SETTINGS_HUD_HELP_POPUPS"
-msgstr ""
+msgstr "Всплывающие подсказки:"
 
 msgid "SETTINGS_HUD_CAMERA_SHAKE"
-msgstr ""
+msgstr "Тряска камеры:"
 
 msgid "SETTINGS_HUD_ROTATE_MINIMAP"
-msgstr ""
+msgstr "Повернуть миникарту:"
 
 msgid "SETTINGS_HUD_OPT_OUT_OF_VOTING"
-msgstr ""
+msgstr "Отказаться от голосования:"
 
 msgid "SETTINGS_HUD_REVERSE_MOUSEWHEEL_SELECTION"
-msgstr ""
+msgstr "Инвертироать выбор ролик мышки:"
 
 msgid "SETTINGS_HUD_AUTO_RELOAD"
-msgstr ""
+msgstr "Авто перезарядка:"
 
 msgid "SETTINGS_HUD_IGNORE_BUDDY_REQUESTS"
-msgstr ""
+msgstr "Игнорировать запросы в дружбу:"
 
 msgid "SETTINGS_HUD_SHOW_KILL_MESSAGES"
-msgstr ""
+msgstr "Показывать сообщение об убийстве:"
 
 msgid "SETTINGS_HUD_SHOW_RADIO_MESSAGES"
-msgstr ""
+msgstr "Показывать сообщение радио:"
 
 msgid "SETTINGS_HUD_SHOW_CHAT_MESSAGES"
-msgstr ""
+msgstr "Показывать сообщение чата:"
 
 msgid "SETTINGS_HUD_PREVIEWABLE"
-msgstr ""
+msgstr "Предпросмотр"
 
 msgid "SETTINGS_HUD_OTHER"
-msgstr ""
+msgstr "Другое"
 
 # ##
 # ##### Settings/Additionals
@@ -622,7 +622,7 @@ msgid "TAB_SETTINGS_AUDIO"
 msgstr "Аудио"
 
 msgid "TAB_SETTINGS_HUD"
-msgstr ""
+msgstr "HUD"
 
 msgid "VERSION_TOOLTIP"
 msgstr "Текущая версия"

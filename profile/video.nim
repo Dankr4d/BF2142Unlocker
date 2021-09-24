@@ -44,7 +44,7 @@ type
 type
   Custom* {.Prefix: "".} = object
     drawFps* {.Setting: "renderer.drawFps", Valid: Bools01, Default: false.}: bool
-    lockFps* {.Setting: "game.lockFps", Valid: Bools01, Default: false.}: bool
+    lockFps* {.Setting: "game.lockFps", Valid: Bools01, Default: false, IgnoreWhen: true.}: bool
 ##
 
 proc `$`*(resolution: Resolution): string =
