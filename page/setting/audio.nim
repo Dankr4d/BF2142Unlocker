@@ -11,6 +11,7 @@ var audioDirty, audio: Audio
 var path0001AudioCon, pathDefaultAudioCon: string # Path to Audio.con file
 var isAudioValid: bool
 
+var gridAudio: Grid
 var scaleRenderer: Scale
 var scaleSoundQuality: Scale
 var switchEnableEax: Switch
@@ -186,6 +187,7 @@ proc setDocumentsPath*(documentsPath: string) =
       btnSave.sensitive = true
     dlgConfigCorrupt.hide()
     loadAudio(audioDirty)
+  gridAudio.visible = true
 
 
 proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
@@ -209,3 +211,5 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   viewConfigCorruptBody = cast[View](getObject(builder, "viewConfigCorruptBody")) # TODO: https://github.com/StefanSalewski/gintro/issues/40
   btnConfigCorruptYes = builder.getButton("btnConfigCorruptYes")
   btnConfigCorruptNo = builder.getButton("btnConfigCorruptNo")
+  gridAudio = builder.getGrid("gridSettingsAudio")
+  gridAudio.visible = false

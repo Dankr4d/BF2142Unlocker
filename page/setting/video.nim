@@ -22,6 +22,7 @@ var customDirty, custom: Custom
 var isCustomValid: bool
 
 # Video
+var vboxVideo: Box
 var cbxResolution: ComboBox
 var scaleTerrain: Scale
 var scaleEffects: Scale
@@ -268,6 +269,7 @@ proc setDocumentsPath*(bf2142ClientPath, documentsPath: string) =
       dlgConfigCorrupt.hide()
       loadCustom(customDirty)
     checkAndPatch()
+  vboxVideo.visible = true
 
 proc onScaleSettingsVideoLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
   return g_strdup(translate(cast[LowMediumHigh](value.int)))
@@ -381,6 +383,8 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   switchEnhancedLighting = builder.getSwitch("switchSettingsVideoEnhancedLighting")
   btnSave = builder.getButton("btnSettingsVideoSave")
   btnRevert = builder.getButton("btnSettingsVideoRevert")
+  vboxVideo = builder.getBox("vboxSettingsVideo")
+  vboxVideo.visible = false
 
   # Custom
   switchDrawFps = builder.getSwitch("switchSettingsVideoDrawFps")

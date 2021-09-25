@@ -3071,22 +3071,6 @@ Author: Dankr4d
                                     <property name="tooltip-text" translatable="yes">SETTINGS_WINDOW_MODE_TOOLTIP</property>
                                     <property name="draw-indicator">True</property>
                                     <signal name="toggled" handler="onChbtnSettingsWindowModeToggled" swapped="no"/>
-                                    <child>
-                                      <object class="GtkComboBox" id="cbxSettingsResolution">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="model">listStoreResolutions</property>
-                                        <property name="has-entry">True</property>
-                                        <property name="entry-text-column">1</property>
-                                        <property name="id-column">0</property>
-                                        <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
-                                        <child internal-child="entry">
-                                          <object class="GtkEntry">
-                                            <property name="can-focus">False</property>
-                                          </object>
-                                        </child>
-                                      </object>
-                                    </child>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
@@ -3101,10 +3085,12 @@ Author: Dankr4d
                                     <property name="receives-default">False</property>
                                     <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
                                     <property name="draw-indicator">True</property>
+                                    <signal name="toggled" handler="onChbtnSettingsSkipMoviesToggled" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
                                     <property name="top-attach">0</property>
+                                    <property name="width">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -3138,16 +3124,28 @@ Author: Dankr4d
                                   <packing>
                                     <property name="left-attach">1</property>
                                     <property name="top-attach">2</property>
+                                    <property name="width">2</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
+                                  <object class="GtkComboBox" id="cbxSettingsResolution">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="model">listStoreResolutions</property>
+                                    <property name="has-entry">True</property>
+                                    <property name="entry-text-column">1</property>
+                                    <property name="id-column">0</property>
+                                    <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can-focus">False</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">2</property>
+                                    <property name="top-attach">1</property>
+                                  </packing>
                                 </child>
                               </object>
                             </child>
@@ -3178,7 +3176,7 @@ Author: Dankr4d
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="vboxSettingsVideo">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">center</property>
@@ -3671,7 +3669,7 @@ Author: Dankr4d
                     </child>
                     <child>
                       <!-- n-columns=3 n-rows=3 -->
-                      <object class="GtkGrid">
+                      <object class="GtkGrid" id="gridSettingsAudio">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">center</property>
@@ -4176,7 +4174,7 @@ Author: Dankr4d
                     </child>
                     <child>
                       <!-- n-columns=2 n-rows=3 -->
-                      <object class="GtkGrid">
+                      <object class="GtkGrid" id="gridSettingsHud">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="margin-start">12</property>

@@ -27,6 +27,7 @@ var sfRadioMessages: Surface
 var sfChatMessages: Surface
 
 # General
+var gridHud: Grid
 var scaleHudTransparency: Scale
 var scaleMinimapTransparency: Scale
 var scaleIconsTransparency: Scale
@@ -305,6 +306,7 @@ proc setDocumentsPath*(documentsPath: string) =
       btnSave.sensitive = true
     dlgConfigCorrupt.hide()
     loadGeneral(generalDirty)
+  gridHud.visible = true
 
 
 proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
@@ -344,3 +346,6 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
   viewConfigCorruptBody = cast[View](getObject(builder, "viewConfigCorruptBody")) # TODO: https://github.com/StefanSalewski/gintro/issues/40
   btnConfigCorruptYes = builder.getButton("btnConfigCorruptYes")
   btnConfigCorruptNo = builder.getButton("btnConfigCorruptNo")
+
+  gridHud = builder.getGrid("gridSettingsHud")
+  gridHud.visible = false

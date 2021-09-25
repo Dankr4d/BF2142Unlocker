@@ -21,7 +21,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
   var id: uint8
   var data: string
   var playerName: string
-  var dataTbl: Table[string, string]
+  var dataTbl: OrderedTable[string, string]
   var channelKillThread: Channel[void]
   var threadPingInterval: Thread[tuple[client: Socket, channelKillThread: ptr Channel[void]]]
 

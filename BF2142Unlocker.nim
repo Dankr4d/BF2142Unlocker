@@ -836,13 +836,12 @@ proc updateProfilePathes() =
   bf2142ProfileDefaultPath = bf2142ProfilePath / "Default"
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
   checkBF2142ProfileFiles()
-  pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath) # TODO: Only required because of linux (have a look in the function)
-  pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
-  pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+  if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
+    pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath)
+    pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+    pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   when defined(linux):
     discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
-    notebookSettings.getNthPage(1).setSensitive(true)
-    notebookSettings.getNthPage(2).setSensitive(true)
   else:
     discard cbxSettingsGameLanguage.setActiveId($getGameLanguage())
 
@@ -907,9 +906,6 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     if config.settings.winePrefix != "":
       documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
       updateProfilePathes()
-    else:
-      notebookSettings.getNthPage(1).setSensitive(false)
-      notebookSettings.getNthPage(2).setSensitive(false)
   elif defined(windows):
     documentsPath = getDocumentsPath()
     updateProfilePathes()
@@ -3018,9 +3014,10 @@ proc setBF2142Path(path: string) =
       wineEndPos = bf2142UnlockerConfig.settings.bf2142ClientPath.find(DirSep, wineStartPos) - 1
       if txtSettingsWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
         txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
+        bf2142UnlockerConfig.settings.winePrefix = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
         documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
-        updateProfilePathes()
+  updateProfilePathes()
   config.writeConfig(CONFIG_FILE_NAME)
   fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
 
@@ -3359,9 +3356,8 @@ proc onApplicationActivate(application: Application) =
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
 
-  notebook.currentPage = 1 # TODO: Remove
-  notebookSettings.currentPage = 3 # TODO: Remove
-  # notebookSettings.getNthPage(2).hide() # TODO: Implement Audio settings
+  # notebook.currentPage = 1 # TODO: Remove
+  # notebookSettings.currentPage = 3 # TODO: Remove
 
   ## Pages
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
@@ -3407,7 +3403,7 @@ proc onApplicationActivate(application: Application) =
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
 
-  updateServerAsync() # TODO: Remove
+  # updateServerAsync() # TODO: Remove
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
