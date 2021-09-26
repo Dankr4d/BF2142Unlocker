@@ -1,10 +1,32 @@
-import gintro/[gtk, gobject, glib, gtksource, cairo, gdk]
+import gintro/[gtk, gobject, glib, gtksource, cairo, gdk, gdkpixbuf]
 import "../../macro/signal"
 import ../../profile/general as profileGeneral
 import os
 import strutils
 import std/with
 
+when defined(release):
+  const BACKGROUND_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "background.png")
+  const HUD_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "hud.png")
+  const MINIMAP_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "minimap.png")
+  const ICONS_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "icons.png")
+  const CROSSHAIR_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "crosshair.png")
+  const HELPPOPUP_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "helppopup.png")
+  const VOTING_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "voting.png")
+  const KILLMESSAGES_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "killmessages.png")
+  const RADIOMESSAGES_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "radiomessages.png")
+  const CHATMESSAGES_IMAGE_RAW: string = staticRead(".." / ".." / "asset" / "hud" / "chatmessages.png")
+else:
+  const BACKGROUND_IMAGE_RAW: string = readFile("asset" / "hud" / "background.png")
+  const HUD_IMAGE_RAW: string = readFile("asset" / "hud" / "hud.png")
+  const MINIMAP_IMAGE_RAW: string = readFile("asset" / "hud" / "minimap.png")
+  const ICONS_IMAGE_RAW: string = readFile("asset" / "hud" / "icons.png")
+  const CROSSHAIR_IMAGE_RAW: string = readFile("asset" / "hud" / "crosshair.png")
+  const HELPPOPUP_IMAGE_RAW: string = readFile("asset" / "hud" / "helppopup.png")
+  const VOTING_IMAGE_RAW: string = readFile("asset" / "hud" / "voting.png")
+  const KILLMESSAGES_IMAGE_RAW: string = readFile("asset" / "hud" / "killmessages.png")
+  const RADIOMESSAGES_IMAGE_RAW: string = readFile("asset" / "hud" / "radiomessages.png")
+  const CHATMESSAGES_IMAGE_RAW: string = readFile("asset" / "hud" / "chatmessages.png")
 
 var windowShown: ptr bool
 var ignoreEvents: ptr bool
@@ -15,16 +37,17 @@ var isGeneralValid: bool
 
 var cbtnCrosshair: ColorButton
 var daHud: DrawingArea
-var sfBackground: Surface
-var sfHud: Surface
-var sfMinimap: Surface
-var sfIcons: Surface
+var pixbufBackground: Pixbuf
+var pixbufHud: Pixbuf
+var pixbufMinimap: Pixbuf
+var pixbufIcons: Pixbuf
+# var pixbufCrosshair: Pixbuf
 var sfCrosshair: Surface
-var sfHelpPopup: Surface
-var sfVoting: Surface
-var sfKillMessages: Surface
-var sfRadioMessages: Surface
-var sfChatMessages: Surface
+var pixbufHelpPopup: Pixbuf
+var pixbufVoting: Pixbuf
+var pixbufKillMessages: Pixbuf
+var pixbufRadioMessages: Pixbuf
+var pixbufChatMessages: Pixbuf
 
 # General
 var gridHud: Grid
@@ -163,13 +186,13 @@ proc onDaSettingsHudHudDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.sig
   ctx.impl = ctx00
   ctx.ignoreFinalizer = true
 
-  var scale: float = daHud.getAllocatedWidth() / sfBackground.imageSurfaceGetWidth
-  scale = min(scale, daHud.getAllocatedHeight() / sfBackground.imageSurfaceGetHeight)
-  var offsetX: float = daHud.getAllocatedWidth().float - sfBackground.imageSurfaceGetWidth.float * scale
+  var scale: float = min(
+    daHud.getAllocatedWidth() / pixbufBackground.getWidth(),
+    daHud.getAllocatedHeight() / pixbufBackground.getHeight()
+  )
+  var offsetX: float = daHud.getAllocatedWidth().float - pixbufBackground.getWidth().float * scale
   if offsetX > 0:
     offsetX /= scale * 2
-  else:
-    offsetX = 0
 
   ctx.save()
   ctx.scale(scale, scale)
@@ -177,28 +200,28 @@ proc onDaSettingsHudHudDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.sig
   # Background
   with ctx:
     save()
-    setSourceSurface(sfBackground, offsetX, 0)
+    cairoSetSourcePixbuf(pixbufBackground, offsetX, 0)
     paint()
     restore()
 
   # Hud
   with ctx:
     save()
-    setSourceSurface(sfHud, offsetX, 0)
+    cairoSetSourcePixbuf(pixbufHud, offsetX, 0)
     paintWithAlpha(1.0 - (scaleHudTransparency.value / 255))
     restore()
 
   # Minimap
   with ctx:
     save()
-    setSourceSurface(sfMinimap, offsetX, 0)
+    cairoSetSourcePixbuf(pixbufMinimap, offsetX, 0)
     paintWithAlpha(1.0 - (scaleMinimapTransparency.value / 255))
     restore()
 
   # Icons
   with ctx:
     save()
-    setSourceSurface(sfIcons, offsetX, 0)
+    cairoSetSourcePixbuf(pixbufIcons, offsetX, 0)
     paintWithAlpha(1.0 - (scaleIconsTransparency.value / 255))
     restore()
 
@@ -215,40 +238,41 @@ proc onDaSettingsHudHudDraw(self: ptr DrawingArea00, ctx00: ptr Context00) {.sig
   if switchHelpPopups.active:
     with ctx:
       save()
-      setSourceSurface(sfHelpPopup, offsetX, 0)
-      maskSurface(sfHelpPopup, offsetX, 0)
+      cairoSetSourcePixbuf(pixbufHelpPopup, offsetX, 0)
+      # maskSurface(sfHelpPopup, offsetX, 0)
+      paint()
       restore()
 
   # Voting
   if not switchOptOutOfVoting.active:
     with ctx:
       save()
-      setSourceSurface(sfVoting, offsetX, 0)
-      maskSurface(sfVoting, offsetX, 0)
+      cairoSetSourcePixbuf(pixbufVoting, offsetX, 0)
+      paint()
       restore()
 
   # Kill messages
   if switchShowKillMessages.active:
     with ctx:
       save()
-      setSourceSurface(sfKillMessages, offsetX, 0)
-      maskSurface(sfKillMessages, offsetX, 0)
+      cairoSetSourcePixbuf(pixbufKillMessages, offsetX, 0)
+      paint()
       restore()
 
   # Radio messages
   if switchShowRadioMessages.active:
     with ctx:
       save()
-      setSourceSurface(sfRadioMessages, offsetX, 0)
-      maskSurface(sfRadioMessages, offsetX, 0)
+      cairoSetSourcePixbuf(pixbufRadioMessages, offsetX, 0)
+      paint()
       restore()
 
   # Chat messages
   if switchShowChatMessages.active:
     with ctx:
       save()
-      setSourceSurface(sfChatMessages, offsetX, 0)
-      maskSurface(sfChatMessages, offsetX, 0)
+      cairoSetSourcePixbuf(pixbufChatMessages, offsetX, 0)
+      paint()
       restore()
 
   ctx.restore()
@@ -314,16 +338,73 @@ proc init*(builder: Builder, windowShownPtr, ignoreEventsPtr: ptr bool) =
 
   cbtnCrosshair = builder.getColorButton("cbtnSettingsHudCrosshair")
   daHud = builder.getDrawingArea("daSettingsHudHud")
-  sfBackground = imageSurfaceCreateFromPng("asset" / "hud" / "background.png")
-  sfHud = imageSurfaceCreateFromPng("asset" / "hud" / "hud.png")
-  sfMinimap = imageSurfaceCreateFromPng("asset" / "hud" / "minimap.png")
-  sfIcons = imageSurfaceCreateFromPng("asset" / "hud" / "icons.png")
-  sfCrosshair = imageSurfaceCreateFromPng("asset" / "hud" / "crosshair.png")
-  sfHelpPopup = imageSurfaceCreateFromPng("asset" / "hud" / "helppopup.png")
-  sfVoting = imageSurfaceCreateFromPng("asset" / "hud" / "voting.png")
-  sfKillMessages = imageSurfaceCreateFromPng("asset" / "hud" / "killmessages.png")
-  sfRadioMessages = imageSurfaceCreateFromPng("asset" / "hud" / "radiomessages.png")
-  sfChatMessages = imageSurfaceCreateFromPng("asset" / "hud" / "chatmessages.png")
+  # sfBackground = imageSurfaceCreateFromPng("asset" / "hud" / "background.png")
+  # sfHud = imageSurfaceCreateFromPng("asset" / "hud" / "hud.png")
+  # sfMinimap = imageSurfaceCreateFromPng("asset" / "hud" / "minimap.png")
+  # sfIcons = imageSurfaceCreateFromPng("asset" / "hud" / "icons.png")
+  # sfCrosshair = imageSurfaceCreateFromPng("asset" / "hud" / "crosshair.png")
+  # sfHelpPopup = imageSurfaceCreateFromPng("asset" / "hud" / "helppopup.png")
+  # sfVoting = imageSurfaceCreateFromPng("asset" / "hud" / "voting.png")
+  # sfKillMessages = imageSurfaceCreateFromPng("asset" / "hud" / "killmessages.png")
+  # sfRadioMessages = imageSurfaceCreateFromPng("asset" / "hud" / "radiomessages.png")
+  # sfChatMessages = imageSurfaceCreateFromPng("asset" / "hud" / "chatmessages.png")
+
+
+  var loader: PixbufLoader
+
+  loader = newPixbufLoader()
+  discard loader.write(BACKGROUND_IMAGE_RAW)
+  pixbufBackground = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(HUD_IMAGE_RAW)
+  pixbufHud = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(MINIMAP_IMAGE_RAW)
+  pixbufMinimap = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(ICONS_IMAGE_RAW)
+  pixbufIcons = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(CROSSHAIR_IMAGE_RAW)
+  sfCrosshair = imageSurfaceCreate(cairo.Format.argb32, loader.pixbuf.width, loader.pixbuf.height)
+  var context: Context = newContext(sfCrosshair)
+  context.cairoSetSourcePixbuf(loader.pixbuf, 0, 0)
+  context.paint()
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(HELPPOPUP_IMAGE_RAW)
+  pixbufHelpPopup = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(VOTING_IMAGE_RAW)
+  pixbufVoting = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(KILLMESSAGES_IMAGE_RAW)
+  pixbufKillMessages = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(RADIOMESSAGES_IMAGE_RAW)
+  pixbufRadioMessages = loader.pixbuf
+  discard loader.close()
+
+  loader = newPixbufLoader()
+  discard loader.write(CHATMESSAGES_IMAGE_RAW)
+  pixbufChatMessages = loader.pixbuf
+  discard loader.close()
+
 
   scaleHudTransparency = builder.getScale("scaleSettingsHudHudTransparency")
   scaleMinimapTransparency = builder.getScale("scaleSettingsHudMinimapTransparency")
