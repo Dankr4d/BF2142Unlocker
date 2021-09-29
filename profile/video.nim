@@ -40,11 +40,6 @@ type
     viewDistanceScale* {.Setting: "setViewDistanceScale", Default: 1.0f}: range[0.0f .. 1.0f] # 0.0 = 50%, 1.0 = 100%
     useBloom* {.Setting: "setUseBloom", Valid: Bools01, Default: false.}: bool
     videoOptionScheme* {.Setting: "setVideoOptionScheme", Default: Presets.Custom.}: Presets
-
-type
-  Custom* {.Prefix: "".} = object
-    drawFps* {.Setting: "renderer.drawFps", Valid: Bools01, Default: false.}: bool
-    lockFps* {.Setting: "game.lockFps", Valid: Bools01, Default: false, IgnoreWhen: true.}: bool
 ##
 
 proc `$`*(resolution: Resolution): string =

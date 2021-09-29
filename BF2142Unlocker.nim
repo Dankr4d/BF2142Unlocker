@@ -837,7 +837,7 @@ proc updateProfilePathes() =
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
   checkBF2142ProfileFiles()
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
-    pageSettingVideo.setDocumentsPath(bf2142UnlockerConfig.settings.bf2142ClientPath, documentsPath)
+    pageSettingVideo.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
     pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
     pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   when defined(linux):
@@ -1012,10 +1012,9 @@ proc selectedMap(list: TreeView): tuple[mapName, mapMode: string, mapSize: int] 
     valMapName: Value
     valMapMode: Value
     valMapSize: Value
-    ls: ListStore
     iter: TreeIter
   let store = listStore(list.getModel())
-  if getSelected(list.selection, ls, iter):
+  if list.selection.getSelected(cast[var TreeModel](nil), iter):
     store.getValue(iter, 0, valMapName)
     result.mapName = valMapName.getString()
     store.getValue(iter, 1, valMapMode)
@@ -1030,9 +1029,8 @@ proc selectedServer(list: TreeView): Option[Server] =
     valStellaName: Value
   let store = listStore(list.getModel())
   var iter: TreeIter
-  var ls: ListStore
 
-  if not getSelected(list.selection, ls, iter):
+  if not list.selection.getSelected(cast[var TreeModel](nil), iter):
     return none(Server)
 
   store.getValue(iter, 0, valName)
@@ -1081,10 +1079,9 @@ proc `selectServer=`(list: TreeView, server: Server) =
 proc selectedSoldier(list: TreeView): Option[string] =
   var
     valSoldier: Value
-    ls: ListStore
     iter: TreeIter
   let store = listStore(list.getModel())
-  if getSelected(list.selection, ls, iter):
+  if list.selection.getSelected(cast[var TreeModel](nil), iter):
     store.getValue(iter, 0, valSoldier)
     return some(valSoldier.getString())
   none(string)
@@ -1166,7 +1163,7 @@ proc selectNext(treeView: TreeView) =
   ignoreEvents = true
   var iter: TreeIter
   var store: ListStore = listStore(treeView.getModel())
-  if not treeView.selection.getSelected(store, iter):
+  if not treeView.selection.getSelected(cast[var TreeModel](nil), iter):
     ignoreEvents = false
     return
   if store.iterNext(iter):
@@ -1176,14 +1173,12 @@ proc selectNext(treeView: TreeView) =
 
 proc removeSelected(treeView: TreeView) =
   ignoreEvents = true
-  var
-    ls: ListStore
-    iter: TreeIter
+  var iter: TreeIter
   let store = listStore(treeView.getModel())
   if not store.getIterFirst(iter):
       ignoreEvents = false
       return
-  if getSelected(treeView.selection, ls, iter):
+  if treeView.selection.getSelected(cast[var TreeModel](nil), iter):
     discard store.remove(iter)
   ignoreEvents = false
 
@@ -1473,6 +1468,8 @@ proc loadMods(cbx: ComboBox, path: string) =
   for folder in walkDir(path, true):
     if folder.kind != pcDir:
       continue
+    if folder.path.toLower().startsWith("project_remaster_v") and folder.path.toLower().endsWith("offline"):
+      continue # TODO: Unwanted mods should be stored in config file. e.g.: exclude_listing_mods
     valMod.setString(folder.path.toLower())
     store.append(iter)
     store.setValue(iter, 0, valMod)
@@ -2367,7 +2364,7 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
   when defined(linux):
     discard terminal.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
-      workingDirectory = "",
+      workingDirectory = ".",
       argv = ["./BF2142UnlockerSrv", $ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
       envv = [],
       spawnFlags = {glib.SpawnFlag.doNotReapChild},

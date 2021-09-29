@@ -450,12 +450,6 @@ msgstr "Hoch"
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Aus"
 
-msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr "FPS anzeigen:"
-
-msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr "FPS entsperren:"
-
 # ##
 # ##### Settings/Audio
 msgid "SETTINGS_AUDIO_RENDERER"

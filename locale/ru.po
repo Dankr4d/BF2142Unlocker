@@ -450,12 +450,6 @@ msgstr "Высокое"
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Выкл"
 
-msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr "Показать FPS:"
-
-msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr "Разблокировать FPS:"
-
 # ##
 # ##### Settings/Audio
 msgid "SETTINGS_AUDIO_RENDERER"

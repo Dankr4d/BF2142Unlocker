@@ -454,12 +454,6 @@ msgstr "High"
 msgid "SETTINGS_VIDEO_OFF"
 msgstr "Off"
 
-msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr "Draw FPS:"
-
-msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr "Unlock FPS:"
-
 # ##
 # ##### Settings/Audio
 msgid "SETTINGS_AUDIO_RENDERER"

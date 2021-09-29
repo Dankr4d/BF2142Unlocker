@@ -398,12 +398,6 @@ msgstr ""
 
 msgid "SETTINGS_VIDEO_OFF"
 msgstr ""
-
-msgid "SETTINGS_VIDEO_DRAW_FPS"
-msgstr ""
-
-msgid "SETTINGS_VIDEO_UNLOCK_FPS"
-msgstr ""
 ###
 
 
