@@ -118,19 +118,19 @@ proc onScaleSettingsAudioVoipReceiveValueChanged(self: ptr Scale00) {.signal.} =
   audioDirty.voipPlaybackVolume = scaleVoipReceive.value
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsAudioEnableEaxStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsAudioEnableEaxStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   audioDirty.enableEax = switchEnableEax.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsAudioEnglishVoOnlyStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsAudioEnglishVoOnlyStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   audioDirty.englishOnlyVoices = switchEnglishVoOnly.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsAudioVoipEnabledStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsAudioVoipEnabledStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   audioDirty.voipEnabled = switchVoipEnabled.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsAudioVoipBoostMicGainStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsAudioVoipBoostMicGainStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   audioDirty.voipBoostEnabled = switchVoipBoostMicGain.active
   updateSaveRevertSensitivity()
 

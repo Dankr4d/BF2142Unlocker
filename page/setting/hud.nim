@@ -136,47 +136,47 @@ proc onCbtnSettingsHudCrosshairColorSet(self: ptr ColorSelection00) {.signal.} =
   updateSaveRevertSensitivity()
   daHud.queueDraw()
 
-proc onSwitchSettingsHudHelpPopupsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudHelpPopupsStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.helpPopups = switchHelpPopups.active
   updateSaveRevertSensitivity()
   daHud.queueDraw()
 
-proc onSwitchSettingsHudCameraShakeStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudCameraShakeStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.cameraShake = switchCameraShake.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsHudRotateMinimapStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudRotateMinimapStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.minimapRotate = switchRotateMinimap.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsHudOptOutOfVotingStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudOptOutOfVotingStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.outOfVoting = switchOptOutOfVoting.active
   updateSaveRevertSensitivity()
   daHud.queueDraw()
 
-proc onSwitchSettingsHudReverseMousewheelSelectionStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudReverseMousewheelSelectionStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.reverseMousewheelSelection = switchReverseMousewheelSelection.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsHudAutoReloadWeaponsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudAutoReloadWeaponsStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.autoReload = switchAutoReloadWeapons.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsHudIgnoreBuddyRequestsStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudIgnoreBuddyRequestsStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.ignoreBuddyRequests = switchIgnoreBuddyRequests.active
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsHudShowKillMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowKillMessagesStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.killMessagesFilter = switchShowKillMessages.active
   updateSaveRevertSensitivity()
   daHud.queueDraw()
 
-proc onSwitchSettingsHudShowRadioMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowRadioMessagesStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.radioMessagesFilter = switchShowRadioMessages.active
   updateSaveRevertSensitivity()
   daHud.queueDraw()
 
-proc onSwitchSettingsHudShowChatMessagesStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsHudShowChatMessagesStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   generalDirty.chatMessagesFilter = switchShowChatMessages.active
   updateSaveRevertSensitivity()
   daHud.queueDraw()

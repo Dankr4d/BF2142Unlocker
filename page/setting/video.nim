@@ -239,7 +239,7 @@ proc onScaleSettingsVideoViewDistanceScaleValueChanged(self: ptr Scale00) {.sign
   videoDirty.viewDistanceScale = scaleViewDistanceScale.value.float * 2 - 1
   updateSaveRevertSensitivity()
 
-proc onSwitchSettingsVideoEnhancedLightingStateSet(self: ptr Switch00) {.signal.} =
+proc onSwitchSettingsVideoEnhancedLightingStateSet(self: ptr Switch00, state: bool): bool {.signal.} =
   videoDirty.useBloom = switchEnhancedLighting.active
   updateSaveRevertSensitivity()
 

@@ -60,8 +60,8 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `pacman -Syu # Upgrade base`
 - `pacman -Syu # Upgrade all packages`
 - `pacman -S make tar git zip`
-- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject`
-- 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject`
+- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4`
+- 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject mingw-w64-i686-gtksourceview4`
 - `mkdir -p /c/Users/$USER/projects && cd /c/Users/$USER/projects`
 - `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
@@ -94,7 +94,7 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `cd /c/Users/$USER/projects/BF2142Unlocker`
 - `git pull`
 - `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
-- `nimble install -d # Install dependencies`
+- `nimble install -d # Install/Update dependencies`
 - Continue with [Compile](#Compile-1)
 ### Update (Linux)
 - `cd /home/$USER/projects/Nim`
@@ -103,7 +103,7 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `cd /home/$USER/projects/BF2142Unlocker`
 - `git pull`
 - `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
-- `nimble install -d # Install dependencies`
+- `nimble install -d # Install/Update dependencies`
 - Continue with [Compile](#Compile-1)
 
 ## Compile (Docker) [Currently not maintained, maybe broken]

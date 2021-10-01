@@ -2,7 +2,8 @@ when defined(windows):
   import registry
 else:
   import ../../module/linux/registry
-import os, strutils
+  import os
+import strutils
 
 const REG_PATH: string = """Software\Wow6432Node\Electronic Arts\EA GAMES\Battlefield 2142"""
 const REG_KEY: string = "Language"
@@ -46,6 +47,7 @@ else:
 
 when isMainModule:
   # setUnicodeValue(REG_PATH, REG_KEY, $Language.English, HKEY_LOCAL_MACHINE, getHomeDir() / ".wine_bf2142")
-  echo REG_KEY, ": ", getGameLanguage(getHomeDir() / ".wine_bf2142")
-  setGameLanguage(Language.English, getHomeDir() / ".wine_bf2142")
-  echo REG_KEY, ": ", getGameLanguage(getHomeDir() / ".wine_bf2142")
+  when defined(linux):
+    echo REG_KEY, ": ", getGameLanguage(getHomeDir() / ".wine_bf2142")
+    setGameLanguage(Language.English, getHomeDir() / ".wine_bf2142")
+    echo REG_KEY, ": ", getGameLanguage(getHomeDir() / ".wine_bf2142")
