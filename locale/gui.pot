@@ -599,6 +599,9 @@ msgstr ""
 msgid "GAMESERVER_CRASHED"
 msgstr ""
 
+msgid "LOGIN_UNLOCKSERVER_CRASHED"
+msgstr ""
+
 msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr ""
 

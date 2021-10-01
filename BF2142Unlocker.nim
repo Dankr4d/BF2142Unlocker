@@ -2203,55 +2203,53 @@ when defined(windows):
     TimerDataGameServer = ref object
       terminal: Terminal
       treeView: TreeView
-    ChannelData = object
-      running: bool
-      data: string
   var threadLoginUnlockServer: system.Thread[Process]
   var threadGameServer: system.Thread[Process]
-  var channelGameServer: Channel[ChannelData]
-  var channelLoginUnlockServer: Channel[ChannelData]
-  channelGameServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
-  channelLoginUnlockServer.open() # TODO: Open before thread is spawned # See workaround in: https://github.com/nim-lang/Nim/issues/6369
+  var channelGameServer: Channel[string]
+  var channelLoginUnlockServer: Channel[string]
 
-  var timerGameServerId: int
+  var timerGameServerId: int = 0
   proc timerGameServer(timerData: TimerDataGameServer): bool =
     # TODO: Always receive the last entry from channel, because
     #       data is the whole stdout of the game server
-    var (hasData, channelData) = channelGameServer.tryRecv()
-    if not hasData:
-      return SOURCE_CONTINUE
-    if channelData.data.strip() == "":
-      # Stdout of game server is at startup "empty"
-      return SOURCE_CONTINUE
-    timerData.terminal.text = channelData.data
-    var gsdata: GsData
-    if channelData.running:
-      try:
-        gsdata = channelData.data.parseGsData()
-      except ValueError:
-        discard # Data couldn't be parsed
-    else:
+    if not processGameServer.running:
       timerGameServerId = 0
+      channelGameServer.close()
+      if processGameServer.peekExitCode().int32 != 0:
+        timerData.terminal.text = dgettext("gui", "GAMESERVER_CRASHED")  % [$processGameServer.peekExitCode().int32]
+      timerData.treeView.update(GsData())
+      return SOURCE_REMOVE
+    if channelGameServer.peek() == 0:
+      return SOURCE_CONTINUE # No data
+    var channelData: string = channelGameServer.recv()
+    if channelData.strip() == "":
+      return SOURCE_CONTINUE # Stdout of game server is empty at startup
+    timerData.terminal.text = channelData
+    var gsdata: GsData
+    try:
+      gsdata = channelData.parseGsData()
+    except ValueError:
+      discard # Couldn't parse data
     if gsdata.status != lastGsStatus:
       timerData.treeView.update(gsdata)
       lastGsStatus = gsdata.status
-    return channelData.running
+    return SOURCE_CONTINUE
 
-  var timerLoginUnlockServerId: int
+  var timerLoginUnlockServerId: int = 0
   proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
-    var (hasData, channelData) = channelLoginUnlockServer.tryRecv()
-    if not hasData:
-      return SOURCE_CONTINUE
-    if not channelData.running:
+    if not processLoginServer.running:
       timerLoginUnlockServerId = 0
+      channelLoginUnlockServer.close()
+      if processLoginServer.peekExitCode().int32 != 0:
+        timerData.terminal.text = dgettext("gui", "LOGIN_UNLOCKSERVER_CRASHED") % [$processLoginServer.peekExitCode().int32]
       return SOURCE_REMOVE
-    timerData.terminal.addTextColorizedWorkaround(channelData.data, scrollDown = true)
+    if channelLoginUnlockServer.peek() == 0:
+      return SOURCE_CONTINUE # No data
+    timerData.terminal.addTextColorizedWorkaround(channelLoginUnlockServer.recv(), scrollDown = true)
     return SOURCE_CONTINUE
 
 proc killLoginServer() =
   when defined(windows):
-    if timerLoginUnlockServerId > 0:
-      discard remove(timerLoginUnlockServerId)
     if processLoginServer.running:
       processLoginServer.kill()
   else:
@@ -2261,8 +2259,6 @@ proc killLoginServer() =
 
 proc killGameServer() =
   when defined(windows):
-    if timerGameServerId > 0:
-      discard remove(timerGameServerId)
     if processGameServer.running:
       processGameServer.kill()
   else:
@@ -2272,49 +2268,34 @@ proc killGameServer() =
 
 when defined(windows):
   proc threadGameServerProc(process: Process) {.thread.} =
-    var channelData: ChannelData = ChannelData(running: true, data: "")
     var hndl: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, true, process.processID.DWORD)
     if hndl == 0:
-      channelData.running = false
-      channelData.data = "ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError())
-      channelGameServer.send(channelData)
+      channelGameServer.send("ERROR: " & $osLastError() & "\n" & osErrorMsg(osLastError()))
       return
     # Disable resizing and maximize button (this breaks readability and
     # stdoutreader fails if region rect is wrong because of resizing)
     SetWindowLongPtrA(hndl, GWL_STYLE, WS_OVERLAPPED xor WS_CAPTION xor WS_SYSMENU xor WS_MINIMIZEBOX xor WS_VISIBLE)
     discard CloseHandle(hndl)
-    while channelData.running:
+    while true:
       if not process.running:
-        channelData.running = false
-        channelData.data = dgettext("gui", "GAMESERVER_CRASHED")
-        channelGameServer.send(channelData)
-        continue # Continue to cleanup after while loop
-      var stdoutTuple: tuple[lastError: uint32, stdout: string] = readStdOut(process.processID)
-      if stdoutTuple.lastError == 0:
-        channelData.data = stdoutTuple.stdout
-        channelGameServer.send(channelData)
-      elif stdoutTuple.lastError == ERROR_INVALID_HANDLE:
-        # TODO: Sometimes it fails with invalid handle.
-        # Maybe this happens when the process is killed while reading from stdout.
-        discard
+        return
+      var (lastError, stdout) = readStdOut(process.processID)
+      if lastError == 0:
+        channelGameServer.send(stdout)
+      elif lastError == ERROR_INVALID_HANDLE:
+        discard # TODO: Sometimes it fails with invalid handle.
+                # Maybe this happens when the process is killed while reading from stdout.
       else:
-        when defined(debug):
-          channelData.running = false
-        channelData.data = "ERROR: " & $stdoutTuple.lastError & "\n" & osErrorMsg(stdoutTuple.lastError.OSErrorCode)
-        channelGameServer.send(channelData)
+        channelGameServer.send("ERROR: " & $lastError & "\n" & osErrorMsg(lastError.OSErrorCode))
       sleep(250)
 
   proc threadLoginUnlockServerProc(process: Process) {.thread.} =
-    var channelData: ChannelData = ChannelData(running: true, data: "")
-    while channelData.running:
+    while true:
       if not process.running:
-        channelData.running = false
-        channelData.data = ""
-        channelLoginUnlockServer.send(channelData)
         return
-      channelData.data = process.outputStream.readAll()
-      channelLoginUnlockServer.send(channelData)
+      channelLoginUnlockServer.send(process.outputStream.readAll())
       sleep(250)
+
 elif defined(linux):
   proc onTermHostGameServerContentsChanged(terminal: Terminal) =
     var text: string = termHostGameServer.getText(nil, nil, cast[var ptr GArray00](nil))
@@ -2355,6 +2336,9 @@ proc startBF2142Server() =
       options = {poParentStreams}
     )
 
+    channelGameServer = Channel[string]()
+    channelGameServer.open()
+
     var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: termHostGameServer, treeView: trvHostSelectedMap)
     timerGameServerId = int(timeoutAdd(250, timerGameServer, timerDataGameServer))
     threadGameServer.createThread(threadGameServerProc, processGameServer)
@@ -2386,6 +2370,9 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
       args = [$ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
       options = {poStdErrToStdOut, poDaemon}
     )
+
+    channelLoginUnlockServer = Channel[string]()
+    channelLoginUnlockServer.open()
 
     var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
     timerLoginUnlockServerId = int(timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer))

@@ -663,8 +663,14 @@ msgstr ""
 # ## Other
 msgid "GAMESERVER_CRASHED"
 msgstr ""
-"ERROR: The Battlefield 2142 server crashed.\n"
-"This is most likely a map fault. Some maps doesn't work perfect and can crash the whole server."
+"ERROR: Battlefield 2142 server crashed.\n"
+"This is most likely a map fault. Some maps doesn't work perfect and can crash the whole server.\n"
+"Exit code: $#\n"
+
+msgid "LOGIN_UNLOCKSERVER_CRASHED"
+msgstr ""
+"ERROR: Login-/Unlockserver crashed.\n"
+"Exit code: $#\n"
 
 msgid "NO_WRITE_PERMISSION_TITLE"
 msgstr "No write permission"
