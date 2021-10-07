@@ -58,7 +58,7 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - Install MSYS2 (https://www.msys2.org/) [Do not run "MSYS2 32/64bit" at the end of installation wizard]
 - Start MSYS2 MINGW64 (64 bit) or MSYS2 MINGW32 (32 bit)
 - `pacman -Syu # Upgrade base`
-- `pacman -Syu # Upgrade all packages`
+- `pacman -Su # Upgrade all packages`
 - `pacman -S make tar git zip`
 - 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4`
 - 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject mingw-w64-i686-gtksourceview4`
