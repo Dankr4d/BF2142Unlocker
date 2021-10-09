@@ -38,7 +38,11 @@ else:
 
 when defined(windows):
   proc getGameLanguage*(): Language =
-    return parseEnum[Language](getUnicodeValue(REG_PATH, REG_KEY, HKEY_LOCAL_MACHINE))
+    try:
+      return parseEnum[Language](getUnicodeValue(REG_PATH, REG_KEY, HKEY_LOCAL_MACHINE))
+    except OSError:
+      setGameLanguage(Language.English)
+      return Language.English
 else:
   proc getGameLanguage*(winePath: string = getHomeDir() / ".wine"): Language =
     return parseEnum[Language](getUnicodeValue(REG_PATH, REG_KEY, HKEY_LOCAL_MACHINE, winePath))
