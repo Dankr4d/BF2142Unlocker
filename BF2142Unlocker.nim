@@ -2090,6 +2090,9 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
   config.setSectionKey(CONFIG_SECTION_MULTIPLAYER, CONFIG_KEY_MULTIPLAYER_MOD, cbxMultiplayerMod.activeId)
   config.writeConfig(CONFIG_FILE_NAME)
 
+  if not fileExists(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+    if not copyFile(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_EXE_NAME, bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
+      return
   if not hasWritePermission(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME):
     newInfoDialog(
       dgettext("gui", "NO_WRITE_PERMISSION_TITLE"),

@@ -100,6 +100,9 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   fs.writeStr(parseHexInt("00607180"), patchConfig.gpcm, 63) # gpcm.gamespy.com
   fs.writeStr(parseHexInt("006071C0"), patchConfig.gpsp, 63) # gpsp.gamespy.com
 
+  # Patch gamespy.com since they're redirecting and game cannot launch the usual way
+  fs.writeStr(parseHexInt("00524824"), "127.0.0.1", 11)
+
 proc patchClient*(path: string, patchConfig: PatchConfig) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
   fs.patchClient(patchConfig)
