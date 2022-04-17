@@ -563,8 +563,8 @@ proc log(ex: ref Exception) =
 
 proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
-  dialog.title = "ERROR: " & osErrorMsg(osLastError())
-  var lblText: Label = newLabel($ex)
+  dialog.title = cstring("ERROR: " & osErrorMsg(osLastError()))
+  var lblText: Label = newLabel(cstring($ex))
   dialog.contentArea.add(lblText)
   var hboxButtons: Box = newBox(Orientation.horizontal, 5)
   dialog.contentArea.add(hboxButtons)
@@ -596,12 +596,12 @@ proc writeFile(filename, content: string): bool {.used.} =
     ex.handle()
     return false
 
-proc readFile(filename: string): Option[TaintedString] {.used.} =
+proc readFile(filename: string): Option[string] {.used.} =
   try:
     return some(system.readFile(filename))
   except system.IOError as ex:
     ex.handle()
-    return none(TaintedString)
+    return none(string)
 
 proc moveFile(source, dest: string): bool {.used.} =
   try:
@@ -685,7 +685,7 @@ const SEVERNAYA_DESC_MD5_HASH: string = "6de6b4433ecc35dd11467fff3f4e5cc4"
 const STREET_DESC_MD5_HASH: string = "d36161b9b4638e315809ba2dd8bf4cdf"
 
 proc removeLine(path: string, val: int): bool =
-  var rawOpt: Option[TaintedString] = readFile(path)
+  var rawOpt: Option[string] = readFile(path)
   if rawOpt.isNone:
     return false
   var rawLines: seq[string] = rawOpt.get().splitLines()
@@ -693,14 +693,14 @@ proc removeLine(path: string, val: int): bool =
   return writeFile(path, rawLines.join("\n"))
 
 proc removeChars(path: string, valFrom, valTo: int): bool =
-  var rawOpt: Option[TaintedString] = readFile(path)
+  var rawOpt: Option[string] = readFile(path)
   if rawOpt.isNone:
     return false
-  rawOpt.get().delete(valFrom - 1, valTo - 1)
+  rawOpt.get().delete(valFrom - 1 .. valTo - 1)
   return writeFile(path, rawOpt.get())
 
 proc fixMapDesc(path: string): bool =
-  var rawOpt: Option[TaintedString] = readFile(path)
+  var rawOpt: Option[string] = readFile(path)
   if rawOpt.isNone:
     return false
   var raw: string = rawOpt.get()
@@ -736,7 +736,7 @@ proc fixBF2142CoopPyLogic(path: string) =
     # Return if file exists # and md5 hash is the same
     return
   var gameStatusChangedIdx: int = -1
-  let gpmCoopRawOpt: Option[TaintedString] = readFile(gameModePath / "gpm_coop.py")
+  let gpmCoopRawOpt: Option[string] = readFile(gameModePath / "gpm_coop.py")
   if isNone(gpmCoopRawOpt):
     return
   var lines: seq[string] = splitLines(get(gpmCoopRawOpt))
@@ -841,9 +841,9 @@ proc updateProfilePathes() =
     pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
     pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
   when defined(linux):
-    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix))
+    discard cbxSettingsGameLanguage.setActiveId(cstring($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix)))
   else:
-    discard cbxSettingsGameLanguage.setActiveId($getGameLanguage())
+    discard cbxSettingsGameLanguage.setActiveId(cstring($getGameLanguage()))
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
   # TODO: Try'n catch because we parse booleans
@@ -879,19 +879,19 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
 
 proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   # Quick
-  if not cbxQuickMod.setActiveId(config.quick.`mod`):
+  if not cbxQuickMod.setActiveId(config.quick.`mod`.cstring):
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxQuickMod.setActiveId("bf2142")
-  txtQuickPlayerName.text = config.quick.playername
+  txtQuickPlayerName.text = config.quick.playername.cstring
   cbtnQuickAutoJoin.active = config.quick.autoJoin
 
   # Multiplayer
-  if not cbxMultiplayerMod.setActiveId(config.multiplayer.`mod`):
+  if not cbxMultiplayerMod.setActiveId(config.multiplayer.`mod`.cstring):
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxMultiplayerMod.setActiveId("bf2142")
 
   # Host
-  if not cbxHostMods.setActiveId(config.host.`mod`):
+  if not cbxHostMods.setActiveId(config.host.`mod`.cstring):
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxHostMods.setActiveId("bf2142")
 
@@ -899,10 +899,10 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   chbtnUnlocksUnlockSquadGadgets.active = config.unlocks.unlockSquadGadgets
 
   # Settings
-  txtSettingsBF2142ClientPath.text = config.settings.bf2142ClientPath
-  txtSettingsBF2142ServerPath.text = config.settings.bf2142ServerPath
+  txtSettingsBF2142ClientPath.text = config.settings.bf2142ClientPath.cstring
+  txtSettingsBF2142ServerPath.text = config.settings.bf2142ServerPath.cstring
   when defined(linux): # TODO: Should we really do this in applyBF2142UnlockerConfig?
-    txtSettingsWinePrefix.text = config.settings.winePrefix
+    txtSettingsWinePrefix.text = config.settings.winePrefix.cstring
     if config.settings.winePrefix != "":
       documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
       updateProfilePathes()
@@ -910,10 +910,10 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
     documentsPath = getDocumentsPath()
     updateProfilePathes()
   when defined(linux):
-    txtSettingsStartupQuery.text = config.settings.startupQuery
+    txtSettingsStartupQuery.text = config.settings.startupQuery.cstring
   chbtnSettingsSkipMovies.active = config.settings.skipMovies
   chbtnSettingsWindowMode.active = config.settings.windowMode
-  if not cbxSettingsResolution.setActiveId(config.settings.resolution):
+  if not cbxSettingsResolution.setActiveId(config.settings.resolution.cstring):
     cbxSettingsResolution.setActive(0)
 
 
@@ -922,7 +922,7 @@ proc backupOpenSpyIfExists() =
   let originalRendDX9Path: string = bf2142UnlockerConfig.settings.bf2142ClientPath / ORIGINAL_RENDDX9_DLL_NAME
   if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
     return
-  let originalRendDX9RawOpt: Option[TaintedString] = readFile(originalRendDX9Path)
+  let originalRendDX9RawOpt: Option[string] = readFile(originalRendDX9Path)
   if originalRendDX9RawOpt.isNone:
     return
   let originalRendDX9Hash: string = getMD5(originalRendDX9RawOpt.get())
@@ -1112,7 +1112,7 @@ proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
   let store = listStore(list.getModel())
   discard valSoldier.init(g_string_get_type())
   for soldier in soldiers:
-    valSoldier.setString(soldier)
+    valSoldier.setString(soldier.cstring)
     store.append(iter)
     store.setValue(iter, 0, valSoldier)
   ignoreEvents = false
@@ -1152,7 +1152,7 @@ proc update(treeView: TreeView, gsdata: GsData) =
         color = "Red"
       else:
         discard
-      valBackgroundColor.setString(color)
+      valBackgroundColor.setString(color.cstring)
       store.setValue(iter, 3, valBackgroundColor)
     elif valBackgroundColor.getString() != "":
         valBackgroundColor.setString("")
@@ -1470,7 +1470,7 @@ proc loadMods(cbx: ComboBox, path: string) =
       continue
     if folder.path.toLower().startsWith("project_remaster_v") and folder.path.toLower().endsWith("offline"):
       continue # TODO: Unwanted mods should be stored in config file. e.g.: exclude_listing_mods
-    valMod.setString(folder.path.toLower())
+    valMod.setString(folder.path.toLower().cstring)
     store.append(iter)
     store.setValue(iter, 0, valMod)
     store.setValue(iter, 1, valMod)
@@ -1486,7 +1486,7 @@ proc loadJoinResolutions() =
   let store = listStore(cbxSettingsResolution.getModel())
   store.clear()
   for resolution in getAvailableResolutions():
-    valResolution.setString($resolution.width & "x" & $resolution.height)
+    valResolution.setString(cstring($resolution.width & "x" & $resolution.height))
     valWidth.setUint(cast[int](resolution.width))
     valHeight.setUint(cast[int](resolution.height))
     store.append(iter)
@@ -1512,7 +1512,7 @@ proc loadGameLanguages() =
   let store = listStore(cbxSettingsGameLanguage.getModel())
   store.clear()
   for lang in clientlang.Language:
-    valLanguage.setString($lang)
+    valLanguage.setString(cstring($lang))
     store.append(iter)
     store.setValue(iter, 0, valLanguage)
 
@@ -1541,7 +1541,7 @@ proc enableDisableIntroMovies(path: string, enable: bool): bool =
         if moviePathSplit.name == "Dice":
           # Fixes game crashes on pressing alt+tab when playing online.
           # https://github.com/Dankr4d/BF2142Unlocker/issues/42
-          var diceBikRawOpt: Option[TaintedString] = readFile(moviePath.path)
+          var diceBikRawOpt: Option[string] = readFile(moviePath.path)
           if diceBikRawOpt.isNone:
             return false
           if getMd5(diceBikRawOpt.get()) == BLANK_BIK_HASH:
@@ -1734,7 +1734,7 @@ proc timerUpdatePlayerList(TODO: int): bool =
     else:
       store = storePlayerInfo2
     valPID.setUint(gspy.player.pid[idx].int) # TODO: setUInt should take an uint param, not int
-    valName.setString(gspy.player.player[idx])
+    valName.setString(gspy.player.player[idx].cstring)
     valScore.setInt(gspy.player.score[idx])
     valKills.setUInt(gspy.player.skill[idx].int) # TODO: setUInt should take an uint param, not int
     valDeaths.setUInt(gspy.player.deaths[idx].int) # TODO: setUInt should take an uint param, not int
@@ -1748,8 +1748,8 @@ proc timerUpdatePlayerList(TODO: int): bool =
     store.setValue(iter, 4, valDeaths)
     store.setValue(iter, 5, valPing)
 
-  lblMultiplayerTeam1.text = gspy.team.team_t[0].toUpper()
-  lblMultiplayerTeam2.text = gspy.team.team_t[1].toUpper()
+  lblMultiplayerTeam1.text = gspy.team.team_t[0].toUpper().cstring
+  lblMultiplayerTeam2.text = gspy.team.team_t[1].toUpper().cstring
 
   btnMultiplayerPlayersRefresh.sensitive = true
   spinnerMultiplayerPlayers1.stop()
@@ -1803,16 +1803,16 @@ proc timerUpdateServer(TODO: int): bool =
   discard valStellaName.init(g_string_get_type())
 
   for server in data.msg:
-    valName.setString(server.gspyServer.hostname)
+    valName.setString(server.gspyServer.hostname.cstring)
     valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
     valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
-    valMap.setString(server.gspyServer.mapname)
-    valMode.setString(server.gspyServer.gametype)
-    valMod.setString(server.gspyServer.gamevariant)
-    valIp.setString($server.address)
+    valMap.setString(server.gspyServer.mapname.cstring)
+    valMode.setString(server.gspyServer.gametype.cstring)
+    valMod.setString(server.gspyServer.gamevariant.cstring)
+    valIp.setString(cstring($server.address))
     valPort.setUInt(server.gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
     valGSpyPort.setUInt(server.port.int) # TODO: setUInt should take an uint param, not int
-    valStellaName.setString(server.serverConfig.server_name)
+    valStellaName.setString(server.serverConfig.server_name.cstring)
     store.append(iter)
     store.setValue(iter, 0, valName)
     store.setValue(iter, 1, valCurrentPlayer)
@@ -1978,9 +1978,9 @@ proc timerFesl(TODO: int): bool =
       errorMsg = "Unknown error."
 
     frameMultiplayerAccountError.visible = true
-    lblMultiplayerAccountErrorTxn.text = $ex.exType
-    lblMultiplayerAccountErrorCode.text = $ex.code
-    lblMultiplayerAccountErrorMsg.text = errorMsg
+    lblMultiplayerAccountErrorTxn.text = cstring($ex.exType)
+    lblMultiplayerAccountErrorCode.text = cstring($ex.code)
+    lblMultiplayerAccountErrorMsg.text = cstring(errorMsg)
 
   else:
     frameMultiplayerAccountError.visible = false
@@ -2124,7 +2124,7 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
 proc fillMultiplayerPatchAndStartBox() =
   var button: Button
   for serverConfig in serverConfigs:
-    button = newButton(serverConfig.server_name)
+    button = newButton(serverConfig.server_name.cstring)
     button.visible = true
     button.connect("clicked", onMultiplayerPatchAndStartButtonClicked, serverConfig)
     bboxMultiplayerServers.add(button)
@@ -2323,7 +2323,7 @@ proc startBF2142Server() =
     ldLibraryPath &= ":" & os.getCurrentDir()
     discard termHostGameServer.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
-      workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath,
+      workingDirectory = bf2142UnlockerConfig.settings.bf2142ServerPath.cstring,
       argv = ["bin" / "amd-64" / BF2142_SRV_PATCHED_EXE_NAME, "+modPath", fmt"mods/{cbxHostMods.activeId}"],
       envv = ["TERM=xterm", fmt"LD_LIBRARY_PATH={ldLibraryPath}"],
       spawnFlags = {glib.SpawnFlag.doNotReapChild},
@@ -2386,7 +2386,7 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
 ## Quick
 proc patchAndStartLogic(): bool =
   let ipAddress: string = txtQuickIpAddress.text.strip()
-  txtQuickPlayerName.text = txtQuickPlayerName.text.strip()
+  txtQuickPlayerName.text = txtQuickPlayerName.text.strip().cstring
   var invalidStr: string
   if cbtnQuickAutoJoin.active and (ipAddress == "127.0.0.1" or ipAddress == "localhost"):
     invalidStr.add("\t* Auto join feature won't work if you're trying to connect to a gameserver with 127.0.0.1 or localhost.\n")
@@ -2662,7 +2662,7 @@ proc onTxtMultiplayerAccountSoldierNameInsertText(self: Editable00, cstr: cstrin
 
 proc onTxtMultiplayerAccountSoldierNameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
   var soldier: string = txtMultiplayerAccountSoldierName.text
-  soldier.delete(int(startPos), int(endPos) - 1)
+  soldier.delete(int(startPos)..int(endPos) - 1)
   if not validateSoldier(soldier):
     txtMultiplayerAccountSoldierName.signalStopEmissionByName("delete-text")
 
@@ -2707,8 +2707,8 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
     if uri != "":
       lblMultiplayerModMissingLink.visible = true
       lbtnMultiplayerModMissing.visible = true
-      lbtnMultiplayerModMissing.label = uri
-      lbtnMultiplayerModMissing.uri = uri
+      lbtnMultiplayerModMissing.label = uri.cstring
+      lbtnMultiplayerModMissing.uri = uri.cstring
     else:
       lblMultiplayerModMissingLink.visible = false
       lbtnMultiplayerModMissing.visible = false
@@ -2737,7 +2737,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
         break
 
   if not mapDirExists:
-    lblMultiplayerMapMissing.text = dgettext("gui", "LOGIN_MAP_MISSING_MSG") % [currentServer.map]
+    lblMultiplayerMapMissing.text = cstring(dgettext("gui", "LOGIN_MAP_MISSING_MSG") % [currentServer.map])
 
     discard dlgMultiplayerMapMissing.run()
     dlgMultiplayerMapMissing.hide()
@@ -2839,15 +2839,15 @@ proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
   discard timeoutAdd(250, timerFesl, TODO)
   threadFesl.createThread(threadFeslProc)
 
-  lblMultiplayerAccountStellaName.text = currentServer.stellaName
-  lblMultiplayerAccountGameServerName.text = currentServer.name
+  lblMultiplayerAccountStellaName.text = currentServer.stellaName.cstring
+  lblMultiplayerAccountGameServerName.text = currentServer.name.cstring
 
   let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.server_name)
   if loginTplOpt.isSome:
     let loginTpl: tuple[username, password: string, soldier: Option[string]] = get(loginTplOpt)
     ignoreEvents = true
-    txtMultiplayerAccountUsername.text = loginTpl.username
-    txtMultiplayerAccountPassword.text = loginTpl.password
+    txtMultiplayerAccountUsername.text = loginTpl.username.cstring
+    txtMultiplayerAccountPassword.text = loginTpl.password.cstring
     chbtnMultiplayerAccountSave.active = true
     ignoreEvents = false
     loginAsync(false, loginTpl.soldier)
@@ -2932,14 +2932,14 @@ proc onBtnHostGameServerClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(true)
   if $ipAddress == "0.0.0.0":
      # When setting to 127.0.0.1 game doesn't connect to game server (doesn't load map)
-    txtQuickIpAddress.text = getPrivateAddrs()[0]
+    txtQuickIpAddress.text = cstring(getPrivateAddrs()[0])
   else:
-    txtQuickIpAddress.text = $ipAddress
+    txtQuickIpAddress.text = cstring($ipAddress)
   cbtnQuickAutoJoin.active = true
   termHostLoginServer.clear()
   termHostLoginServer.startLoginServer(ipAddress)
   startBF2142Server()
-  discard cbxQuickMod.setActiveId(cbxHostMods.activeId)
+  discard cbxQuickMod.setActiveId(cbxHostMods.activeId.cstring)
 
 proc onBtnHostCancelClicked(self: Button00) {.signal.} =
   applyHostRunningSensitivity(false)
@@ -2977,7 +2977,7 @@ proc setBF2142Path(path: string) =
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_EXE_NAME],
     )
-    txtSettingsBF2142ClientPath.text = bf2142UnlockerConfig.settings.bf2142ClientPath
+    txtSettingsBF2142ClientPath.text = bf2142UnlockerConfig.settings.bf2142ClientPath.cstring
     return
   vboxQuick.visible = true
   vboxMultiplayer.visible = true
@@ -2986,11 +2986,11 @@ proc setBF2142Path(path: string) =
   if txtSettingsBF2142ClientPath.text != path:
     txtSettingsBF2142ClientPath.text = path
   cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
-  if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`.cstring): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxQuickMod.setActiveId("bf2142")
   cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
-  if not cbxMultiplayerMod.setActiveId(bf2142UnlockerConfig.multiplayer.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxMultiplayerMod.setActiveId(bf2142UnlockerConfig.multiplayer.`mod`.cstring): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxMultiplayerMod.setActiveId("bf2142")
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
@@ -3000,7 +3000,7 @@ proc setBF2142Path(path: string) =
     if wineStartPos > -1:
       wineEndPos = bf2142UnlockerConfig.settings.bf2142ClientPath.find(DirSep, wineStartPos) - 1
       if txtSettingsWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
-        txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
+        txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos).cstring
         bf2142UnlockerConfig.settings.winePrefix = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
         config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
         documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
@@ -3029,7 +3029,7 @@ proc setBF2142ServerPath(path: string) =
       dgettext("gui", "COULD_NOT_FIND_TITLE") % [BF2142_SRV_EXE_NAME],
       dgettext("gui", "COULD_NOT_FIND_MSG") % [BF2142_SRV_EXE_NAME],
     )
-    txtSettingsBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath
+    txtSettingsBF2142ServerPath.text = bf2142UnlockerConfig.settings.bf2142ServerPath.cstring
     return
   bf2142UnlockerConfig.settings.bf2142ServerPath = path
   if txtSettingsBF2142ServerPath.text != path:
@@ -3037,7 +3037,7 @@ proc setBF2142ServerPath(path: string) =
   vboxHost.visible = true
   ignoreEvents = true
   cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
-  if not cbxHostMods.setActiveId(bf2142UnlockerConfig.host.`mod`): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxHostMods.setActiveId(cstring(bf2142UnlockerConfig.host.`mod`)): # TODO: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxHostMods.setActiveId("bf2142")
   updatePathes()
@@ -3071,7 +3071,7 @@ proc onBtnSettingsWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add che
     return
   if bf2142UnlockerConfig.settings.bf2142ServerPath == path:
     return
-  txtSettingsWinePrefix.text = path
+  txtSettingsWinePrefix.text = path.cstring
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text)
   config.writeConfig(CONFIG_FILE_NAME)
   when defined(linux): # Getlogin is only available for linux
@@ -3324,7 +3324,7 @@ proc onApplicationActivate(application: Application) =
     hboxHostTerms.add(swinHostGameServer)
   #
   ## Setting current language
-  discard cbxLanguages.setActiveId(currentLocale)
+  discard cbxLanguages.setActiveId(currentLocale.cstring)
   #
   ## Setting styles
   var cssProvider: CssProvider = newCssProvider()
@@ -3419,10 +3419,10 @@ else:
 
 proc languageLogic() =
   if fileExists(LANGUAGE_FILE):
-    var currentLocaleRawOpt: Option[TaintedString] = readFile(LANGUAGE_FILE)
+    var currentLocaleRawOpt: Option[string] = readFile(LANGUAGE_FILE)
     if currentLocaleRawOpt.isSome:
       currentLocale = currentLocaleRawOpt.get().strip()
-  discard bindtextdomain("gui", os.getCurrentDir() / "locale")
+  discard bindtextdomain("gui", cstring(os.getCurrentDir() / "locale"))
   disableSetlocale()
   if currentLocale in AVAILABLE_LANGUAGES:
     when defined(windows):
@@ -3433,7 +3433,7 @@ proc languageLogic() =
       else:
         discard bind_textdomain_codeset("gui", "ISO-8859-1")
     else:
-      discard setlocale(LC_ALL, currentLocale)
+      discard setlocale(LC_ALL, cstring(currentLocale))
       if currentLocale == "ru_RU":
         discard bind_textdomain_codeset("gui", "KOI8-R")
   else:

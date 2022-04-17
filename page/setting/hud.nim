@@ -110,7 +110,7 @@ proc updateSaveRevertSensitivity() =
     btnRevert.sensitive = false
 
 proc scaleSettingsHudTransparencyFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup($int((value / 255) * 100) & "%")
+  return g_strdup(cstring($int((value / 255) * 100) & "%"))
 
 proc onScaleSettingsHudHudTransparencyValueChanged(self: ptr Scale00) {.signal.} =
   generalDirty.hudTransparency = 255 - scaleHudTransparency.value.uint8
@@ -312,11 +312,11 @@ proc setDocumentsPath*(documentsPath: string) =
   else:
     generalDirty = general
 
-    lblConfigCorruptTitle.text = dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["General", "General.con"]
+    lblConfigCorruptTitle.text = cstring(dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["General", "General.con"])
     var iter: TextIter
     let markup: string = markup(report)
     viewConfigCorruptBody.buffer.getEndIter(iter)
-    viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
+    viewConfigCorruptBody.buffer.insertMarkup(iter, cstring(markup), markup.len)
 
     btnConfigCorruptYes.label = "Fix it!"
     btnConfigCorruptNo.label = "Cancel"

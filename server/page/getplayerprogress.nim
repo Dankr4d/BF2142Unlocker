@@ -1,7 +1,6 @@
 import asynchttpserver, asyncdispatch
-from strutils import multiReplace
+from strutils import multiReplace, split
 import tables # Query params
-from strutils import split # Query params
 
 proc handleGetPlayerProgress*(req: Request, params: Table[string, string]) {.async.} =
   var body: string

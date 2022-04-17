@@ -1,9 +1,8 @@
 import asynchttpserver, asyncdispatch
 from asyncnet import getPeerAddr # Required for getPeerAddr
 from times import epochTime
-from strutils import multiReplace
+from strutils import multiReplace, split
 import tables # Query params
-from strutils import split # Query params
 
 proc handleGetBackendInfo*(req: Request, params: Table[string, string]) {.async.} =
   var isServer: bool = false # TODO: Fix this

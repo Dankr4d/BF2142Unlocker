@@ -1,8 +1,7 @@
 import asynchttpserver, asyncdispatch
 from times import epochTime
-from strutils import multiReplace
+from strutils import multiReplace, split
 import tables # Query params
-from strutils import split # Query params
 
 proc handleGetUnlocksInfo*(req: Request, params: Table[string, string], unlockAllSquadGadgets: bool) {.async.} =
   var body: string

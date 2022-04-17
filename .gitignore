@@ -39,6 +39,17 @@ server/gpcm.exe
 server/stats
 server/stats.exe
 
+server/page/getawardsinfo
+server/page/getawardsinfo.exe
+server/page/getbackendinfo
+server/page/getbackendinfo.exe
+server/page/getplayerinfo
+server/page/getplayerinfo.exe
+server/page/getplayerprogress
+server/page/getplayerprogress.exe
+server/page/getunlocksinfo
+server/page/getunlocksinfo.exe
+
 module/localaddr
 module/localaddr.exe
 module/checkserver

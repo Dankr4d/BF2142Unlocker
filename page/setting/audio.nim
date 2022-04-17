@@ -72,13 +72,13 @@ proc loadAudio(audio: Audio) =
 
 
 proc onScaleSettingsAudioRendererFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup(translate(cast[Provider](value.int)))
+  return g_strdup(cstring(translate(cast[Provider](value.int))))
 
 proc onScaleSettingsAudioSoundQualityFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup(translate(cast[LowMediumHigh](value.int)))
+  return g_strdup(cstring(translate(cast[LowMediumHigh](value.int))))
 
 proc onScaleSettingsAudioPercentFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup($(int(value * 100)) & "%")
+  return g_strdup(cstring($(int(value * 100)) & "%"))
 
 
 proc updateSaveRevertSensitivity() =
@@ -169,11 +169,11 @@ proc setDocumentsPath*(documentsPath: string) =
   else:
     audioDirty = audio
 
-    lblConfigCorruptTitle.text = dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Audio", "Audio.con"]
+    lblConfigCorruptTitle.text = cstring(dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Audio", "Audio.con"])
     var iter: TextIter
     let markup: string = markup(report)
     viewConfigCorruptBody.buffer.getEndIter(iter)
-    viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
+    viewConfigCorruptBody.buffer.insertMarkup(iter, cstring(markup), markup.len)
 
     btnConfigCorruptYes.label = "Fix it!"
     btnConfigCorruptNo.label = "Cancel"

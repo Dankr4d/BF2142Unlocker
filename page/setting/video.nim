@@ -103,7 +103,7 @@ proc fillResolutions(self: ComboBox, resolutions: seq[Resolution]) =
   let store = listStore(cbxResolution.getModel())
   store.clear()
   for resolution in resolutions:
-    valResolution.setString($resolution)
+    valResolution.setString(cstring($resolution))
     valWidth.setUint(cast[int](resolution.width))
     valHeight.setUint(cast[int](resolution.height))
     valFrequence.setUint(cast[int](resolution.frequence))
@@ -123,7 +123,7 @@ proc loadVideo(video: Video) =
   scaleEffects.value = video.effectsQuality.float
   scaleTexture.value = video.textureQuality.float
   scaleTextureFiltering.value = video.textureFilteringQuality.float
-  discard cbxResolution.setActiveId($video.resolution)
+  discard cbxResolution.setActiveId(cstring($video.resolution))
   scaleAntialiasing.value = video.antialiasing.float
   scaleViewDistanceScale.value = video.viewDistanceScale
   switchEnhancedLighting.active = video.useBloom
@@ -153,12 +153,12 @@ proc setDocumentsPath*(documentsPath: string) =
       videoDirty.resolution = resolutions[0] #cbxResolution.getResolutionAtIdx(0)
     videoDirty.videoOptionScheme = Presets.Custom
 
-    lblConfigCorruptTitle.text = dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Video", "Video.con"]
+    lblConfigCorruptTitle.text = cstring(dgettext("gui", "SETTINGS_CONFIG_CORRUPT_TITLE") % ["Video", "Video.con"])
 
     var iter: TextIter
     let markup: string = markup(report)
     viewConfigCorruptBody.buffer.getEndIter(iter)
-    viewConfigCorruptBody.buffer.insertMarkup(iter, markup, markup.len)
+    viewConfigCorruptBody.buffer.insertMarkup(iter, cstring(markup), markup.len)
 
     btnConfigCorruptYes.label = "Fix it!"
     btnConfigCorruptNo.label = "Cancel"
@@ -176,16 +176,16 @@ proc setDocumentsPath*(documentsPath: string) =
   vboxVideo.visible = true
 
 proc onScaleSettingsVideoLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup(translate(cast[LowMediumHigh](value.int)))
+  return g_strdup(cstring(translate(cast[LowMediumHigh](value.int))))
 
 proc onScaleSettingsVideoOffLowMediumHighFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup(translate(cast[OffLowMediumHigh](value.int)))
+  return g_strdup(cstring(translate(cast[OffLowMediumHigh](value.int))))
 
 proc onScaleSettingsAntialiasingFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup(translate(cast[Antialiasing](value.int)))
+  return g_strdup(cstring(translate(cast[Antialiasing](value.int))))
 
 proc onScaleSettingsVideoViewDistanceScaleFormatValue(self: ptr Scale00, value: float): cstring {.signalNoCheck.} =
-  return g_strdup($(int(value * 100)) & "%")
+  return g_strdup(cstring($(int(value * 100)) & "%"))
 
 proc updateSaveRevertSensitivity() =
   if isVideoValid and isResolutionAvailable:
