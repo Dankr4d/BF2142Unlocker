@@ -371,7 +371,7 @@ msgid "SETTINGS_LAA_PATCH"
 msgstr "LAA-Patch:"
 
 msgid "SETTINGS_LAA_PATCH_TOOLTIP"
-msgstr "Allows the game to use 4GiB of RAM (required by some mods)."
+msgstr "Позволяет игре использовать 4ГБ оперативной памяти (требуется некоторыми модами)."
 
 msgid "SETTINGS_WINDOW_MODE"
 msgstr "Оконный режим:"
