@@ -120,10 +120,10 @@ msgstr ""
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr "Lädt die Spielerliste neu (F6)."
 
-msgid "MULTIPLAYER_MODS"
-msgstr "Mods:"
+msgid "MULTIPLAYER_MOD"
+msgstr "Mod:"
 
-msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgid "MULTIPLAYER_MOD_TOOLTIP"
 msgstr "Wähle die Modifikation aus mit der das Spiel gestartet werden soll."
 
 msgid "LOGIN_STELLA_NAME"
@@ -206,10 +206,10 @@ msgstr "Schnellstart"
 msgid "HOST_SETTINGS"
 msgstr "Einstellungen"
 
-msgid "HOST_MODS"
-msgstr "Mods:"
+msgid "HOST_MOD"
+msgstr "Mod:"
 
-msgid "HOST_MODS_TOOLTIP"
+msgid "HOST_MOD_TOOLTIP"
 msgstr "Wähle die Mod aus, mit der der Gameserver gestartet werden soll."
 
 msgid "HOST_GAME_MODE"
@@ -366,6 +366,12 @@ msgstr "Intro Movies überspringen:"
 
 msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Überspringt die intro Movies beim Spielstart."
+
+msgid "SETTINGS_LAA_PATCH"
+msgstr "LAA-Patch:"
+
+msgid "SETTINGS_LAA_PATCH_TOOLTIP"
+msgstr "Ermöglicht, dass das Spiel 4GiB RAM zur verfügung hat (benötigt von manchen mods)"
 
 msgid "SETTINGS_WINDOW_MODE"
 msgstr "Fenstermodus:"

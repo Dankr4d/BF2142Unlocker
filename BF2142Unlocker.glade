@@ -1695,7 +1695,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">MULTIPLAYER_MODS</property>
+                                <property name="tooltip-text" translatable="yes">MULTIPLAYER_MOD_TOOLTIP</property>
+                                <property name="label" translatable="yes">MULTIPLAYER_MOD</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -1848,8 +1849,8 @@ Author: Dankr4d
                                               <object class="GtkLabel">
                                                 <property name="visible">True</property>
                                                 <property name="can-focus">False</property>
-                                                <property name="tooltip-text" translatable="yes">HOST_MODS_TOOLTIP</property>
-                                                <property name="label" translatable="yes">HOST_MODS</property>
+                                                <property name="tooltip-text" translatable="yes">HOST_MOD_TOOLTIP</property>
+                                                <property name="label" translatable="yes">HOST_MOD</property>
                                                 <property name="xalign">0</property>
                                               </object>
                                               <packing>
@@ -3027,7 +3028,7 @@ Author: Dankr4d
                             <property name="label-xalign">0</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <!-- n-columns=3 n-rows=3 -->
+                              <!-- n-columns=3 n-rows=4 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -3041,7 +3042,7 @@ Author: Dankr4d
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_SKIP_MOVIES_TOOLTIP</property>
                                     <property name="label" translatable="yes">SETTINGS_SKIP_MOVIES</property>
                                     <property name="xalign">0</property>
                                   </object>
@@ -3060,7 +3061,7 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
-                                    <property name="top-attach">1</property>
+                                    <property name="top-attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -3074,7 +3075,7 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
-                                    <property name="top-attach">1</property>
+                                    <property name="top-attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -3103,7 +3104,7 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
-                                    <property name="top-attach">2</property>
+                                    <property name="top-attach">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -3123,7 +3124,7 @@ Author: Dankr4d
                                   </object>
                                   <packing>
                                     <property name="left-attach">1</property>
-                                    <property name="top-attach">2</property>
+                                    <property name="top-attach">3</property>
                                     <property name="width">2</property>
                                   </packing>
                                 </child>
@@ -3136,15 +3137,39 @@ Author: Dankr4d
                                     <property name="entry-text-column">1</property>
                                     <property name="id-column">0</property>
                                     <signal name="changed" handler="onCbxSettingsResolutionChanged" swapped="no"/>
-                                    <child internal-child="entry">
-                                      <object class="GtkEntry">
-                                        <property name="can-focus">False</property>
-                                      </object>
-                                    </child>
                                   </object>
                                   <packing>
                                     <property name="left-attach">2</property>
+                                    <property name="top-attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_LAA_PATCH_TOOLTIP</property>
+                                    <property name="label" translatable="yes">SETTINGS_LAA_PATCH</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
                                     <property name="top-attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="chbtnSettingsLaaPatch">
+                                    <property name="label" translatable="yes"> </property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">False</property>
+                                    <property name="tooltip-text" translatable="yes">SETTINGS_LAA_PATCH_TOOLTIP</property>
+                                    <property name="draw-indicator">True</property>
+                                    <signal name="toggled" handler="onChbtnSettingsLaaPatchToggled" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">1</property>
+                                    <property name="width">2</property>
                                   </packing>
                                 </child>
                               </object>

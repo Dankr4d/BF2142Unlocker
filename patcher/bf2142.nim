@@ -43,7 +43,7 @@ proc patchServer*(path: string, ip: IpAddress, port: Port) =
   fs.patchServer(ip, port)
   fs.close()
 
-proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
+proc patchClient*(fs: FileStream, patchConfig: PatchConfig, laaPatch: bool) =
   ## Previously preClientPatch
   fs.setPosition(parseHexInt("003293B0"))
   fs.write(byte(0x90))
@@ -86,7 +86,10 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   fs.write(byte(0x00))
   # Large Address Aware (patching from 2GB to 4GB ram)
   fs.setPosition(parseHexInt("00000146"))
-  fs.write(byte(0x2E))
+  if laaPatch:
+    fs.write(byte(0x2E))
+  else:
+    fs.write(byte(0x0E))
 
   var hostend: Hostent = getHostByName(parseUri(patchConfig.stella_prod).hostname)
   fs.writeIpReversed(parseHexInt("0045C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
@@ -103,9 +106,9 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig) =
   # Patch gamespy.com since they're redirecting and game cannot launch the usual way
   fs.writeStr(parseHexInt("00524824"), "127.0.0.1", 11)
 
-proc patchClient*(path: string, patchConfig: PatchConfig) =
+proc patchClient*(path: string, patchConfig: PatchConfig, laaPatch: bool) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
-  fs.patchClient(patchConfig)
+  fs.patchClient(patchConfig, laaPatch)
   fs.close()
 
 

@@ -120,10 +120,10 @@ msgstr ""
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr "Refreshes the player list (F6)."
 
-msgid "MULTIPLAYER_MODS"
-msgstr "Mods:"
+msgid "MULTIPLAYER_MOD"
+msgstr "Mod:"
 
-msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgid "MULTIPLAYER_MOD_TOOLTIP"
 msgstr "Choose the mod that the game should start with."
 
 msgid "LOGIN_STELLA_NAME"
@@ -206,10 +206,10 @@ msgstr "Quickstart"
 msgid "HOST_SETTINGS"
 msgstr "Settings"
 
-msgid "HOST_MODS"
-msgstr "Mods:"
+msgid "HOST_MOD"
+msgstr "Mod:"
 
-msgid "HOST_MODS_TOOLTIP"
+msgid "HOST_MOD_TOOLTIP"
 msgstr "Choose the mod the server should run with."
 
 msgid "HOST_GAME_MODE"
@@ -370,6 +370,12 @@ msgstr "Skip intro movies:"
 
 msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Skips the intro movies on startup."
+
+msgid "SETTINGS_LAA_PATCH"
+msgstr "LAA-Patch:"
+
+msgid "SETTINGS_LAA_PATCH_TOOLTIP"
+msgstr "Allows the game to use 4GiB of RAM (required by some mods)."
 
 msgid "SETTINGS_WINDOW_MODE"
 msgstr "Window mode:"

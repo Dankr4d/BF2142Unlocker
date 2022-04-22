@@ -115,6 +115,7 @@ type
     windowMode: bool
     resolution: string
     skipMovies: bool
+    laaPatch: bool
   BF2142UnlockerConfig = object
     quick: BF2142UnlockerConfigQuick
     multiplayer: BF2142UnlockerConfigMultiplayer
@@ -373,6 +374,7 @@ const
   CONFIG_KEY_SETTINGS_WINEPREFIX: string = "wineprefix"
   CONFIG_KEY_SETTINGS_STARTUP_QUERY: string = "startup_query"
   CONFIG_KEY_SETTINGS_SKIP_MOVIES: string = "skip_movies"
+  CONFIG_KEY_SETTINGS_LAA_PATCH: string = "laa_patch"
   CONFIG_KEY_SETTINGS_WINDOW_MODE: string = "window_mode"
   CONFIG_KEY_SETTINGS_RESOLUTION: string = "resolution"
 
@@ -537,6 +539,7 @@ var btnSettingsWinePrefix: Button
 var lblSettingsStartupQuery: Label
 var txtSettingsStartupQuery: Entry
 var chbtnSettingsSkipMovies: CheckButton
+var chbtnSettingsLaaPatch: CheckButton
 var chbtnSettingsWindowMode: CheckButton
 var cbxSettingsResolution: ComboBox
 var cbxSettingsGameLanguage: ComboBox
@@ -873,6 +876,7 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
     result.settings.winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX)
     result.settings.startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, "/usr/bin/wine")
   result.settings.skipMovies = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, "false"))
+  result.settings.laaPatch = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_LAA_PATCH, "false"))
   result.settings.windowMode = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, "false"))
   result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, "800x600") # TODO: Rename to windowResolution
 
@@ -912,6 +916,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   when defined(linux):
     txtSettingsStartupQuery.text = config.settings.startupQuery.cstring
   chbtnSettingsSkipMovies.active = config.settings.skipMovies
+  chbtnSettingsLaaPatch.active = config.settings.laaPatch
   chbtnSettingsWindowMode.active = config.settings.windowMode
   if not cbxSettingsResolution.setActiveId(config.settings.resolution.cstring):
     cbxSettingsResolution.setActive(0)
@@ -2099,7 +2104,7 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
       dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME]
     )
     return
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig))
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig), chbtnSettingsLaaPatch.active)
 
   backupOpenSpyIfExists()
   when defined(windows): # TODO: Reading/setting cd key on linux
@@ -2476,7 +2481,7 @@ proc patchAndStartLogic(): bool =
   patchConfig.gamestats = ipAddress
   patchConfig.gpcm = ipAddress
   patchConfig.gpsp = ipAddress
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, patchConfig)
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, patchConfig, chbtnSettingsLaaPatch.active)
 
   backupOpenSpyIfExists()
 
@@ -2758,7 +2763,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
     )
     return
 
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig))
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig), chbtnSettingsLaaPatch.active)
   backupOpenSpyIfExists()
   saveBF2142Profile(username, soldier)
   when defined(windows): # TODO: Reading/setting cd key on linux
@@ -3086,6 +3091,10 @@ proc onChbtnSettingsSkipMoviesToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, $chbtnSettingsSkipMovies.active)
   config.writeConfig(CONFIG_FILE_NAME)
 
+proc onChbtnSettingsLaaPatchToggled(self: CheckButton00) {.signal.} =
+  config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_LAA_PATCH, $chbtnSettingsLaaPatch.active)
+  config.writeConfig(CONFIG_FILE_NAME)
+
 proc onChbtnSettingsWindowModeToggled(self: CheckButton00) {.signal.} =
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, $chbtnSettingsWindowMode.active)
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, cbxSettingsResolution.activeId)
@@ -3283,6 +3292,7 @@ proc onApplicationActivate(application: Application) =
   lblSettingsStartupQuery = builder.getLabel("lblSettingsStartupQuery")
   txtSettingsStartupQuery = builder.getEntry("txtSettingsStartupQuery")
   chbtnSettingsSkipMovies = builder.getCheckButton("chbtnSettingsSkipMovies")
+  chbtnSettingsLaaPatch = builder.getCheckButton("chbtnSettingsLaaPatch")
   chbtnSettingsWindowMode = builder.getCheckButton("chbtnSettingsWindowMode")
   cbxSettingsResolution = builder.getComboBox("cbxSettingsResolution")
   cbxSettingsGameLanguage = builder.getComboBox("cbxSettingsGameLanguage")

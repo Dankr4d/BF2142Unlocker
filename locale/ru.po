@@ -120,10 +120,10 @@ msgstr ""
 msgid "MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP"
 msgstr "Обновить список игроков (F6)."
 
-msgid "MULTIPLAYER_MODS"
+msgid "MULTIPLAYER_MOD"
 msgstr "Мод:"
 
-msgid "MULTIPLAYER_MODS_TOOLTIP"
+msgid "MULTIPLAYER_MOD_TOOLTIP"
 msgstr "Выберете мод для запуска игры"
 
 msgid "LOGIN_STELLA_NAME"
@@ -204,10 +204,10 @@ msgstr "Быстрый запуск"
 msgid "HOST_SETTINGS"
 msgstr "Настройки"
 
-msgid "HOST_MODS"
+msgid "HOST_MOD"
 msgstr "Мод:"
 
-msgid "HOST_MODS_TOOLTIP"
+msgid "HOST_MOD_TOOLTIP"
 msgstr "Выбрать мод, с которой запустится сервер"
 
 msgid "HOST_GAME_MODE"
@@ -366,6 +366,12 @@ msgstr "Пропуск втупительных роликов:"
 
 msgid "SETTINGS_SKIP_MOVIES_TOOLTIP"
 msgstr "Пропустить видео при запуске"
+
+msgid "SETTINGS_LAA_PATCH"
+msgstr "LAA-Patch:"
+
+msgid "SETTINGS_LAA_PATCH_TOOLTIP"
+msgstr "Allows the game to use 4GiB of RAM (required by some mods)."
 
 msgid "SETTINGS_WINDOW_MODE"
 msgstr "Оконный режим:"
