@@ -19,9 +19,9 @@ msgstr ""
 msgid "QUICK_CONNECT_TOOLTIP"
 msgstr ""
 
-msgid "QUICK_MODS"
+msgid "QUICK_MOD"
 msgstr ""
-msgid "QUICK_MODS_TOOLTIP"
+msgid "QUICK_MOD_TOOLTIP"
 msgstr ""
 
 msgid "QUICK_PLAYER_NAME"

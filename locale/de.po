@@ -28,10 +28,10 @@ msgstr "Verbinden"
 msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Zum Anmeldeserver/Unlockserver der eingegebenen IP-Adresse verbinden."
 
-msgid "QUICK_MODS"
-msgstr "Mods:"
+msgid "QUICK_MOD"
+msgstr "Mod:"
 
-msgid "QUICK_MODS_TOOLTIP"
+msgid "QUICK_MOD_TOOLTIP"
 msgstr "Wähle die Modifikation aus mit der das Spiel gestartet werden soll."
 
 msgid "QUICK_PLAYER_NAME"
@@ -371,7 +371,7 @@ msgid "SETTINGS_LAA_PATCH"
 msgstr "LAA-Patch:"
 
 msgid "SETTINGS_LAA_PATCH_TOOLTIP"
-msgstr "Ermöglicht, dass das Spiel 4GiB RAM zur verfügung hat (benötigt von manchen mods)"
+msgstr "Ermöglicht, dass das Spiel 4GiB RAM zur verfügung hat (benötigt von manchen mods)."
 
 msgid "SETTINGS_WINDOW_MODE"
 msgstr "Fenstermodus:"

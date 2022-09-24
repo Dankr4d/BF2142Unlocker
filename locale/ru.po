@@ -30,10 +30,10 @@ msgstr "Подключиться"
 msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Подключитесь к логин-серверу, используя введенный IP-адрес."
 
-msgid "QUICK_MODS"
+msgid "QUICK_MOD"
 msgstr "Мод:"
 
-msgid "QUICK_MODS_TOOLTIP"
+msgid "QUICK_MOD_TOOLTIP"
 msgstr "Выберете мод для запуска игры"
 
 msgid "QUICK_PLAYER_NAME"

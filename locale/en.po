@@ -28,10 +28,10 @@ msgstr "Connect"
 msgid "QUICK_CONNECT_TOOLTIP"
 msgstr "Connect to the login-server by using the IP-Address entered."
 
-msgid "QUICK_MODS"
-msgstr "Mods:"
+msgid "QUICK_MOD"
+msgstr "Mod:"
 
-msgid "QUICK_MODS_TOOLTIP"
+msgid "QUICK_MOD_TOOLTIP"
 msgstr "Choose the mod that the game should start with."
 
 msgid "QUICK_PLAYER_NAME"

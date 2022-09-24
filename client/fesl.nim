@@ -102,7 +102,7 @@ proc createAccount*(client: Socket, username, password: string, timeout: int = -
   #       break
 
   # client.send(newAddAccountClient(username, password, randomEmail(), countryCode), 4)
-  client.send(newAddAccountClient(username, password, randomEmail(), "EN"), 4)
+  client.send(newAddAccountClient(username, password, randomEmail(), "RU"), 4)
   if not client.recv(data, id, timeout):
     raiseRecvFailed(FeslExceptionType.AddAccount)
   parseCheckAndRaise()

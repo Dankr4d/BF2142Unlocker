@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 
+<!-- Generated with glade 3.38.2
 
 The MIT License (MIT)
 
-Copyright (c) 
+Copyright (c)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -820,8 +820,8 @@ Author: Dankr4d
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">QUICK_MODS_TOOLTIP</property>
-                                <property name="label" translatable="yes">QUICK_MODS</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_MOD_TOOLTIP</property>
+                                <property name="label" translatable="yes">QUICK_MOD</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -857,7 +857,7 @@ Author: Dankr4d
                               <object class="GtkComboBox" id="cbxQuickMod">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">QUICK_MODS_TOOLTIP</property>
+                                <property name="tooltip-text" translatable="yes">QUICK_MOD_TOOLTIP</property>
                                 <property name="model">listStoreJoinMods</property>
                                 <property name="has-entry">True</property>
                                 <property name="entry-text-column">1</property>
