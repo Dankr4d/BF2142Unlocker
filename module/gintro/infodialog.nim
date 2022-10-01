@@ -12,7 +12,9 @@ proc newInfoDialog*(title, text: string, okText: string = "OK") =
   btnOk.halign = Align.center
   proc onBtnOkClicked(self: Button, dialog: Dialog) =
     dialog.destroy()
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
   btnOk.connect("clicked", onBtnOkClicked, dialog)
+  when defined(nimHasStyleChecks): {.push styleChecks: on.}
   dialog.contentArea.showAll()
   dialog.setPosition(WindowPosition.center)
   discard dialog.run()

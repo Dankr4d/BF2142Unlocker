@@ -29,7 +29,7 @@ import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
 import sequtils # Required for filter proc (filtering gamespy address port list)
 import client/fesl # Required for getSoldiers proc (login and returning soldiers or error code)
-import uri # Required for parseUri # TODO: REMOVE (see server.ini)
+import uri # Required for parseUri # todo: REMOVE (see server.ini)
 import module/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in login.ini
 import client/master # Required to query master server
 import client/gspy # Required to query each gamespy server for game server information
@@ -123,11 +123,11 @@ type
     unlocks: BF2142UnlockerConfigUnlocks
     settings: BF2142UnlockerConfigSettings
 
-var bf2142UnlockerConfig: BF2142UnlockerConfig # TODO: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
-var documentsPath: string # TODO: Add to BF2142UnlockerConfig?
-var bf2142ProfilePath: string # TODO: Add to BF2142UnlockerConfig?
-var bf2142ProfileDefaultPath: string # TODO: Add to BF2142UnlockerConfig?
-var bf2142Profile0001Path: string # TODO: Add to BF2142UnlockerConfig?
+var bf2142UnlockerConfig: BF2142UnlockerConfig # todo: Rename var name to config and rename var config: Config to var cfgUnlocker or something other
+var documentsPath: string # todo: Add to BF2142UnlockerConfig?
+var bf2142ProfilePath: string # todo: Add to BF2142UnlockerConfig?
+var bf2142ProfileDefaultPath: string # todo: Add to BF2142UnlockerConfig?
+var bf2142Profile0001Path: string # todo: Add to BF2142UnlockerConfig?
 
 const RC {.intdefine.}: int = 0
 const VERSION: string = static:
@@ -223,10 +223,10 @@ type
 
 type
   ServerConfig* = object of PatchConfig
-    server_name*: string
-    game_name*: string
-    game_key*: string
-    game_str*: string
+    serverName*: string
+    gameName*: string
+    gameKey*: string
+    gameStr*: string
   Server = object
     name: string
     currentPlayer: uint8
@@ -321,7 +321,7 @@ var timerUpdatePlayerListId: int = 0
 var isServerSelected: bool = false
 var currentServer: Server
 var currentServerConfig: ServerConfig
-var serverConfigs: seq[ServerConfig] # TODO: Change this to a table and maybe remove server_name attribute from ServerConfig
+var serverConfigs: seq[ServerConfig] # todo: Change this to a table and maybe remove serverName attribute from ServerConfig
 
 
 const
@@ -547,7 +547,7 @@ var dlgSettingsBF2142ClientPathDetected: Dialog
 var lblSettingsBF2142ClientPathDetected: Label
 ##
 
-### Exception procs # TODO: Replace tuple results with Option
+### Exception procs # todo: Replace tuple results with Option
 proc onQuit()
 
 import logging
@@ -564,7 +564,7 @@ proc `$`(ex: ref Exception): string =
 proc log(ex: ref Exception) =
   logging.error($ex)
 
-proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
+proc show(ex: ref Exception) = # todo: gintro doesnt wraped messagedialog :/ INFO: https://github.com/StefanSalewski/gintro/issues/35
   var dialog: Dialog = newDialog()
   dialog.title = cstring("ERROR: " & osErrorMsg(osLastError()))
   var lblText: Label = newLabel(cstring($ex))
@@ -575,13 +575,17 @@ proc show(ex: ref Exception) = # TODO: gintro doesnt wraped messagedialog :/ INF
   hboxButtons.add(btnOk)
   proc onBtnOkClicked(self: Button, dialog: Dialog) =
     dialog.destroy()
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
   btnOk.connect("clicked", onBtnOkClicked, dialog)
+  when defined(nimHasStyleChecks): {.push styleChecks: on.}
   var btnCloseAll: Button = newButton("Close BF2142Unlocker")
   hboxButtons.add(btnCloseAll)
   proc onBtnCloseAllClicked(self: Button, dialog: Dialog) =
     onQuit()
     quit(0)
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
   btnCloseAll.connect("clicked", onBtnCloseAllClicked, dialog)
+  when defined(nimHasStyleChecks): {.push styleChecks: on.}
   dialog.contentArea.showAll()
   dialog.setPosition(WindowPosition.center)
   discard dialog.run()
@@ -654,7 +658,7 @@ proc removeFile(file: string): bool {.used.} =
     ex.handle()
     return false
 
-proc removeDir(dir: string): bool {.used.}= # TODO: in newer version, theres also a "checkDir = false" param
+proc removeDir(dir: string): bool {.used.}= # todo: in newer version, theres also a "checkDir = false" param
   try:
     os.removeDir(dir)
     return true
@@ -677,8 +681,8 @@ proc existsOrCreateDir(dir: string): tuple[succeed: bool, exists: bool] {.used.}
     return (false, false)
 ##
 
-### Fix procs TODO: delete later
-# TODO: Check if this counts as modified content when trying to join a server. If yes, fix invalid xml on the fly.
+### Fix procs todo: delete later
+# todo: Check if this counts as modified content when trying to join a server. If yes, fix invalid xml on the fly.
 const AEGIS_STATION_DESC_MD5_HASH: string = "5709317f425bf7e639eb57842095852e"
 const BLOODGULCH_DESC_MD5_HASH: string = "bc08f0711ba9a37a357e196e4167c2b0"
 const KILIMANDSCHARO_DESC_MD5_HASH: string = "b165b81cf9949a89924b0f196d0ceec3"
@@ -840,16 +844,16 @@ proc updateProfilePathes() =
   bf2142Profile0001Path = bf2142ProfilePath / "0001"
   checkBF2142ProfileFiles()
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
-    pageSettingVideo.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
-    pageSettingAudio.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
-    pageSettingHud.setDocumentsPath(documentsPath) # TODO: Only required because of linux (have a look in the function)
+    pageSettingVideo.setDocumentsPath(documentsPath) # todo: Only required because of linux (have a look in the function)
+    pageSettingAudio.setDocumentsPath(documentsPath) # todo: Only required because of linux (have a look in the function)
+    pageSettingHud.setDocumentsPath(documentsPath) # todo: Only required because of linux (have a look in the function)
   when defined(linux):
     discard cbxSettingsGameLanguage.setActiveId(cstring($getGameLanguage(bf2142UnlockerConfig.settings.winePrefix)))
   else:
     discard cbxSettingsGameLanguage.setActiveId(cstring($getGameLanguage()))
 
 proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerConfig =
-  # TODO: Try'n catch because we parse booleans
+  # todo: Try'n catch because we parse booleans
   if not fileExists(CONFIG_FILE_NAME):
     config = newConfig()
   else:
@@ -878,7 +882,7 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
   result.settings.skipMovies = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, "false"))
   result.settings.laaPatch = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_LAA_PATCH, "false"))
   result.settings.windowMode = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, "false"))
-  result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, "800x600") # TODO: Rename to windowResolution
+  result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, "800x600") # todo: Rename to windowResolution
 
 
 proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
@@ -905,7 +909,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
   # Settings
   txtSettingsBF2142ClientPath.text = config.settings.bf2142ClientPath.cstring
   txtSettingsBF2142ServerPath.text = config.settings.bf2142ServerPath.cstring
-  when defined(linux): # TODO: Should we really do this in applyBF2142UnlockerConfig?
+  when defined(linux): # todo: Should we really do this in applyBF2142UnlockerConfig?
     txtSettingsWinePrefix.text = config.settings.winePrefix.cstring
     if config.settings.winePrefix != "":
       documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
@@ -925,7 +929,7 @@ proc applyBF2142UnlockerConfig(config: BF2142UnlockerConfig) =
 proc backupOpenSpyIfExists() =
   let openspyDllPath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
   let originalRendDX9Path: string = bf2142UnlockerConfig.settings.bf2142ClientPath / ORIGINAL_RENDDX9_DLL_NAME
-  if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # TODO: Inform user if original file could not be found if openspy dll exists
+  if not fileExists(openspyDllPath) or not fileExists(originalRendDX9Path): # todo: Inform user if original file could not be found if openspy dll exists
     return
   let originalRendDX9RawOpt: Option[string] = readFile(originalRendDX9Path)
   if originalRendDX9RawOpt.isNone:
@@ -944,7 +948,7 @@ proc restoreOpenSpyIfExists() =
   let openspyDllRestorePath: string = bf2142UnlockerConfig.settings.bf2142ClientPath / OPENSPY_DLL_NAME
   if not fileExists(openspyDllBackupPath):
     return
-  # TODO: Check if processGameClient is running and wait until it closed. remove try counter
+  # todo: Check if processGameClient is running and wait until it closed. remove try counter
   echo "Found openspy dll (" & OPENSPY_DLL_NAME & "). Restoring!"
   var tryCnt: int = 0
   while tryCnt < 8:
@@ -998,7 +1002,7 @@ proc moveSelectedUpDown(list: TreeView, up: bool) =
     iter: TreeIter
     iter2: TreeIter
 
-  if list.selection.getSelected(listStore, iter) and list.selection.getSelected(listStore, iter2): # TODO: This is imperformant
+  if list.selection.getSelected(listStore, iter) and list.selection.getSelected(listStore, iter2): # todo: This is imperformant
     if up:
       if listStore.iterPrevious(iter2):
         listStore.moveBefore(iter, iter2)
@@ -1078,7 +1082,7 @@ proc `selectServer=`(list: TreeView, server: Server) =
       list.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
       return
     whileCond = store.iterNext(iter)
-  # TODO: Raise exception if server doesn't exists
+  # todo: Raise exception if server doesn't exists
 
 
 proc selectedSoldier(list: TreeView): Option[string] =
@@ -1106,7 +1110,7 @@ proc `selectedSoldier=`(list: TreeView, soldier: string) =
       return
     whileCond = store.iterNext(iter)
   ignoreEvents = false
-  # TODO: Raise exception if soldier doesn't exists
+  # todo: Raise exception if soldier doesn't exists
 
 proc `soldiers=`(list: TreeView, soldiers: seq[string]) =
   ignoreEvents = true
@@ -1146,7 +1150,7 @@ proc update(treeView: TreeView, gsdata: GsData) =
     store.getValue(iter, 2, valMapSize)
     store.getValue(iter, 3, valBackgroundColor)
     if valMapName.getString() == gsdata.mapName and valMapMode.getString() == gsdata.mapMode and
-    valMapSize.getInt() == gsdata.mapSize: # Current map. # TODO: This needs to be checked (get index from gs)
+    valMapSize.getInt() == gsdata.mapSize: # Current map. # todo: This needs to be checked (get index from gs)
       var color: string
       case gsdata.status
       of Pregame:
@@ -1234,7 +1238,7 @@ proc loadSelectableMapList() =
       notFixableXmlFiles.add(path)
   if invalidXmlFiles.len > 0:
     if notFixableXmlFiles.len == 0:
-      loadSelectableMapList() # TODO: Fixed maps are only displayed if there's no non fixable map
+      loadSelectableMapList() # todo: Fixed maps are only displayed if there's no non fixable map
     else:
       newInfoDialog("INVALID XML FILES", "Following xml files are invalid and could not be fixed\n" & notFixableXmlFiles.join("\n"))
 
@@ -1312,9 +1316,9 @@ proc loadSaveServerSettings(save: bool): bool =
           value = "\"" & txtHostIpAddress.text & "\""
       of SETTING_INTERNET:
         if save:
-          value = "0" # TODO: Server crashes when internet is set to 1
+          value = "0" # todo: Server crashes when internet is set to 1
       of SETTING_TEAM_RATIO:
-        discard # TODO: Implement SETTING_TEAM_RATIO
+        discard # todo: Implement SETTING_TEAM_RATIO
     if save:
       serverConfig.add(setting & ' ' & value & '\n')
   fileTpl.file.close()
@@ -1474,7 +1478,7 @@ proc loadMods(cbx: ComboBox, path: string) =
     if folder.kind != pcDir:
       continue
     if folder.path.toLower().startsWith("project_remaster_v") and folder.path.toLower().endsWith("offline"):
-      continue # TODO: Unwanted mods should be stored in config file. e.g.: exclude_listing_mods
+      continue # todo: Unwanted mods should be stored in config file. e.g.: exclude_listing_mods
     valMod.setString(folder.path.toLower().cstring)
     store.append(iter)
     store.setValue(iter, 0, valMod)
@@ -1589,7 +1593,7 @@ proc loadServerConfig() =
       else:
         serverConfigs.add(serverConfig)
         serverConfig = ServerConfig()
-      serverConfig.server_name = e.section
+      serverConfig.serverName = e.section
     of cfgKeyValuePair:
       case e.key:
       of CONFIG_SERVER_KEY_STELLA_PROD:
@@ -1611,11 +1615,11 @@ proc loadServerConfig() =
       of CONFIG_SERVER_KEY_GPSP:
         serverConfig.gpsp = e.value
       of CONFIG_SERVER_KEY_GAME_NAME:
-        serverConfig.game_name = e.value
+        serverConfig.gameName = e.value
       of CONFIG_SERVER_KEY_GAME_KEY:
-        serverConfig.game_key = e.value
+        serverConfig.gameKey = e.value
       of CONFIG_SERVER_KEY_GAME_STR:
-        serverConfig.game_str = e.value
+        serverConfig.gameStr = e.value
       # echo("key-value-pair: " & e.key & ": " & e.value)
     of cfgOption:
       echo("command: " & e.key & ": " & e.value)
@@ -1648,14 +1652,14 @@ proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly:
   config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_SOLDIER, hideStr(soldier))
   config.writeConfig(CONFIG_LOGINS_FILE_NAME)
 
-proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also an joinGSPort
+proc startBF2142(options: BF2142Options): bool = # todo: Other params and also an joinGSPort
   var command: string
   when defined(linux):
     when defined(debug):
-      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # TODO: Remove some nasty fixme's and errors for development
+      command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # todo: Remove some nasty fixme's and errors for development
     if txtSettingsWinePrefix.text != "":
       command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
-  # command.add("WINEARCH=win32" & ' ') # TODO: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
+  # command.add("WINEARCH=win32" & ' ') # todo: Implement this if user would like to run this in 32 bit mode (only requierd on first run)
   when defined(linux):
     if txtSettingsStartupQuery.text != "":
       command.add(txtSettingsStartupQuery.text & ' ')
@@ -1663,7 +1667,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   if isSome(options.modPath):
     command.add("+modPath " & get(options.modPath) & ' ')
   if isSome(options.menu):
-    command.add("+menu " & $get(options.menu).int & ' ') # TODO: Check if this is necessary
+    command.add("+menu " & $get(options.menu).int & ' ') # todo: Check if this is necessary
   if isSome(options.fullscreen):
     command.add("+fullscreen " & $get(options.fullscreen).int & ' ')
     if get(options.fullscreen) == false:
@@ -1682,7 +1686,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
     command.add("+joinServer " & $get(options.joinServer) & ' ')
     if isSome(options.port):
       command.add("+port " & $get(options.port) & ' ')
-  when defined(linux): # TODO: Check if bf2142Path is neccessary
+  when defined(linux): # todo: Check if bf2142Path is neccessary
     let processCommand: string = command
   elif defined(windows):
     let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
@@ -1691,7 +1695,7 @@ proc startBF2142(options: BF2142Options): bool = # TODO: Other params and also a
   )
   return true
 
-proc timerUpdatePlayerList(TODO: int): bool =
+proc timerUpdatePlayerList(todo: int): bool =
   if channelUpdatePlayerList.peek() <= 0:
     return SOURCE_CONTINUE
 
@@ -1738,15 +1742,15 @@ proc timerUpdatePlayerList(TODO: int): bool =
       store = storePlayerInfo1
     else:
       store = storePlayerInfo2
-    valPID.setUint(gspy.player.pid[idx].int) # TODO: setUInt should take an uint param, not int
+    valPID.setUint(gspy.player.pid[idx].int) # todo: setUInt should take an uint param, not int
     valName.setString(gspy.player.player[idx].cstring)
     valScore.setInt(gspy.player.score[idx])
-    valKills.setUInt(gspy.player.skill[idx].int) # TODO: setUInt should take an uint param, not int
-    valDeaths.setUInt(gspy.player.deaths[idx].int) # TODO: setUInt should take an uint param, not int
-    valPing.setUInt(gspy.player.ping[idx].int) # TODO: setUInt should take an uint param, not int
+    valKills.setUInt(gspy.player.skill[idx].int) # todo: setUInt should take an uint param, not int
+    valDeaths.setUInt(gspy.player.deaths[idx].int) # todo: setUInt should take an uint param, not int
+    valPing.setUInt(gspy.player.ping[idx].int) # todo: setUInt should take an uint param, not int
     store.append(iter)
     store.setValue(iter, 0, valPID)
-    # TODO: Add clan tag column and split first whitespace occurrence
+    # todo: Add clan tag column and split first whitespace occurrence
     store.setValue(iter, 1, valName)
     store.setValue(iter, 2, valScore)
     store.setValue(iter, 3, valKills)
@@ -1779,13 +1783,15 @@ proc updatePlayerListAsync() =
   channelUpdatePlayerList = Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]()
   channelUpdatePlayerList.open()
 
-  let TODO: int = 0
+  let todo: int = 0
   if timerUpdatePlayerListId == 0:
-    timerUpdatePlayerListId = int(timeoutAdd(250, timerUpdatePlayerList, TODO))
+    when defined(nimHasStyleChecks): {.push styleChecks: off.}
+    timerUpdatePlayerListId = int(timeoutAdd(250, timerUpdatePlayerList, todo))
+    when defined(nimHasStyleChecks): {.push styleChecks: on.}
 
   threadUpdatePlayerList.createThread(threadUpdatePlayerListProc, (currentServer.ip, currentServer.gspyPort))
 
-proc timerUpdateServer(TODO: int): bool =
+proc timerUpdateServer(todo: int): bool =
   var data: tuple[dataAvailable: bool, msg: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]] = channelUpdateServer.tryRecv()
   if not data.dataAvailable:
     return SOURCE_CONTINUE
@@ -1809,15 +1815,15 @@ proc timerUpdateServer(TODO: int): bool =
 
   for server in data.msg:
     valName.setString(server.gspyServer.hostname.cstring)
-    valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # TODO: setUInt should take an uint param, not int
-    valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # TODO: setUInt should take an uint param, not int
+    valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # todo: setUInt should take an uint param, not int
+    valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # todo: setUInt should take an uint param, not int
     valMap.setString(server.gspyServer.mapname.cstring)
     valMode.setString(server.gspyServer.gametype.cstring)
     valMod.setString(server.gspyServer.gamevariant.cstring)
     valIp.setString(cstring($server.address))
-    valPort.setUInt(server.gspyServer.hostport.int) # TODO: setUInt should take an uint param, not int
-    valGSpyPort.setUInt(server.port.int) # TODO: setUInt should take an uint param, not int
-    valStellaName.setString(server.serverConfig.server_name.cstring)
+    valPort.setUInt(server.gspyServer.hostport.int) # todo: setUInt should take an uint param, not int
+    valGSpyPort.setUInt(server.port.int) # todo: setUInt should take an uint param, not int
+    valStellaName.setString(server.serverConfig.serverName.cstring)
     store.append(iter)
     store.setValue(iter, 0, valName)
     store.setValue(iter, 1, valCurrentPlayer)
@@ -1835,7 +1841,7 @@ proc timerUpdateServer(TODO: int): bool =
   spinnerMultiplayerPlayers2.stop()
   btnMultiplayerServersRefresh.sensitive = true
   if isServerSelected:
-    # TODO: Maybe we can select the first server then this global var is obsolet.
+    # todo: Maybe we can select the first server then this global var is obsolet.
     #       Options would be also a possibility but then we need to call get every currentServer access
     trvMultiplayerServers.selectServer = currentServer
     btnMultiplayerServersPlay.sensitive = true
@@ -1855,21 +1861,21 @@ proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
   var servers: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]
 
   for idx, serverConfig in serverConfigs:
-    # TODO: Querying openspy and novgames master server takes ~500ms
+    # todo: Querying openspy and novgames master server takes ~500ms
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
-    # TODO2: Query master servers async like in `queryServers` proc
+    # todo: Query master servers async like in `queryServers` proc
     try:
-      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.game_name, serverConfig.game_key, serverConfig.game_str, 1000)
+      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.gameName, serverConfig.gameKey, serverConfig.gameStr, 1000)
     except RangeDefect:
-      break # TODO: Temprariy fixing issue #69 and #72
+      break # todo: Temprariy fixing issue #69 and #72
     gslist.add(filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
         return false
       if gs in gslist:
         # INFO: PlayBF2142 master server also respond OpenSpy game server
-        # TODO: If the original master server isn't replying to us, but PlayBF2142 do,
+        # todo: If the original master server isn't replying to us, but PlayBF2142 do,
         #       then it's listed with the incorrect master server
-        # TODO: Also add a setting like "is_duplicating" to server.ini and sort them out (if true),
+        # todo: Also add a setting like "is_duplicating" to server.ini and sort them out (if true),
         #       after all other master server who have is_duplicating set to false, responded.
         #       Then the order in server.ini isn't required anymore.
         return false
@@ -1901,12 +1907,14 @@ proc updateServerAsync() =
   channelUpdateServer = Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]()
   channelUpdateServer.open()
 
-  let TODO: int = 0
-  discard timeoutAdd(250, timerUpdateServer, TODO)
+  let todo: int = 0
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
+  discard timeoutAdd(250, timerUpdateServer, todo)
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
   threadUpdateServer.createThread(threadUpdateServerProc, serverConfigs)
 
 
-proc timerFesl(TODO: int): bool =
+proc timerFesl(todo: int): bool =
   let msgAmount: int = channelFeslTimer.peek()
 
   if msgAmount == -1:
@@ -1919,20 +1927,20 @@ proc timerFesl(TODO: int): bool =
   case data.command:
   of FeslCommand.Create:
     if data.create.save and isNone(data.ex):
-      saveLogin(currentServerConfig.server_name, data.create.username, data.create.password, "")
+      saveLogin(currentServerConfig.serverName, data.create.username, data.create.password, "")
     btnMultiplayerAccountSoldierAdd.sensitive = isNone(data.ex)
     btnMutliplayerAccountSoldierDel.sensitive = false
     btnMultiplayerAccountPlay.sensitive = false
     spinnerMultiplayerAccount.stop()
   of FeslCommand.Login:
     if data.login.save and isNone(data.ex):
-      saveLogin(currentServerConfig.server_name, data.login.username, data.login.password, get(data.login.soldier, ""))
+      saveLogin(currentServerConfig.serverName, data.login.username, data.login.password, get(data.login.soldier, ""))
     btnMultiplayerAccountSoldierAdd.sensitive = isNone(data.ex)
     if isNone(data.ex):
       trvMultiplayerAccountSoldiers.soldiers = data.login.soldiers
       if isSome(data.login.soldier):
-        trvMultiplayerAccountSoldiers.selectedSoldier = get(data.login.soldier) # TODO: `selectedSoldier=` should raise an exception if soldier doesn't exists
-      let isSoldierSelected: bool = isSome(trvMultiplayerAccountSoldiers.selectedSoldier) # TODO: `selectedSoldier` should raise an exception if soldier doesn't exists
+        trvMultiplayerAccountSoldiers.selectedSoldier = get(data.login.soldier) # todo: `selectedSoldier=` should raise an exception if soldier doesn't exists
+      let isSoldierSelected: bool = isSome(trvMultiplayerAccountSoldiers.selectedSoldier) # todo: `selectedSoldier` should raise an exception if soldier doesn't exists
       btnMultiplayerAccountPlay.sensitive = isSoldierSelected
       btnMutliplayerAccountSoldierDel.sensitive = isSoldierSelected
     else:
@@ -1955,8 +1963,8 @@ proc timerFesl(TODO: int): bool =
     if isNone(data.ex):
       # trvMultiplayerAccountSoldiers.selectNext()
       trvMultiplayerAccountSoldiers.removeSelected()
-    if chbtnMultiplayerAccountSave.active and isNone(data.ex): # TODO
-      saveLogin(currentServerConfig.server_name, txtMultiplayerAccountUsername.text, txtMultiplayerAccountPassword.text, "") # TODO
+    if chbtnMultiplayerAccountSave.active and isNone(data.ex): # todo
+      saveLogin(currentServerConfig.serverName, txtMultiplayerAccountUsername.text, txtMultiplayerAccountPassword.text, "") # todo
     btnMutliplayerAccountSoldierDel.sensitive = trvMultiplayerAccountSoldiers.hasEntries()
     btnMultiplayerAccountPlay.sensitive = isSome(trvMultiplayerAccountSoldiers.selectedSoldier)
     spinnerMultiplayerAccountSoldiers.stop()
@@ -1966,7 +1974,7 @@ proc timerFesl(TODO: int): bool =
     let ex: FeslException = get(data.ex)
     var errorMsg: string = ex.msg
 
-    if errorMsg == "" and currentServerConfig.server_name == "OpenSpy":
+    if errorMsg == "" and currentServerConfig.serverName == "OpenSpy":
       case ex.exType:
       of FeslExceptionType.AddAccount:
         if ex.code == 160:
@@ -2004,7 +2012,7 @@ proc threadFeslProc() {.thread.} =
 
     if msgAmount == -1:
       # if isSocketConnected:
-      #   socket.close() # TODO: Investigate crashes when closing socket
+      #   socket.close() # todo: Investigate crashes when closing socket
       return # Channel closed, stop thread
 
     if msgAmount == 0:
@@ -2107,7 +2115,7 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig), chbtnSettingsLaaPatch.active)
 
   backupOpenSpyIfExists()
-  when defined(windows): # TODO: Reading/setting cd key on linux
+  when defined(windows): # todo: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
   discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxMultiplayerMod.activeId / "Movies", chbtnSettingsSkipMovies.active)
   if cbxMultiplayerMod.activeId != "bf2142":
@@ -2129,9 +2137,11 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
 proc fillMultiplayerPatchAndStartBox() =
   var button: Button
   for serverConfig in serverConfigs:
-    button = newButton(serverConfig.server_name.cstring)
+    button = newButton(serverConfig.serverName.cstring)
     button.visible = true
+    when defined(nimHasStyleChecks): {.push styleChecks: off.}
     button.connect("clicked", onMultiplayerPatchAndStartButtonClicked, serverConfig)
+    when defined(nimHasStyleChecks): {.push styleChecks: on.}
     bboxMultiplayerServers.add(button)
 ##
 
@@ -2146,14 +2156,14 @@ when defined(windows):
 
       if line.len < 3:
         buffer.add(glib.markupEscapeText(line.cstring, line.len))
-        if idx + 1 != textLineSplit.high: # TODO: Why?
+        if idx + 1 != textLineSplit.high: # todo: Why?
           buffer.add("\n")
         continue
 
       lineSplit.add(line[0..2])
       if not (lineSplit[0] in @["###", "<==", "==>"]):
         buffer.add(glib.markupEscapeText(line.cstring, line.len))
-        if idx + 1 != textLineSplit.high: # TODO: Why?
+        if idx + 1 != textLineSplit.high: # todo: Why?
           buffer.add("\n")
         continue
 
@@ -2218,7 +2228,7 @@ when defined(windows):
 
   var timerGameServerId: int = 0
   proc timerGameServer(timerData: TimerDataGameServer): bool =
-    # TODO: Always receive the last entry from channel, because
+    # todo: Always receive the last entry from channel, because
     #       data is the whole stdout of the game server
     if not processGameServer.running:
       timerGameServerId = 0
@@ -2262,7 +2272,7 @@ proc killLoginServer() =
       processLoginServer.kill()
   else:
     if loginServerPid > 0:
-      # TODO: Show popupif it didn't work
+      # todo: Show popupif it didn't work
       discard kill(Pid(loginServerPid), SIGKILL)
 
 proc killGameServer() =
@@ -2271,7 +2281,7 @@ proc killGameServer() =
       processGameServer.kill()
   else:
     if gameServerPid > 0:
-      # TODO: Show popupif it didn't work
+      # todo: Show popupif it didn't work
       discard kill(Pid(gameServerPid), SIGKILL)
 
 when defined(windows):
@@ -2291,7 +2301,7 @@ when defined(windows):
       if lastError == 0:
         channelGameServer.send(stdout)
       elif lastError == ERROR_INVALID_HANDLE:
-        discard # TODO: Sometimes it fails with invalid handle.
+        discard # todo: Sometimes it fails with invalid handle.
                 # Maybe this happens when the process is killed while reading from stdout.
       else:
         channelGameServer.send("ERROR: " & $lastError & "\n" & osErrorMsg(lastError.OSErrorCode))
@@ -2348,7 +2358,9 @@ proc startBF2142Server() =
     channelGameServer.open()
 
     var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: termHostGameServer, treeView: trvHostSelectedMap)
+    when defined(nimHasStyleChecks): {.push styleChecks: off.}
     timerGameServerId = int(timeoutAdd(250, timerGameServer, timerDataGameServer))
+    when defined(nimHasStyleChecks): {.push styleChecks: on.}
     threadGameServer.createThread(threadGameServerProc, processGameServer)
 
 proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
@@ -2364,7 +2376,7 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
       childSetupData = nil,
       childPid = loginServerPid
     )
-    # TODO: Fix this crappy code below. Did this only to get version 0.9.3 out.
+    # todo: Fix this crappy code below. Did this only to get version 0.9.3 out.
     var tryCnt: int = 0
     while tryCnt < 3:
       if isAddrReachable($ipAddress, Port(18300), 1_000):
@@ -2383,7 +2395,9 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
     channelLoginUnlockServer.open()
 
     var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
+    when defined(nimHasStyleChecks): {.push styleChecks: off.}
     timerLoginUnlockServerId = int(timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer))
+    when defined(nimHasStyleChecks): {.push styleChecks: on.}
     threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, processLoginServer)
 ##
 
@@ -2398,10 +2412,10 @@ proc patchAndStartLogic(): bool =
   if not ipAddress.isIpAddress():
     invalidStr.add("\t* Your IP-address is not valid.\n")
   elif ipAddress.parseIpAddress().family == IPv6:
-    invalidStr.add("\t* IPv6 not testes!\n") # TODO: Add ignore?
+    invalidStr.add("\t* IPv6 not testes!\n") # todo: Add ignore?
   if txtQuickPlayerName.text == "":
     invalidStr.add("\t* You need to specify a playername with at least one character.\n")
-  if bf2142UnlockerConfig.settings.bf2142ClientPath == "": # TODO: Some more checkes are requierd (e.g. does BF2142.exe exists)
+  if bf2142UnlockerConfig.settings.bf2142ClientPath == "": # todo: Some more checkes are requierd (e.g. does BF2142.exe exists)
     invalidStr.add("\t* You need to specify your Battlefield 2142 path in \"Settings\"-Tab.\n")
   when defined(linux):
     if txtSettingsWinePrefix.text == "":
@@ -2410,7 +2424,7 @@ proc patchAndStartLogic(): bool =
     newInfoDialog("Error", invalidStr)
     return false
 
-  ## Check Logic (TODO: Cleanup and check servers in thread)
+  ## Check Logic (todo: Cleanup and check servers in thread)
   # var canConnect: bool = true
   # spinnerQuickCheckServerLoginServer.visible = true
   # spinnerQuickCheckServerGpcmServer.visible = true
@@ -2450,7 +2464,7 @@ proc patchAndStartLogic(): bool =
   #   imgQuickCheckServerUnlockServer.setFromIconName("gtk-cancel", 0)
   # if not canConnect:
   #   dlgQuickCheckServer.show()
-  #   # TODO: When checks are done in a thread, this dialog would be always shown when connecting,
+  #   # todo: When checks are done in a thread, this dialog would be always shown when connecting,
   #   #       and if every server is reachable autoamtically hidden.
   #   return
   #
@@ -2475,7 +2489,7 @@ proc patchAndStartLogic(): bool =
   patchConfig.stella_prod = "http://" & ipAddress & ":8085/"
   patchConfig.stella_ms = ipAddress
   patchConfig.ms = ipAddress
-  patchConfig.available = "%s.available.gamespy.com" # TODO: Slows BF2142 on startup when set to 127.0.0.1
+  patchConfig.available = "%s.available.gamespy.com" # todo: Slows BF2142 on startup when set to 127.0.0.1
   patchConfig.motd = "http://" & ipAddress & "/"
   patchConfig.master = ipAddress
   patchConfig.gamestats = ipAddress
@@ -2487,7 +2501,7 @@ proc patchAndStartLogic(): bool =
 
   saveBF2142Profile(txtQuickPlayerName.text, txtQuickPlayerName.text)
 
-  when defined(windows): # TODO: Reading/setting cd key on linux
+  when defined(windows): # todo: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
 
   if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / cbxQuickMod.activeId / "Movies", chbtnSettingsSkipMovies.active):
@@ -2596,7 +2610,7 @@ proc onBtnHostMapMoveDownClicked(self: Button00) {.signal.} =
   trvHostSelectedMap.moveSelectedDown()
 #
 ## Server list
-## TODO: Ping or connection gets closed after 30 seconds
+## todo: Ping or connection gets closed after 30 seconds
 proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
   var previousServer: Server = currentServer
 
@@ -2608,7 +2622,7 @@ proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
   isServerSelected = true
 
   for serverConfig in serverConfigs:
-    if serverConfig.server_name == currentServer.stellaName:
+    if serverConfig.serverName == currentServer.stellaName:
       currentServerConfig = serverConfig
 
   btnMultiplayerServersPlay.sensitive = true
@@ -2622,9 +2636,9 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   event.ignoreFinalizer = true
   if not notebook.currentPage == 1:
     return
-  if not isMultiplayerServerUpdating and event.getKeyval() == KEY_F5: # TODO: Add tooltip info
+  if not isMultiplayerServerUpdating and event.getKeyval() == KEY_F5: # todo: Add tooltip info
     updateServerAsync()
-  if event.getKeyval() == KEY_F6 and isServerSelected: # TODO: Add tooltip info
+  if event.getKeyval() == KEY_F6 and isServerSelected: # todo: Add tooltip info
     updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
@@ -2654,7 +2668,7 @@ proc onTxtMultiplayerAccountPasswordDeleteText(self: Editable00, startPos, endPo
   btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onMultiplayerAccountUsernamePasswordActivate(self: Entry00) {.signal.} =
-  if btnMultiplayerAccountLogin.sensitive: # TODO: create a isUsernamePasswordValid proc
+  if btnMultiplayerAccountLogin.sensitive: # todo: create a isUsernamePasswordValid proc
     frameMultiplayerAccountError.visible = false
     loginAsync(chbtnMultiplayerAccountSave.active)
 
@@ -2766,7 +2780,7 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig), chbtnSettingsLaaPatch.active)
   backupOpenSpyIfExists()
   saveBF2142Profile(username, soldier)
-  when defined(windows): # TODO: Reading/setting cd key on linux
+  when defined(windows): # todo: Reading/setting cd key on linux
     setCdKeyIfNotExists() # Checking if cd key exists, if not an empty cd key is set
   discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / currentServer.`mod` / "Movies", chbtnSettingsSkipMovies.active)
   if currentServer.`mod` != "bf2142":
@@ -2824,11 +2838,11 @@ proc onChbtnMultiplayerAccountSaveToggled(self: ToggleButton00) {.signal.} =
     username = txtMultiplayerAccountUsername.text
     password = txtMultiplayerAccountPassword.text
     soldier = get(trvMultiplayerAccountSoldiers.selectedSoldier, "")
-  saveLogin(currentServerConfig.server_name, username, password, soldier)
+  saveLogin(currentServerConfig.serverName, username, password, soldier)
 
 proc onTrvMultiplayerAccountSoldiersCursorChanged(self: TreeView00): bool {.signal.} =
   if chbtnMultiplayerAccountSave.active:
-    saveLogin(currentServerConfig.server_name, "", "", get(trvMultiplayerAccountSoldiers.selectedSoldier), true)
+    saveLogin(currentServerConfig.serverName, "", "", get(trvMultiplayerAccountSoldiers.selectedSoldier), true)
   btnMultiplayerAccountPlay.sensitive = true
   btnMutliplayerAccountSoldierDel.sensitive = true
   return EVENT_PROPAGATE
@@ -2840,14 +2854,16 @@ proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
   channelFeslThread.open()
   channelFeslTimer = Channel[TimerFeslData]()
   channelFeslTimer.open()
-  let TODO: int = 0
-  discard timeoutAdd(250, timerFesl, TODO)
+  let todo: int = 0
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
+  discard timeoutAdd(250, timerFesl, todo)
+  when defined(nimHasStyleChecks): {.push styleChecks: on.}
   threadFesl.createThread(threadFeslProc)
 
   lblMultiplayerAccountStellaName.text = currentServer.stellaName.cstring
   lblMultiplayerAccountGameServerName.text = currentServer.name.cstring
 
-  let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.server_name)
+  let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.serverName)
   if loginTplOpt.isSome:
     let loginTpl: tuple[username, password: string, soldier: Option[string]] = get(loginTplOpt)
     ignoreEvents = true
@@ -2991,11 +3007,11 @@ proc setBF2142Path(path: string) =
   if txtSettingsBF2142ClientPath.text != path:
     txtSettingsBF2142ClientPath.text = path
   cbxQuickMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
-  if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`.cstring): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxQuickMod.setActiveId(bf2142UnlockerConfig.quick.`mod`.cstring): # todo: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxQuickMod.setActiveId("bf2142")
   cbxMultiplayerMod.loadMods(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods")
-  if not cbxMultiplayerMod.setActiveId(bf2142UnlockerConfig.multiplayer.`mod`.cstring): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxMultiplayerMod.setActiveId(bf2142UnlockerConfig.multiplayer.`mod`.cstring): # todo: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxMultiplayerMod.setActiveId("bf2142")
   config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_BF2142_PATH, bf2142UnlockerConfig.settings.bf2142ClientPath)
@@ -3004,16 +3020,16 @@ proc setBF2142Path(path: string) =
     var wineEndPos: int
     if wineStartPos > -1:
       wineEndPos = bf2142UnlockerConfig.settings.bf2142ClientPath.find(DirSep, wineStartPos) - 1
-      if txtSettingsWinePrefix.text == "": # TODO: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
+      if txtSettingsWinePrefix.text == "": # todo: Ask with Dialog if the read out wineprefix should be assigned to txtSettingsWinePrefix's text
         txtSettingsWinePrefix.text = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos).cstring
         bf2142UnlockerConfig.settings.winePrefix = bf2142UnlockerConfig.settings.bf2142ClientPath.substr(0, wineEndPos)
-        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # TODO: Create a saveWinePrefix proc
+        config.setSectionKey(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX, txtSettingsWinePrefix.text) # todo: Create a saveWinePrefix proc
         documentsPath = txtSettingsWinePrefix.text / "drive_c" / "users" / $getlogin() / "My Documents"
   updateProfilePathes()
   config.writeConfig(CONFIG_FILE_NAME)
   fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ClientPath)
 
-proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # TODO: Add checks
+proc onBtnSettingsBF2142ClientPathClicked(self: Button00) {.signal.} = # todo: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ClientPath.text[0..^2])
   if responseType != ResponseType.accept:
     return
@@ -3042,7 +3058,7 @@ proc setBF2142ServerPath(path: string) =
   vboxHost.visible = true
   ignoreEvents = true
   cbxHostMods.loadMods(bf2142UnlockerConfig.settings.bf2142ServerPath / "mods")
-  if not cbxHostMods.setActiveId(cstring(bf2142UnlockerConfig.host.`mod`)): # TODO: Redundant (applyBF2142UnlockerConfig)
+  if not cbxHostMods.setActiveId(cstring(bf2142UnlockerConfig.host.`mod`)): # todo: Redundant (applyBF2142UnlockerConfig)
     # When mod is removed or renamed set bf2142 as fallback
     discard cbxHostMods.setActiveId("bf2142")
   updatePathes()
@@ -3061,7 +3077,7 @@ proc setBF2142ServerPath(path: string) =
   config.writeConfig(CONFIG_FILE_NAME)
   fixBF2142CoopPyLogic(bf2142UnlockerConfig.settings.bf2142ServerPath)
 
-proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: Add Checks
+proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # todo: Add Checks
   var (responseType, path) = selectFolderDialog(lblSettingsBF2142ServerPath.text[0..^2])
   if responseType != ResponseType.accept:
     return
@@ -3070,7 +3086,7 @@ proc onBtnSettingsBF2142ServerPathClicked(self: Button00) {.signal.} = # TODO: A
 proc onTxtSettingsBF2142ServerPathFocusOutEvent(self: Entry00) {.signal.} =
   setBF2142ServerPath(txtSettingsBF2142ServerPath.text.strip())
 
-proc onBtnSettingsWinePrefixClicked(self: Button00) {.signal.} = # TODO: Add checks
+proc onBtnSettingsWinePrefixClicked(self: Button00) {.signal.} = # todo: Add checks
   var (responseType, path) = selectFolderDialog(lblSettingsWinePrefix.text[0..^2])
   if responseType != ResponseType.accept:
     return
@@ -3172,7 +3188,7 @@ proc onCbxLanguagesChanged(self: ComboBox00) {.signal.} =
 
 proc onApplicationActivate(application: Application) =
   let builder: Builder = newBuilder()
-  discard newView() # TODO: https://github.com/StefanSalewski/gintro/issues/40
+  discard newView() # todo: https://github.com/StefanSalewski/gintro/issues/40
   builder.translationDomain = "gui" # Autotranslate all "translatable" enabled widgets
   when defined(release):
     discard builder.addFromString(GUI_GLADE, GUI_GLADE.len)
@@ -3303,7 +3319,7 @@ proc onApplicationActivate(application: Application) =
   lblVersion.label = VERSION
   #
 
-  ## Terminals # TODO: Create a custom widget for glade
+  ## Terminals # todo: Create a custom widget for glade
   termQuickServer = newTerminal()
   termQuickServer.vexpand = true
   termQuickServer.marginBottom = 3
@@ -3320,8 +3336,10 @@ proc onApplicationActivate(application: Application) =
   elif defined(linux):
     # Adding a horizontal scrollbar to display the whole server output.
     # This is required to parse the content otherwise the content is cutted.
+    when defined(nimHasStyleChecks): {.push styleChecks: off.}
     termHostGameServer.connect("contents-changed", ontermHostGameServerContentsChanged)
     termHostGameServer.connect("child-exited", ontermHostGameServerChildExited)
+    when defined(nimHasStyleChecks): {.push styleChecks: on.}
     termHostGameServer.visible = true
     var box: Box = newBox(Orientation.horizontal, 0)
     box.visible = true
@@ -3353,8 +3371,8 @@ proc onApplicationActivate(application: Application) =
     settings.setProperty("gtk-application-prefer-dark-theme", preferDarkTheme)
   #
 
-  # notebook.currentPage = 1 # TODO: Remove
-  # notebookSettings.currentPage = 3 # TODO: Remove
+  # notebook.currentPage = 1 # todo: Remove
+  # notebookSettings.currentPage = 3 # todo: Remove
 
   ## Pages
   pageSettingVideo.init(builder, addr windowShown, addr ignoreEvents)
@@ -3363,7 +3381,9 @@ proc onApplicationActivate(application: Application) =
   #
 
   window.setApplication(application)
+  # when defined(nimHasStyleChecks): {.push styleChecks: off.}
   builder.connectSignals(cast[pointer](nil))
+  # when defined(nimHasStyleChecks): {.push styleChecks: on.}
   window.show()
   bf2142UnlockerConfig = getBF2142UnlockerConfig()
   if bf2142UnlockerConfig.settings.bf2142ClientPath != "":
@@ -3383,7 +3403,7 @@ proc onApplicationActivate(application: Application) =
     loadSelectableMapList()
     if loadMapList() and loadServerSettings() and loadAiSettings():
        # This if statments exists, because if any of this proc calls above fails it wont continue with the next proc call
-       # TODO: Maybe create a loadAll proc because those procs are always called together
+       # todo: Maybe create a loadAll proc because those procs are always called together
       discard # Do not return, otherwise the following visibility logic will not be executed
   when defined(windows):
     lblSettingsWinePrefix.visible = false
@@ -3400,7 +3420,7 @@ proc onApplicationActivate(application: Application) =
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
 
-  # updateServerAsync() # TODO: Remove
+  # updateServerAsync() # todo: Remove
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
@@ -3420,7 +3440,7 @@ proc onApplicationActivate(application: Application) =
             notebook.currentPage = 0
         vboxSettings.sensitive = true
 
-when defined(windows): # TODO: Cleanup
+when defined(windows): # todo: Cleanup
   proc bindtextdomain(domainname: cstring, dirname: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
   proc bind_textdomain_codeset(domainname: cstring, codeset: cstring): cstring {.dynlib: "libintl-8.dll", importc.}
 else:
@@ -3459,7 +3479,9 @@ proc languageLogic() =
 proc main =
   languageLogic()
   application = newApplication()
+  when defined(nimHasStyleChecks): {.push styleChecks: off.}
   application.connect("activate", onApplicationActivate)
+  when defined(nimHasStyleChecks): {.push styleChecks: on.}
   discard run(application)
 
 when defined(release):
@@ -3467,7 +3489,7 @@ when defined(release):
   proc unhandledException(msg: string) =
     system.writeFile("log" / "crash_" & format(now(), "yyyy-MM-dd'T'hh-mm-ss-ms") & ".log", msg)
     {.cast(gcsafe).}:
-      # TODO: Should I store the processId globally for windows too and kill by pid?
+      # todo: Should I store the processId globally for windows too and kill by pid?
       killLoginServer()
       killGameServer()
     quit(1)

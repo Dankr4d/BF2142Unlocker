@@ -10,8 +10,8 @@ when defined(linux):
     XRRScreenSize {.importc, header: "<X11/extensions/Xrandr.h>", bycopy.} = object
       width, height, mwidth, mheight: cint
 
-  proc XOpenDisplay(display_name: ptr char): ptr Display {.importc, header: "<X11/Xlib.h>".}
-  proc RootWindow(display: ptr Display, screen_number: int): Window {.importc, header: "<X11/Xlib.h>".}
+  proc XOpenDisplay(displayName: ptr char): ptr Display {.importc, header: "<X11/Xlib.h>".}
+  proc RootWindow(display: ptr Display, screenNumber: int): Window {.importc, header: "<X11/Xlib.h>".}
   proc XRRGetScreenInfo(display: ptr Display, window: Window): ptr XRRScreenConfiguration {.importc, header: "<X11/Xlib.h>".}
   # proc XRRConfigCurrentConfiguration(config: ptr XRRScreenConfiguration, rotation: ptr Rotation): SizeID {.importc, header: "<X11/Xlib.h>".}
   proc XRRConfigSizes(config: ptr XRRScreenConfiguration, nsizes: ptr cint): ptr XRRScreenSize {.importc, header: "<X11/Xlib.h>".}
@@ -23,19 +23,19 @@ when defined(linux):
     (p + off)[]
 
   proc getAvailableResolutions*(): seq[tuple[width, height: uint16, frequence: uint8]] =
-    # var current_rotation: Rotation
-    var display_name: char
-    var screen_number: cint
+    # var currentRotation: Rotation
+    var displayName: char
+    var screenNumber: cint
     var nsize: cint
-    var dpy: ptr Display = XOpenDisplay(addr(display_name))
-    var root_window: Window = RootWindow(dpy, screen_number)
-    var sc: ptr XRRScreenConfiguration = XRRGetScreenInfo(dpy, root_window)
-    # var current_size: SizeID = XRRConfigCurrentConfiguration(sc, addr(current_rotation))
+    var dpy: ptr Display = XOpenDisplay(addr(displayName))
+    var rootWindow: Window = RootWindow(dpy, screenNumber)
+    var sc: ptr XRRScreenConfiguration = XRRGetScreenInfo(dpy, rootWindow)
+    # var currentSize: SizeID = XRRConfigCurrentConfiguration(sc, addr(currentRotation))
     var sizes: ptr XRRScreenSize = XRRConfigSizes(sc, addr(nsize))
     var frequence: cshort = XRRConfigCurrentRate(sc) # TODO: Use XRRRates?
     var i: cint = 0
     while i < nsize:
-      # if i == cast[cint](current_size) is the current resolution
+      # if i == cast[cint](currentSize) is the current resolution
       result.add((cast[uint16](sizes[i].width), cast[uint16](sizes[i].height), cast[uint8](frequence)))
       inc(i)
 else:

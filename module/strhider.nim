@@ -12,7 +12,7 @@ proc `xor`(str1, str2: string): string =
   for idx in 0..str1.high:
     result.add(char(uint8(str1[idx]) xor uint8(str2[idx])))
 
-let LOGINS_XOR: string = LOGINS_XOR_STR xor LOGINS_XOR_X.repeat(LOGINS_XOR_STR.len)
+const LOGINS_XOR: string = LOGINS_XOR_STR xor LOGINS_XOR_X.repeat(LOGINS_XOR_STR.len)
 
 proc strXor(password: string, xorKey: string = LOGINS_XOR): string =
   let xorAmount: int = int(ceil(password.len / xorKey.len))

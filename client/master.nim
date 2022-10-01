@@ -246,10 +246,10 @@ type ipport_t {.packed.} = object
   port: uint16
 
 # unsigned char *enctypex_decoder(unsigned char *key, unsigned char *validate, unsigned char *data, int *datalen, enctypex_data_t *enctypex_data)
-proc enctypex_decoder(key: ptr char, validate: ptr char, data: ptr char, datalen: ptr cint, enctypex_data: ptr enctypex_data_t): ptr char {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
+proc enctypex_decoder(key: ptr char, validate: ptr char, data: ptr char, dataLen: ptr cint, enctypexData: ptr enctypex_data_t): ptr char {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 # int enctypex_decoder_convert_to_ipport(unsigned char *data, int datalen, unsigned char *out, unsigned char *infobuff, int infobuff_size, int infobuff_offset)
-proc enctypex_decoder_convert_to_ipport(data: ptr char, datalen: cint, `out`: ptr char, infobuff: ptr char, infobuff_size: cint, infobuff_offset: cint): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
+proc enctypex_decoder_convert_to_ipport(data: ptr char, dataLen: cint, `out`: ptr char, infobuff: ptr char, infobuffSize: cint, infobuffOffset: cint): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 
 # int tcpxspr(int sd, u8 *gamestr, u8 *msgamestr, u8 *validate, u8 *filter, u8 *info, int type)
@@ -282,30 +282,30 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   # var filter: ptr uint8 = cast[ptr uint8](addr(filterCstr)) # TODO: Doesn't work, why?
   # echo repr cast[ptr char](filter)
 
-  var enctypex_queryEmpty: uint8 = 0
-  var enctypex_query: ptr uint8 = cast[ptr uint8](addr(enctypex_queryEmpty))
-  # var enctypex_queryCstr: cstring = "" # TODO: Doesn't work, why?
-  # var enctypex_query: ptr uint8 = cast[ptr uint8](addr(enctypex_queryCstr)) # TODO: Doesn't work, why?
-  # echo repr cast[ptr char](enctypex_query)
+  var enctypexQueryEmpty: uint8 = 0
+  var enctypexQuery: ptr uint8 = cast[ptr uint8](addr(enctypexQueryEmpty))
+  # var enctypexQueryCstr: cstring = "" # TODO: Doesn't work, why?
+  # var enctypexQuery: ptr uint8 = cast[ptr uint8](addr(enctypexQueryCstr)) # TODO: Doesn't work, why?
+  # echo repr cast[ptr char](enctypexQuery)
 
-  var enctypex_type: cint = 1
+  var enctypexType: cint = 1
 
   # echo "Gamename: ", cast[ptr char](msgamename)
-  # echo "Enctype: ", enctypex_type
+  # echo "Enctype: ", enctypexType
   # echo "Gamestr: ", cast[ptr char](gamestr)
   # echo "MSgamekey: ", cast[ptr char](msgamekey)
   # echo "Random id: ", validate.cstring
 
   # TODO: Implement functionality to communicate to port 28900 with encryption set.
-  #       In gslist the encryption method is stored in myenctype and not in enctypex_type [if(myenctype < 0) {]
+  #       In gslist the encryption method is stored in myenctype and not in enctypexType [if(myenctype < 0) {]
 
   discard tcpxspr(client.getFd().cint,
     gamestr,
     msgamename,
     cast[ptr uint8](validate),
     filter,
-    enctypex_query,
-    enctypex_type)
+    enctypexQuery,
+    enctypexType)
 
 
   var buffer: ptr char
@@ -327,12 +327,12 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   var len: cint = curLen.cint
 
   var ipport: ptr ipport_t
-  var enctypex_data: enctypex_data_t
-  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr char](msgamekey), validate, buffer, len.addr, enctypex_data.addr)) # TODO: Maybe #72 (maybe wrong buffer len?)
+  var enctypexData: enctypex_data_t
+  ipport = cast[ptr ipport_t](enctypex_decoder(cast[ptr char](msgamekey), validate, buffer, len.addr, enctypexData.addr)) # TODO: Maybe #72 (maybe wrong buffer len?)
 
   var enctypextmp: ptr uint8
   enctypextmp = enctypextmp.resize(((len / 5) * 6).int) # TODO: Issue #69
-  len = enctypex_decoder_convert_to_ipport(buffer + enctypex_data.start, len - enctypex_data.start, cast[ptr char](enctypextmp), nil, 0, 0)
+  len = enctypex_decoder_convert_to_ipport(buffer + enctypexData.start, len - enctypexData.start, cast[ptr char](enctypextmp), nil, 0, 0)
 
   ipport = cast[ptr ipport_t](enctypextmp)
 

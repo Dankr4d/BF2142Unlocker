@@ -5,6 +5,9 @@ import base64
 
 const MESSAGE_PREFIX_LEN: int = 12
 
+when defined(nimHasStyleChecks):
+  {.push styleChecks: off.}
+
 type
   EaMessage* = object of RootObj
     TXN*: string
@@ -163,6 +166,8 @@ type
     tos*: string
   GetTosClient* = object of EaMessage
 
+when defined(nimHasStyleChecks):
+  {.push styleChecks: on.}
 
 
 proc newGetTosServer*(): GetTosServer =

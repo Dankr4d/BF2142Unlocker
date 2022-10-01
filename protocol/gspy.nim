@@ -70,51 +70,51 @@ type
   GSpyServer* = object
     hostport*: uint16 # "17567",
     gamemode*: string # "openplaying",
-    bf2142_spawntime*: float # "15.000000",
-    bf2142_pure*: bool # "0",
-    bf2142_d_idx*: string # "http://",
-    bf2142_team2*: string # "reb",
+    bf2142Spawntime*: float # "15.000000",
+    bf2142Pure*: bool # "0",
+    bf2142DIdx*: string # "http://",
+    bf2142Team2*: string # "reb",
     numplayers*: uint8 # "0",
-    bf2142_maxrank*: uint16 # What is maxrank? # "0",
-    bf2142_teamratio*: float # Maybe uint8? # "100.000000",
-    bf2142_custom_map_url*: string # "0http://www.moddb.com/mods/first-strike/downloads",
+    bf2142Maxrank*: uint16 # What is maxrank? # "0",
+    bf2142Teamratio*: float # Maybe uint8? # "100.000000",
+    bf2142CustomMapUrl*: string # "0http://www.moddb.com/mods/first-strike/downloads",
     mapname*: string # "Endor_Clearing",
-    bf2142_globalunlocks*: bool # What does globalunlocks? # "1",
-    bf2142_ticketratio*: uint8 # "100",
+    bf2142Globalunlocks*: bool # What does globalunlocks? # "1",
+    bf2142Ticketratio*: uint8 # "100",
     password*: bool # "0",
-    bf2142_d_dl*: string # "http://",
-    bf2142_sponsortext*: string # "",
-    bf2142_region*: string # "",
+    bf2142DDl*: string # "http://",
+    bf2142Sponsortext*: string # "",
+    bf2142Region*: string # "",
     gamevariant*: string # "firststrike",
     gametype*: string # "gpm_coop",
-    bf2142_ranked*: bool # "0",
-    bf2142_averageping*: uint16 # "0",
-    bf2142_provider*: string # "",
-    bf2142_ranked_tournament*: bool # "0",
-    bf2142_anticheat*: bool # "0",
-    bf2142_friendlyfire*: bool # "1",
-    bf2142_communitylogo_url*: string # "http://cdn-images.imagevenue.com/47/2d/9c/ME122MV2_o.jpg",
+    bf2142Ranked*: bool # "0",
+    bf2142Averageping*: uint16 # "0",
+    bf2142Provider*: string # "",
+    bf2142RankedTournament*: bool # "0",
+    bf2142Anticheat*: bool # "0",
+    bf2142Friendlyfire*: bool # "1",
+    bf2142CommunitylogoUrl*: string # "http://cdn-images.imagevenue.com/47/2d/9c/ME122MV2_o.jpg",
     maxplayers*: uint8 # "32",
-    bf2142_voip*: bool # "1",
-    bf2142_reservedslots*: uint8 # Or bool? "0",
-    bf2142_type*: string # Don't know what this is. # "0",
+    bf2142Voip*: bool # "1",
+    bf2142Reservedslots*: uint8 # Or bool? "0",
+    bf2142Type*: string # Don't know what this is. # "0",
     gamename*: string # "stella",
-    bf2142_mapsize*: uint8 # "32",
-    bf2142_scorelimit*: uint # Or bool or uint8/unit16? # "0",
-    bf2142_allow_spectators*: bool # "0",
+    bf2142Mapsize*: uint8 # "32",
+    bf2142Scorelimit*: uint # Or bool or uint8/unit16? # "0",
+    bf2142AllowSpectators*: bool # "0",
     gamever*: string # "1.10.112.0",
-    bf2142_tkmode*: string # Maybe enum # "Punish",
-    bf2142_autobalanced*: bool # "1",
-    bf2142_team1*: string # "imp",
-    bf2142_autorec*: bool # "0",
-    bf2142_sponsorlogo_url*: string # "http://cdn-images.imagevenue.com/47/2d/9c/ME122MV2_o.jpg",
+    bf2142Tkmode*: string # Maybe enum # "Punish",
+    bf2142Autobalanced*: bool # "1",
+    bf2142Team1*: string # "imp",
+    bf2142Autorec*: bool # "0",
+    bf2142SponsorlogoUrl*: string # "http://cdn-images.imagevenue.com/47/2d/9c/ME122MV2_o.jpg",
     timelimit*: uint16 # Or uint8? Minutes or milliseconds? # "0",
     hostname*: string # "First Strike - 1.63 Test",
     roundtime*: uint8 # Is this how much rounds a map is played? # "1",
-    bf2142_startdelay*: uint8 # Or uint16. Check the max startdelay (seconds) # "15"
+    bf2142Startdelay*: uint8 # Or uint16. Check the max startdelay (seconds) # "15"
   GSpyTeam* = object
-    team_t*: seq[string]
-    score_t*: seq[uint16]
+    teamT*: seq[string]
+    scoreT*: seq[uint16]
   GSpyPlayer* = object
     deaths*: seq[uint16]
     pid*: seq[uint32] # Maybe uint16
@@ -247,81 +247,81 @@ proc parseGSpyServer*(data: string, server: var GSpyServer, pos: var int) =
     of "gamemode":
       server.gamemode = val
     of "bf2142_spawntime":
-      server.bf2142_spawntime = parseFloat(val)
+      server.bf2142Spawntime = parseFloat(val)
     of "bf2142_pure":
-      server.bf2142_pure = parseBool(val)
+      server.bf2142Pure = parseBool(val)
     of "bf2142_d_idx":
-      server.bf2142_d_idx = val
+      server.bf2142DIdx = val
     of "bf2142_team2":
-      server.bf2142_team2 = val
+      server.bf2142Team2 = val
     of "numplayers":
       server.numplayers = parseUInt(val).uint8
     of "bf2142_maxrank":
-      server.bf2142_maxrank = parseUInt(val).uint16
+      server.bf2142Maxrank = parseUInt(val).uint16
     of "bf2142_teamratio":
-      server.bf2142_teamratio = parseFloat(val)
+      server.bf2142Teamratio = parseFloat(val)
     of "bf2142_custom_map_url":
-      server.bf2142_custom_map_url = val
+      server.bf2142CustomMapUrl = val
     of "mapname":
       server.mapname = val
     of "bf2142_globalunlocks":
-      server.bf2142_globalunlocks = parseBool(val)
+      server.bf2142Globalunlocks = parseBool(val)
     of "bf2142_ticketratio":
-      server.bf2142_ticketratio = parseUInt(val).uint8
+      server.bf2142Ticketratio = parseUInt(val).uint8
     of "password":
       server.password = parseBool(val)
     of "bf2142_d_dl":
-      server.bf2142_d_dl = val
+      server.bf2142DDl = val
     of "bf2142_sponsortext":
-      server.bf2142_sponsortext = val
+      server.bf2142Sponsortext = val
     of "bf2142_region":
-      server.bf2142_region = val
+      server.bf2142Region = val
     of "gamevariant":
       server.gamevariant = val
     of "gametype":
       server.gametype = val
     of "bf2142_ranked":
-      server.bf2142_ranked = parseBool(val)
+      server.bf2142Ranked = parseBool(val)
     of "bf2142_averageping":
-      server.bf2142_averageping = parseUInt(val).uint16
+      server.bf2142Averageping = parseUInt(val).uint16
     of "bf2142_provider":
-      server.bf2142_provider = val
+      server.bf2142Provider = val
     of "bf2142_ranked_tournament":
-      server.bf2142_ranked_tournament = parseBool(val)
+      server.bf2142RankedTournament = parseBool(val)
     of "bf2142_anticheat":
-      server.bf2142_anticheat = parseBool(val)
+      server.bf2142Anticheat = parseBool(val)
     of "bf2142_friendlyfire":
-      server.bf2142_friendlyfire = parseBool(val)
+      server.bf2142Friendlyfire = parseBool(val)
     of "bf2142_communitylogo_url":
-      server.bf2142_communitylogo_url = val
+      server.bf2142CommunitylogoUrl = val
     of "maxplayers":
       server.maxplayers = parseUInt(val).uint8
     of "bf2142_voip":
-      server.bf2142_voip = parseBool(val)
+      server.bf2142Voip = parseBool(val)
     of "bf2142_reservedslots":
-      server.bf2142_reservedslots = parseUInt(val).uint8
+      server.bf2142Reservedslots = parseUInt(val).uint8
     of "bf2142_type":
-      server.bf2142_type = val
+      server.bf2142Type = val
     of "gamename":
       server.gamename = val
     of "bf2142_mapsize":
-      server.bf2142_mapsize = parseUInt(val).uint8
+      server.bf2142Mapsize = parseUInt(val).uint8
     of "bf2142_scorelimit":
-      server.bf2142_scorelimit = parseUInt(val)
+      server.bf2142Scorelimit = parseUInt(val)
     of "bf2142_allow_spectators":
-      server.bf2142_allow_spectators = parseBool(val)
+      server.bf2142AllowSpectators = parseBool(val)
     of "gamever":
       server.gamever = val
     of "bf2142_tkmode":
-      server.bf2142_tkmode = val
+      server.bf2142Tkmode = val
     of "bf2142_autobalanced":
-      server.bf2142_autobalanced = parseBool(val)
+      server.bf2142Autobalanced = parseBool(val)
     of "bf2142_team1":
-      server.bf2142_team1 = val
+      server.bf2142Team1 = val
     of "bf2142_autorec":
-      server.bf2142_autorec = parseBool(val)
+      server.bf2142Autorec = parseBool(val)
     of "bf2142_sponsorlogo_url":
-      server.bf2142_sponsorlogo_url = val
+      server.bf2142SponsorlogoUrl = val
     of "timelimit":
       server.timelimit = parseUInt(val).uint16
     of "hostname":
@@ -329,7 +329,7 @@ proc parseGSpyServer*(data: string, server: var GSpyServer, pos: var int) =
     of "roundtime":
       server.roundtime = parseUInt(val).uint8
     of "bf2142_startdelay":
-      server.bf2142_startdelay = parseUInt(val).uint8
+      server.bf2142Startdelay = parseUInt(val).uint8
 
     if data[pos - 1 .. pos] == "\0\0": # pos - 1 because parseCStr skips the first 0x0 byte
       pos.inc(1)

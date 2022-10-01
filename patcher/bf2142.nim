@@ -6,8 +6,8 @@ import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 
 type
   PatchConfig* = object of RootObj
-    stella_prod*: string
-    stella_ms*: string
+    stellaProd*: string
+    stellaMs*: string
     ms*: string
     available*: string
     motd*: string
@@ -91,10 +91,10 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig, laaPatch: bool) =
   else:
     fs.write(byte(0x0E))
 
-  var hostend: Hostent = getHostByName(parseUri(patchConfig.stella_prod).hostname)
+  var hostend: Hostent = getHostByName(parseUri(patchConfig.stellaProd).hostname)
   fs.writeIpReversed(parseHexInt("0045C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
-  fs.writeStr(parseHexInt("005639A4"), patchConfig.stella_prod, 31) # http://stella.prod.gamespy.com
-  fs.writeStr(parseHexInt("005639C4"), patchConfig.stella_ms, 23) # stella.prod.gamespy.com
+  fs.writeStr(parseHexInt("005639A4"), patchConfig.stellaProd, 31) # http://stella.prod.gamespy.com
+  fs.writeStr(parseHexInt("005639C4"), patchConfig.stellaMs, 23) # stella.prod.gamespy.com
   fs.writeStr(parseHexInt("0059F608"), patchConfig.ms, 19) # %s.ms%d.gamespy.com
   fs.writeStr(parseHexInt("0059E6E8"), patchConfig.available, 27) # %s.available.gamespy.com
   fs.writeStr(parseHexInt("0059E938"), patchConfig.motd, 39) # http://motd.gamespy.com/motd/motd.asp
