@@ -880,7 +880,7 @@ proc getBF2142UnlockerConfig(path: string = CONFIG_FILE_NAME): BF2142UnlockerCon
     result.settings.winePrefix = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINEPREFIX)
     result.settings.startupQuery = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_STARTUP_QUERY, "/usr/bin/wine")
   result.settings.skipMovies = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_SKIP_MOVIES, "false"))
-  result.settings.laaPatch = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_LAA_PATCH, "false"))
+  result.settings.laaPatch = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_LAA_PATCH, "true"))
   result.settings.windowMode = parseBool(config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_WINDOW_MODE, "false"))
   result.settings.resolution = config.getSectionValue(CONFIG_SECTION_SETTINGS, CONFIG_KEY_SETTINGS_RESOLUTION, "800x600") # todo: Rename to windowResolution
 
