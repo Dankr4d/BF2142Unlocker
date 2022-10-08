@@ -4,7 +4,6 @@ import tables
 
 when defined(windows):
   import winim
-  import strutils
   import bitops
 
   iterator adapterInfos(pIpAdapterInfo: PIP_ADAPTER_INFO): PIP_ADAPTER_INFO =
@@ -45,13 +44,13 @@ when defined(windows):
 
     var adapterName: string
     for adapterInfo in pIpAdapterInfo.adapterInfos:
-      adapterName = $adapterInfo.Description.cstring
+      adapterName = $adapterInfo.Description.join("")
       result[adapterName] = @[]
       for ipAddrList in adapterInfo.IpAddressList.ipAddressLists:
         var address: Address
         address.family = Domain.AF_INET.uint16
-        address.address = $ipAddrList.IpAddress.String.cstring
-        address.netmask = $ipAddrList.IpMask.String.cstring
+        address.address = $ipAddrList.IpAddress.String.join("")
+        address.netmask = $ipAddrList.IpMask.String.join("")
         address.broadcast = calcBroadcastAddr(address.address, address.netmask)
         result[adapterName].add(address)
 

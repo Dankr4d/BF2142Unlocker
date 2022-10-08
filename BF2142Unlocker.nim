@@ -34,6 +34,7 @@ import module/strhider # Simple string hide functionality with xor and base64 to
 import client/master # Required to query master server
 import client/gspy # Required to query each gamespy server for game server information
 import streams # Required to load server.ini (which has unknown sections)
+               # Windows: Required to read from process stream (login/unlock server)
 import regex # Required to validate soldier name
 import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
 import module/gintro/liststore
@@ -53,7 +54,6 @@ import page/setting/hud as pageSettingHud
 when defined(linux):
   import gintro/vte # Required for terminal (linux only feature or currently only available on linux)
 elif defined(windows):
-  import streams # Required to read from process stream (login/unlock server)
   import module/windows/stdoutreader # Required for read stdoutput from another process
   type
     Terminal = ref object of ScrolledWindow # Have a look at the linux only vte import above
@@ -2188,10 +2188,10 @@ when defined(windows):
           colorServer = "red"
       buffer.add(FORMATTED_COLORIZE % [
         colorPrefix,
-        glib.markupEscapeText(lineSplit[0], lineSplit[0].len),
+        glib.markupEscapeText(lineSplit[0].cstring, lineSplit[0].len),
         colorServer,
-        glib.markupEscapeText(lineSplit[1], lineSplit[1].len),
-        glib.markupEscapeText(lineSplit[2], lineSplit[2].len)
+        glib.markupEscapeText(lineSplit[1].cstring, lineSplit[1].len),
+        glib.markupEscapeText(lineSplit[2].cstring, lineSplit[2].len)
       ])
 
       if idx + 1 != textLineSplit.high:
@@ -2199,7 +2199,7 @@ when defined(windows):
 
     var iterEnd: TextIter
     terminal.buffer.getEndIter(iterEnd)
-    terminal.buffer.insertMarkup(iterEnd, buffer, buffer.len)
+    terminal.buffer.insertMarkup(iterEnd, buffer.cstring, buffer.len)
     if scrollDown:
       terminal.buffer.placeCursor(iterEnd)
       var mark: TextMark = terminal.buffer.getInsert()
@@ -3427,7 +3427,7 @@ proc onApplicationActivate(application: Application) =
       let bf2142ClientPath: string = getBF2142ClientPath()
       if bf2142ClientPath != "" and fileExists(bf2142ClientPath / BF2142_EXE_NAME):
         vboxSettings.sensitive = false
-        lblSettingsBF2142ClientPathDetected.text = bf2142ClientPath
+        lblSettingsBF2142ClientPathDetected.text = bf2142ClientPath.cstring
         let responseId: int = dlgSettingsBF2142ClientPathDetected.run()
         dlgSettingsBF2142ClientPathDetected.destroy()
         if responseId == 0:

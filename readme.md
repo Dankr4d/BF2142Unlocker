@@ -93,7 +93,7 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - If there are any updates: `./build_all.bat`
 - `cd /c/Users/$USER/projects/BF2142Unlocker`
 - `git pull`
-- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
+- `export PATH="$PATH:/c/Users/$USER/projects/Nim/bin"`
 - `nimble install -d # Install/Update dependencies`
 - Continue with [Compile](#Compile-1)
 ### Update (Linux)
