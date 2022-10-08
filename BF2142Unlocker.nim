@@ -27,7 +27,6 @@ import math # Required for runtime configuration
 import parser/gamesrv # Required to parse data out of bf2142 game server
 import options # Required for error/exception handling
 import sets # Required for queryServer for the optional bytes parameter from gspy module
-import sequtils # Required for filter proc (filtering gamespy address port list)
 import client/fesl # Required for getSoldiers proc (login and returning soldiers or error code)
 import uri # Required for parseUri # todo: REMOVE (see server.ini)
 import module/strhider # Simple string hide functionality with xor and base64 to hide username/password saved in login.ini
@@ -35,7 +34,7 @@ import client/master # Required to query master server
 import client/gspy # Required to query each gamespy server for game server information
 import streams # Required to load server.ini (which has unknown sections)
 import regex # Required to validate soldier name
-import tables # Required to store ServerConfig temporary for faster server list quering (see threadUpdateServerProc)
+import tables # Required for fesl thread (see threadFeslProc)
 import module/gintro/liststore
 import module/gintro/infodialog
 
@@ -239,8 +238,14 @@ type
     gspyPort: Port
     stellaName: string
 
-var threadUpdateServer: system.Thread[seq[ServerConfig]]
-var channelUpdateServer: Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]
+var threadUpdateServerList: system.Thread[seq[ServerConfig]]
+type
+  ServerData = object
+    address: IpAddress
+    port: Port
+    gspyServer: GSpyServer
+    serverConfig: ServerConfig
+var channelAddServers: Channel[seq[ServerData]]
 var isMultiplayerServerLoadedOnce: bool = false
 var isMultiplayerServerUpdating: bool = false
 
@@ -1088,7 +1093,8 @@ proc `selectServer=`(list: TreeView, server: Server) =
       list.scrollToCell(store.getPath(iter), nil, false, 0.0, 0.0)
       return
     whileCond = store.iterNext(iter)
-  # todo: Raise exception if server doesn't exists
+  # todo: Raise exception if server doesn't exists and add "hasServer" proc
+  #       to check if server is already added to list
 
 
 proc selectedSoldier(list: TreeView): Option[string] =
@@ -1803,9 +1809,16 @@ proc updatePlayerListAsync() =
 
   threadUpdatePlayerList.createThread(threadUpdatePlayerListProc, (currentServer.ip, currentServer.gspyPort))
 
-proc timerUpdateServer(todo: int): bool =
-  var data: tuple[dataAvailable: bool, msg: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]] = channelUpdateServer.tryRecv()
-  if not data.dataAvailable:
+proc timerUpdateServerList(todo: int): bool =
+  let channelAddServersPeek = channelAddServers.peek()
+
+  if channelAddServersPeek == -1:
+    spinnerMultiplayerServers.stop()
+    btnMultiplayerServersRefresh.sensitive = true
+    isMultiplayerServerUpdating = false
+    isMultiplayerServerLoadedOnce = true
+    return SOURCE_REMOVE
+  elif channelAddServersPeek == 0:
     return SOURCE_CONTINUE
 
   var
@@ -1825,87 +1838,79 @@ proc timerUpdateServer(todo: int): bool =
   discard valGSpyPort.init(g_uint_get_type())
   discard valStellaName.init(g_string_get_type())
 
-  for server in data.msg:
-    valName.setString(server.gspyServer.hostname.cstring)
-    valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # todo: setUInt should take an uint param, not int
-    valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # todo: setUInt should take an uint param, not int
-    valMap.setString(server.gspyServer.mapname.cstring)
-    valMode.setString(server.gspyServer.gametype.cstring)
-    valMod.setString(server.gspyServer.gamevariant.cstring)
-    valIp.setString(cstring($server.address))
-    valPort.setUInt(server.gspyServer.hostport.int) # todo: setUInt should take an uint param, not int
-    valGSpyPort.setUInt(server.port.int) # todo: setUInt should take an uint param, not int
-    valStellaName.setString(server.serverConfig.serverName.cstring)
-    store.append(iter)
-    store.setValue(iter, 0, valName)
-    store.setValue(iter, 1, valCurrentPlayer)
-    store.setValue(iter, 2, valMaxPlayer)
-    store.setValue(iter, 3, valMap)
-    store.setValue(iter, 4, valMode)
-    store.setValue(iter, 5, valMod)
-    store.setValue(iter, 6, valIp)
-    store.setValue(iter, 7, valPort)
-    store.setValue(iter, 9, valGSpyPort)
-    store.setValue(iter, 8, valStellaName)
+  for idx in 1..channelAddServersPeek:
+    for server in channelAddServers.recv():
+      valName.setString(server.gspyServer.hostname.cstring)
+      valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # todo: setUInt should take an uint param, not int
+      valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # todo: setUInt should take an uint param, not int
+      valMap.setString(server.gspyServer.mapname.cstring)
+      valMode.setString(server.gspyServer.gametype.cstring)
+      valMod.setString(server.gspyServer.gamevariant.cstring)
+      valIp.setString(cstring($server.address))
+      valPort.setUInt(server.gspyServer.hostport.int) # todo: setUInt should take an uint param, not int
+      valGSpyPort.setUInt(server.port.int) # todo: setUInt should take an uint param, not int
+      valStellaName.setString(server.serverConfig.serverName.cstring)
+      store.append(iter)
+      store.setValue(iter, 0, valName)
+      store.setValue(iter, 1, valCurrentPlayer)
+      store.setValue(iter, 2, valMaxPlayer)
+      store.setValue(iter, 3, valMap)
+      store.setValue(iter, 4, valMode)
+      store.setValue(iter, 5, valMod)
+      store.setValue(iter, 6, valIp)
+      store.setValue(iter, 7, valPort)
+      store.setValue(iter, 9, valGSpyPort)
+      store.setValue(iter, 8, valStellaName)
 
-  spinnerMultiplayerServers.stop()
-  spinnerMultiplayerPlayers1.stop()
-  spinnerMultiplayerPlayers2.stop()
-  btnMultiplayerServersRefresh.sensitive = true
-  if isServerSelected:
-    # todo: Maybe we can select the first server then this global var is obsolet.
-    #       Options would be also a possibility but then we need to call get every currentServer access
-    trvMultiplayerServers.selectServer = currentServer
-    btnMultiplayerServersPlay.sensitive = true
-    btnMultiplayerPlayersRefresh.sensitive = true
-    updatePlayerListAsync()
+      if isServerSelected and server.address == currentServer.ip and server.port == server.port:
+        # todo: Maybe we can select the first server then this global var is obsolet.
+        #       Options would be also a possibility but then we need to call get every currentServer access
+        trvMultiplayerServers.selectServer = currentServer
+        btnMultiplayerServersPlay.sensitive = true
+        btnMultiplayerPlayersRefresh.sensitive = true
+        updatePlayerListAsync()
 
-  channelUpdateServer.close()
-  isMultiplayerServerUpdating = false
-  isMultiplayerServerLoadedOnce = true
-  return SOURCE_REMOVE
+  return SOURCE_CONTINUE
 
+proc threadUpdateServerListProc(serverConfigs: seq[ServerConfig]) {.thread.} =
+  var gslistAll: seq[tuple[address: IpAddress, port: Port]] = @[]
 
-proc threadUpdateServerProc(serverConfigs: seq[ServerConfig]) {.thread.} =
-  var gslist: seq[tuple[address: IpAddress, port: Port]]
-  var gslistTmp: seq[tuple[address: IpAddress, port: Port]]
-  var serverConfigsTbl: tables.Table[string, ServerConfig] = initTable[string, ServerConfig]()
-  var servers: seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]
-
-  for idx, serverConfig in serverConfigs:
+  for idxConfig, serverConfig in serverConfigs:
     # todo: Querying openspy and novgames master server takes ~500ms
     #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
     # todo: Query master servers async like in `queryServers` proc
+    var gslist: seq[tuple[address: IpAddress, port: Port]] = @[]
+    var gslistTmp: seq[tuple[address: IpAddress, port: Port]] = @[]
+
     try:
       gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.gameName, serverConfig.gameKey, serverConfig.gameStr, 1000)
     except RangeDefect:
       break # todo: Temprariy fixing issue #69 and #72
-    gslist.add(filter(gslistTmp, proc(gs: tuple[address: IpAddress, port: Port]): bool =
+    for gs in gslistTmp:
       if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
-        return false
-      if gs in gslist:
-        # INFO: PlayBF2142 master server also respond OpenSpy game server
-        # todo: If the original master server isn't replying to us, but PlayBF2142 do,
-        #       then it's listed with the incorrect master server
-        # todo: Also add a setting like "is_duplicating" to server.ini and sort them out (if true),
-        #       after all other master server who have is_duplicating set to false, responded.
-        #       Then the order in server.ini isn't required anymore.
-        return false
-      serverConfigsTbl[$gs.address & $gs.port] = serverConfigs[idx]
-      return true
-    ))
-    # gslist.add(gslistTmp)
-  let serversTmp = queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport]))
-  for server in serversTmp:
-    servers.add((
-      address: server.address,
-      port: server.port,
-      gspyServer: server.gspyServer,
-      serverConfig: serverConfigsTbl[$server.address & $server.port]
-    ))
-  channelUpdateServer.send(servers)
+        continue
+      if gslistAll.contains(gs):
+        continue
+      gslistAll.add(gs)
+      gslist.add(gs)
 
-proc updateServerAsync() =
+    var servers: seq[ServerData] = @[]
+    for idxServer, server in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])):
+      servers.add(ServerData(
+        address: server.address,
+        port: server.port,
+        gspyServer: server.gspyServer,
+        serverConfig: serverConfig
+      ))
+    channelAddServers.send(servers)
+
+  # Wait until ui thread processed all entries in channel before closing
+  while channelAddServers.peek() > 0:
+    sleep(50)
+  channelAddServers.close()
+
+
+proc updateServerListAsync() =
   isMultiplayerServerUpdating = true
 
   trvMultiplayerServers.clear()
@@ -1916,14 +1921,14 @@ proc updateServerAsync() =
   btnMultiplayerServersPlay.sensitive = false
   btnMultiplayerPlayersRefresh.sensitive = false
 
-  channelUpdateServer = Channel[seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer, serverConfig: ServerConfig]]]()
-  channelUpdateServer.open()
+  channelAddServers = Channel[seq[ServerData]]()
+  channelAddServers.open()
 
   let todo: int = 0
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
-  discard timeoutAdd(250, timerUpdateServer, todo)
+  discard timeoutAdd(50, timerUpdateServerList, todo)
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
-  threadUpdateServer.createThread(threadUpdateServerProc, serverConfigs)
+  threadUpdateServerList.createThread(threadUpdateServerListProc, serverConfigs)
 
 
 proc timerFesl(todo: int): bool =
@@ -2035,7 +2040,7 @@ proc threadFeslProc() {.thread.} =
       # No commands in channel (channelFeslThread) and connected to server,
       # so we're waiting for Ping packages and respond to them,
       # to not get disconnected.
-      var dataTbl: tables.OrderedTable[string, string]
+      var dataTbl: OrderedTable[string, string]
       var data: string
       var id: uint8
       if not socket.recv(data, id, 500):
@@ -2659,13 +2664,13 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   if not notebook.currentPage == 1:
     return
   if not isMultiplayerServerUpdating and event.getKeyval() == KEY_F5: # todo: Add tooltip info
-    updateServerAsync()
+    updateServerListAsync()
   if event.getKeyval() == KEY_F6 and isServerSelected: # todo: Add tooltip info
     updatePlayerListAsync()
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
   if not isMultiplayerServerUpdating and not isMultiplayerServerLoadedOnce and pageNum == 1:
-    updateServerAsync()
+    updateServerListAsync()
 
 proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
   if not validateUsername($cstr):
@@ -2933,7 +2938,7 @@ proc onTrvMultiplayerServersButtonPressEvent(self: TreeView00, event00: ptr Even
   return EVENT_PROPAGATE
 
 proc onBtnMultiplayerServersRefreshClicked(self: Button00) {.signal.} =
-  updateServerAsync()
+  updateServerListAsync()
 
 proc onBtnMultiplayerServersPlayClicked(self: Button00) {.signal.} =
   wndMultiplayerAccount.show()
@@ -3441,8 +3446,6 @@ proc onApplicationActivate(application: Application) =
     vboxHost.visible = false
   loadServerConfig()
   fillMultiplayerPatchAndStartBox()
-
-  # updateServerAsync() # todo: Remove
 
   when defined(windows):
     if bf2142UnlockerConfig.settings.bf2142ClientPath == "":
