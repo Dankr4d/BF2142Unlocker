@@ -2138,6 +2138,16 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
     options.szx = some(resolution.width)
     options.szy = some(resolution.height)
   options.widescreen = some(true)
+
+  let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(serverConfig.serverName)
+  if loginTplOpt.isSome:
+    let loginTpl: tuple[username, password: string, soldier: Option[string]] = get(loginTplOpt)
+    saveBF2142Profile(loginTpl.username, if loginTpl.soldier.isSome: loginTpl.soldier.get() else: "")
+    if loginTpl.soldier.isSome:
+      options.eaAccountName = some(loginTpl.username)
+      options.eaAccountPassword = some(loginTpl.password)
+      options.soldierName = some(loginTpl.soldier.get())
+
   discard startBF2142(options)
 
 proc fillMultiplayerPatchAndStartBox() =
