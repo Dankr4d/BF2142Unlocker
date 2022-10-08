@@ -775,7 +775,13 @@ proc fixMedalsAndPins(path: string) =
   discard writeFile(statsPath / "stats.py", STATS_STATS_PY)
   discard writeFile(statsPath / "unlocks.py", STATS_UNLOCKS_PY)
 
-proc isAlphaNumeric(str: string): bool =
+proc validateUsername(str: string): bool =
+  for ch in str:
+    if not isAlphaNumeric(ch) and not (ch in @['_', '-']):
+      return false
+  return true
+
+proc validatePassword(str: string): bool =
   for ch in str:
     if not isAlphaNumeric(ch):
       return false
@@ -2646,7 +2652,7 @@ proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool
     updateServerAsync()
 
 proc onTxtMultiplayerAccountUsernameInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
-  if not isAlphaNumeric($cstr):
+  if not validateUsername($cstr):
     txtMultiplayerAccountUsername.signalStopEmissionByName("insert-text")
     return
   btnMultiplayerAccountLogin.sensitive = (txtMultiplayerAccountUsername.text & $cstr).len > 0 and txtMultiplayerAccountPassword.text.len > 0
@@ -2657,7 +2663,7 @@ proc onTxtMultiplayerAccountUsernameDeleteText(self: Editable00, startPos, endPo
   btnMultiplayerAccountCreate.sensitive = btnMultiplayerAccountLogin.sensitive
 
 proc onTxtMultiplayerAccountPasswordInsertText(self: Editable00, cstr: cstring, cstrLen: cint, pos: ptr cuint) {.signal.} =
-  if not isAlphaNumeric($cstr):
+  if not validatePassword($cstr):
     txtMultiplayerAccountPassword.signalStopEmissionByName("insert-text")
     return
   btnMultiplayerAccountLogin.sensitive = txtMultiplayerAccountUsername.text.len > 0 and (txtMultiplayerAccountPassword.text & $cstr).len > 0
