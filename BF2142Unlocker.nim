@@ -1661,7 +1661,7 @@ proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly:
 proc startBF2142(options: BF2142Options): bool = # todo: Other params and also an joinGSPort
   var command: string
   when defined(linux):
-    when defined(debug):
+    when not defined(release):
       command.add("WINEDEBUG=fixme-all,err-winediag" & ' ') # todo: Remove some nasty fixme's and errors for development
     if txtSettingsWinePrefix.text != "":
       command.add("WINEPREFIX=" & txtSettingsWinePrefix.text & ' ')
@@ -1696,8 +1696,14 @@ proc startBF2142(options: BF2142Options): bool = # todo: Other params and also a
     let processCommand: string = command
   elif defined(windows):
     let processCommand: string = bf2142UnlockerConfig.settings.bf2142ClientPath & '\\' & command
-  discard startProcess(command = processCommand, workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
-    options = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
+  when defined(release):
+    const processOptions: set[ProcessOption] = {poStdErrToStdOut, poParentStreams, poEvalCommand}
+  else:
+    const processOptions: set[ProcessOption] = {poStdErrToStdOut, poParentStreams, poEvalCommand, poEchoCmd}
+  discard startProcess(
+    command = processCommand,
+    workingDir = bf2142UnlockerConfig.settings.bf2142ClientPath,
+    options = processOptions
   )
   return true
 
