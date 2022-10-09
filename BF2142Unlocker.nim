@@ -450,6 +450,7 @@ var vboxMultiplayer: Box
 var spinnerMultiplayerServers: Spinner
 var trvMultiplayerServers: TreeView
 var btnMultiplayerServersRefresh: Button
+var imgMultiplayerServersRefesh: Image
 var btnMultiplayerServersPlay: Button
 var trvMultiplayerPlayers1: TreeView
 var spinnerMultiplayerPlayers1: Spinner
@@ -1815,6 +1816,7 @@ proc timerUpdateServerList(todo: int): bool =
   if channelAddServersPeek == -1:
     spinnerMultiplayerServers.stop()
     btnMultiplayerServersRefresh.sensitive = true
+    btnMultiplayerServersRefresh.image = imgMultiplayerServersRefesh
     isMultiplayerServerUpdating = false
     isMultiplayerServerLoadedOnce = true
     return SOURCE_REMOVE
@@ -1918,6 +1920,7 @@ proc updateServerListAsync() =
   trvMultiplayerPlayers2.clear()
   spinnerMultiplayerServers.start()
   btnMultiplayerServersRefresh.sensitive = false
+  btnMultiplayerServersRefresh.image = nil
   btnMultiplayerServersPlay.sensitive = false
   btnMultiplayerPlayersRefresh.sensitive = false
 
@@ -3250,6 +3253,7 @@ proc onApplicationActivate(application: Application) =
   spinnerMultiplayerServers = builder.getSpinner("spinnerMultiplayerServers")
   trvMultiplayerServers = builder.getTreeView("trvMultiplayerServers")
   btnMultiplayerServersRefresh = builder.getButton("btnMultiplayerServersRefresh")
+  imgMultiplayerServersRefesh = builder.getImage("imgServerListRefesh")
   btnMultiplayerServersPlay = builder.getButton("btnMultiplayerServersPlay")
   trvMultiplayerPlayers1 = builder.getTreeView("trvMultiplayerPlayers1")
   spinnerMultiplayerPlayers1 = builder.getSpinner("spinnerMultiplayerPlayers1")
