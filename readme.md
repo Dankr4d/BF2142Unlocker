@@ -60,8 +60,8 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `pacman -Syu # Upgrade base`
 - `pacman -Su # Upgrade all packages`
 - `pacman -S make tar git zip`
-- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4`
-- 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject mingw-w64-i686-gtksourceview4`
+- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4 mingw-w64-x86_64-osslsigncode`
+- 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject mingw-w64-i686-gtksourceview4 mingw-w64-i686-osslsigncode`
 - `mkdir -p /c/Users/$USER/projects && cd /c/Users/$USER/projects`
 - `git clone -b version-1-6 https://github.com/nim-lang/Nim.git`
 - `cd Nim`

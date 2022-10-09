@@ -18,6 +18,8 @@ BF2142UnlockerSrv.exe
 BF2142UnlockerSrv.res
 BF2142UnlockerLauncher
 BF2142UnlockerLauncher.exe
+BF2142UnlockerKey.pem
+BF2142UnlockerCert.pem
 lang.txt
 
 protocol/fesl

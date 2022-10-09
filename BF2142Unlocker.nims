@@ -1,3 +1,5 @@
+mode = ScriptMode.Verbose
+
 ### imports
 from os import `/`
 from strformat import fmt
@@ -340,11 +342,20 @@ proc prepare() =
     COMPILE_PARAMS &= " --passL:-Wl,--no-insert-timestamp"
 
 proc compile() =
-  mode = Verbose
   rmDir(BUILD_DIR)
   mkDir(BUILD_DIR)
   compileAll()
   copyAll()
+
+proc sign() =
+  if not fileExists("BF2142UnlockerKey.pem") or not fileExists("BF2142UnlockerCert.pem"):
+    exec("""openssl req -nodes -x509 -newkey rsa:4096 -keyout BF2142UnlockerKey.pem -out BF2142UnlockerCert.pem -sha256 -days 36500 -subj "/O=BF2142Unlocker"""")
+  exec(fmt"""osslsigncode sign -certs BF2142UnlockerCert.pem -key BF2142UnlockerKey.pem -time 0 -in "{BUILD_DIR / "BF2142Unlocker".toExe}" -out "{BUILD_DIR / "BF2142UnlockerSigned".toExe}" """)
+  mvFile(BUILD_DIR / "BF2142UnlockerSigned".toExe, BUILD_DIR / "BF2142Unlocker".toExe)
+  exec(fmt"""osslsigncode sign -certs BF2142UnlockerCert.pem -key BF2142UnlockerKey.pem -time 0 -in "{BUILD_BIN_DIR / "BF2142Unlocker".toExe}" -out "{BUILD_BIN_DIR / "BF2142UnlockerSigned".toExe}" """)
+  mvFile(BUILD_BIN_DIR / "BF2142UnlockerSigned".toExe, BUILD_BIN_DIR / "BF2142Unlocker".toExe)
+  exec(fmt"""osslsigncode sign -certs BF2142UnlockerCert.pem -key BF2142UnlockerKey.pem -time 0 -in "{BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe}" -out "{BUILD_BIN_DIR / "BF2142UnlockerSrvSigned".toExe}" """)
+  mvFile(BUILD_BIN_DIR / "BF2142UnlockerSrvSigned".toExe, BUILD_BIN_DIR / "BF2142UnlockerSrv".toExe)
 
 proc zip() =
   withDir("build"):
@@ -362,18 +373,24 @@ task buildall, "Compile and bundle 64 bit release.":
   CPU_ARCH = 32
   prepare()
   compile()
+  if defined(windows):
+    sign()
   zip()
 
 task build64, "Compile and bundle 64 bit release.":
   CPU_ARCH = 64
   prepare()
   compile()
+  if defined(windows):
+    sign()
   zip()
 
 task build32, "Compile and bundle 32 bit release.":
   CPU_ARCH = 32
   prepare()
   compile()
+  if defined(windows):
+    sign()
   zip()
 
 # task xbuild64, "Cross compile and bundle 64 bit release.":
@@ -383,10 +400,8 @@ task build32, "Compile and bundle 32 bit release.":
 #   compile()
 
 task translatePo, "Update po files from pot file.":
-  mode = Verbose
   updateTranslationPo()
 
 task translateMo, "Creates binary files from po files.":
-  mode = Verbose
   createTranslationMo()
 ##
