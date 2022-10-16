@@ -1,4 +1,3 @@
-import threadpool
 import gintro/[gtk, glib, gobject, gdk, gtksource]
 import gintro/gio except ListStore
 import os
@@ -238,18 +237,19 @@ type
     ip: IpAddress
     port: Port
     gspyPort: Port
-    stellaName: string
+    master: string
 
 var threadUpdateServerList: seq[system.Thread[ServerConfig]]
 type
   ServerData = object
-    address: IpAddress
+    ip: IpAddress
     port: Port
     gspyServer: GSpyServer
     serverConfig: ServerConfig
 var channelAddServers: Channel[seq[ServerData]]
 var isMultiplayerServerLoadedOnce: bool = false
 var isMultiplayerServerUpdating: bool = false
+var isMultiplayerPlayerListUpdating: bool = false
 
 type
   FeslCommand = enum
@@ -279,51 +279,51 @@ type
     of AddSoldier, DelSoldier:
       soldier: ThreadFeslSoldierData
 type
-  TimerFeslCreateData = object of ThreadFeslCreateData
-  TimerFeslLoginData = object of ThreadFeslLoginData
+  FeslCreateData = object of ThreadFeslCreateData
+  FeslLoginData = object of ThreadFeslLoginData
     soldiers: seq[string]
-  TimerFeslSoldierData = object of ThreadFeslSoldierData
+  FeslSoldierData = object of ThreadFeslSoldierData
     soldiers: seq[string]
-  TimerFeslData = object
+  FeslData = object
     case command: FeslCommand:
     of Create:
-      create: TimerFeslCreateData
+      create: FeslCreateData
     of Login:
-      login: TimerFeslLoginData
+      login: FeslLoginData
     of AddSoldier, DelSoldier:
-      soldier: TimerFeslSoldierData
+      soldier: FeslSoldierData
     ex: Option[FeslException]
 
-proc getTimerFeslData(threadData: ThreadFeslData): TimerFeslData =
+proc getFeslData(threadData: ThreadFeslData): FeslData =
   case threadData.command:
   of FeslCommand.Create:
-    result = TimerFeslData(command: FeslCommand.Create)
+    result = FeslData(command: FeslCommand.Create)
     result.create.stella = threadData.create.stella
     result.create.username = threadData.create.username
     result.create.password = threadData.create.password
     result.create.save = threadData.create.save
   of FeslCommand.Login:
-    result = TimerFeslData(command: FeslCommand.Login)
+    result = FeslData(command: FeslCommand.Login)
     result.login.stella = threadData.login.stella
     result.login.username = threadData.login.username
     result.login.password = threadData.login.password
     result.login.save = threadData.login.save
     result.login.soldier = threadData.login.soldier
   of FeslCommand.AddSoldier:
-    result = TimerFeslData(command: FeslCommand.AddSoldier)
+    result = FeslData(command: FeslCommand.AddSoldier)
     result.soldier.soldier = threadData.soldier.soldier
   of FeslCommand.DelSoldier:
-    result = TimerFeslData(command: FeslCommand.DelSoldier)
+    result = FeslData(command: FeslCommand.DelSoldier)
     result.soldier.soldier = threadData.soldier.soldier
 
 var threadFesl: system.Thread[void]
 var channelFeslThread: Channel[ThreadFeslData]
-var channelFeslTimer: Channel[TimerFeslData]
+var channelFesl: Channel[FeslData]
 
 
-var threadUpdatePlayerList: system.Thread[tuple[gspyIp: IpAddress, gspyPort: Port]]
-var channelUpdatePlayerList: Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]
-var timerUpdatePlayerListId: int = 0
+var threadUpdatePlayerList: system.Thread[void]
+var channelUpdatePlayerList: Channel[tuple[ip: IpAddress, port: Port, gspy: GSpy]]
+var channelQueryPlayerList: Channel[tuple[ip: IpAddress, port: Port]]
 
 var isServerSelected: bool = false
 var currentServer: Server
@@ -1050,9 +1050,9 @@ proc selectedServer(list: TreeView): Option[Server] =
   var
     valName, valCurrentPlayer, valMaxPlayer, valMap: Value
     valMode, valMod, valIp, valPort, valGSpyPort: Value
-    valStellaName: Value
+    valMaster: Value
+    iter: TreeIter
   let store = listStore(list.getModel())
-  var iter: TreeIter
 
   if not list.selection.getSelected(cast[var TreeModel](nil), iter):
     return none(Server)
@@ -1066,7 +1066,7 @@ proc selectedServer(list: TreeView): Option[Server] =
   store.getValue(iter, 6, valIp)
   store.getValue(iter, 7, valPort)
   store.getValue(iter, 9, valGSpyPort)
-  store.getValue(iter, 8, valStellaName)
+  store.getValue(iter, 8, valMaster)
 
   var server: Server
   server.name = valName.getString()
@@ -1078,9 +1078,10 @@ proc selectedServer(list: TreeView): Option[Server] =
   server.ip = parseIpAddress(valIp.getString())
   server.port = Port(valPort.getUint())
   server.gspyPort = Port(valGSpyPort.getUint())
-  server.stellaName = valStellaName.getString()
+  server.master = valMaster.getString()
 
   return some(server)
+
 
 proc getIter(list: TreeView, ip: IpAddress, port: Port): Option[TreeIter] =
   var iter: TreeIter
@@ -1098,18 +1099,75 @@ proc getIter(list: TreeView, ip: IpAddress, port: Port): Option[TreeIter] =
   return none(TreeIter)
 
 
-proc updateMasterServer(list: TreeView, iter: var TreeIter, masterServer: string) =
+proc updateMaster(list: TreeView, iter: var TreeIter, master: string) =
   let store: gtk.ListStore = listStore(list.getModel())
-  var valMasterServer: Value
-  discard valMasterServer.init(g_string_get_type())
-  valMasterServer.setString(masterServer)
-  store.setValue(iter, 8, valMasterServer)
+  var valMaster: Value
+  discard valMaster.init(g_string_get_type())
+  valMaster.setString(master)
+  store.setValue(iter, 8, valMaster)
 
-proc getMasterServer(list: TreeView, iter: var TreeIter): string =
-  var valMasterServer: Value
+proc getMaster(list: TreeView, iter: var TreeIter): string =
+  var valMaster: Value
   let store: gtk.ListStore  = listStore(list.getModel())
-  store.getValue(iter, 8, valMasterServer)
-  return valMasterServer.getString()
+  store.getValue(iter, 8, valMaster)
+  return valMaster.getString()
+
+
+proc updateServer(iter: var TreeIter, server: Server) =
+  var
+    valName, valCurrentPlayer, valMaxPlayer, valMap: Value
+    valMode, valMod, valIp, valPort, valGSpyPort: Value
+    valMaster: Value
+  let store = listStore(trvMultiplayerServers.getModel())
+  discard valName.init(g_string_get_type())
+  discard valCurrentPlayer.init(g_uint_get_type())
+  discard valMaxPlayer.init(g_uint_get_type())
+  discard valMap.init(g_string_get_type())
+  discard valMode.init(g_string_get_type())
+  discard valMod.init(g_string_get_type())
+  discard valIp.init(g_string_get_type())
+  discard valPort.init(g_uint_get_type())
+  discard valGSpyPort.init(g_uint_get_type())
+  discard valMaster.init(g_string_get_type())
+
+  valName.setString(server.name.cstring)
+  valCurrentPlayer.setUInt(server.currentPlayer.int) # todo: setUInt should take an uint param, not int
+  valMaxPlayer.setUInt(server.maxPlayer.int) # todo: setUInt should take an uint param, not int
+  valMap.setString(server.map.cstring)
+  valMode.setString(server.mode.cstring)
+  valMod.setString(server.`mod`.cstring)
+  valIp.setString(cstring($server.ip))
+  valPort.setUInt(server.port.int) # todo: setUInt should take an uint param, not int
+  valGSpyPort.setUInt(server.gspyPort.int) # todo: setUInt should take an uint param, not int
+  valMaster.setString(server.master.cstring)
+  store.setValue(iter, 0, valName)
+  store.setValue(iter, 1, valCurrentPlayer)
+  store.setValue(iter, 2, valMaxPlayer)
+  store.setValue(iter, 3, valMap)
+  store.setValue(iter, 4, valMode)
+  store.setValue(iter, 5, valMod)
+  store.setValue(iter, 6, valIp)
+  store.setValue(iter, 7, valPort)
+  store.setValue(iter, 9, valGSpyPort)
+  store.setValue(iter, 8, valMaster)
+
+proc appendServer(server: Server) =
+  var iter: TreeIter
+  let store = listStore(trvMultiplayerServers.getModel())
+  store.append(iter)
+  iter.updateServer(server)
+
+proc convertServer(gspyServer: GspyServer, ip: IpAddress, gspyPort: Port, master: string): Server =
+  result.name = gspyServer.hostname
+  result.currentPlayer = gspyServer.numplayers
+  result.maxPlayer = gspyServer.maxplayers
+  result.map = gspyServer.mapname
+  result.mode = gspyServer.gametype
+  result.`mod` = gspyServer.gamevariant
+  result.ip = ip
+  result.port = Port(gspyServer.hostport) # TODO: Set type to port in GSpyServer type
+  result.gspyPort = gspyPort
+  result.master = master
 
 proc `selectServer=`(list: TreeView, server: Server) =
   var iter: TreeIter
@@ -1674,29 +1732,29 @@ proc loadServerConfig() =
       echo(e.msg)
   close(p)
 
-proc getLogin(stellaName: string): Option[tuple[username, password: string, soldier: Option[string]]] =
+proc getLogin(master: string): Option[tuple[username, password: string, soldier: Option[string]]] =
   var config: Config
   if not fileExists(CONFIG_LOGINS_FILE_NAME):
     config = newConfig()
   else:
     config = loadConfig(CONFIG_LOGINS_FILE_NAME)
-  let username = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_USERNAME))
-  let password = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_PASSWORD))
-  let soldier = showStr(config.getSectionValue(stellaName, CONFIG_LOGINS_KEY_SOLDIER))
+  let username = showStr(config.getSectionValue(master, CONFIG_LOGINS_KEY_USERNAME))
+  let password = showStr(config.getSectionValue(master, CONFIG_LOGINS_KEY_PASSWORD))
+  let soldier = showStr(config.getSectionValue(master, CONFIG_LOGINS_KEY_SOLDIER))
   if username != "" and password != "":
     return some((username, password, if soldier.len > 0: some(soldier) else: none(string)))
   return none(tuple[username, password: string, soldier: Option[string]])
 
-proc saveLogin(stellaName, username, password, soldier: string, saveSoldierOnly: bool = false) =
+proc saveLogin(master, username, password, soldier: string, saveSoldierOnly: bool = false) =
   var config: Config
   if not fileExists(CONFIG_LOGINS_FILE_NAME):
     config = newConfig()
   else:
     config = loadConfig(CONFIG_LOGINS_FILE_NAME)
   if not saveSoldierOnly:
-    config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_USERNAME, hideStr(username))
-    config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_PASSWORD, hideStr(password))
-  config.setSectionKey(stellaName, CONFIG_LOGINS_KEY_SOLDIER, hideStr(soldier))
+    config.setSectionKey(master, CONFIG_LOGINS_KEY_USERNAME, hideStr(username))
+    config.setSectionKey(master, CONFIG_LOGINS_KEY_PASSWORD, hideStr(password))
+  config.setSectionKey(master, CONFIG_LOGINS_KEY_SOLDIER, hideStr(soldier))
   config.writeConfig(CONFIG_LOGINS_FILE_NAME)
 
 proc startBF2142(options: BF2142Options): bool = # todo: Other params and also an joinGSPort
@@ -1748,21 +1806,26 @@ proc startBF2142(options: BF2142Options): bool = # todo: Other params and also a
   )
   return true
 
-proc timerUpdatePlayerList(todo: int): bool =
-  if channelUpdatePlayerList.peek() <= 0:
+proc idleUpdatePlayerList(unused: int): bool =
+  # TODO: This should also update gamespy server, since we're querying all data
+  if channelUpdatePlayerList.peek() == 0:
     return SOURCE_CONTINUE
 
   var gspy: Gspy
-  var gspyTpl: tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]
-  var found: bool = false
+  var ip: IpAddress
+  var port: Port
+  var servers: seq[tuple[ip: IpAddress, port: Port, gspy: GSpy]]
   while channelUpdatePlayerList.peek() > 0:
-    gspyTpl = channelUpdatePlayerList.recv()
+    (ip, port, gspy) = channelUpdatePlayerList.recv()
+    servers.add((ip, port, gspy))
 
-    if gspyTpl.gspyIp == currentServer.ip and gspyTpl.gspyPort == currentServer.gspyPort:
-      gspy = gspyTpl.gspy
+  var found: bool = false
+  for server in servers:
+    if currentServer.ip == ip and currentServer.gspyPort == port:
+      (ip, port, gspy) = server
       found = true
-
-  if found == false:
+  if not found:
+    # Thread may still querying data
     return SOURCE_CONTINUE
 
   # Return if data/seq len is incorrect (server send uncomplete data or parse couldn't parse it)
@@ -1776,6 +1839,11 @@ proc timerUpdatePlayerList(todo: int): bool =
   gspy.team.team_t.len != 2 or
   gspy.team.score_t.len != 2:
     return SOURCE_CONTINUE
+
+  var iterServer: TreeIter
+  discard trvMultiplayerServers.selection.getSelected(cast[var TreeModel](nil), iterServer)
+  let server: Server = convertServer(gspy.server, currentServer.ip, currentServer.gspyPort, currentServer.master)
+  updateServer(iterServer, server)
 
   var
     valPID, valName, valScore, valKills, valDeaths, valPing: Value
@@ -1816,14 +1884,30 @@ proc timerUpdatePlayerList(todo: int): bool =
   btnMultiplayerPlayersRefresh.sensitive = true
   spinnerMultiplayerPlayers1.stop()
   spinnerMultiplayerPlayers2.stop()
-  timerUpdatePlayerListId = 0
 
+  isMultiplayerPlayerListUpdating = false
   channelUpdatePlayerList.close()
+  channelQueryPlayerList.close()
+
   return SOURCE_REMOVE
 
-proc threadUpdatePlayerListProc(gspyIpPort: tuple[gspyIp: IpAddress, gspyPort: Port]) =
-  let gspy: GSpy = queryAll(gspyIpPort.gspyIP, gspyIpPort.gspyPort, 1000)
-  channelUpdatePlayerList.send((gspy, gspyIpPort.gspyIp, gspyIpPort.gspyPort))
+
+proc threadUpdatePlayerListProc() {.thread.} =
+  var ip: IpAddress
+  var port: Port
+
+  # consume channel until last entry
+  var channelQueryPlayerListPeek: int = 0
+  while channelQueryPlayerListPeek != -1:
+    channelQueryPlayerListPeek = channelQueryPlayerList.peek()
+    while channelQueryPlayerListPeek > 0:
+      (ip, port) = channelQueryPlayerList.recv()
+      channelQueryPlayerListPeek = channelQueryPlayerList.peek()
+      if channelQueryPlayerListPeek == 0:
+        let gspy: GSpy = queryAll(ip, port, 1000)
+        channelUpdatePlayerList.send((ip, port, gspy)) # TODO: Error: unhandled exception: cannot send message; thread died [DeadThreadDefect]
+    sleep(50)
+
 
 proc updatePlayerListAsync() =
   trvMultiplayerPlayers1.clear()
@@ -1833,20 +1917,26 @@ proc updatePlayerListAsync() =
   btnMultiplayerServersPlay.sensitive = true
   btnMultiplayerPlayersRefresh.sensitive = false
 
-  channelUpdatePlayerList = Channel[tuple[gspy: GSpy, gspyIp: IpAddress, gspyPort: Port]]()
-  channelUpdatePlayerList.open()
+  if not isMultiplayerPlayerListUpdating:
+    isMultiplayerPlayerListUpdating = true
 
-  let todo: int = 0
-  if timerUpdatePlayerListId == 0:
+    channelQueryPlayerList = Channel[tuple[ip: IpAddress, port: Port]]()
+    channelQueryPlayerList.open()
+    channelUpdatePlayerList = Channel[tuple[ip: IpAddress, port: Port, gspy: GSpy]]()
+    channelUpdatePlayerList.open()
+
+    let unused: int = 0
     when defined(nimHasStyleChecks): {.push styleChecks: off.}
-    timerUpdatePlayerListId = int(timeoutAdd(250, timerUpdatePlayerList, todo))
+    idleAdd(idleUpdatePlayerList, unused)
     when defined(nimHasStyleChecks): {.push styleChecks: on.}
 
-  threadUpdatePlayerList.createThread(threadUpdatePlayerListProc, (currentServer.ip, currentServer.gspyPort))
+    threadUpdatePlayerList.createThread(threadUpdatePlayerListProc)
 
-proc timerUpdateServerList(todo: int): bool =
+  channelQueryPlayerList.send((currentServer.ip, currentServer.gspyPort))
+
+
+proc idleUpdateServerList(unused: int): bool =
   let channelAddServersPeek = channelAddServers.peek()
-
 
   if channelAddServersPeek == 0:
     var threadsRunning: bool = false
@@ -1863,54 +1953,18 @@ proc timerUpdateServerList(todo: int): bool =
       return SOURCE_REMOVE
     return SOURCE_CONTINUE
 
-  var
-    valName, valCurrentPlayer, valMaxPlayer, valMap: Value
-    valMode, valMod, valIp, valPort, valGSpyPort: Value
-    valStellaName: Value
-    iter: TreeIter
-  let store = listStore(trvMultiplayerServers.getModel())
-  discard valName.init(g_string_get_type())
-  discard valCurrentPlayer.init(g_uint_get_type())
-  discard valMaxPlayer.init(g_uint_get_type())
-  discard valMap.init(g_string_get_type())
-  discard valMode.init(g_string_get_type())
-  discard valMod.init(g_string_get_type())
-  discard valIp.init(g_string_get_type())
-  discard valPort.init(g_uint_get_type())
-  discard valGSpyPort.init(g_uint_get_type())
-  discard valStellaName.init(g_string_get_type())
-
   for idx in 1..channelAddServersPeek:
-    for server in channelAddServers.recv():
-      var iterDuplicateOpt: Option[TreeIter] = trvMultiplayerServers.getIter(server.address, Port(server.gspyServer.hostport))
+    for serverData in channelAddServers.recv():
+      var iterDuplicateOpt: Option[TreeIter] = trvMultiplayerServers.getIter(serverData.ip, Port(serverData.gspyServer.hostport))
       if iterDuplicateOpt.isSome:
-        if not (trvMultiplayerServers.getMasterServer(iterDuplicateOpt.get) in server.serverConfig.duplicates):
+        if not (trvMultiplayerServers.getMaster(iterDuplicateOpt.get) in serverData.serverConfig.duplicates):
           # Master server published game server which is not his own
-          trvMultiplayerServers.updateMasterServer(iterDuplicateOpt.get, server.serverConfig.serverName)
+          trvMultiplayerServers.updateMaster(iterDuplicateOpt.get, serverData.serverConfig.serverName)
         continue
-      valName.setString(server.gspyServer.hostname.cstring)
-      valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # todo: setUInt should take an uint param, not int
-      valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # todo: setUInt should take an uint param, not int
-      valMap.setString(server.gspyServer.mapname.cstring)
-      valMode.setString(server.gspyServer.gametype.cstring)
-      valMod.setString(server.gspyServer.gamevariant.cstring)
-      valIp.setString(cstring($server.address))
-      valPort.setUInt(server.gspyServer.hostport.int) # todo: setUInt should take an uint param, not int
-      valGSpyPort.setUInt(server.port.int) # todo: setUInt should take an uint param, not int
-      valStellaName.setString(server.serverConfig.serverName.cstring)
-      store.append(iter)
-      store.setValue(iter, 0, valName)
-      store.setValue(iter, 1, valCurrentPlayer)
-      store.setValue(iter, 2, valMaxPlayer)
-      store.setValue(iter, 3, valMap)
-      store.setValue(iter, 4, valMode)
-      store.setValue(iter, 5, valMod)
-      store.setValue(iter, 6, valIp)
-      store.setValue(iter, 7, valPort)
-      store.setValue(iter, 9, valGSpyPort)
-      store.setValue(iter, 8, valStellaName)
+      var server: Server = convertServer(serverData.gspyServer, serverData.ip, serverData.port, serverData.serverConfig.serverName)
+      appendServer(server)
 
-      if isServerSelected and server.address == currentServer.ip and server.port == server.port:
+      if isServerSelected and server.ip == currentServer.ip and server.port == server.port:
         # todo: Maybe we can select the first server then this global var is obsolet.
         #       Options would be also a possibility but then we need to call get every currentServer access
         trvMultiplayerServers.selectServer = currentServer
@@ -1921,16 +1975,16 @@ proc timerUpdateServerList(todo: int): bool =
   return SOURCE_CONTINUE
 
 proc threadUpdateServerListProc(serverConfig: ServerConfig) {.thread.} =
-  var gslist: seq[tuple[address: IpAddress, port: Port]]
+  var gslist: seq[tuple[ip: IpAddress, port: Port]]
 
   gslist = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.gameName, serverConfig.gameKey, serverConfig.gameStr, 2000, 500) # TODO: Store timeout in settings
-  gslist = filter(gslist, proc(gs: tuple[address: IpAddress, port: Port]): bool =
-    return $gs.address != "0.0.0.0" and not startsWith($gs.address, "255.255.255")
+  gslist = filter(gslist, proc(gs: tuple[ip: IpAddress, port: Port]): bool =
+    return $gs.ip != "0.0.0.0" and not startsWith($gs.ip, "255.255.255")
   )
 
-  for (address, port, gspyServer) in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])): # TODO: Store timeout in settings
+  for (ip, port, gspyServer) in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])): # TODO: Store timeout in settings
     channelAddServers.send(@[ServerData(
-      address: address,
+      ip: ip,
       port: port,
       gspyServer: gspyServer,
       serverConfig: serverConfig
@@ -1956,21 +2010,21 @@ proc updateServerListAsync() =
   for idx, thread in threadUpdateServerList.mpairs:
     thread.createThread(threadUpdateServerListProc, serverConfigs[idx])
 
-  let todo: int = 0
+  let unused: int = 0
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
-  discard timeoutAdd(50, timerUpdateServerList, todo)
+  idleAdd(idleUpdateServerList, unused)
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
 
 
-proc timerFesl(todo: int): bool =
-  let msgAmount: int = channelFeslTimer.peek()
+proc idleFesl(unused: int): bool =
+  let msgAmount: int = channelFesl.peek()
 
   if msgAmount == -1:
-    return SOURCE_REMOVE # Channel closed, stop timer
+    return SOURCE_REMOVE
   elif msgAmount == 0:
-    return SOURCE_CONTINUE # No data to process
+    return SOURCE_CONTINUE
 
-  let data: TimerFeslData = channelFeslTimer.recv()
+  let data: FeslData = channelFesl.recv()
 
   case data.command:
   of FeslCommand.Create:
@@ -2052,7 +2106,7 @@ proc threadFeslProc() {.thread.} =
   var socket: net.Socket = net.newSocket()
   var isSocketConnected: bool = false
   var threadData: ThreadFeslData
-  var timerData: TimerFeslData
+  var feslData: FeslData
   var msgAmount: int
 
   while true:
@@ -2082,10 +2136,10 @@ proc threadFeslProc() {.thread.} =
         continue # Send Ping, continue loop
 
     threadData = channelFeslThread.recv()
-    timerData = getTimerFeslData(threadData)
+    feslData = getFeslData(threadData)
 
-    # Copying ThreadFeslData object into TimerFeslData
-    # copyMem(addr(timerData), addr(threadData), sizeof(threadData))
+    # Copying ThreadFeslData object into FeslData
+    # copyMem(addr(feslData), addr(threadData), sizeof(threadData))
 
     try:
       if not isSocketConnected:
@@ -2103,22 +2157,22 @@ proc threadFeslProc() {.thread.} =
       of FeslCommand.Create:
         socket.createAccount(threadData.create.username, threadData.create.password, 5000)
         socket.login(threadData.create.username, threadData.create.password, 5000)
-        channelFeslTimer.send(timerData)
+        channelFesl.send(feslData)
       of FeslCommand.Login:
         socket.login(threadData.login.username, threadData.login.password, 5000)
-        timerData.login.soldiers = socket.soldiers(5000)
-        channelFeslTimer.send(timerData)
+        feslData.login.soldiers = socket.soldiers(5000)
+        channelFesl.send(feslData)
       of FeslCommand.AddSoldier:
         socket.addSoldier(threadData.soldier.soldier, 5000)
-        timerData.soldier.soldiers = socket.soldiers(5000)
-        channelFeslTimer.send(timerData)
+        feslData.soldier.soldiers = socket.soldiers(5000)
+        channelFesl.send(feslData)
       of FeslCommand.DelSoldier:
         socket.delSoldier(threadData.soldier.soldier, 5000)
-        timerData.soldier.soldiers = socket.soldiers(5000)
-        channelFeslTimer.send(timerData)
+        feslData.soldier.soldiers = socket.soldiers(5000)
+        channelFesl.send(feslData)
     except FeslException as ex:
-      timerData.ex = some(ex)
-      channelFeslTimer.send(timerData)
+      feslData.ex = some(ex)
+      channelFesl.send(feslData)
 
 proc createAsync(save: bool) =
   trvMultiplayerAccountSoldiers.clear()
@@ -2274,9 +2328,9 @@ proc clear(terminal: Terminal) =
 
 when defined(windows):
   type
-    TimerDataLoginUnlockServer = ref object
+    LoginUnlockServerData = ref object
       terminal: Terminal
-    TimerDataGameServer = ref object
+    GameServerData = ref object
       terminal: Terminal
       treeView: TreeView
   var threadLoginUnlockServer: system.Thread[Process]
@@ -2284,44 +2338,40 @@ when defined(windows):
   var channelGameServer: Channel[string]
   var channelLoginUnlockServer: Channel[string]
 
-  var timerGameServerId: int = 0
-  proc timerGameServer(timerData: TimerDataGameServer): bool =
+  proc idleUpdateGameServer(gameServerData: GameServerData): bool =
     # todo: Always receive the last entry from channel, because
     #       data is the whole stdout of the game server
     if not processGameServer.running:
-      timerGameServerId = 0
       channelGameServer.close()
       if processGameServer.peekExitCode().int32 != 0:
-        timerData.terminal.text = dgettext("gui", "GAMESERVER_CRASHED")  % [$processGameServer.peekExitCode().int32]
-      timerData.treeView.update(GsData())
+        gameServerData.terminal.text = dgettext("gui", "GAMESERVER_CRASHED")  % [$processGameServer.peekExitCode().int32]
+      gameServerData.treeView.update(GsData())
       return SOURCE_REMOVE
     if channelGameServer.peek() == 0:
       return SOURCE_CONTINUE # No data
     var channelData: string = channelGameServer.recv()
     if channelData.strip() == "":
       return SOURCE_CONTINUE # Stdout of game server is empty at startup
-    timerData.terminal.text = channelData
+    gameServerData.terminal.text = channelData
     var gsdata: GsData
     try:
       gsdata = channelData.parseGsData()
     except ValueError:
       discard # Couldn't parse data
     if gsdata.status != lastGsStatus:
-      timerData.treeView.update(gsdata)
+      gameServerData.treeView.update(gsdata)
       lastGsStatus = gsdata.status
     return SOURCE_CONTINUE
 
-  var timerLoginUnlockServerId: int = 0
-  proc timerLoginUnlockServer(timerData: TimerDataLoginUnlockServer): bool =
+  proc idleLoginUnlockServer(loginUnlockServerData: LoginUnlockServerData): bool =
     if not processLoginServer.running:
-      timerLoginUnlockServerId = 0
       channelLoginUnlockServer.close()
       if processLoginServer.peekExitCode().int32 != 0:
-        timerData.terminal.text = dgettext("gui", "LOGIN_UNLOCKSERVER_CRASHED") % [$processLoginServer.peekExitCode().int32]
+        loginUnlockServerData.terminal.text = dgettext("gui", "LOGIN_UNLOCKSERVER_CRASHED") % [$processLoginServer.peekExitCode().int32]
       return SOURCE_REMOVE
     if channelLoginUnlockServer.peek() == 0:
       return SOURCE_CONTINUE # No data
-    timerData.terminal.addTextColorizedWorkaround(channelLoginUnlockServer.recv(), scrollDown = true)
+    loginUnlockServerData.terminal.addTextColorizedWorkaround(channelLoginUnlockServer.recv(), scrollDown = true)
     return SOURCE_CONTINUE
 
 proc killLoginServer() =
@@ -2415,19 +2465,19 @@ proc startBF2142Server() =
     channelGameServer = Channel[string]()
     channelGameServer.open()
 
-    var timerDataGameServer: TimerDataGameServer = TimerDataGameServer(terminal: termHostGameServer, treeView: trvHostSelectedMap)
+    var gameServerData: GameServerData = GameServerData(terminal: termHostGameServer, treeView: trvHostSelectedMap)
     when defined(nimHasStyleChecks): {.push styleChecks: off.}
-    timerGameServerId = int(timeoutAdd(250, timerGameServer, timerDataGameServer))
+    idleAdd(idleUpdateGameServer, gameServerData)
     when defined(nimHasStyleChecks): {.push styleChecks: on.}
     threadGameServer.createThread(threadGameServerProc, processGameServer)
 
-proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
+proc startLoginServer(terminal: Terminal, ip: IpAddress) =
   terminal.setSizeRequest(0, 300)
   when defined(linux):
     discard terminal.spawnSync(
       ptyFlags = {PtyFlag.noLastlog},
       workingDirectory = ".",
-      argv = ["./BF2142UnlockerSrv", $ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      argv = ["./BF2142UnlockerSrv", $ip, $chbtnUnlocksUnlockSquadGadgets.active],
       envv = [],
       spawnFlags = {glib.SpawnFlag.doNotReapChild},
       childSetup = nil,
@@ -2437,7 +2487,7 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
     # todo: Fix this crappy code below. Did this only to get version 0.9.3 out.
     var tryCnt: int = 0
     while tryCnt < 3:
-      if isAddrReachable($ipAddress, Port(18300), 1_000):
+      if isAddrReachable($ip, Port(18300), 1_000):
         break
       else:
         tryCnt.inc()
@@ -2445,16 +2495,16 @@ proc startLoginServer(terminal: Terminal, ipAddress: IpAddress) =
   elif defined(windows):
     processLoginServer = startProcess(
       command = "BF2142UnlockerSrv.exe",
-      args = [$ipAddress, $chbtnUnlocksUnlockSquadGadgets.active],
+      args = [$ip, $chbtnUnlocksUnlockSquadGadgets.active],
       options = {poStdErrToStdOut, poDaemon}
     )
 
     channelLoginUnlockServer = Channel[string]()
     channelLoginUnlockServer.open()
 
-    var timerLoginUnlockServer: TimerDataLoginUnlockServer = TimerDataLoginUnlockServer(terminal: terminal)
+    var loginUnlockServerData: LoginUnlockServerData = LoginUnlockServerData(terminal: terminal)
     when defined(nimHasStyleChecks): {.push styleChecks: off.}
-    timerLoginUnlockServerId = int(timeoutAdd(250, timerLoginUnlockServer, timerLoginUnlockServer))
+    idleAdd(idleLoginUnlockServer, loginUnlockServerData)
     when defined(nimHasStyleChecks): {.push styleChecks: on.}
     threadLoginUnlockServer.createThread(threadLoginUnlockServerProc, processLoginServer)
 ##
@@ -2675,13 +2725,15 @@ proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
   currentServer = get(trvMultiplayerServers.selectedServer)
 
   if previousServer.ip == currentServer.ip and previousServer.port == currentServer.port:
+    # TODO: Is this even possible?!?
     return
 
   isServerSelected = true
 
   for serverConfig in serverConfigs:
-    if serverConfig.serverName == currentServer.stellaName:
+    if serverConfig.serverName == currentServer.master:
       currentServerConfig = serverConfig
+      break
 
   btnMultiplayerServersPlay.sensitive = true
   btnMultiplayerPlayersRefresh.sensitive = true
@@ -2694,10 +2746,17 @@ proc onWindowKeyReleaseEvent(self: gtk.Window00, event00: ptr EventKey00): bool 
   event.ignoreFinalizer = true
   if not notebook.currentPage == 1:
     return
-  if not isMultiplayerServerUpdating and event.getKeyval() == KEY_F5: # todo: Add tooltip info
+  if isMultiplayerServerUpdating:
+    return
+  if event.getKeyval() == KEY_F5:
     updateServerListAsync()
-  if event.getKeyval() == KEY_F6 and isServerSelected: # todo: Add tooltip info
+  if event.getKeyval() == KEY_F6 and isServerSelected:
+    # TODO: Check if it's the same server and already updating
+    # TODO: Above it's returning when server list is refreshing, but we are able
+    #       to update selected server and playerlist (if server is selcted)
     updatePlayerListAsync()
+    trvMultiplayerServers.grabFocus() # TODO: Why is focus set to player list when refreshing
+                                      #       server and player list?!?
 
 proc onNotebookSwitchPage(self: Notebook00, page: Widget00, pageNum: cint): bool {.signal.} =
   if not isMultiplayerServerUpdating and not isMultiplayerServerLoadedOnce and pageNum == 1:
@@ -2910,15 +2969,15 @@ proc onWndMultiplayerAccountShow(self: gtk.Window00) {.signal.} =
 
   channelFeslThread = Channel[ThreadFeslData]()
   channelFeslThread.open()
-  channelFeslTimer = Channel[TimerFeslData]()
-  channelFeslTimer.open()
-  let todo: int = 0
+  channelFesl = Channel[FeslData]()
+  channelFesl.open()
+  let unused: int = 0
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
-  discard timeoutAdd(250, timerFesl, todo)
+  discard idleAdd(idleFesl, unused)
   when defined(nimHasStyleChecks): {.push styleChecks: on.}
   threadFesl.createThread(threadFeslProc)
 
-  lblMultiplayerAccountStellaName.text = currentServer.stellaName.cstring
+  lblMultiplayerAccountStellaName.text = currentServer.master.cstring
   lblMultiplayerAccountGameServerName.text = currentServer.name.cstring
 
   let loginTplOpt: Option[tuple[username, password: string, soldier: Option[string]]] = getLogin(currentServerConfig.serverName)
@@ -2954,8 +3013,8 @@ proc onWndMultiplayerAccountHide(self: gtk.Window00) {.signal.} =
 
   txtMultiplayerAccountUsername.text = ""
   txtMultiplayerAccountPassword.text = ""
-  channelFeslThread.close() # Closes thread (see threadFeslProc)
-  channelFeslTimer.close() # Closes timer (see timerFesl)
+  channelFeslThread.close()
+  channelFesl.close()
 
 
 proc onTrvMultiplayerServersButtonPressEvent(self: TreeView00, event00: ptr EventButton00): bool {.signal.} =

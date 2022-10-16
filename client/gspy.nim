@@ -35,16 +35,16 @@ proc queryServer*(address: IpAddress, port: Port, timeout: int = -1, bytes: Prot
   return some(gspyServer)
 
 
-iterator queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): tuple[address: IpAddress, port: Port, gspyServer: GSpyServer] =
+iterator queryServers*(servers: seq[tuple[ip: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): tuple[ip: IpAddress, port: Port, gspyServer: GSpyServer] =
   # WARNING: `queryServers` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
   var responsesOpt: seq[Option[Response00C]]
-  var responsesFuture: seq[tuple[server: tuple[address: IpAddress, port: Port], future: Future[Option[Response00C]]]]
+  var responsesFuture: seq[tuple[server: tuple[ip: IpAddress, port: Port], future: Future[Option[Response00C]]]]
 
   var protocol00C: Protocol00C
   for server in servers:
     protocol00C = newProtocol00C(bytes)
-    responsesFuture.add((server, sendProtocol00C(server.address, server.port, protocol00C, timeout)))
+    responsesFuture.add((server, sendProtocol00C(server.ip, server.port, protocol00C, timeout)))
 
   while responsesFuture.len > 0:
     var responsesToDelete: seq[int]
@@ -58,7 +58,7 @@ iterator queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], time
       var response00C: Response00C
       if response00COpt.isNone:
         when not defined(release):
-          echo "Server (GSPY) not responding: ", server.address, ":", server.port
+          echo "Server (GSPY) not responding: ", server.ip, ":", server.port
         continue # Server was not reachable
       response00C = get(response00COpt)
       try:
@@ -68,7 +68,7 @@ iterator queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], time
       when not defined(release):
         echo "Server (GSPY): ", gspyServer.hostname
       yield (
-        address: server.address,
+        ip: server.ip,
         port: server.port,
         gspyServer: gspyServer
       )
