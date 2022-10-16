@@ -451,9 +451,11 @@ var btnQuickCheckServerCancel: Button
 ### Multiplayer controls
 var vboxMultiplayer: Box
 var spinnerMultiplayerServers: Spinner
+var spinnerMultiplayerRefreshServer: Spinner
 var trvMultiplayerServers: TreeView
 var btnMultiplayerServersRefresh: Button
-var imgMultiplayerServersRefesh: Image
+var imgMultiplayerServersRefresh: Image
+var imgServerPlayerRefesh: Image
 var btnMultiplayerServersPlay: Button
 var trvMultiplayerPlayers1: TreeView
 var spinnerMultiplayerPlayers1: Spinner
@@ -1882,6 +1884,8 @@ proc idleUpdatePlayerList(unused: int): bool =
   lblMultiplayerTeam2.text = gspy.team.team_t[1].toUpper().cstring
 
   btnMultiplayerPlayersRefresh.sensitive = true
+  btnMultiplayerPlayersRefresh.image = imgServerPlayerRefesh
+  spinnerMultiplayerRefreshServer.stop()
   spinnerMultiplayerPlayers1.stop()
   spinnerMultiplayerPlayers2.stop()
 
@@ -1912,10 +1916,12 @@ proc threadUpdatePlayerListProc() {.thread.} =
 proc updatePlayerListAsync() =
   trvMultiplayerPlayers1.clear()
   trvMultiplayerPlayers2.clear()
+  spinnerMultiplayerRefreshServer.start()
   spinnerMultiplayerPlayers1.start()
   spinnerMultiplayerPlayers2.start()
   btnMultiplayerServersPlay.sensitive = true
   btnMultiplayerPlayersRefresh.sensitive = false
+  btnMultiplayerPlayersRefresh.image = nil
 
   if not isMultiplayerPlayerListUpdating:
     isMultiplayerPlayerListUpdating = true
@@ -1947,7 +1953,7 @@ proc idleUpdateServerList(unused: int): bool =
     if not threadsRunning:
       spinnerMultiplayerServers.stop()
       btnMultiplayerServersRefresh.sensitive = true
-      btnMultiplayerServersRefresh.image = imgMultiplayerServersRefesh
+      btnMultiplayerServersRefresh.image = imgMultiplayerServersRefresh
       isMultiplayerServerUpdating = false
       isMultiplayerServerLoadedOnce = true
       return SOURCE_REMOVE
@@ -1968,8 +1974,6 @@ proc idleUpdateServerList(unused: int): bool =
         # todo: Maybe we can select the first server then this global var is obsolet.
         #       Options would be also a possibility but then we need to call get every currentServer access
         trvMultiplayerServers.selectServer = currentServer
-        btnMultiplayerServersPlay.sensitive = true
-        btnMultiplayerPlayersRefresh.sensitive = true
         updatePlayerListAsync()
 
   return SOURCE_CONTINUE
@@ -2737,6 +2741,7 @@ proc onTrvMultiplayerServersCursorChanged(self: TreeView00) {.signal.} =
 
   btnMultiplayerServersPlay.sensitive = true
   btnMultiplayerPlayersRefresh.sensitive = true
+  btnMultiplayerPlayersRefresh.image = imgServerPlayerRefesh
 
   updatePlayerListAsync()
 
@@ -3338,9 +3343,11 @@ proc onApplicationActivate(application: Application) =
 
   vboxMultiplayer = builder.getBox("vboxMultiplayer")
   spinnerMultiplayerServers = builder.getSpinner("spinnerMultiplayerServers")
+  spinnerMultiplayerRefreshServer = builder.getSpinner("spinnerMultiplayerRefreshServer")
   trvMultiplayerServers = builder.getTreeView("trvMultiplayerServers")
   btnMultiplayerServersRefresh = builder.getButton("btnMultiplayerServersRefresh")
-  imgMultiplayerServersRefesh = builder.getImage("imgServerListRefesh")
+  imgMultiplayerServersRefresh = builder.getImage("imgServerListRefresh")
+  imgServerPlayerRefesh = builder.getImage("imgServerPlayerRefesh")
   btnMultiplayerServersPlay = builder.getButton("btnMultiplayerServersPlay")
   trvMultiplayerPlayers1 = builder.getTreeView("trvMultiplayerPlayers1")
   spinnerMultiplayerPlayers1 = builder.getSpinner("spinnerMultiplayerPlayers1")

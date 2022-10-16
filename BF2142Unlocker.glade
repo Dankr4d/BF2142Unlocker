@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 
+<!-- Generated with glade 3.40.0
 
 The MIT License (MIT)
 
@@ -452,7 +452,7 @@ Author: Dankr4d
     <property name="pixel-size">25</property>
     <property name="icon-name">media-playback-start</property>
   </object>
-  <object class="GtkImage" id="imgServerListRefesh">
+  <object class="GtkImage" id="imgServerListRefresh">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
     <property name="pixel-size">24</property>
@@ -1287,7 +1287,7 @@ Author: Dankr4d
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
                                         <property name="tooltip-text" translatable="yes">MULTIPLAYER_SERVERS_REFRESH_TOOLTIP</property>
-                                        <property name="image">imgServerListRefesh</property>
+                                        <property name="image">imgServerListRefresh</property>
                                         <property name="always-show-image">True</property>
                                         <signal name="clicked" handler="onBtnMultiplayerServersRefreshClicked" swapped="no"/>
                                       </object>
@@ -1312,14 +1312,32 @@ Author: Dankr4d
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkButton" id="btnMultiplayerPlayersRefresh">
+                                  <object class="GtkOverlay">
                                     <property name="visible">True</property>
-                                    <property name="sensitive">False</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="tooltip-text" translatable="yes">MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP</property>
-                                    <property name="image">imgServerPlayerRefesh</property>
-                                    <signal name="clicked" handler="onBtnMultiplayerPlayersRefreshClicked" swapped="no"/>
+                                    <property name="can-focus">False</property>
+                                    <child>
+                                      <object class="GtkButton" id="btnMultiplayerPlayersRefresh">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="receives-default">True</property>
+                                        <property name="tooltip-text" translatable="yes">MULTIPLAYER_PLAYERS_REFRESH_TOOLTIP</property>
+                                        <property name="image">imgServerPlayerRefesh</property>
+                                        <property name="always-show-image">True</property>
+                                        <signal name="clicked" handler="onBtnMultiplayerPlayersRefreshClicked" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="index">-1</property>
+                                      </packing>
+                                    </child>
+                                    <child type="overlay">
+                                      <object class="GtkSpinner" id="spinnerMultiplayerRefreshServer">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="pass-through">True</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
