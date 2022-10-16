@@ -1,3 +1,4 @@
+import threadpool
 import gintro/[gtk, glib, gobject, gdk, gtksource]
 import gintro/gio except ListStore
 import os
@@ -222,6 +223,7 @@ type
 
 type
   ServerConfig* = object of PatchConfig
+    duplicates*: seq[string] # Server publish game server of other master servers
     serverName*: string
     gameName*: string
     gameKey*: string
@@ -238,7 +240,7 @@ type
     gspyPort: Port
     stellaName: string
 
-var threadUpdateServerList: system.Thread[seq[ServerConfig]]
+var threadUpdateServerList: seq[system.Thread[ServerConfig]]
 type
   ServerData = object
     address: IpAddress
@@ -385,6 +387,7 @@ const
 
 const
   CONFIG_SERVER_FILE_NAME: string = "config" / "server.ini"
+  CONFIG_SERVER_CONTAINS_DUPLICATES_OF: string = "contains_duplicates_of"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -1079,6 +1082,35 @@ proc selectedServer(list: TreeView): Option[Server] =
 
   return some(server)
 
+proc getIter(list: TreeView, ip: IpAddress, port: Port): Option[TreeIter] =
+  var iter: TreeIter
+  let store = listStore(list.getModel())
+  var whileCond: bool = store.getIterFirst(iter)
+  while whileCond:
+    var
+      valIp: Value
+      valPort: Value
+    store.getValue(iter, 6, valIp)
+    store.getValue(iter, 7, valPort)
+    if parseIpAddress(valIp.getString()) == ip and Port(valPort.getUint()) == port:
+      return some(iter)
+    whileCond = store.iterNext(iter)
+  return none(TreeIter)
+
+
+proc updateMasterServer(list: TreeView, iter: var TreeIter, masterServer: string) =
+  let store: gtk.ListStore = listStore(list.getModel())
+  var valMasterServer: Value
+  discard valMasterServer.init(g_string_get_type())
+  valMasterServer.setString(masterServer)
+  store.setValue(iter, 8, valMasterServer)
+
+proc getMasterServer(list: TreeView, iter: var TreeIter): string =
+  var valMasterServer: Value
+  let store: gtk.ListStore  = listStore(list.getModel())
+  store.getValue(iter, 8, valMasterServer)
+  return valMasterServer.getString()
+
 proc `selectServer=`(list: TreeView, server: Server) =
   var iter: TreeIter
   let store = listStore(list.getModel())
@@ -1609,6 +1641,8 @@ proc loadServerConfig() =
       serverConfig.serverName = e.section
     of cfgKeyValuePair:
       case e.key:
+      of CONFIG_SERVER_CONTAINS_DUPLICATES_OF:
+        serverConfig.duplicates = e.value.split(",")
       of CONFIG_SERVER_KEY_STELLA_PROD:
         serverConfig.stella_prod = e.value
       of CONFIG_SERVER_KEY_STELLA_MS:
@@ -1813,14 +1847,20 @@ proc updatePlayerListAsync() =
 proc timerUpdateServerList(todo: int): bool =
   let channelAddServersPeek = channelAddServers.peek()
 
-  if channelAddServersPeek == -1:
-    spinnerMultiplayerServers.stop()
-    btnMultiplayerServersRefresh.sensitive = true
-    btnMultiplayerServersRefresh.image = imgMultiplayerServersRefesh
-    isMultiplayerServerUpdating = false
-    isMultiplayerServerLoadedOnce = true
-    return SOURCE_REMOVE
-  elif channelAddServersPeek == 0:
+
+  if channelAddServersPeek == 0:
+    var threadsRunning: bool = false
+    for thread in threadUpdateServerList:
+      if thread.running:
+        threadsRunning = true
+        break
+    if not threadsRunning:
+      spinnerMultiplayerServers.stop()
+      btnMultiplayerServersRefresh.sensitive = true
+      btnMultiplayerServersRefresh.image = imgMultiplayerServersRefesh
+      isMultiplayerServerUpdating = false
+      isMultiplayerServerLoadedOnce = true
+      return SOURCE_REMOVE
     return SOURCE_CONTINUE
 
   var
@@ -1842,6 +1882,12 @@ proc timerUpdateServerList(todo: int): bool =
 
   for idx in 1..channelAddServersPeek:
     for server in channelAddServers.recv():
+      var iterDuplicateOpt: Option[TreeIter] = trvMultiplayerServers.getIter(server.address, Port(server.gspyServer.hostport))
+      if iterDuplicateOpt.isSome:
+        if not (trvMultiplayerServers.getMasterServer(iterDuplicateOpt.get) in server.serverConfig.duplicates):
+          # Master server published game server which is not his own
+          trvMultiplayerServers.updateMasterServer(iterDuplicateOpt.get, server.serverConfig.serverName)
+        continue
       valName.setString(server.gspyServer.hostname.cstring)
       valCurrentPlayer.setUInt(server.gspyServer.numplayers.int) # todo: setUInt should take an uint param, not int
       valMaxPlayer.setUInt(server.gspyServer.maxplayers.int) # todo: setUInt should take an uint param, not int
@@ -1874,42 +1920,21 @@ proc timerUpdateServerList(todo: int): bool =
 
   return SOURCE_CONTINUE
 
-proc threadUpdateServerListProc(serverConfigs: seq[ServerConfig]) {.thread.} =
-  var gslistAll: seq[tuple[address: IpAddress, port: Port]] = @[]
+proc threadUpdateServerListProc(serverConfig: ServerConfig) {.thread.} =
+  var gslist: seq[tuple[address: IpAddress, port: Port]]
 
-  for idxConfig, serverConfig in serverConfigs:
-    # todo: Querying openspy and novgames master server takes ~500ms
-    #       Store game server and implement a "quick refrsh" which queries gamespy server only and not requering master server
-    # todo: Query master servers async like in `queryServers` proc
-    var gslist: seq[tuple[address: IpAddress, port: Port]] = @[]
-    var gslistTmp: seq[tuple[address: IpAddress, port: Port]] = @[]
+  gslist = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.gameName, serverConfig.gameKey, serverConfig.gameStr, 2000, 500) # TODO: Store timeout in settings
+  gslist = filter(gslist, proc(gs: tuple[address: IpAddress, port: Port]): bool =
+    return $gs.address != "0.0.0.0" and not startsWith($gs.address, "255.255.255")
+  )
 
-    try:
-      gslistTmp = queryGameServerList(serverConfig.stella_ms, Port(28910), serverConfig.gameName, serverConfig.gameKey, serverConfig.gameStr, 1000)
-    except RangeDefect:
-      break # todo: Temprariy fixing issue #69 and #72
-    for gs in gslistTmp:
-      if $gs.address == "0.0.0.0" or startsWith($gs.address, "255.255.255"):
-        continue
-      if gslistAll.contains(gs):
-        continue
-      gslistAll.add(gs)
-      gslist.add(gs)
-
-    var servers: seq[ServerData] = @[]
-    for idxServer, server in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])):
-      servers.add(ServerData(
-        address: server.address,
-        port: server.port,
-        gspyServer: server.gspyServer,
-        serverConfig: serverConfig
-      ))
-    channelAddServers.send(servers)
-
-  # Wait until ui thread processed all entries in channel before closing
-  while channelAddServers.peek() > 0:
-    sleep(50)
-  channelAddServers.close()
+  for (address, port, gspyServer) in queryServers(gslist, 500, toOrderedSet([Hostname, Numplayers, Maxplayers, Mapname, Gametype, Gamevariant, Hostport])): # TODO: Store timeout in settings
+    channelAddServers.send(@[ServerData(
+      address: address,
+      port: port,
+      gspyServer: gspyServer,
+      serverConfig: serverConfig
+    )])
 
 
 proc updateServerListAsync() =
@@ -1927,11 +1952,14 @@ proc updateServerListAsync() =
   channelAddServers = Channel[seq[ServerData]]()
   channelAddServers.open()
 
+  threadUpdateServerList = newSeq[system.Thread[ServerConfig]](serverConfigs.len)
+  for idx, thread in threadUpdateServerList.mpairs:
+    thread.createThread(threadUpdateServerListProc, serverConfigs[idx])
+
   let todo: int = 0
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
   discard timeoutAdd(50, timerUpdateServerList, todo)
   when defined(nimHasStyleChecks): {.push styleChecks: off.}
-  threadUpdateServerList.createThread(threadUpdateServerListProc, serverConfigs)
 
 
 proc timerFesl(todo: int): bool =

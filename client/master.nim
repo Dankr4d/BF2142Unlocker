@@ -259,11 +259,11 @@ proc tcpxspr(sd: cint, gamestr: ptr uint8, msgamestr: ptr uint8, validate: ptr u
 proc enctypex_decoder_rand_validate(validate: ptr char): cint {.importc, cdecl, header: MASTER_SERVER_HEADER_PATH.}
 
 
-proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string, timeout: int = -1): seq[tuple[address: IpAddress, port: Port]] =
+proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: string, connTimeout, recvTimeout: int = -1): seq[tuple[address: IpAddress, port: Port]] =
   var client: Socket = newSocket()
 
   try:
-    client.connect(url, port, 5_000)
+    client.connect(url, port, connTimeout)
   except OSError, TimeoutError:
     client.close()
     return # If master server doesn't respond or connection is refused
@@ -315,7 +315,7 @@ proc queryGameServerList*(url: string, port: Port, gameName, gameKey, gameStr: s
   var prevLen: int = 0
   while true:
     try:
-      curLen += client.recv(addr(buffer[curLen]), 1, timeout)
+      curLen += client.recv(addr(buffer[curLen]), 1, recvTimeout) # TODO: read buffer len, timeout and resize buffer
       if curLen == prevLen:
         break
       prevLen = curLen

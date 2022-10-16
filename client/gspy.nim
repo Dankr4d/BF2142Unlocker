@@ -34,37 +34,49 @@ proc queryServer*(address: IpAddress, port: Port, timeout: int = -1, bytes: Prot
     return none(GSpyServer) # TODO: Parser shouldn't fail
   return some(gspyServer)
 
-proc queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): seq[tuple[address: IpAddress, port: Port, gspyServer: GSpyServer]] =
+
+iterator queryServers*(servers: seq[tuple[address: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): tuple[address: IpAddress, port: Port, gspyServer: GSpyServer] =
   # WARNING: `queryServers` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
   var responsesOpt: seq[Option[Response00C]]
-  var responsesFuture: seq[Future[Option[Response00C]]]
+  var responsesFuture: seq[tuple[server: tuple[address: IpAddress, port: Port], future: Future[Option[Response00C]]]]
 
   var protocol00C: Protocol00C
   for server in servers:
     protocol00C = newProtocol00C(bytes)
-    responsesFuture.add(sendProtocol00C(server.address, server.port, protocol00C, timeout))
+    responsesFuture.add((server, sendProtocol00C(server.address, server.port, protocol00C, timeout)))
 
-  responsesOpt = waitFor all(responsesFuture)
+  while responsesFuture.len > 0:
+    var responsesToDelete: seq[int]
+    for idx, (server, responseFuture) in responsesFuture:
+      if not responseFuture.finished:
+        continue
+      responsesToDelete.add(idx)
 
-  var gspyServer: GSpyServer
-  var response00C: Response00C
-  var idx: int = 0
-  for response00COpt in responsesOpt:
-    if isNone(response00COpt):
-      idx.inc()
-      continue # Server was not reachable
-    response00C = get(response00COpt)
-    try:
-      parseProtocol00C(response00C.data, gspyServer, bytes)
-    except:
-      continue # TODO: Parser shouldn't fail
-    result.add((
-      address: servers[idx].address,
-      port: servers[idx].port,
-      gspyServer: gspyServer
-    ))
-    idx.inc()
+      var gspyServer: GSpyServer
+      var response00COpt: Option[Response00C] = waitFor responseFuture
+      var response00C: Response00C
+      if response00COpt.isNone:
+        when not defined(release):
+          echo "Server (GSPY) not responding: ", server.address, ":", server.port
+        continue # Server was not reachable
+      response00C = get(response00COpt)
+      try:
+        parseProtocol00C(response00C.data, gspyServer, bytes)
+      except:
+        continue # TODO: Parser shouldn't fail
+      when not defined(release):
+        echo "Server (GSPY): ", gspyServer.hostname
+      yield (
+        address: server.address,
+        port: server.port,
+        gspyServer: gspyServer
+      )
+
+    for idx, idxToRemove in responsesToDelete:
+      responsesFuture.delete(idxToRemove - idx)
+
+    waitFor sleepAsync 50
 
 
 
