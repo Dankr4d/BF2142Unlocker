@@ -1816,16 +1816,13 @@ proc idleUpdatePlayerList(unused: int): bool =
   var gspy: Gspy
   var ip: IpAddress
   var port: Port
-  var servers: seq[tuple[ip: IpAddress, port: Port, gspy: GSpy]]
+  var found: bool = false
   while channelUpdatePlayerList.peek() > 0:
     (ip, port, gspy) = channelUpdatePlayerList.recv()
-    servers.add((ip, port, gspy))
-
-  var found: bool = false
-  for server in servers:
     if currentServer.ip == ip and currentServer.gspyPort == port:
-      (ip, port, gspy) = server
       found = true
+      break
+
   if not found:
     # Thread may still querying data
     return SOURCE_CONTINUE
@@ -1909,7 +1906,10 @@ proc threadUpdatePlayerListProc() {.thread.} =
       channelQueryPlayerListPeek = channelQueryPlayerList.peek()
       if channelQueryPlayerListPeek == 0:
         let gspy: GSpy = queryAll(ip, port, 1000)
-        channelUpdatePlayerList.send((ip, port, gspy)) # TODO: Error: unhandled exception: cannot send message; thread died [DeadThreadDefect]
+        if channelUpdatePlayerList.peek() == -1:
+          return # User may fast switching servers and may selecting an older server
+                 # which causes a successfull refresh and closes the channel
+        channelUpdatePlayerList.send((ip, port, gspy))
     sleep(50)
 
 

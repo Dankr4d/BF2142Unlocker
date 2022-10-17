@@ -38,7 +38,6 @@ proc queryServer*(address: IpAddress, port: Port, timeout: int = -1, bytes: Prot
 iterator queryServers*(servers: seq[tuple[ip: IpAddress, port: Port]], timeout: int = -1, bytes: Protocol00CBytes = Protocol00CBytesAll): tuple[ip: IpAddress, port: Port, gspyServer: GSpyServer] =
   # WARNING: `queryServers` queries server information via Protocol00C which is missing some
   #          some informations/data. Therefore the GSpyServer object is holey.
-  var responsesOpt: seq[Option[Response00C]]
   var responsesFuture: seq[tuple[server: tuple[ip: IpAddress, port: Port], future: Future[Option[Response00C]]]]
 
   var protocol00C: Protocol00C
