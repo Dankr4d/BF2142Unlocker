@@ -35,6 +35,18 @@ typedef struct {
     int             start;          // where starts the buffer (so how much big is the header), this is the only one you need to zero
 } enctypex_data_t;
 
+void func1(unsigned char *id, int idlen);
+void func2(unsigned char *data, int size, unsigned char *crypt);
+void func3(unsigned char *data, int len, unsigned char *buff);
+void func4(unsigned char *id, int idlen);
+int func5(int cnt, unsigned char *id, int idlen, int *n1, int *n2);
+void func6(unsigned char *data, int len);
+int func7(int len);
+void func8(unsigned char *data, int len, const unsigned char *enctype1_data);
+void encshare2(unsigned int *tbuff, unsigned int *tbuffp, int len);
+void encshare1(unsigned int *tbuff, unsigned char *datap, int len);
+void encshare3(unsigned int *data, int n1, int n2);
+void encshare4(unsigned char *src, int size, unsigned int *dest);
 
 unsigned char  enc1key[261];
 

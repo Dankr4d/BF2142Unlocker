@@ -714,7 +714,7 @@ proc removeChars(path: string, valFrom, valTo: int): bool =
   var rawOpt: Option[string] = readFile(path)
   if rawOpt.isNone:
     return false
-  rawOpt.get().delete(valFrom - 1 .. valTo - 1)
+  rawOpt.get().delete(valFrom - 1, valTo - 1)
   return writeFile(path, rawOpt.get())
 
 proc fixMapDesc(path: string): bool =
@@ -1816,13 +1816,16 @@ proc idleUpdatePlayerList(unused: int): bool =
   var gspy: Gspy
   var ip: IpAddress
   var port: Port
-  var found: bool = false
+  var servers: seq[tuple[ip: IpAddress, port: Port, gspy: GSpy]]
   while channelUpdatePlayerList.peek() > 0:
     (ip, port, gspy) = channelUpdatePlayerList.recv()
-    if currentServer.ip == ip and currentServer.gspyPort == port:
-      found = true
-      break
+    servers.add((ip, port, gspy))
 
+  var found: bool = false
+  for server in servers:
+    if currentServer.ip == ip and currentServer.gspyPort == port:
+      (ip, port, gspy) = server
+      found = true
   if not found:
     # Thread may still querying data
     return SOURCE_CONTINUE
@@ -1906,10 +1909,7 @@ proc threadUpdatePlayerListProc() {.thread.} =
       channelQueryPlayerListPeek = channelQueryPlayerList.peek()
       if channelQueryPlayerListPeek == 0:
         let gspy: GSpy = queryAll(ip, port, 1000)
-        if channelUpdatePlayerList.peek() == -1:
-          return # User may fast switching servers and may selecting an older server
-                 # which causes a successfull refresh and closes the channel
-        channelUpdatePlayerList.send((ip, port, gspy))
+        channelUpdatePlayerList.send((ip, port, gspy)) # TODO: Error: unhandled exception: cannot send message; thread died [DeadThreadDefect]
     sleep(50)
 
 
@@ -2803,7 +2803,7 @@ proc onTxtMultiplayerAccountSoldierNameInsertText(self: Editable00, cstr: cstrin
 
 proc onTxtMultiplayerAccountSoldierNameDeleteText(self: Editable00, startPos, endPos: cint) {.signal.} =
   var soldier: string = txtMultiplayerAccountSoldierName.text
-  soldier.delete(int(startPos)..int(endPos) - 1)
+  soldier.delete(int(startPos), int(endPos) - 1)
   if not validateSoldier(soldier):
     txtMultiplayerAccountSoldierName.signalStopEmissionByName("delete-text")
 
