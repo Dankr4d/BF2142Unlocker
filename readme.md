@@ -59,17 +59,20 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - Start MSYS2 MINGW64 (64 bit) or MSYS2 MINGW32 (32 bit)
 - `pacman -Syu # Upgrade base`
 - `pacman -Su # Upgrade all packages`
-- `pacman -S make tar git zip`
-- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4 mingw-w64-x86_64-osslsigncode`
+- `pacman -S make tar git zip unzip`
+- 64 bit: `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-openssl mingw-w64-x86_64-gtk3 mingw-w64-x86_64-python3-gobject mingw-w64-x86_64-gtksourceview4 mingw-w64-x86_64-osslsigncode mingw-w64-cross-mingw64-binutils`
 - 32 bit: `pacman -S mingw-w64-i686-gcc mingw-w64-i686-openssl mingw-w64-i686-gtk3 mingw-w64-i686-python3-gobject mingw-w64-i686-gtksourceview4 mingw-w64-i686-osslsigncode`
 - `mkdir -p /c/Users/$USER/projects && cd /c/Users/$USER/projects`
 - `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
 - `./build_all.bat # Build nim and all tools (like nimble)`
-- `export PATH="$PATH:/c/Users/$USER/projects/Nim/bin"`
+- `wget --directory-prefix=bin https://nim-lang.org/download/dlls.zip`
+- `unzip bin/dlls.zip -d bin`
+- `rm bin/dlls.zip`
 - `cd ..`
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
+- `export PATH="$PATH:/c/Users/$USER/projects/Nim/bin"`
 - `nimble install -d # Install dependencies`
 ### Prepare (Linux)
 - Install requierd packages: git gcc make tar wget gtk3 python-gobject vte3
@@ -77,17 +80,17 @@ Also the BF2142Unlocker has a multiplayer feature withit you can create accounts
 - `git clone -b version-1-4 https://github.com/nim-lang/Nim.git`
 - `cd Nim`
 - `sh build_all.sh # Build nim and all tools (like nimble)`
-- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
 - `cd ..`
 - `git clone https://github.com/Dankr4d/BF2142Unlocker`
 - `cd BF2142Unlocker`
+- `export PATH="$PATH:/home/$USER/projects/Nim/bin"`
 - `nimble install -d # Install dependencies`
 ### Compile
 - 64 bit: `nim build64 BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 - 32 bit: `nim build32 BF2142Unlocker # Build BF2142Unlocker and bundle it into "build" folder`
 
 ### Update (Windows)
-- `pacman -Syu # Optional, only required if library names changed`
+- `pacman -Syu`
 - `cd /c/Users/$USER/projects/Nim`
 - `git pull`
 - If there are any updates: `./build_all.bat`

@@ -37,7 +37,7 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
   if query.startsWith("&"):
     query = query[1 .. ^1]
   var params: Table[string, string] = getQueryParams(query)
-  stdout.styledWriteLine(fgGreen, "==> ", fgMagenta, "UNLOCK: ", resetStyle, "Request to '", req.url.path, "?", req.url.query, "'.")
+  stdout.styledWriteLine(fgGreen, "==> ", fgMagenta, "STATS: ", resetStyle, "Request to '", req.url.path, "?", req.url.query, "'.")
   stdout.flushFile()
 
   # var isServer: bool = false
@@ -58,23 +58,23 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
   case req.url.path
   of "/getbackendinfo.aspx":
     await req.handleGetBackendInfo(params)
-    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getbackendinfo'")
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "STATS: ", resetStyle, "Responding 'getbackendinfo'")
     stdout.flushFile()
   of "/getplayerinfo.aspx":
     await req.handleGetPlayerInfo(params)
-    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerinfo'")
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "STATS: ", resetStyle, "Responding 'getplayerinfo'")
     stdout.flushFile()
   of "/getunlocksinfo.aspx":
     await req.handleGetUnlocksInfo(params, unlockAllSquadGadgets)
-    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getunlocksinfo'")
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "STATS: ", resetStyle, "Responding 'getunlocksinfo'")
     stdout.flushFile()
   of "/getawardsinfo.aspx":
     await req.handleGetAwardsInfo(params)
-    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getawardsinfo'")
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "STATS: ", resetStyle, "Responding 'getawardsinfo'")
     stdout.flushFile()
   of "/getplayerprogress.aspx": # only mode: point .. mode also is ignored
     await req.handleGetPlayerProgress(params)
-    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "UNLOCK: ", resetStyle, "Responding 'getplayerprogress'")
+    stdout.styledWriteLine(fgGreen, "<== ", fgMagenta, "STATS: ", resetStyle, "Responding 'getplayerprogress'")
     stdout.flushFile()
   else:
     await req.respond(Http200, "Hello World!")
@@ -82,7 +82,7 @@ proc handleClient*(req: Request) {.async, gcsafe.} =
 proc run*(data: tuple[ipAddress: IpAddress, unlockAllSquadGadgets: bool]) =
   var server = newAsyncHttpServer()
   let port = Port(8085)
-  echo fmt"Unlock (HTTP) server listening on {$data.ipAddress}:{$port} and waiting for clients!"
+  echo fmt"Stats server listening on {$data.ipAddress}:{$port} and waiting for clients!"
   unlockAllSquadGadgets = data.unlockAllSquadGadgets
   waitFor server.serve(port, handleClient, $data.ipAddress)
 

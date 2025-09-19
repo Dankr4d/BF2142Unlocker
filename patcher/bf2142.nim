@@ -2,10 +2,10 @@ import streams
 import net
 import strutils # Required for parseHexInt proc
 import nativesockets # Required for getHostByName
-import uri # Required for parseUri # TODO: REMOVE (see server.ini)
 
 type
   PatchConfig* = object of RootObj
+    fesl*: string
     stellaProd*: string
     stellaMs*: string
     ms*: string
@@ -37,6 +37,11 @@ proc patchServer*(fs: FileStream, ip: IpAddress, port: Port) =
       fs.writeStr(parseHexInt("00768FA0"), stellaProd, 31) # http://stella.prod.gamespy.com/
   elif defined(windows):
     fs.writeStr(parseHexInt("003CE610"), stellaProd, 31)
+    # Remove \drivers\etc\hosts string
+    fs.setPosition(parseHexInt("003CE5FC"))
+    for idx in 1 .. 18:
+      fs.write(byte(0x00))
+
 
 proc patchServer*(path: string, ip: IpAddress, port: Port) =
   var fs: FileStream = newFileStream(path, fmReadWriteExisting)
@@ -90,9 +95,18 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig, laaPatch: bool) =
     fs.write(byte(0x2E))
   else:
     fs.write(byte(0x0E))
+  # Remove \drivers\etc\hosts string. The game is checking against that file and if an an ip address is found, the game crashes
+  fs.setPosition(parseHexInt("00563990"))
+  for idx in 1 .. 18:
+    fs.write(byte(0x00))
 
-  var hostend: Hostent = getHostByName(parseUri(patchConfig.stellaProd).hostname)
-  fs.writeIpReversed(parseHexInt("0045C984"), parseIpAddress(hostend.addrList[0])) # stella.prod.gamespy.com (as ip)
+  var feslIpAddress: IpAddress # TODO: Catch IPv6 address
+  if patchConfig.fesl.isIpAddress():
+    feslIpAddress = patchConfig.fesl.parseIpAddress()
+  else:
+    feslIpAddress = parseIpAddress(getHostByName(patchConfig.fesl).addrList[0])
+
+  fs.writeIpReversed(parseHexInt("0045C984"), feslIpAddress) # stella.prod.gamespy.com (as ip)
   fs.writeStr(parseHexInt("005639A4"), patchConfig.stellaProd, 31) # http://stella.prod.gamespy.com
   fs.writeStr(parseHexInt("005639C4"), patchConfig.stellaMs, 23) # stella.prod.gamespy.com
   fs.writeStr(parseHexInt("0059F608"), patchConfig.ms, 19) # %s.ms%d.gamespy.com

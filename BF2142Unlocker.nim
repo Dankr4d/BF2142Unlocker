@@ -36,6 +36,7 @@ import streams # Required to load server.ini (which has unknown sections)
                # Windows: Required to read from process stream (login/unlock server)
 import regex # Required to validate soldier name
 import tables # Required for fesl thread (see threadFeslProc)
+import nativesockets # Required for getHostByName
 import module/gintro/liststore
 import module/gintro/infodialog
 
@@ -258,12 +259,12 @@ type
     AddSoldier
     DelSoldier
   ThreadFeslCreateData = object of RootObj
-    stella: string
+    address: string
     username: string
     password: string
     save: bool
   ThreadFeslLoginData = object of RootObj
-    stella: string
+    address: string
     username: string
     password: string
     save: bool
@@ -298,13 +299,13 @@ proc getFeslData(threadData: ThreadFeslData): FeslData =
   case threadData.command:
   of FeslCommand.Create:
     result = FeslData(command: FeslCommand.Create)
-    result.create.stella = threadData.create.stella
+    result.create.address = threadData.create.address
     result.create.username = threadData.create.username
     result.create.password = threadData.create.password
     result.create.save = threadData.create.save
   of FeslCommand.Login:
     result = FeslData(command: FeslCommand.Login)
-    result.login.stella = threadData.login.stella
+    result.login.address = threadData.login.address
     result.login.username = threadData.login.username
     result.login.password = threadData.login.password
     result.login.save = threadData.login.save
@@ -388,6 +389,7 @@ const
 const
   CONFIG_SERVER_FILE_NAME: string = "config" / "server.ini"
   CONFIG_SERVER_CONTAINS_DUPLICATES_OF: string = "contains_duplicates_of"
+  CONFIG_SERVER_FESL: string = "fesl"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -1703,6 +1705,8 @@ proc loadServerConfig() =
       case e.key:
       of CONFIG_SERVER_CONTAINS_DUPLICATES_OF:
         serverConfig.duplicates = e.value.split(",")
+      of CONFIG_SERVER_FESL:
+        serverConfig.fesl = e.value
       of CONFIG_SERVER_KEY_STELLA_PROD:
         serverConfig.stella_prod = e.value
       of CONFIG_SERVER_KEY_STELLA_MS:
@@ -2093,6 +2097,8 @@ proc idleFesl(unused: int): bool =
           errorMsg = "Username or password is incorrect."
       else:
         discard
+    if ex.notReceived:
+      errorMsg = "The response message has not been received (timeout)."
     if errorMsg == "":
       errorMsg = "Unknown error."
 
@@ -2147,14 +2153,14 @@ proc threadFeslProc() {.thread.} =
 
     try:
       if not isSocketConnected:
-        var stella: string
+        var address: string
         if threadData.command == FeslCommand.Create:
-          stella = threadData.create.stella
+          address = threadData.create.address
         elif threadData.command == FeslCommand.Login:
-          stella = threadData.login.stella
+          address = threadData.login.address
         else:
           raise # Create or Login command need to be send before sending other commands
-        fesl.connect(socket, stella)
+        fesl.connect(socket, address)
         isSocketConnected = true
 
       case threadData.command:
@@ -2182,9 +2188,14 @@ proc createAsync(save: bool) =
   trvMultiplayerAccountSoldiers.clear()
   spinnerMultiplayerAccount.start()
   wndMultiplayerAccount.sensitive = false
+  var feslIpAddress: string
+  if currentServerConfig.fesl.isIpAddress(): # TODO: Catch IPv6 address
+    feslIpAddress = currentServerConfig.fesl
+  else:
+    feslIpAddress = getHostByName(currentServerConfig.fesl).addrList[0]
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Create)
   var createData: ThreadFeslCreateData
-  createData.stella = parseUri(currentServerConfig.stella_prod).hostname
+  createData.address = feslIpAddress
   createData.username = txtMultiplayerAccountUsername.text
   createData.password = txtMultiplayerAccountPassword.text
   createData.save = save
@@ -2195,9 +2206,14 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   trvMultiplayerAccountSoldiers.clear()
   spinnerMultiplayerAccount.start()
   wndMultiplayerAccount.sensitive = false
+  var feslIpAddress: string
+  if currentServerConfig.fesl.isIpAddress(): # TODO: Catch IPv6 address
+    feslIpAddress = currentServerConfig.fesl
+  else:
+    feslIpAddress = getHostByName(currentServerConfig.fesl).addrList[0]
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Login)
   var loginData: ThreadFeslLoginData
-  loginData.stella = parseUri(currentServerConfig.stella_prod).hostname
+  loginData.address = feslIpAddress
   loginData.username = txtMultiplayerAccountUsername.text
   loginData.password = txtMultiplayerAccountPassword.text
   loginData.save = save
@@ -2294,11 +2310,11 @@ when defined(windows):
         else:
           colorPrefix = "red"
       case lineSplit[1]:
-        of "LOGIN":
+        of "FESL":
           colorServer = "darkcyan"
-        of "LOGIN_UDP":
+        of "GPCM":
           colorServer = "goldenrod"
-        of "UNLOCK":
+        of "STATS":
           colorServer = "darkmagenta"
         else:
           colorServer = "red"
@@ -2598,6 +2614,7 @@ proc patchAndStartLogic(): bool =
     return
 
   var patchConfig: PatchConfig
+  patchconfig.fesl = ipAddress
   patchConfig.stella_prod = "http://" & ipAddress & ":8085/"
   patchConfig.stella_ms = ipAddress
   patchConfig.ms = ipAddress

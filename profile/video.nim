@@ -13,8 +13,9 @@ type
     High = "3"
   Antialiasing* {.pure.} = enum
     Off = "Off"
+    TwoSamples = "2Samples"
     FourSamples = "4Samples"
-    EightSamples = "8Samples"
+    EightSamples = "8Samples" # TODO: Warn user that 8 Samples is broken in game
   Presets* {.pure.} = enum
     Low = "0"
     Medium = "1"

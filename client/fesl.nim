@@ -59,7 +59,7 @@ template parseCheckAndRaise() =
 
 
 proc raiseRecvFailed(exType: FeslExceptionType) =
-  var ex: FeslException
+  var ex: FeslException = new FeslException
   ex.exType = exType
   ex.notReceived = true
   raise ex
@@ -70,39 +70,16 @@ proc createAccount*(client: Socket, username, password: string, timeout: int = -
   var data: string
   var id: uint8
 
-  # client.send(newHelloClient(), 1)
-  # if not client.recv(data, id, timeout):
-  #   raiseRecvFailed(FeslExceptionType.Unhandled)
-  # parseCheckAndRaise()
+  client.send(newGetCountryListClient(), 3)
+  if not client.recv(data, id, timeout):
+    raiseRecvFailed(FeslExceptionType.GetCountryList)
+  parseCheckAndRaise()
 
-  # if not client.recv(data, id, timeout):
-  #   raiseRecvFailed(FeslExceptionType.Unhandled)
-  # parseCheckAndRaise()
-  # client.send(newMemCheckClient(), 0)
+  var countryCode: string = ""
+  if dataTbl.hasKey("countryList.0.ISOCode"):
+    countryCode = dataTbl["countryList.0.ISOCode"]
 
-  # client.send(newGetTosClient(), 2)
-  # if not client.recv(data, id, timeout):
-  #   raiseRecvFailed(FeslExceptionType.Unhandled)
-  # parseCheckAndRaise()
-
-  # client.send(newGetCountryListClient(), 3)
-  # if not client.recv(data, id, timeout):
-  #   raiseRecvFailed(FeslExceptionType.GetCountryList)
-  # parseCheckAndRaise()
-
-  # var countryCode: string
-  # if dataTbl.hasKey("countryList.0.ISOCode"):
-  #   countryCode = dataTbl["countryList.0.ISOCode"]
-  # else:
-  #   # PlayBF2142 with the current version doesn't start with index 0, so we need
-  #   # to loop through and pick the first. # TODO: Remove this later when/if it's fixed.
-  #   for key, value in dataTbl.pairs:
-  #     if key.endsWith("ISOCode"):
-  #       countryCode = value
-  #       break
-
-  # client.send(newAddAccountClient(username, password, randomEmail(), countryCode), 4)
-  client.send(newAddAccountClient(username, password, randomEmail(), "RU"), 4)
+  client.send(newAddAccountClient(username, password, randomEmail(), countryCode), 4)
   if not client.recv(data, id, timeout):
     raiseRecvFailed(FeslExceptionType.AddAccount)
   parseCheckAndRaise()
@@ -162,3 +139,32 @@ proc delSoldier*(client: Socket, soldier: string, timeout: int = -1) =
   if not client.recv(data, id, timeout):
     raiseRecvFailed(FeslExceptionType.DisableSubAccount)
   parseCheckAndRaise()
+
+
+when isMainModule:
+  # echo "\x80".mapIt(it.byte)
+  # echo newHelloClient().serialize(1).mapIt(it.byte)
+  var dataTbl: OrderedTable[string, string]
+  var data: string
+  var id: uint8
+
+  var socket: Socket = newSocket()
+  connect(socket, "127.0.0.1", Port(18300))
+
+  # socket.send(newHelloClient(), 1)
+  # if not socket.recv(data, id, -1):
+  #   raiseRecvFailed(FeslExceptionType.DisableSubAccount)
+  # parseCheckAndRaise()
+
+
+  # if not socket.recv(data, id, -1):
+  #   raiseRecvFailed(FeslExceptionType.DisableSubAccount)
+  # parseCheckAndRaise()
+  # socket.send(newMemCheckClient(), 2)
+
+  socket.send(newGetCountryListClient(), 2)
+  if not socket.recv(data, id, -1):
+    raiseRecvFailed(FeslExceptionType.DisableSubAccount)
+  parseCheckAndRaise()
+
+  socket.close()

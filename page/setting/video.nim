@@ -50,6 +50,8 @@ proc translate(antialiasing: Antialiasing): string =
   case antialiasing:
   of Antialiasing.Off:
     return dgettext("gui", "SETTINGS_VIDEO_OFF")
+  of Antialiasing.TwoSamples:
+    return "2x"
   of Antialiasing.FourSamples:
     return "4x"
   of Antialiasing.EightSamples:

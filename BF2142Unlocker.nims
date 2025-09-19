@@ -55,6 +55,7 @@ var RC: int = 0
 var BUILD_LIB_DIR: string
 var BUILD_SHARE_DIR: string
 var BUILD_SHARE_THEME_DIR: string
+var BUILD_SHARE_HICOLOR_THEME_DIR: string
 
 # GTK
 var GTK_LIBS: seq[string]
@@ -135,18 +136,19 @@ proc compileOpenSsl() =
   withDir(OPENSSL_PATH):
     when defined(windows):
       if CPU_ARCH == 64:
-        exec("perl Configure mingw64 enable-ssl3 shared -m64")
+        exec("perl Configure mingw64 enable-ssl3 shared -m64 -Wno-error=incompatible-pointer-types")
       else:
-        exec("perl Configure mingw enable-ssl3 shared -m32")
+        exec("perl Configure mingw enable-ssl3 shared -m32 -Wno-error=incompatible-pointer-types")
     else:
       if CROSS_COMPILE:
         if CPU_ARCH == 64:
-          exec(fmt"./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared -m64")
+          exec(fmt"./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared -m64 -Wno-error=incompatible-pointer-types")
         else:
-          exec(fmt"./Configure --cross-compile-prefix=i686-w64-mingw32- mingw enable-ssl3 shared -m32")
+          exec(fmt"./Configure --cross-compile-prefix=i686-w64-mingw32- mingw enable-ssl3 shared -m32 -Wno-error=incompatible-pointer-types")
       else:
-        exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH}")
+        exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH} -Wno-error=incompatible-pointer-types")
     exec("make depend")
+    # putEnv("PATH", fmt"{getEnv("PATH")}:/opt/bin") # TODO: Also 32bit?
     exec(fmt"make -j{CPU_CORES}")
 
 when defined(linux):
@@ -187,8 +189,8 @@ proc copyGtk() =
     BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-png.dll"
   )
   cpFile(
-    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-svg.dll",
-    BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "libpixbufloader-svg.dll"
+    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "pixbufloader_svg.dll",
+    BUILD_LIB_DIR / "gdk-pixbuf-2.0" / "2.10.0" / "loaders" / "pixbufloader_svg.dll"
   )
   cpFile(
     "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders.cache",
@@ -198,8 +200,11 @@ proc copyGtk() =
   mkDir(BUILD_SHARE_THEME_DIR)
   cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "index.theme", BUILD_SHARE_THEME_DIR / "index.theme")
 
+  mkDir(BUILD_SHARE_HICOLOR_THEME_DIR)
+  cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "hicolor" / "index.theme", BUILD_SHARE_HICOLOR_THEME_DIR / "index.theme")
+
   # actions
-  mkDir(BUILD_SHARE_THEME_DIR / "scalable" / "actions")
+  mkDir(BUILD_SHARE_THEME_DIR / "symbolic" / "actions")
   for svg in @[
     "media-playback-start-symbolic.svg", # play button multiplayer
     "view-refresh-symbolic.svg", # reload multiplayer
@@ -207,28 +212,28 @@ proc copyGtk() =
     "list-remove-symbolic.svg", # spinner decrease
   ]:
     cpFile(
-      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "actions" / svg,
-      BUILD_SHARE_THEME_DIR / "scalable" / "actions" / svg
+      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "symbolic" / "actions" / svg,
+      BUILD_SHARE_THEME_DIR / "symbolic" / "actions" / svg
     )
 
   # ui
-  mkDir(BUILD_SHARE_THEME_DIR / "scalable" / "ui")
+  mkDir(BUILD_SHARE_THEME_DIR / "symbolic" / "ui")
   for svg in @[
     "pan-up-symbolic.svg", # Sort treeview + combobox icon
     "pan-down-symbolic.svg", # Sort treeview
   ]:
     cpFile(
-      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable" / "ui" / svg,
-      BUILD_SHARE_THEME_DIR / "scalable" / "ui" / svg
+      "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "symbolic" / "ui" / svg,
+      BUILD_SHARE_THEME_DIR / "symbolic" / "ui" / svg
     )
   #
 
-  # scalable-up-to-32
-  mkDir(BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status")
-  cpFile(
-    "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32" / "status" / "process-working-symbolic.svg",
-    BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status" / "process-working-symbolic.svg"
-  ) # Multiplayer spinner
+  # # scalable-up-to-32
+  # mkDir(BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status")
+  # cpFile(
+  #   "C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "icons" / "Adwaita" / "scalable-up-to-32" / "status" / "process-working-symbolic.svg",
+  #   BUILD_SHARE_THEME_DIR / "scalable-up-to-32" / "status" / "process-working-symbolic.svg"
+  # ) # Multiplayer spinner
 
   mkDir(BUILD_SHARE_DIR / "glib-2.0" / "schemas")
   cpFile("C:" / "msys64" / fmt"mingw{CPU_ARCH}" / "share" / "glib-2.0" / "schemas" / "gschemas.compiled", BUILD_SHARE_DIR / "glib-2.0" / "schemas" / "gschemas.compiled")
@@ -303,24 +308,31 @@ proc prepare() =
     BUILD_LIB_DIR = BUILD_DIR / "lib"
     BUILD_SHARE_DIR = BUILD_DIR / "share"
     BUILD_SHARE_THEME_DIR = BUILD_SHARE_DIR / "icons" / "Adwaita"
+    BUILD_SHARE_HICOLOR_THEME_DIR = BUILD_SHARE_DIR / "icons" / "hicolor"
 
     # GTK
     GTK_LIBS = @[
-      "gdbus.exe", "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
-      "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll", "libssp-0.dll",
+      "gdbus.exe",
+      "libatk-1.0-0.dll", "libbz2-1.dll", "libcairo-2.dll",
+      "libcairo-gobject-2.dll", "libdatrie-1.dll", "libepoxy-0.dll", "libexpat-1.dll",
+      # "libssp-0.dll",
       "libffi-8.dll", "libfontconfig-1.dll", "libfreetype-6.dll", "libfribidi-0.dll",
       "libgdk-3-0.dll", "libgdk_pixbuf-2.0-0.dll", "libgio-2.0-0.dll", "libglib-2.0-0.dll", "libgmodule-2.0-0.dll",
       "libgobject-2.0-0.dll", "libgraphite2.dll", "libgtk-3-0.dll", "libharfbuzz-0.dll", "libiconv-2.dll",
       "libintl-8.dll", "liblzma-5.dll", "libpango-1.0-0.dll", "libpangocairo-1.0-0.dll", "libpangoft2-1.0-0.dll",
       "libpangowin32-1.0-0.dll", "libpcre2-8-0.dll", "libpixman-1-0.dll", "libpng16-16.dll", "librsvg-2-2.dll",
-      "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll", "libxml2-2.dll", "zlib1.dll", "libbrotlidec.dll",
-      "libbrotlicommon.dll", "libgtksourceview-4-0.dll"
+      "libstdc++-6.dll", "libthai-0.dll", "libwinpthread-1.dll",
+      # "libxml2-2.dll",
+      "zlib1.dll", "libbrotlidec.dll",
+      "libbrotlicommon.dll", "libgtksourceview-4-0.dll",
+      "libdeflate.dll", "libjbig-0.dll", "libjpeg-8.dll", "libLerc.dll", "libsharpyuv-0.dll", "libtiff-6.dll",
+      "libwebp-7.dll", "libxml2-16.dll", "libzstd.dll"
     ]
     if CPU_ARCH == 64:
-      GTK_LIBS.add("gspawn-win64-helper-console.exe")
+      # GTK_LIBS.add("gspawn-win64-helper-console.exe")
       GTK_LIBS.add("libgcc_s_seh-1.dll")
     else:
-      GTK_LIBS.add("gspawn-win32-helper-console.exe")
+      # GTK_LIBS.add("gspawn-win32-helper-console.exe")
       GTK_LIBS.add("libgcc_s_dw2-1.dll")
   else:
     # NCURSES
@@ -369,6 +381,8 @@ task buildall, "Compile and bundle 64 bit release.":
   CPU_ARCH = 64
   prepare()
   compile()
+  if defined(windows):
+    sign()
   zip()
   CPU_ARCH = 32
   prepare()
@@ -392,6 +406,17 @@ task build32, "Compile and bundle 32 bit release.":
   if defined(windows):
     sign()
   zip()
+
+task buildSsl64, "Compile OpenSSL 32 bit shared library":
+  CPU_ARCH = 64
+  prepare()
+  compileOpenSsl()
+
+task buildSsl32, "Compile OpenSSL 32 bit shared library":
+  CPU_ARCH = 32
+  prepare()
+  compileOpenSsl()
+
 
 # task xbuild64, "Cross compile and bundle 64 bit release.":
 #   CPU_ARCH = 64

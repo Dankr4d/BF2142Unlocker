@@ -7,7 +7,7 @@ import os
 
 proc send*(client: Socket, data: EaMessageType, id: uint8) =
   fesl.send(client, data, id)
-  stdout.styledWriteLine(fgGreen, "<== ", fgCyan, "LOGIN: ", resetStyle, $data) # data.substr(txnPos, data.find({' ', '\n'}, txnPos)))
+  stdout.styledWriteLine(fgGreen, "<== ", fgCyan, "FESL: ", resetStyle, $data) # data.substr(txnPos, data.find({' ', '\n'}, txnPos)))
   stdout.flushFile()
 
 proc pingInterval*(data: tuple[client: Socket, channelKillThread: ptr Channel[void]]) {.thread.} =
@@ -30,7 +30,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
       break
     dataTbl = data.parseData()
     if dataTbl.contains("TXN"):
-      stdout.styledWriteLine(fgGreen, "==> ", fgCyan, "LOGIN: ", resetStyle, $dataTbl)
+      stdout.styledWriteLine(fgGreen, "==> ", fgCyan, "FESL: ", resetStyle, $dataTbl)
       stdout.flushFile()
       case dataTbl["TXN"]:
         of "Hello":
@@ -60,7 +60,7 @@ proc handleFeslClient(client: Socket) {.thread.} =
   channelKillThread.close()
   if threadPingInterval.running:
     threadPingInterval.joinThread() # Waiting for ping thread is closed
-  stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") disconnected!")
+  stdout.styledWriteLine(fgBlue, "### ", fgCyan, "FESL: ", resetStyle, "Client (", $client.getFd().int, ") disconnected!")
   stdout.flushFile()
 
 proc run*(ipAddress: IpAddress) {.thread.} =
@@ -76,13 +76,13 @@ proc run*(ipAddress: IpAddress) {.thread.} =
   var client: Socket
   var address: string
   var thread: Thread[Socket]
-  echo fmt"Login (TCP) server listening on {$ipAddress}:{$port} and waiting for clients!"
+  echo fmt"Fesl server listening on {$ipAddress}:{$port} and waiting for clients!"
   while true:
     client = newSocket()
     address = ""
     try:
       server.acceptAddr(client, address)
-      stdout.styledWriteLine(fgBlue, "### ", fgCyan, "LOGIN: ", resetStyle, "Client (", $client.getFd().int, ") connected from: ", address)
+      stdout.styledWriteLine(fgBlue, "### ", fgCyan, "FESL: ", resetStyle, "Client (", $client.getFd().int, ") connected from: ", address)
       stdout.flushFile()
       thread.createThread(handleFeslClient, client)
     except: # TODO: If clients sends wrong data (like ddos or something else)

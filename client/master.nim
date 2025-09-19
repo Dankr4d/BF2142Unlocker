@@ -236,7 +236,7 @@ template `[]`*[T](p: ptr T, off: int): T =
 #   (p + off)[] = val
 
 
-type enctypex_data_t = object # {.importc, header: "masterserver.h".} = object
+type enctypex_data_t {.importc, header: MASTER_SERVER_HEADER_PATH.} = object
   encxkey: array[261, char]
   offset: cint
   start: cint
