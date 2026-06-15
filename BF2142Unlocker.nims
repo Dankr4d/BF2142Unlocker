@@ -25,7 +25,7 @@ const LANGUAGES: seq[string] = @["en", "de", "ru"]
 
 # OpenSSL
 const
-  OPENSSL_VERSION: string = "1.0.2u"
+  OPENSSL_VERSION: string = "1.1.1w"
   OPENSSL_ARCHIVE_BASENAME: string = fmt"openssl-{OPENSSL_VERSION}"
   OPENSSL_URL: string = fmt"https://www.openssl.org/source/openssl-{OPENSSL_VERSION}.tar.gz"
 
@@ -136,17 +136,17 @@ proc compileOpenSsl() =
   withDir(OPENSSL_PATH):
     when defined(windows):
       if CPU_ARCH == 64:
-        exec("perl Configure mingw64 enable-ssl3 shared -m64 -Wno-error=incompatible-pointer-types")
+        exec("perl Configure mingw64 enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-rc4 shared -m64 -Wno-error=incompatible-pointer-types")
       else:
-        exec("perl Configure mingw enable-ssl3 shared -m32 -Wno-error=incompatible-pointer-types")
+        exec("perl Configure mingw enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-rc4 shared -m32 -Wno-error=incompatible-pointer-types")
     else:
       if CROSS_COMPILE:
         if CPU_ARCH == 64:
-          exec(fmt"./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 shared -m64 -Wno-error=incompatible-pointer-types")
+          exec(fmt"./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-rc4 shared -m64 -Wno-error=incompatible-pointer-types")
         else:
-          exec(fmt"./Configure --cross-compile-prefix=i686-w64-mingw32- mingw enable-ssl3 shared -m32 -Wno-error=incompatible-pointer-types")
+          exec(fmt"./Configure --cross-compile-prefix=i686-w64-mingw32- mingw enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-rc4 shared -m32 -Wno-error=incompatible-pointer-types")
       else:
-        exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 shared -m{CPU_ARCH} -Wno-error=incompatible-pointer-types")
+        exec(fmt"./Configure linux-generic{CPU_ARCH} enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-rc4 shared -m{CPU_ARCH} -Wno-error=incompatible-pointer-types")
     exec("make depend")
     # putEnv("PATH", fmt"{getEnv("PATH")}:/opt/bin") # TODO: Also 32bit?
     exec(fmt"make -j{CPU_CORES}")
@@ -246,11 +246,16 @@ proc copyNcurses() =
 
 proc copyOpenSSL() =
   if defined(windows) or defined(linux) and CROSS_COMPILE:
-    cpFile(OPENSSL_PATH / "libeay32.dll", BUILD_BIN_DIR / "libeay32.dll")
-    cpFile(OPENSSL_PATH / "ssleay32.dll", BUILD_BIN_DIR / "ssleay32.dll")
+    if CPU_ARCH == 64:
+      cpFile(OPENSSL_PATH / "libcrypto-1_1-x64.dll", BUILD_BIN_DIR / "libcrypto-1_1-x64.dll")
+      cpFile(OPENSSL_PATH / "libssl-1_1-x64.dll", BUILD_BIN_DIR / "libssl-1_1-x64.dll")
+    else:
+      cpFile(OPENSSL_PATH / "libcrypto-1_1.dll", BUILD_BIN_DIR / "libcrypto-1_1.dll")
+      cpFile(OPENSSL_PATH / "libssl-1_1.dll", BUILD_BIN_DIR / "libssl-1_1.dll")
   else:
-    cpFile(OPENSSL_PATH / "libssl.so.1.0.0", BUILD_DIR / "libssl.so.1.0.0")
-    cpFile(OPENSSL_PATH / "libcrypto.so.1.0.0", BUILD_DIR / "libcrypto.so.1.0.0")
+    # TODO
+    cpFile(OPENSSL_PATH / "libssl.so.1.1", BUILD_DIR / "libssl.so.1.1")
+    cpFile(OPENSSL_PATH / "libcrypto.so.1.1", BUILD_DIR / "libcrypto.so.1.1")
 
 proc copyServersConfig() =
   if defined(windows) or defined(linux) and CROSS_COMPILE:

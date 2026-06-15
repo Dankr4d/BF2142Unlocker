@@ -39,6 +39,7 @@ import tables # Required for fesl thread (see threadFeslProc)
 import nativesockets # Required for getHostByName
 import module/gintro/liststore
 import module/gintro/infodialog
+import server/sslproxy
 
 from conparser import newDefault
 import profile/video as profileVideo
@@ -260,11 +261,13 @@ type
     DelSoldier
   ThreadFeslCreateData = object of RootObj
     address: string
+    port: int
     username: string
     password: string
     save: bool
   ThreadFeslLoginData = object of RootObj
     address: string
+    port: int
     username: string
     password: string
     save: bool
@@ -300,12 +303,14 @@ proc getFeslData(threadData: ThreadFeslData): FeslData =
   of FeslCommand.Create:
     result = FeslData(command: FeslCommand.Create)
     result.create.address = threadData.create.address
+    result.create.port = threadData.create.port
     result.create.username = threadData.create.username
     result.create.password = threadData.create.password
     result.create.save = threadData.create.save
   of FeslCommand.Login:
     result = FeslData(command: FeslCommand.Login)
     result.login.address = threadData.login.address
+    result.login.port = threadData.login.port
     result.login.username = threadData.login.username
     result.login.password = threadData.login.password
     result.login.save = threadData.login.save
@@ -390,6 +395,7 @@ const
   CONFIG_SERVER_FILE_NAME: string = "config" / "server.ini"
   CONFIG_SERVER_CONTAINS_DUPLICATES_OF: string = "contains_duplicates_of"
   CONFIG_SERVER_FESL: string = "fesl"
+  CONFIG_SERVER_FESL_PORT: string = "fesl_port"
   CONFIG_SERVER_KEY_STELLA_PROD: string = "stella_prod"
   CONFIG_SERVER_KEY_STELLA_MS: string = "stella_ms"
   CONFIG_SERVER_KEY_MS: string = "ms"
@@ -1707,6 +1713,8 @@ proc loadServerConfig() =
         serverConfig.duplicates = e.value.split(",")
       of CONFIG_SERVER_FESL:
         serverConfig.fesl = e.value
+      of CONFIG_SERVER_FESL_PORT:
+        serverConfig.fesl_port = e.value.parseInt()
       of CONFIG_SERVER_KEY_STELLA_PROD:
         serverConfig.stella_prod = e.value
       of CONFIG_SERVER_KEY_STELLA_MS:
@@ -2154,13 +2162,16 @@ proc threadFeslProc() {.thread.} =
     try:
       if not isSocketConnected:
         var address: string
+        var port: int
         if threadData.command == FeslCommand.Create:
           address = threadData.create.address
+          port = threadData.create.port
         elif threadData.command == FeslCommand.Login:
           address = threadData.login.address
+          port = threadData.login.port
         else:
           raise # Create or Login command need to be send before sending other commands
-        fesl.connect(socket, address)
+        fesl.connect(socket, address, Port(port))
         isSocketConnected = true
 
       case threadData.command:
@@ -2196,6 +2207,7 @@ proc createAsync(save: bool) =
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Create)
   var createData: ThreadFeslCreateData
   createData.address = feslIpAddress
+  createData.port = currentServerConfig.fesl_port
   createData.username = txtMultiplayerAccountUsername.text
   createData.password = txtMultiplayerAccountPassword.text
   createData.save = save
@@ -2214,6 +2226,7 @@ proc loginAsync(save: bool, soldier: Option[string] = none(string)) =
   var data: ThreadFeslData = ThreadFeslData(command: FeslCommand.Login)
   var loginData: ThreadFeslLoginData
   loginData.address = feslIpAddress
+  loginData.port = currentServerConfig.fesl_port
   loginData.username = txtMultiplayerAccountUsername.text
   loginData.password = txtMultiplayerAccountPassword.text
   loginData.save = save
@@ -2234,7 +2247,14 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
       dgettext("gui", "NO_WRITE_PERMISSION_MSG") % [bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME]
     )
     return
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfig), chbtnSettingsLaaPatch.active)
+
+  var serverConfigTmp: ServerConfig = serverConfig
+  var feslAddress: string = serverConfigTmp.fesl
+  var feslPort: Port = Port(serverConfigTmp.feslPort)
+  serverConfigTmp.fesl = sslproxy.PROXY_ADDRESS
+  serverConfigTmp.feslPort =  sslproxy.PROXY_PORT.int
+
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfigTmp), chbtnSettingsLaaPatch.active)
 
   backupOpenSpyIfExists()
   when defined(windows): # todo: Reading/setting cd key on linux
@@ -2244,6 +2264,9 @@ proc onMultiplayerPatchAndStartButtonClicked(self: Button, serverConfig: ServerC
     # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
     discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
 
+  if sslProxy.running():
+    sslproxy.stop()
+  discard sslproxy.start(feslAddress, feslPort)
 
   var options: BF2142Options
   options.modPath = some("mods/" & cbxMultiplayerMod.activeId)
@@ -2614,7 +2637,8 @@ proc patchAndStartLogic(): bool =
     return
 
   var patchConfig: PatchConfig
-  patchconfig.fesl = ipAddress
+  patchconfig.fesl = sslProxy.PROXY_ADDRESS
+  patchconfig.feslPort = sslProxy.PROXY_PORT.int
   patchConfig.stella_prod = "http://" & ipAddress & ":8085/"
   patchConfig.stella_ms = ipAddress
   patchConfig.ms = ipAddress
@@ -2624,6 +2648,7 @@ proc patchAndStartLogic(): bool =
   patchConfig.gamestats = ipAddress
   patchConfig.gpcm = ipAddress
   patchConfig.gpsp = ipAddress
+
   patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, patchConfig, chbtnSettingsLaaPatch.active)
 
   backupOpenSpyIfExists()
@@ -2640,6 +2665,10 @@ proc patchAndStartLogic(): bool =
     # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
     if not enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active):
       return
+
+  if sslProxy.running():
+    sslproxy.stop()
+  discard sslproxy.start(ipAddress, Port(18300))
 
   var options: BF2142Options
   options.modPath = some("mods/" & cbxQuickMod.activeId)
@@ -2916,7 +2945,13 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
     )
     return
 
-  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(currentServerConfig), chbtnSettingsLaaPatch.active)
+  var serverConfigTmp: ServerConfig = currentServerConfig
+  var feslAddress: string = serverConfigTmp.fesl
+  var feslPort: Port = Port(serverConfigTmp.feslPort)
+  serverConfigTmp.fesl = sslproxy.PROXY_ADDRESS
+  serverConfigTmp.feslPort =  sslproxy.PROXY_PORT.int
+
+  patchClient(bf2142UnlockerConfig.settings.bf2142ClientPath / BF2142_PATCHED_EXE_NAME, PatchConfig(serverConfigTmp), chbtnSettingsLaaPatch.active)
   backupOpenSpyIfExists()
   saveBF2142Profile(username, soldier)
   when defined(windows): # todo: Reading/setting cd key on linux
@@ -2925,6 +2960,10 @@ proc onBtnMultiplayerAccountPlayClicked(self: Button00) {.signal.} =
   if currentServer.`mod` != "bf2142":
     # Also disable movies from base mod since it may load base mod videos if mod videos cannot be found
     discard enableDisableIntroMovies(bf2142UnlockerConfig.settings.bf2142ClientPath / "mods" / "bf2142" / "Movies", chbtnSettingsSkipMovies.active)
+
+  if sslProxy.running():
+    sslproxy.stop()
+  discard sslproxy.start(feslAddress, feslPort)
 
   var options: BF2142Options
   options.modPath = some("mods/" & currentServer.`mod`)

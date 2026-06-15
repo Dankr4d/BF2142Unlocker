@@ -6,6 +6,7 @@ import nativesockets # Required for getHostByName
 type
   PatchConfig* = object of RootObj
     fesl*: string
+    feslPort*: int
     stellaProd*: string
     stellaMs*: string
     ms*: string
@@ -21,6 +22,11 @@ proc writeIpReversed(fs: FileStream, pos: int, ip: IpAddress) =
   fs.setPosition(pos)
   for i in 0..len:
     fs.write(ip.address_v4[len - i])
+
+proc writeInt32(fs: FileStream, pos: int, val: int32) =
+  fs.setPosition(pos)
+  fs.write(val)
+  # TODO: Fill
 
 proc writeStr(fs: FileStream, pos: int, str: string, maxLen: int) =
   fs.setPosition(pos)
@@ -107,6 +113,7 @@ proc patchClient*(fs: FileStream, patchConfig: PatchConfig, laaPatch: bool) =
     feslIpAddress = parseIpAddress(getHostByName(patchConfig.fesl).addrList[0])
 
   fs.writeIpReversed(parseHexInt("0045C984"), feslIpAddress) # stella.prod.gamespy.com (as ip)
+  fs.writeInt32(parseHexInt("0009F70A"), patchConfig.feslPort.int32) # fesl port
   fs.writeStr(parseHexInt("005639A4"), patchConfig.stellaProd, 31) # http://stella.prod.gamespy.com
   fs.writeStr(parseHexInt("005639C4"), patchConfig.stellaMs, 23) # stella.prod.gamespy.com
   fs.writeStr(parseHexInt("0059F608"), patchConfig.ms, 19) # %s.ms%d.gamespy.com

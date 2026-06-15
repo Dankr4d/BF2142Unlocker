@@ -439,6 +439,29 @@ proc send*(client: Socket, data: EaMessageType, id: uint8) =
   # echo "SEND: ", repr data.serialize(id)
   net.send(client, data.serialize(id))
 
+proc recvRaw*(socket: Socket, data: var string, timeout: int = -1): int =
+  var header, body: string
+  var length: uint32
+  var amount: int
+
+  amount = socket.recv(header, MESSAGE_PREFIX_LEN, timeout) # TODO: Can throw OSError
+  if amount == 0:
+    return 0
+
+  length = (cast[uint32](header[MESSAGE_PREFIX_LEN - 1]) shl 0) or
+            (cast[uint32](header[MESSAGE_PREFIX_LEN - 2]) shl 8) or
+            (cast[uint32](header[MESSAGE_PREFIX_LEN - 3]) shl 16) or
+            (cast[uint32](header[MESSAGE_PREFIX_LEN - 4]) shl 24)
+
+  amount += socket.recv(body, int(length) - MESSAGE_PREFIX_LEN, timeout) # TODO: Can throw OSError
+  if amount == 0:
+    return 0
+
+  data = header & body
+  when not defined(release):
+    echo "<-N res " & formatFesl(data)
+  return amount
+
 proc recv*(socket: Socket, data: var string, id: var uint8, timeout: int = -1): bool =
   var prefix: string
   var length: uint32

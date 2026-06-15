@@ -6,8 +6,14 @@ locale/*/
 
 libeay32.dll
 ssleay32.dll
+libssl-1_1-x64.dll
+libcrypto-1_1-x64.dll
+libssl-1_1.dll
+libcrypto-1_1.dll
 libssl.so.1.0.0
 libcrypto.so.1.0.0
+libssl.so.1.1
+libcrypto.so.1.1
 libncurses.so.5
 
 BF2142Unlocker
