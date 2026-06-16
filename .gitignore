@@ -46,6 +46,8 @@ server/gpcm
 server/gpcm.exe
 server/stats
 server/stats.exe
+server/sslproxy
+server/sslproxy.exe
 
 server/page/getawardsinfo
 server/page/getawardsinfo.exe
